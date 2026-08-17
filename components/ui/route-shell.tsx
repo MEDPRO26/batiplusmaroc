@@ -1,0 +1,1 @@
+export function RouteShell({ label }: { label: string }) { return <section className="shell-section"><div className="container-shell"><p className="eyebrow">S2MBOU</p><p className="shell-note">{label} — contenu WordPress à migrer sans réécriture SEO.</p></div></section>; }

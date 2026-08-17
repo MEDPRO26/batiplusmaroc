@@ -1,0 +1,1055 @@
+{
+  "audit_metadata": {
+    "captured_at_utc": "2026-08-17T18:01:39.444773+00:00",
+    "production_source": "https://batiplusmaroc.com/",
+    "source_of_truth": "Direct production HTTP responses and returned HTML",
+    "user_agent": "Mozilla/5.0 (compatible; BatiPlusMigrationAudit/1.0; +https://batiplusmaroc.com/)"
+  },
+  "homepage": {
+    "requested_url": "https://batiplusmaroc.com/",
+    "final_url": "https://batiplusmaroc.com/",
+    "http_status": 200,
+    "redirect_chain": [],
+    "response_headers": {
+      "Date": "Mon, 17 Aug 2026 18:01:18 GMT",
+      "Content-Type": "text/html; charset=UTF-8",
+      "Transfer-Encoding": "chunked",
+      "Connection": "close",
+      "Vary": "Accept-Encoding",
+      "x-powered-by": "PHP/8.3.30",
+      "permissions-policy": "private-state-token-redemption=(self \"https://www.google.com\" \"https://www.gstatic.com\" \"https://recaptcha.net\" \"https://challenges.cloudflare.com\" \"https://hcaptcha.com\"), private-state-token-issuance=(self \"https://www.google.com\" \"https://www.gstatic.com\" \"https://recaptcha.net\" \"https://challenges.cloudflare.com\" \"https://hcaptcha.com\")",
+      "expires": "Thu, 19 Nov 1981 08:52:00 GMT",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      "pragma": "no-cache",
+      "link": "<https://batiplusmaroc.com/>; rel=shortlink",
+      "etag": "W/\"66-1786635410;gz\"",
+      "x-litespeed-cache": "hit",
+      "platform": "hostinger",
+      "panel": "hpanel",
+      "content-security-policy": "upgrade-insecure-requests",
+      "Server": "hcdn",
+      "alt-svc": "h3=\":443\"; ma=86400",
+      "x-hcdn-request-id": "70541128359db2514962969436779207-fra-edge3",
+      "x-hcdn-cache-status": "MISS",
+      "x-hcdn-upstream-rt": "0.096"
+    },
+    "title": "Entreprise BTP et aménagement à Agadir – Construction pro",
+    "meta_description": "Expert en construction, rénovation et aménagement à Agadir. Devis rapide, qualité garantie pour vos projets BTP résidentiels et professionnels",
+    "canonical": "https://batiplusmaroc.com/",
+    "meta_robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+    "open_graph": {
+      "og:title": "Entreprise BTP et aménagement à Agadir – Construction pro",
+      "og:description": "Expert en construction, rénovation et aménagement à Agadir. Devis rapide, qualité garantie pour vos projets BTP résidentiels et professionnels",
+      "og:url": "https://batiplusmaroc.com/",
+      "og:image": null,
+      "og:type": "website"
+    },
+    "twitter": {
+      "twitter:card": "summary_large_image"
+    },
+    "json_ld_blocks": [
+      "{\"@context\":\"https:\\/\\/schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/\",\"name\":\"Entreprise BTP et aménagement à Agadir – Construction pro\",\"isPartOf\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#website\"},\"about\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#organization\"},\"datePublished\":\"2025-05-01T16:55:14+00:00\",\"dateModified\":\"2026-07-09T15:25:33+00:00\",\"description\":\"Expert en construction, rénovation et aménagement à Agadir. Devis rapide, qualité garantie pour vos projets BTP résidentiels et professionnels\",\"breadcrumb\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#breadcrumb\"},\"inLanguage\":\"fr-FR\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https:\\/\\/batiplusmaroc.com\\/\"]}]},{\"@type\":\"BreadcrumbList\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Accueil\"}]},{\"@type\":\"WebSite\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#website\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/\",\"name\":\"batiplusmaroc.com\",\"description\":\"\",\"publisher\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#organization\"},\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https:\\/\\/batiplusmaroc.com\\/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"fr-FR\"},{\"@type\":\"Organization\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#organization\",\"name\":\"batiplusmaroc.com\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/\",\"logo\":{\"@type\":\"ImageObject\",\"inLanguage\":\"fr-FR\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#\\/schema\\/logo\\/image\\/\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/wp-content\\/uploads\\/2025\\/05\\/home-build-construction-logo-153-x-40-px.png\",\"contentUrl\":\"https:\\/\\/batiplusmaroc.com\\/wp-content\\/uploads\\/2025\\/05\\/home-build-construction-logo-153-x-40-px.png\",\"width\":153,\"height\":40,\"caption\":\"batiplusmaroc.com\"},\"image\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#\\/schema\\/logo\\/image\\/\"},\"sameAs\":[\"https:\\/\\/www.facebook.com\\/sgta.btp\",\"https:\\/\\/share.google\\/j5BiBjLTGpFdjD3f8\"]}]}"
+    ],
+    "headings": [
+      {
+        "level": 1,
+        "tag": "H1",
+        "text": "Aménagement Agadir : Intérieur & extérieur sur mesure"
+      },
+      {
+        "level": 5,
+        "tag": "H5",
+        "text": "Qui somme nous ?"
+      },
+      {
+        "level": 2,
+        "tag": "H2",
+        "text": "Construire, aménager, valoriser"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Plâtre"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Carrelage"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Menuiserie"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Aluminium"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Electricite / Plomberie"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Climatisation"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Étanchéité"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Jardinage"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "PVC"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Peinture"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Amical Omolkoura"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Particulier privé"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Amical Annajah"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Villa avec sous sol"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Alhouda Doha Iamar"
+      },
+      {
+        "level": 5,
+        "tag": "H5",
+        "text": "Nos Articles"
+      },
+      {
+        "level": 2,
+        "tag": "H2",
+        "text": "Nouveautés du blog"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Les nouvelles tendances dans la construction en 2025"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Comment bien préparer son budget de construction ?"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Comment choisir les bons matériaux pour votre maison ?"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Construction sur-mesure : quels avantages pour votre projet ?"
+      },
+      {
+        "level": 6,
+        "tag": "H6",
+        "text": "S2MBOU Construction – Votre partenaire de confiance dans la réalisation de projets de construction durables et sur mesure. Nous mettons notre expertise et notre engagement au service de vos idées, pour bâtir ensemble un avenir solide."
+      },
+      {
+        "level": 6,
+        "tag": "H6",
+        "text": "Nos services"
+      },
+      {
+        "level": 6,
+        "tag": "H6",
+        "text": "Accès rapide"
+      },
+      {
+        "level": 6,
+        "tag": "H6",
+        "text": "Contactez nous"
+      }
+    ],
+    "internal_links": [
+      {
+        "anchor_text": "Skip to main content",
+        "href": "#ajax-content-wrap",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Close Search",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com",
+        "resolved_url": "https://batiplusmaroc.com",
+        "final_resolved_url": "https://batiplusmaroc.com",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Menu",
+        "href": "#sidewidgetarea",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "À propos",
+        "href": "https://batiplusmaroc.com/a-propos/",
+        "resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "final_resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Nos services",
+        "href": "https://batiplusmaroc.com/nos-services/",
+        "resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "final_resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Gros oeuvre",
+        "href": "https://batiplusmaroc.com/gros-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "final_resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Second oeuvre",
+        "href": "https://batiplusmaroc.com/second-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Nos réalisations",
+        "href": "https://batiplusmaroc.com/nos-realisations/",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Contactez-nous",
+        "href": "https://batiplusmaroc.com/contactez-nous/",
+        "resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "final_resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "En savoir plus",
+        "href": "/prestations-metallerie",
+        "resolved_url": "https://batiplusmaroc.com/prestations-metallerie",
+        "final_resolved_url": "https://batiplusmaroc.com/prestations-metallerie",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/charpente-metallique",
+        "resolved_url": "https://batiplusmaroc.com/charpente-metallique",
+        "final_resolved_url": "https://batiplusmaroc.com/charpente-metallique",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/bardage-metallique/",
+        "resolved_url": "https://batiplusmaroc.com/bardage-metallique/",
+        "final_resolved_url": "https://batiplusmaroc.com/bardage-metallique/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/serrurerie/",
+        "resolved_url": "https://batiplusmaroc.com/serrurerie/",
+        "final_resolved_url": "https://batiplusmaroc.com/serrurerie/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/construction-parasismique/",
+        "resolved_url": "https://batiplusmaroc.com/construction-parasismique/",
+        "final_resolved_url": "https://batiplusmaroc.com/construction-parasismique/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/ossature-metallique/",
+        "resolved_url": "https://batiplusmaroc.com/ossature-metallique/",
+        "final_resolved_url": "https://batiplusmaroc.com/ossature-metallique/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/charpente-metallique",
+        "resolved_url": "https://batiplusmaroc.com/charpente-metallique",
+        "final_resolved_url": "https://batiplusmaroc.com/charpente-metallique",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/bardage-metallique/",
+        "resolved_url": "https://batiplusmaroc.com/bardage-metallique/",
+        "final_resolved_url": "https://batiplusmaroc.com/bardage-metallique/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/serrurerie/",
+        "resolved_url": "https://batiplusmaroc.com/serrurerie/",
+        "final_resolved_url": "https://batiplusmaroc.com/serrurerie/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/construction-parasismique/",
+        "resolved_url": "https://batiplusmaroc.com/construction-parasismique/",
+        "final_resolved_url": "https://batiplusmaroc.com/construction-parasismique/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/ossature-metallique/",
+        "resolved_url": "https://batiplusmaroc.com/ossature-metallique/",
+        "final_resolved_url": "https://batiplusmaroc.com/ossature-metallique/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "En savoir plus",
+        "href": "/realisations-metallerie",
+        "resolved_url": "https://batiplusmaroc.com/realisations-metallerie",
+        "final_resolved_url": "https://batiplusmaroc.com/realisations-metallerie",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "All",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "aménagement extérieur",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "aménagement intérieur",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Gros oeuvre",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/portfolio/projet-5/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-5/",
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-5/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/portfolio/projet-4/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-4/",
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-4/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/portfolio/projet-3/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-3/",
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-3/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/portfolio/projet-2/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-2/",
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-2/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/portfolio/projet-1/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-1/",
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-1/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "général",
+        "href": "https://batiplusmaroc.com/category/general/",
+        "resolved_url": "https://batiplusmaroc.com/category/general/",
+        "final_resolved_url": "https://batiplusmaroc.com/category/general/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Les nouvelles tendances dans la construction en 2025",
+        "href": " https://batiplusmaroc.com/les-nouvelles-tendances-dans-la-construction-en-2025/",
+        "resolved_url": "https://batiplusmaroc.com/les-nouvelles-tendances-dans-la-construction-en-2025/",
+        "final_resolved_url": "https://batiplusmaroc.com/les-nouvelles-tendances-dans-la-construction-en-2025/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Read Article",
+        "href": "https://batiplusmaroc.com/les-nouvelles-tendances-dans-la-construction-en-2025/",
+        "resolved_url": "https://batiplusmaroc.com/les-nouvelles-tendances-dans-la-construction-en-2025/",
+        "final_resolved_url": "https://batiplusmaroc.com/les-nouvelles-tendances-dans-la-construction-en-2025/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "général",
+        "href": "https://batiplusmaroc.com/category/general/",
+        "resolved_url": "https://batiplusmaroc.com/category/general/",
+        "final_resolved_url": "https://batiplusmaroc.com/category/general/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Comment bien préparer son budget de construction ?",
+        "href": " https://batiplusmaroc.com/comment-bien-preparer-son-budget-de-construction/",
+        "resolved_url": "https://batiplusmaroc.com/comment-bien-preparer-son-budget-de-construction/",
+        "final_resolved_url": "https://batiplusmaroc.com/comment-bien-preparer-son-budget-de-construction/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Read Article",
+        "href": "https://batiplusmaroc.com/comment-bien-preparer-son-budget-de-construction/",
+        "resolved_url": "https://batiplusmaroc.com/comment-bien-preparer-son-budget-de-construction/",
+        "final_resolved_url": "https://batiplusmaroc.com/comment-bien-preparer-son-budget-de-construction/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Gros œuvre",
+        "href": "https://batiplusmaroc.com/category/gros-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/category/gros-oeuvre/",
+        "final_resolved_url": "https://batiplusmaroc.com/category/gros-oeuvre/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Comment choisir les bons matériaux pour votre maison ?",
+        "href": " https://batiplusmaroc.com/comment-choisir-les-bons-materiaux-pour-votre-maison/",
+        "resolved_url": "https://batiplusmaroc.com/comment-choisir-les-bons-materiaux-pour-votre-maison/",
+        "final_resolved_url": "https://batiplusmaroc.com/comment-choisir-les-bons-materiaux-pour-votre-maison/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Read Article",
+        "href": "https://batiplusmaroc.com/comment-choisir-les-bons-materiaux-pour-votre-maison/",
+        "resolved_url": "https://batiplusmaroc.com/comment-choisir-les-bons-materiaux-pour-votre-maison/",
+        "final_resolved_url": "https://batiplusmaroc.com/comment-choisir-les-bons-materiaux-pour-votre-maison/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Gros œuvre",
+        "href": "https://batiplusmaroc.com/category/gros-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/category/gros-oeuvre/",
+        "final_resolved_url": "https://batiplusmaroc.com/category/gros-oeuvre/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Construction sur-mesure : quels avantages pour votre projet ?",
+        "href": " https://batiplusmaroc.com/hello-world/",
+        "resolved_url": "https://batiplusmaroc.com/hello-world/",
+        "final_resolved_url": "https://batiplusmaroc.com/hello-world/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Read Article",
+        "href": "https://batiplusmaroc.com/hello-world/",
+        "resolved_url": "https://batiplusmaroc.com/hello-world/",
+        "final_resolved_url": "https://batiplusmaroc.com/hello-world/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "À propos",
+        "href": "https://batiplusmaroc.com/a-propos/",
+        "resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "final_resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Nos services",
+        "href": "https://batiplusmaroc.com/nos-services/",
+        "resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "final_resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Gros oeuvre",
+        "href": "https://batiplusmaroc.com/gros-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "final_resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Second oeuvre",
+        "href": "https://batiplusmaroc.com/second-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Nos réalisations",
+        "href": "https://batiplusmaroc.com/nos-realisations/",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Close Menu",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "À propos",
+        "href": "https://batiplusmaroc.com/a-propos/",
+        "resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "final_resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Nos services",
+        "href": "https://batiplusmaroc.com/nos-services/",
+        "resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "final_resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Gros oeuvre",
+        "href": "https://batiplusmaroc.com/gros-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "final_resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Second oeuvre",
+        "href": "https://batiplusmaroc.com/second-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Nos réalisations",
+        "href": "https://batiplusmaroc.com/nos-realisations/",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "Contactez-nous",
+        "href": "https://batiplusmaroc.com/contactez-nous/",
+        "resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "final_resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "http_status": 200
+      },
+      {
+        "anchor_text": "",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200
+      }
+    ],
+    "images": [
+      {
+        "src": "https://www.facebook.com/tr?id=1713767920020441&ev=PageView&noscript=1",
+        "srcset": null,
+        "alt": null,
+        "width": "1",
+        "height": "1"
+      },
+      {
+        "src": "https://www.facebook.com/tr?id=26723692560601650&ev=PageView&noscript=1",
+        "srcset": null,
+        "alt": "fbpx",
+        "width": "1",
+        "height": "1"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+        "srcset": null,
+        "alt": "batiplusmaroc.com",
+        "width": "153",
+        "height": "40"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+        "srcset": null,
+        "alt": "batiplusmaroc.com",
+        "width": "153",
+        "height": "40"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/570-1.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/570-1.jpg 2000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/570-1-600x400.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/570-1-300x200.jpg 300w, https://batiplusmaroc.com/wp-content/uploads/2025/05/570-1-1024x682.jpg 1024w, https://batiplusmaroc.com/wp-content/uploads/2025/05/570-1-768x512.jpg 768w, https://batiplusmaroc.com/wp-content/uploads/2025/05/570-1-1536x1024.jpg 1536w, https://batiplusmaroc.com/wp-content/uploads/2025/05/570-1-900x600.jpg 900w",
+        "alt": "",
+        "width": "2000",
+        "height": "1333"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/entreprise-de-batiment-.png",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/entreprise-de-batiment-.png 1224w, https://batiplusmaroc.com/wp-content/uploads/2025/05/entreprise-de-batiment--600x317.png 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/entreprise-de-batiment--300x158.png 300w, https://batiplusmaroc.com/wp-content/uploads/2025/05/entreprise-de-batiment--1024x540.png 1024w, https://batiplusmaroc.com/wp-content/uploads/2025/05/entreprise-de-batiment--768x405.png 768w",
+        "alt": "",
+        "width": "1224",
+        "height": "646"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg 350w",
+        "alt": "",
+        "width": "500",
+        "height": "1000"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-1000x1000.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-1000x1000.jpg 1000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-500x500.jpg 500w",
+        "alt": "",
+        "width": "1000",
+        "height": "1000"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg 350w",
+        "alt": "",
+        "width": "500",
+        "height": "1000"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-1000x500.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-1000x500.jpg 1000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-670x335.jpg 670w",
+        "alt": "",
+        "width": "1000",
+        "height": "500"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-500x500.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-500x500.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-350x350.jpg 350w",
+        "alt": "",
+        "width": "500",
+        "height": "500"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px-334-x-65-px.png",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px-334-x-65-px.png 334w, https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px-334-x-65-px-300x58.png 300w",
+        "alt": "",
+        "width": "334",
+        "height": "65"
+      },
+      {
+        "src": "https://www.facebook.com/tr?id=1713767920020441&ev=PageView&noscript=1&cd%5Bpage_title%5D=Accueil&cd%5Bpost_type%5D=page&cd%5Bpost_id%5D=14&cd%5Bplugin%5D=PixelYourSite&cd%5Buser_role%5D=guest&cd%5Bevent_url%5D=batiplusmaroc.com%2F",
+        "srcset": null,
+        "alt": "",
+        "width": "1",
+        "height": "1"
+      }
+    ],
+    "icons": [
+      {
+        "rel": "icon",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/cropped-home-build-construction-logo-153-x-40-px-334-x-65-px-32x32.png",
+        "sizes": "32x32"
+      },
+      {
+        "rel": "icon",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/cropped-home-build-construction-logo-153-x-40-px-334-x-65-px-192x192.png",
+        "sizes": "192x192"
+      },
+      {
+        "rel": "apple-touch-icon",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/cropped-home-build-construction-logo-153-x-40-px-334-x-65-px-180x180.png"
+      }
+    ],
+    "html_lang": "fr-FR",
+    "tracking_scripts": [
+      {
+        "types": [
+          "Meta Pixel"
+        ],
+        "src": null,
+        "inline_excerpt": "!function(f,b,e,v,n,t,s) {if(f.fbq)return;n=f.fbq=function(){n.callMethod? n.callMethod.apply(n,arguments):n.queue.push(arguments)}; if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0'; n.queue=[];t=b.createElement(e);t.async=!0; t.src=v;s=b.getElementsByTagName(e)[0]; s.parentNode.insertBefore"
+      },
+      {
+        "types": [
+          "Meta Pixel"
+        ],
+        "src": null,
+        "inline_excerpt": "fbq('track', 'PageView', []);"
+      }
+    ],
+    "indexable_from_http_and_meta_robots": true,
+    "internal_link_occurrence_count": 56,
+    "unique_internal_url_count": 26,
+    "image_count": 13
+  },
+  "verified_routes": [
+    {
+      "requested_url": "https://batiplusmaroc.com/",
+      "final_url": "https://batiplusmaroc.com/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Entreprise BTP et aménagement à Agadir – Construction pro",
+      "meta_description": "Expert en construction, rénovation et aménagement à Agadir. Devis rapide, qualité garantie pour vos projets BTP résidentiels et professionnels",
+      "canonical": "https://batiplusmaroc.com/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "Aménagement Agadir : Intérieur & extérieur sur mesure"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/a-propos/",
+      "final_url": "https://batiplusmaroc.com/a-propos/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "À propos - batiplusmaroc.com",
+      "meta_description": null,
+      "canonical": "https://batiplusmaroc.com/a-propos/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "À propos"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/nos-services/",
+      "final_url": "https://batiplusmaroc.com/nos-services/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Nos services - batiplusmaroc.com",
+      "meta_description": null,
+      "canonical": "https://batiplusmaroc.com/nos-services/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "Nos services"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/gros-oeuvre/",
+      "final_url": "https://batiplusmaroc.com/gros-oeuvre/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Gros Œuvre à Agadir – construction & maçonnerie pro",
+      "meta_description": "Travaux de gros œuvre à Agadir : fondations, maçonnerie. Expertise et qualité pour vos projets de construction résidentiels et professionnels",
+      "canonical": "https://batiplusmaroc.com/gros-oeuvre/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "Gros œuvre"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/second-oeuvre/",
+      "final_url": "https://batiplusmaroc.com/second-oeuvre/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Second Œuvre à Agadir – rénovation & finitions Pro",
+      "meta_description": "Travaux de second œuvre à Agadir : électricité, plomberie, peinture, carrelage. Des finitions de qualité pour vos projets résidentiels .",
+      "canonical": "https://batiplusmaroc.com/second-oeuvre/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "Second œuvre"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/nos-realisations/",
+      "final_url": "https://batiplusmaroc.com/nos-realisations/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Nos réalisations - batiplusmaroc.com",
+      "meta_description": null,
+      "canonical": "https://batiplusmaroc.com/nos-realisations/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "Nos réalisations",
+        "Prêt à passer à l’étape suivante et à collaborer avec nous ?"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/contactez-nous/",
+      "final_url": "https://batiplusmaroc.com/contactez-nous/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Contactez-nous - batiplusmaroc.com",
+      "meta_description": null,
+      "canonical": "https://batiplusmaroc.com/contactez-nous/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "FORMULAIRE DE CONTACT"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/hello-world/",
+      "final_url": "https://batiplusmaroc.com/hello-world/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Construction sur-mesure : quels avantages pour votre projet ? - batiplusmaroc.com",
+      "meta_description": null,
+      "canonical": "https://batiplusmaroc.com/hello-world/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "Construction sur-mesure : quels avantages pour votre projet ?"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/les-nouvelles-tendances-dans-la-construction-en-2025/",
+      "final_url": "https://batiplusmaroc.com/les-nouvelles-tendances-dans-la-construction-en-2025/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Les nouvelles tendances dans la construction en 2025 - batiplusmaroc.com",
+      "meta_description": null,
+      "canonical": "https://batiplusmaroc.com/les-nouvelles-tendances-dans-la-construction-en-2025/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "Les nouvelles tendances dans la construction en 2025"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/comment-bien-preparer-son-budget-de-construction/",
+      "final_url": "https://batiplusmaroc.com/comment-bien-preparer-son-budget-de-construction/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Comment bien préparer son budget de construction ? - batiplusmaroc.com",
+      "meta_description": null,
+      "canonical": "https://batiplusmaroc.com/comment-bien-preparer-son-budget-de-construction/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "Comment bien préparer son budget de construction ?"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/comment-choisir-les-bons-materiaux-pour-votre-maison/",
+      "final_url": "https://batiplusmaroc.com/comment-choisir-les-bons-materiaux-pour-votre-maison/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Comment choisir les bons matériaux pour votre maison ? - batiplusmaroc.com",
+      "meta_description": null,
+      "canonical": "https://batiplusmaroc.com/comment-choisir-les-bons-materiaux-pour-votre-maison/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "Comment choisir les bons matériaux pour votre maison ?",
+        "Comment choisir les bons matériaux pour votre maison ?"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/category/general/",
+      "final_url": "https://batiplusmaroc.com/category/general/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Archives des général - batiplusmaroc.com",
+      "meta_description": null,
+      "canonical": "https://batiplusmaroc.com/category/general/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "général"
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/category/gros-oeuvre/",
+      "final_url": "https://batiplusmaroc.com/category/gros-oeuvre/",
+      "http_status": 200,
+      "redirect_chain": [],
+      "title": "Archives des Gros œuvre - batiplusmaroc.com",
+      "meta_description": null,
+      "canonical": "https://batiplusmaroc.com/category/gros-oeuvre/",
+      "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      "h1": [
+        "Gros œuvre"
+      ]
+    }
+  ],
+  "known_legacy_defects": {
+    "explicitly_requested_tests": [
+      {
+        "requested_url": "https://batiplusmaroc.com/prestations-metallerie",
+        "final_url": "https://batiplusmaroc.com/prestations-metallerie",
+        "http_status": 404,
+        "redirect_chain": [],
+        "title": "Page non trouvée - batiplusmaroc.com",
+        "meta_description": null,
+        "canonical": null,
+        "robots": "noindex, follow",
+        "h1": [
+          "404"
+        ]
+      },
+      {
+        "requested_url": "https://batiplusmaroc.com/realisations-metallerie",
+        "final_url": "https://batiplusmaroc.com/realisations-metallerie",
+        "http_status": 404,
+        "redirect_chain": [],
+        "title": "Page non trouvée - batiplusmaroc.com",
+        "meta_description": null,
+        "canonical": null,
+        "robots": "noindex, follow",
+        "h1": [
+          "404"
+        ]
+      }
+    ],
+    "all_broken_internal_urls_detected_on_homepage": [
+      {
+        "anchor_text": "En savoir plus",
+        "href": "/prestations-metallerie",
+        "resolved_url": "https://batiplusmaroc.com/prestations-metallerie",
+        "final_resolved_url": "https://batiplusmaroc.com/prestations-metallerie",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/charpente-metallique",
+        "resolved_url": "https://batiplusmaroc.com/charpente-metallique",
+        "final_resolved_url": "https://batiplusmaroc.com/charpente-metallique",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/bardage-metallique/",
+        "resolved_url": "https://batiplusmaroc.com/bardage-metallique/",
+        "final_resolved_url": "https://batiplusmaroc.com/bardage-metallique/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/serrurerie/",
+        "resolved_url": "https://batiplusmaroc.com/serrurerie/",
+        "final_resolved_url": "https://batiplusmaroc.com/serrurerie/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/construction-parasismique/",
+        "resolved_url": "https://batiplusmaroc.com/construction-parasismique/",
+        "final_resolved_url": "https://batiplusmaroc.com/construction-parasismique/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "",
+        "href": "/ossature-metallique/",
+        "resolved_url": "https://batiplusmaroc.com/ossature-metallique/",
+        "final_resolved_url": "https://batiplusmaroc.com/ossature-metallique/",
+        "http_status": 404
+      },
+      {
+        "anchor_text": "En savoir plus",
+        "href": "/realisations-metallerie",
+        "resolved_url": "https://batiplusmaroc.com/realisations-metallerie",
+        "final_resolved_url": "https://batiplusmaroc.com/realisations-metallerie",
+        "http_status": 404
+      }
+    ],
+    "broken_link_occurrence_count": 12,
+    "unique_broken_internal_url_count": 7
+  },
+  "trailing_slash_behavior": [
+    {
+      "requested_url": "https://batiplusmaroc.com/a-propos",
+      "final_url": "https://batiplusmaroc.com/a-propos/",
+      "http_status": 200,
+      "redirect_chain": [
+        {
+          "url": "https://batiplusmaroc.com/a-propos",
+          "status": 301,
+          "location": "https://batiplusmaroc.com/a-propos/",
+          "resolved_location": "https://batiplusmaroc.com/a-propos/"
+        }
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/a-propos/",
+      "final_url": "https://batiplusmaroc.com/a-propos/",
+      "http_status": 200,
+      "redirect_chain": []
+    }
+  ],
+  "robots_txt": {
+    "requested_url": "https://batiplusmaroc.com/robots.txt",
+    "final_url": "https://batiplusmaroc.com/robots.txt",
+    "http_status": 200,
+    "content": "User-agent: *\nAllow: /\nSitemap:https://batiplusmaroc.com/sitemap.xml\nSitemap:https://batiplusmaroc.com/sitemap-1.xml\nSitemap:https://batiplusmaroc.com/sitemap-2.xml\nSitemap:https://batiplusmaroc.com/sitemap-3.xml\nSitemap:https://batiplusmaroc.com/sitemap-4.xml\nSitemap:https://batiplusmaroc.com/sitemap-5.xml\nSitemap:https://batiplusmaroc.com/sitemap-6.xml\nSitemap:https://batiplusmaroc.com/sitemap-7.xml\nSitemap:https://batiplusmaroc.com/sitemap-8.xml\nSitemap:https://batiplusmaroc.com/sitemap-9.xml\nSitemap:https://batiplusmaroc.com/sitemap-10.xml\nSitemap:https://batiplusmaroc.com/sitemap-11.xml\nSitemap:https://batiplusmaroc.com/sitemap-12.xml\nSitemap:https://batiplusmaroc.com/sitemap-13.xml\nSitemap:https://batiplusmaroc.com/sitemap-14.xml\nSitemap:https://batiplusmaroc.com/sitemap-15.xml\nSitemap:https://batiplusmaroc.com/sitemap-16.xml\nSitemap:https://batiplusmaroc.com/sitemap-17.xml\nSitemap:https://batiplusmaroc.com/sitemap-18.xml\nSitemap:https://batiplusmaroc.com/sitemap-19.xml\nSitemap:https://batiplusmaroc.com/sitemap-20.xml\n"
+  },
+  "comparison_with_SEO_MIGRATION_md": {
+    "matches": [
+      "Homepage title matches exactly.",
+      "Homepage H1 matches exactly.",
+      "All protected article/category slugs in the manifest returned 200.",
+      "The two documented metalwork links are confirmed 404 responses."
+    ],
+    "discrepancies": [
+      "The manifest documented two broken homepage URLs; production HTML contains seven unique broken internal URLs (12 link occurrences).",
+      "The exact homepage meta description, canonical, robots, social metadata, JSON-LD, icons, image inventory, and raw heading order were previously marked as pending and are now captured.",
+      "The live /nos-realisations/ page contains two H1 elements.",
+      "The live /comment-choisir-les-bons-materiaux-pour-votre-maison/ page contains the same H1 twice."
+    ]
+  },
+  "seo_risks": [
+    {
+      "priority": "P1",
+      "finding": "Seven unique broken internal URLs appear on the homepage across 12 link occurrences."
+    },
+    {
+      "priority": "P1",
+      "finding": "Five broken URLs were not listed in SEO_MIGRATION.md: /charpente-metallique, /bardage-metallique/, /serrurerie/, /construction-parasismique/, and /ossature-metallique/."
+    },
+    {
+      "priority": "P1",
+      "finding": "Multiple H1 elements occur on /nos-realisations/ and /comment-choisir-les-bons-materiaux-pour-votre-maison/."
+    },
+    {
+      "priority": "P1",
+      "finding": "Most audited non-home routes have no meta description."
+    },
+    {
+      "priority": "P2",
+      "finding": "Homepage Open Graph metadata has no og:image."
+    },
+    {
+      "priority": "P2",
+      "finding": "Homepage Twitter metadata only declares twitter:card; title, description, and image tags are absent."
+    },
+    {
+      "priority": "P2",
+      "finding": "Homepage heading order jumps from H1 to H5 to H2 and uses H6 for footer copy/navigation labels."
+    },
+    {
+      "priority": "P2",
+      "finding": "One homepage image lacks an alt attribute and nine use empty alt text; decorative intent requires manual validation."
+    },
+    {
+      "priority": "P2",
+      "finding": "Seventeen internal anchor occurrences have empty accessible text in the returned HTML."
+    }
+  ]
+}
