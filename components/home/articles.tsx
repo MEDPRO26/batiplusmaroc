@@ -1,1 +1,3 @@
-export function Articles() { return null; }
+import Link from "next/link";
+import { articles } from "@/content/articles";
+export function Articles() { return <section className="section articles-section" id="actualites"><div className="container-shell"><div className="section-heading row-heading"><div><p className="eyebrow">CONSEILS &amp; ACTUALITÉS</p><h2>Nouveautés du blog.</h2></div><p>Conseils, matériaux et regards sur la construction.</p></div><div className="article-list">{articles.map((article, index) => <article key={article.href}><span className="article-number">0{index + 1}</span><div><p>{article.category}</p><h3><Link href={article.href}>{article.title}</Link></h3></div><Link className="arrow-link" href={article.href} aria-label={`Lire : ${article.title}`}><span aria-hidden="true">↗</span></Link></article>)}</div></div></section>; }

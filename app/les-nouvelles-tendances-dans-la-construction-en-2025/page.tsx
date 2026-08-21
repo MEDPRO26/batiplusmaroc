@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { RouteShell } from "@/components/ui/route-shell";
+import { ArticlePage } from "@/components/blog/article-page";
+import { getArticle } from "@/content/blog";
 import { routes } from "@/lib/routes";
 import { createMetadata } from "@/lib/seo";
-export const metadata: Metadata = createMetadata({ path: routes.constructionTrends2025 });
-export default function Page() { return <RouteShell label="Les nouvelles tendances dans la construction en 2025" />; }
+
+const article = getArticle(routes.constructionTrends2025);
+export const metadata: Metadata = createMetadata({ path: routes.constructionTrends2025, title: `${article.title} - batiplusmaroc.com` });
+export default function Page() { return <ArticlePage article={article} />; }

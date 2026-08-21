@@ -1,10 +1,38 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AboutPreview } from "@/components/home/about-preview";
+import { Articles } from "@/components/home/articles";
+import { ExpertiseGrid } from "@/components/home/expertise-grid";
+import { FinalCta } from "@/components/home/final-cta";
+import { Hero } from "@/components/home/hero";
+import { Process } from "@/components/home/process";
+import { Projects } from "@/components/home/projects";
+import { Services } from "@/components/home/services";
+import { Testimonials } from "@/components/home/testimonials";
+import { TrustStrip } from "@/components/home/trust-strip";
+import { WhyUs } from "@/components/home/why-us";
+import { JsonLd } from "@/components/seo/json-ld";
 import { routes } from "@/lib/routes";
-import { createMetadata } from "@/lib/seo";
+import { createMetadata, SITE_URL } from "@/lib/seo";
 
-export const metadata: Metadata = createMetadata({ title: "Entreprise BTP et aménagement à Agadir – Construction pro", path: routes.home });
+const title = "Entreprise BTP et aménagement à Agadir – Construction pro";
+const description = "Expert en construction, rénovation et aménagement à Agadir. Devis rapide, qualité garantie pour vos projets BTP résidentiels et professionnels";
+
+export const metadata: Metadata = {
+  ...createMetadata({ path: routes.home, title, description, robots: { index: true, follow: true } }),
+  openGraph: { title, description, url: `${SITE_URL}/`, type: "website" },
+  twitter: { card: "summary_large_image" },
+};
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "WebPage", "@id": `${SITE_URL}/`, url: `${SITE_URL}/`, name: title, isPartOf: { "@id": `${SITE_URL}/#website` }, about: { "@id": `${SITE_URL}/#organization` }, description, breadcrumb: { "@id": `${SITE_URL}/#breadcrumb` }, inLanguage: "fr-FR" },
+    { "@type": "BreadcrumbList", "@id": `${SITE_URL}/#breadcrumb`, itemListElement: [{ "@type": "ListItem", position: 1, name: "Accueil" }] },
+    { "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: `${SITE_URL}/`, name: "S2MBOU", publisher: { "@id": `${SITE_URL}/#organization` }, inLanguage: "fr-FR" },
+    { "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: "S2MBOU", url: `${SITE_URL}/`, logo: { "@type": "ImageObject", url: `${SITE_URL}/brand/s2mbou-logo.webp`, width: 153, height: 40, caption: "S2MBOU" } },
+  ],
+};
 
 export default function Home() {
-  return <section className="shell-section"><div className="container-shell"><p className="eyebrow">S2MBOU — ENTREPRISE BTP À AGADIR</p><h1>Aménagement Agadir : Intérieur &amp; extérieur sur mesure</h1><p className="shell-note">Le contenu existant sera migré sans réécriture lors de la prochaine phase.</p><Link className="button-primary" href={routes.contact}>Demander un devis</Link></div></section>;
+  return <><JsonLd data={structuredData} /><Hero /><TrustStrip /><AboutPreview /><Services /><ExpertiseGrid /><Projects /><Process /><WhyUs /><Testimonials /><Articles /><FinalCta /></>;
 }

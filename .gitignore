@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local documentation and generated migration reports
+*.md
+!README.md
+/migration/
+*-live-audit.json

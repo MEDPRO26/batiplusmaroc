@@ -1,1 +1,7 @@
-export function Testimonials() { return null; }
+const testimonials = [
+  { quote: "Nous avons fait appel à S2MBOU pour la construction de notre maison, et le résultat a dépassé toutes nos attentes. Une équipe sérieuse, à l’écoute, et un travail d’une qualité irréprochable.", name: "Amina elbahaoui", city: "Casablanca" },
+  { quote: "Professionnalisme, respect des délais et finitions impeccables. S2MBOU a su concrétiser notre projet tout en nous accompagnant à chaque étape. Nous recommandons sans hésiter !", name: "Aziz el Makaoui", city: "Agadir" },
+  { quote: "Un vrai plaisir de travailler avec S2MBOU. Ils ont su répondre à nos besoins spécifiques avec beaucoup de flexibilité. Merci pour votre sérieux et votre engagement", name: "Nassima Jarti", city: "Agadir" },
+  { quote: "Une entreprise sérieuse, réactive et très compétente. Le chantier s’est déroulé sans accroc, avec un suivi régulier et une transparence totale", name: "Mohamed Lakhdar", city: "Marrakesh" },
+] as const;
+export function Testimonials() { return <section className="section testimonials"><div className="container-shell"><div className="section-heading"><p className="eyebrow">TÉMOIGNAGES</p><h2>La confiance se construit sur le terrain.</h2></div><div className="testimonial-grid">{testimonials.map((item, index) => <blockquote key={item.name}><span className="quote-mark" aria-hidden="true">“</span><p>{item.quote}</p><footer><strong>{item.name}</strong><span>{item.city}</span><small>0{index + 1}</small></footer></blockquote>)}</div></div></section>; }

@@ -1,0 +1,33 @@
+# S2MBOU
+
+> S2MBOU est une entreprise de construction, rénovation et aménagement basée à Agadir, au Maroc. Elle accompagne les projets résidentiels et professionnels, du gros œuvre aux finitions.
+
+Langue principale : français (fr-FR).
+Zone de service principale : Agadir, Maroc.
+Site officiel : https://batiplusmaroc.com/
+
+## Pages principales
+
+- [Accueil](https://batiplusmaroc.com/) : présentation de l'entreprise, de ses services et de ses projets.
+- [À propos](https://batiplusmaroc.com/a-propos/) : activité, approche et savoir-faire de S2MBOU.
+- [Nos services](https://batiplusmaroc.com/nos-services/) : construction, rénovation et aménagement.
+- [Gros œuvre](https://batiplusmaroc.com/gros-oeuvre/) : fondations, maçonnerie et structure.
+- [Second œuvre](https://batiplusmaroc.com/second-oeuvre/) : électricité, plomberie, peinture, carrelage, menuiserie et finitions.
+- [Nos réalisations](https://batiplusmaroc.com/nos-realisations/) : projets de construction et d'aménagement réalisés à Agadir.
+- [Contact](https://batiplusmaroc.com/contactez-nous/) : page de contact de l'entreprise.
+
+## Guides et articles
+
+- [Les nouvelles tendances dans la construction en 2025](https://batiplusmaroc.com/les-nouvelles-tendances-dans-la-construction-en-2025/)
+- [Comment bien préparer son budget de construction ?](https://batiplusmaroc.com/comment-bien-preparer-son-budget-de-construction/)
+- [Comment choisir les bons matériaux pour votre maison ?](https://batiplusmaroc.com/comment-choisir-les-bons-materiaux-pour-votre-maison/)
+- [Construction sur mesure : quels avantages pour votre projet ?](https://batiplusmaroc.com/hello-world/)
+- [Articles généraux](https://batiplusmaroc.com/category/general/)
+- [Articles sur le gros œuvre](https://batiplusmaroc.com/category/gros-oeuvre/)
+
+## Ressources techniques
+
+- [Sitemap XML](https://batiplusmaroc.com/sitemap.xml)
+- [Politique d'exploration](https://batiplusmaroc.com/robots.txt)
+
+Pour toute information contractuelle, tarifaire ou liée à la disponibilité, consulter directement S2MBOU via la page de contact. Les pages du site officiel restent la source de référence.
