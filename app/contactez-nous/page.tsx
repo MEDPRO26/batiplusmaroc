@@ -1,6 +1,20 @@
 import type { Metadata } from "next";
-import { RouteShell } from "@/components/ui/route-shell";
+
+import { ContactHero } from "@/components/contact/contact-hero";
+import { ContactPanel } from "@/components/contact/contact-panel";
 import { routes } from "@/lib/routes";
 import { createMetadata } from "@/lib/seo";
-export const metadata: Metadata = createMetadata({ path: routes.contact });
-export default function Page() { return <RouteShell label="Contactez-nous" />; }
+
+export const metadata: Metadata = createMetadata({
+  path: routes.contact,
+  title: "Contactez-nous - batiplusmaroc.com",
+});
+
+export default function ContactPage() {
+  return (
+    <>
+      <ContactHero />
+      <ContactPanel />
+    </>
+  );
+}

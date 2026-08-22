@@ -40,7 +40,7 @@ export function ArticlePage({ article }: { article: BlogArticle }) {
       </header>
 
       <div className="px-[18px] sm:px-6 lg:px-8">
-        <div className="relative mx-auto aspect-[16/8] min-h-[300px] max-w-[1280px] overflow-hidden bg-[#dce6eb] lg:min-h-[560px]">
+        <div className="relative mx-auto h-[300px] max-w-[1280px] overflow-hidden bg-[#dce6eb] sm:aspect-[16/8] sm:h-auto lg:min-h-[560px]">
           <Image className="object-cover" src={article.image} alt={article.imageAlt} fill priority sizes="(max-width: 1320px) 100vw, 1280px" />
         </div>
       </div>
@@ -84,4 +84,3 @@ export function ArticlePage({ article }: { article: BlogArticle }) {
     </article>
   );
 }
-

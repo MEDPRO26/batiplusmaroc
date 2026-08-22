@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AlFarahCaseStudy } from "@/components/gros-oeuvre/al-farah-case-study";
+import { RelatedReading } from "@/components/blog/related-reading";
 import { AlHudaProgression } from "@/components/gros-oeuvre/al-huda-progression";
 import { ExecutionProcess } from "@/components/gros-oeuvre/execution-process";
 import { GrosOeuvreCta } from "@/components/gros-oeuvre/gros-oeuvre-cta";
@@ -112,6 +113,7 @@ export default function GrosOeuvrePage() {
       <ProjectTypes />
       <LegacyProjects />
       <ExecutionProcess />
+      <RelatedReading articleHrefs={[routes.constructionMaterials, routes.helloWorld]} archiveHref={routes.categoryStructuralWork} heading="Approfondir votre projet de construction." />
       <GrosOeuvreCta />
     </>
   );

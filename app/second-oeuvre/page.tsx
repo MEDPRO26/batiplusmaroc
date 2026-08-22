@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { CeilingsLighting } from "@/components/second-oeuvre/ceilings-lighting";
+import { RelatedReading } from "@/components/blog/related-reading";
 import { FinishingPortfolio } from "@/components/second-oeuvre/finishing-portfolio";
 import { FinishingQuality } from "@/components/second-oeuvre/finishing-quality";
 import { InteriorFinishes } from "@/components/second-oeuvre/interior-finishes";
@@ -116,6 +117,7 @@ export default function SecondOeuvrePage() {
       <FinishingPortfolio />
       <LegacyProjects />
       <FinishingQuality />
+      <RelatedReading articleHrefs={[routes.constructionTrends2025, routes.constructionMaterials]} archiveHref={routes.categoryGeneral} heading="Des conseils pour des choix durables." />
       <SecondOeuvreCta />
     </>
   );

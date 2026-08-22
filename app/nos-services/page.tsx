@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { CapabilityGallery } from "@/components/services-page/capability-gallery";
+import { RelatedReading } from "@/components/blog/related-reading";
 import { GrosOeuvreFeature } from "@/components/services-page/gros-oeuvre-feature";
 import { SecondOeuvreFeature } from "@/components/services-page/second-oeuvre-feature";
 import { ServiceProcess } from "@/components/services-page/service-process";
@@ -104,6 +105,7 @@ export default function ServicesPage() {
       <CapabilityGallery />
       <ServiceProcess />
       <ServiceProjectProof />
+      <RelatedReading articleHrefs={[routes.constructionBudget, routes.constructionTrends2025]} archiveHref={routes.categoryGeneral} heading="Bien préparer votre projet." />
       <ServicesCta />
     </>
   );

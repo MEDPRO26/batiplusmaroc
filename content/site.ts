@@ -12,5 +12,6 @@ export const footerNavigation: NavigationItem[] = [
   { label: "À propos", href: routes.about },
   { label: "Nos services", href: routes.services },
   { label: "Nos réalisations", href: routes.projects },
+  { label: "Conseils & actualités", href: routes.categoryGeneral },
   { label: "Contactez-nous", href: routes.contact },
 ];
