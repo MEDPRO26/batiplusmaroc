@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { projects } from "@/content/projects";
+import { projects, projectPath } from "@/content/projects";
 import { routes } from "@/lib/routes";
 
 export function Projects() {
@@ -40,6 +40,7 @@ export function Projects() {
                   className="group relative min-h-[560px] overflow-hidden rounded-[28px] bg-[#10213a] shadow-[0_24px_70px_-34px_rgba(15,31,53,0.45)] md:col-span-2 lg:col-span-7 lg:row-span-2 lg:min-h-[780px]"
                   key={project.id}
                 >
+                  <Link className="absolute inset-0 z-10" href={projectPath(project.slug)} aria-label={`Voir le projet ${project.title}`} />
                   <div className="absolute inset-0 grid grid-cols-[1.65fr_1fr] grid-rows-2 gap-1.5 bg-[#10213a]">
                     {project.images.map((image, imageIndex) => (
                       <div className={`relative overflow-hidden ${imageIndex === 0 ? "row-span-2" : ""}`} key={image.src}>
@@ -71,9 +72,10 @@ export function Projects() {
 
             return (
               <article
-                className={`group overflow-hidden rounded-[24px] border border-slate-200/90 bg-white shadow-[0_18px_55px_-38px_rgba(15,31,53,0.35)] transition-shadow duration-300 hover:shadow-[0_24px_65px_-34px_rgba(15,31,53,0.4)] ${index < 3 ? "lg:col-span-5" : "lg:col-span-6"}`}
+                className={`group relative overflow-hidden rounded-[24px] border border-slate-200/90 bg-white shadow-[0_18px_55px_-38px_rgba(15,31,53,0.35)] transition-shadow duration-300 hover:shadow-[0_24px_65px_-34px_rgba(15,31,53,0.4)] ${index < 3 ? "lg:col-span-5" : "lg:col-span-6"}`}
                 key={project.id}
               >
+                <Link className="absolute inset-0 z-10" href={projectPath(project.slug)} aria-label={`Voir le projet ${project.title}`} />
                 <div className="grid aspect-[16/11] grid-cols-[1.55fr_1fr] grid-rows-2 gap-1.5 overflow-hidden bg-slate-100">
                   {project.images.map((image, imageIndex) => (
                     <div className={`relative overflow-hidden ${imageIndex === 0 ? "row-span-2" : ""}`} key={image.src}>

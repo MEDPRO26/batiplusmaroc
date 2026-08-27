@@ -9,6 +9,7 @@ import { LegacyProjects } from "@/components/portfolio/legacy-projects";
 import { PortfolioCta } from "@/components/portfolio/portfolio-cta";
 import { PortfolioHero } from "@/components/portfolio/portfolio-hero";
 import { PortfolioIntro } from "@/components/portfolio/portfolio-intro";
+import { ProjectDirectory } from "@/components/portfolio/project-directory";
 import { VillaFountyProject } from "@/components/portfolio/villa-founty-project";
 import { JsonLd } from "@/components/seo/json-ld";
 import { routes } from "@/lib/routes";
@@ -114,6 +115,7 @@ export default function PortfolioPage() {
       <JsonLd data={structuredData} />
       <PortfolioHero />
       <PortfolioIntro />
+      <ProjectDirectory />
       <div id="projets" className="scroll-mt-24">
         <AlHudaProject />
       </div>

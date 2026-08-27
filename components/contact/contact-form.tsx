@@ -1,6 +1,6 @@
 "use client";
 
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 const serviceOptions = [
   "Construction complète",
@@ -13,21 +13,36 @@ const serviceOptions = [
 const inputClass = "min-h-13 w-full border-0 border-b border-[#c8d4db] bg-transparent px-0 py-3 text-base text-[#15212b] outline-none transition placeholder:text-[#89959d] focus:border-[#07598e] focus:ring-0";
 
 export function ContactForm() {
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const subject = `Demande de contact — ${data.get("service") ?? "Projet"}`;
-    const body = [
-      `Nom complet : ${data.get("name") ?? ""}`,
-      `Téléphone : ${data.get("phone") ?? ""}`,
-      `Ville : ${data.get("city") ?? ""}`,
-      `Service : ${data.get("service") ?? ""}`,
-      "",
-      "Besoin :",
-      String(data.get("details") ?? ""),
-    ].join("\n");
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
 
-    window.location.href = `mailto:sgta.btp@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+
+    setStatus("sending");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(data.entries())),
+      });
+      const result = await response.json().catch(() => ({})) as { message?: string };
+
+      if (!response.ok) {
+        throw new Error(result.message ?? "L’envoi a échoué. Veuillez réessayer.");
+      }
+
+      form.reset();
+      setStatus("success");
+      setMessage("Merci ! Votre demande a bien été envoyée. Notre équipe vous répondra rapidement.");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "L’envoi a échoué. Veuillez réessayer.");
+    }
   }
 
   return (
@@ -70,11 +85,26 @@ export function ContactForm() {
         <input className={inputClass} type="tel" name="phone" placeholder="Votre numéro" autoComplete="tel" inputMode="tel" required />
       </label>
 
+      <label className="grid gap-1">
+        <span className="text-[0.68rem] font-bold tracking-[0.15em] text-[#61717c] uppercase">E-mail</span>
+        <input className={inputClass} type="email" name="email" placeholder="vous@exemple.com" autoComplete="email" required />
+      </label>
+
+      <label className="sr-only" aria-hidden="true">
+        Site web
+        <input name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </label>
+
       <div className="flex flex-col items-start gap-5 border-t border-[#d9e2e7] pt-7 sm:flex-row sm:items-center sm:justify-between">
-        <p className="m-0 max-w-sm text-xs leading-5 text-[#77858e]">L’envoi ouvre votre application e-mail avec les informations du formulaire déjà préparées.</p>
-        <button className="inline-flex min-h-14 w-full items-center justify-center gap-4 rounded-[8px] bg-[#07598e] px-7 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#064b78] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#07598e] sm:w-auto" type="submit">Envoyer ma demande <span aria-hidden="true">↗</span></button>
+        <p className="m-0 max-w-sm text-xs leading-5 text-[#77858e]">Vos informations sont envoyées directement et uniquement utilisées pour répondre à votre demande.</p>
+        <button disabled={status === "sending"} className="inline-flex min-h-14 w-full items-center justify-center gap-4 rounded-[8px] bg-[#07598e] px-7 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#064b78] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#07598e] disabled:cursor-wait disabled:opacity-65 sm:w-auto" type="submit">
+          {status === "sending" ? "Envoi en cours…" : "Envoyer ma demande"} <span aria-hidden="true">↗</span>
+        </button>
       </div>
+
+      <p className={`m-0 rounded-[8px] px-4 py-3 text-sm font-medium ${status === "success" ? "bg-emerald-50 text-emerald-800" : status === "error" ? "bg-red-50 text-red-800" : "hidden"}`} role="status" aria-live="polite">
+        {message}
+      </p>
     </form>
   );
 }
-

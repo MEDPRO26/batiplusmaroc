@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { routes, type ProtectedRoute } from "@/lib/routes";
 import { absoluteUrl } from "@/lib/seo";
+import { projects, projectPath } from "@/content/projects";
 
 type SitemapPage = {
   path: ProtectedRoute;
@@ -25,8 +26,16 @@ const sitemapPages: SitemapPage[] = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return sitemapPages.map(({ path, ...metadata }) => ({
+  const pages = sitemapPages.map(({ path, ...metadata }) => ({
     url: absoluteUrl(path),
     ...metadata,
   }));
+
+  const projectPages = projects.map((project) => ({
+    url: new URL(projectPath(project.slug), "https://batiplusmaroc.com").toString(),
+    changeFrequency: "yearly" as const,
+    priority: 0.8,
+  }));
+
+  return [...pages, ...projectPages];
 }

@@ -1,9 +1,19 @@
 export const projects = [
   {
     id: "01",
+    slug: "immeuble-r5-al-huda",
     title: "Immeuble R+5 — Al-Huda",
     subtitle: "Quartier Al-Huda, Agadir · Suivi des phases de construction et gros œuvre",
     size: "featured",
+    story: {
+      location: "Quartier Al-Huda, Agadir",
+      category: "Immeuble résidentiel R+5",
+      headline: "Du premier niveau à la façade, un chantier suivi dans sa continuité.",
+      intro: "Ce projet d’immeuble R+5 à Al-Huda présente les principales étapes d’une construction menée avec méthode : implantation, élévation de la structure, fermeture du bâtiment puis traitement de la façade.",
+      approach: "Le suivi du gros œuvre repose sur la coordination des équipes, le contrôle des niveaux et l’enchaînement rigoureux des interventions. La progression visible du chantier témoigne d’une exécution structurée, pensée pour préparer les lots techniques et les finitions dans de bonnes conditions.",
+      result: "Un bâtiment résidentiel aux volumes lisibles et à la façade sobre, dont la réalisation traduit la maîtrise de S2MBOU sur les opérations de construction à plusieurs niveaux.",
+      services: ["Organisation et suivi du chantier", "Élévation de la structure", "Maçonnerie et enveloppe", "Préparation des finitions"],
+    },
     images: [
       { src: "/images/portfolio-2026/projects/al-huda-01.webp", alt: "Démarrage du chantier de l’immeuble R+5 à Al-Huda" },
       { src: "/images/portfolio-2026/projects/al-huda-02.webp", alt: "Avancement du gros œuvre de l’immeuble R+5 à Al-Huda" },
@@ -12,9 +22,19 @@ export const projects = [
   },
   {
     id: "02",
+    slug: "immeuble-r5-al-farah",
     title: "Immeuble R+5 — Al Farah",
     subtitle: "Quartier Al Farah, Agadir · Gros œuvre et état final",
     size: "supporting",
+    story: {
+      location: "Quartier Al Farah, Agadir",
+      category: "Immeuble résidentiel R+5",
+      headline: "Transformer une structure brute en un ensemble résidentiel cohérent.",
+      intro: "À Al Farah, S2MBOU a accompagné la réalisation d’un immeuble R+5 depuis les travaux structurels jusqu’à la lecture finale des façades. Le projet met en évidence le passage précis du gros œuvre à une enveloppe architecturale achevée.",
+      approach: "La régularité des trames, le traitement des ouvertures et la continuité des volumes ont guidé l’exécution. Une attention particulière a été portée aux raccords entre les niveaux et à la préparation des supports avant l’application des finitions extérieures.",
+      result: "L’état final révèle une façade équilibrée et durable, avec des lignes nettes qui valorisent le caractère résidentiel de l’immeuble.",
+      services: ["Gros œuvre", "Maçonnerie de façade", "Préparation des supports", "Finitions extérieures"],
+    },
     images: [
       { src: "/images/portfolio-2026/projects/al-farah-01.webp", alt: "Immeuble R+5 à Al Farah en fin de gros œuvre" },
       { src: "/images/portfolio-2026/projects/al-farah-02.webp", alt: "État final de l’immeuble R+5 à Al Farah" },
@@ -23,9 +43,19 @@ export const projects = [
   },
   {
     id: "03",
+    slug: "villa-founty",
     title: "Villa Founty",
     subtitle: "Agadir · Construction et finition d’une villa",
     size: "supporting",
+    story: {
+      location: "Founty, Agadir",
+      category: "Villa contemporaine",
+      headline: "Une villa construite comme un ensemble, de la structure au dernier détail.",
+      intro: "Cette villa à Founty illustre une prise en charge globale associant construction, mise en forme des façades et finitions. Les volumes contemporains sont soulignés par une composition simple et des contrastes de matières maîtrisés.",
+      approach: "Le chantier a été conduit en veillant à la continuité entre les ouvrages structurels, les réseaux et les finitions. Les ouvertures, retraits et lignes de façade ont été exécutés avec précision pour conserver la clarté du parti architectural.",
+      result: "Une villa lumineuse et équilibrée, prête à accueillir les aménagements de vie dans un cadre durable et contemporain.",
+      services: ["Construction de la villa", "Coordination des corps d’état", "Traitement des façades", "Finitions intérieures et extérieures"],
+    },
     images: [
       { src: "/images/portfolio-2026/projects/villa-founty-01.webp", alt: "Villa en cours de construction à Founty" },
       { src: "/images/portfolio-2026/projects/villa-founty-02.webp", alt: "Façade achevée d’une villa moderne à Founty" },
@@ -34,9 +64,19 @@ export const projects = [
   },
   {
     id: "04",
+    slug: "finitions-interieures",
     title: "Finitions intérieures",
     subtitle: "Décoration murale, textures, revêtements et ambiance premium",
     size: "supporting",
+    story: {
+      location: "Agadir et région",
+      category: "Finitions intérieures",
+      headline: "Donner du relief aux espaces par la matière, la lumière et la précision.",
+      intro: "Cette sélection rassemble des interventions de finition intérieure où les murs deviennent de véritables éléments de composition. Textures, motifs et teintes sont associés pour créer des ambiances soignées sans surcharger les volumes.",
+      approach: "Chaque support est préparé avant la pose ou l’application du revêtement. Les raccords, les angles et la rencontre avec les menuiseries font l’objet d’un soin particulier afin de garantir une finition homogène et une bonne tenue dans le temps.",
+      result: "Des intérieurs chaleureux et personnalisés, où la qualité d’exécution se lit aussi bien dans la vue d’ensemble que dans les détails.",
+      services: ["Préparation des supports", "Revêtements muraux", "Peinture décorative", "Finitions personnalisées"],
+    },
     images: [
       { src: "/images/portfolio-2026/interiors/finitions-interieures-01.webp", alt: "Cloison intérieure avec revêtement mural décoratif" },
       { src: "/images/portfolio-2026/interiors/finitions-interieures-02.webp", alt: "Mur intérieur texturé dans un salon aménagé" },
@@ -45,9 +85,19 @@ export const projects = [
   },
   {
     id: "05",
+    slug: "amenagement-interieur",
     title: "Aménagement intérieur",
     subtitle: "Sols, faux plafonds, éclairage, habillage mural et finitions modernes",
     size: "supporting",
+    story: {
+      location: "Agadir et région",
+      category: "Aménagement intérieur",
+      headline: "Composer des espaces fluides où chaque finition dialogue avec la suivante.",
+      intro: "Ces aménagements intérieurs réunissent sols, plafonds, éclairage et habillages muraux dans une même lecture architecturale. L’objectif est de créer des pièces fonctionnelles, lumineuses et visuellement cohérentes.",
+      approach: "L’implantation des éléments techniques est coordonnée avec les effets décoratifs dès la préparation. Les alignements, niveaux et transitions entre matériaux sont contrôlés pour obtenir une continuité propre entre circulation, mobilier et surfaces finies.",
+      result: "Des espaces contemporains et confortables, structurés par la lumière et valorisés par des finitions nettes et durables.",
+      services: ["Revêtements de sol", "Faux plafonds", "Éclairage intégré", "Habillages muraux"],
+    },
     images: [
       { src: "/images/portfolio-2026/interiors/amenagement-interieur-01.webp", alt: "Entrée intérieure moderne avec rangements intégrés" },
       { src: "/images/portfolio-2026/interiors/amenagement-interieur-02.webp", alt: "Salon moderne avec sol brillant et habillage mural" },
@@ -56,9 +106,19 @@ export const projects = [
   },
   {
     id: "06",
+    slug: "details-de-finition",
     title: "Détails de finition",
     subtitle: "Jeux de lumière, niches décoratives, cheminées, carrelage et revêtements",
     size: "supporting",
+    story: {
+      location: "Agadir et région",
+      category: "Détails architecturaux",
+      headline: "Faire de chaque détail un point d’équilibre dans l’espace.",
+      intro: "Niches arrondies, lignes lumineuses, cheminées et raccords de revêtement demandent une exécution particulièrement précise. Cette série met en avant les détails qui donnent une identité forte à un intérieur.",
+      approach: "Les formes sont tracées et préparées avec soin avant l’intégration de l’éclairage ou la pose des matériaux. Le travail porte autant sur la géométrie que sur les jonctions invisibles, afin que les éléments techniques s’effacent au profit de l’effet final.",
+      result: "Des détails intégrés avec justesse, capables de structurer l’ambiance sans compromettre la simplicité ni la fonctionnalité des espaces.",
+      services: ["Création de niches", "Éclairage indirect", "Habillage de cheminée", "Pose de carrelage et revêtements"],
+    },
     images: [
       { src: "/images/portfolio-2026/interiors/details-finition-01.webp", alt: "Niche décorative arrondie avec éclairage indirect" },
       { src: "/images/portfolio-2026/interiors/details-finition-02.webp", alt: "Faux plafond moderne avec lignes lumineuses intégrées" },
@@ -67,9 +127,19 @@ export const projects = [
   },
   {
     id: "07",
+    slug: "revetements-decoratifs",
     title: "Revêtements décoratifs",
     subtitle: "Textures murales, effets pierre, bois, béton ciré et finitions personnalisées",
     size: "supporting",
+    story: {
+      location: "Agadir et région",
+      category: "Revêtements décoratifs",
+      headline: "Des surfaces expressives, pensées pour durer au-delà des tendances.",
+      intro: "Les revêtements décoratifs permettent de transformer un mur en repère visuel. Effets pierre, bois ou matière minérale sont sélectionnés selon la lumière, les proportions et l’usage de chaque pièce.",
+      approach: "La qualité du résultat commence par un support plan, sain et correctement préparé. La pose respecte le rythme du motif, les coupes et les raccords afin de préserver une lecture naturelle de la matière sur toute la surface.",
+      result: "Des murs de caractère qui enrichissent l’architecture intérieure et conservent une finition maîtrisée jusque dans les angles et les transitions.",
+      services: ["Diagnostic des supports", "Effets pierre et bois", "Finitions texturées", "Protection des surfaces"],
+    },
     images: [
       { src: "/images/portfolio-2026/interiors/revetements-decoratifs-01.webp", alt: "Grand mur intérieur avec finition décorative texturée" },
       { src: "/images/portfolio-2026/interiors/revetements-decoratifs-02.webp", alt: "Cloison avec revêtement décoratif effet bois" },
@@ -78,9 +148,19 @@ export const projects = [
   },
   {
     id: "08",
+    slug: "faux-plafonds-eclairage",
     title: "Faux plafonds & éclairage",
     subtitle: "Conception de plafonds modernes et intégration d’éclairages décoratifs",
     size: "supporting",
+    story: {
+      location: "Agadir et région",
+      category: "Plafonds et éclairage",
+      headline: "Dessiner le plafond pour mieux révéler les volumes et les usages.",
+      intro: "Le faux plafond organise à la fois l’espace, les équipements et l’éclairage. Ces réalisations associent formes géométriques, courbes et lumière indirecte pour créer des ambiances adaptées à chaque pièce.",
+      approach: "Le calepinage est coordonné avec les points lumineux, les alimentations et les hauteurs disponibles. Ossatures, plaques et finitions sont exécutées avec précision pour obtenir des lignes continues et une diffusion lumineuse régulière.",
+      result: "Des plafonds contemporains qui structurent les espaces tout en dissimulant les éléments techniques et en améliorant le confort lumineux.",
+      services: ["Étude du calepinage", "Pose de faux plafonds", "Création de gorges lumineuses", "Intégration des luminaires"],
+    },
     images: [
       { src: "/images/portfolio-2026/interiors/faux-plafonds-eclairage-01.webp", alt: "Faux plafond de salon avec éclairage indirect" },
       { src: "/images/portfolio-2026/interiors/faux-plafonds-eclairage-02.webp", alt: "Plafond décoratif courbe avec lustre intégré" },
@@ -89,9 +169,19 @@ export const projects = [
   },
   {
     id: "09",
+    slug: "escaliers-circulations",
     title: "Escaliers & circulations",
     subtitle: "Finitions des cages d’escalier, halls et espaces de circulation",
     size: "supporting",
+    story: {
+      location: "Agadir et région",
+      category: "Circulations intérieures",
+      headline: "Soigner les espaces de passage comme de véritables lieux d’architecture.",
+      intro: "Escaliers, halls et circulations concentrent de nombreux raccords et subissent un usage quotidien intense. Leur finition doit conjuguer résistance, sécurité, lumière et continuité visuelle.",
+      approach: "Les travaux sont séquencés pour protéger les ouvrages déjà réalisés et maintenir des arêtes nettes. Les murs, sous-faces, marches et ouvertures sont traités comme un ensemble afin d’unifier les différents niveaux.",
+      result: "Des circulations claires, robustes et accueillantes, capables d’accompagner naturellement les déplacements au sein du bâtiment.",
+      services: ["Préparation et peinture", "Finition des marches", "Traitement des sous-faces", "Mise en valeur des halls"],
+    },
     images: [
       { src: "/images/portfolio-2026/interiors/escaliers-circulations-01.webp", alt: "Travaux de peinture dans un hall avec ouverture zénithale" },
       { src: "/images/portfolio-2026/interiors/escaliers-circulations-02.webp", alt: "Cage d’escalier en cours de finition" },
@@ -100,9 +190,19 @@ export const projects = [
   },
   {
     id: "10",
+    slug: "exterieur-piscine",
     title: "Extérieur & piscine",
     subtitle: "Aménagements extérieurs, terrasses, façades, piscine et espaces verts",
     size: "supporting",
+    story: {
+      location: "Agadir et région",
+      category: "Aménagement extérieur",
+      headline: "Prolonger l’architecture vers un extérieur pensé pour être vécu.",
+      intro: "Autour de la piscine, les terrasses, cheminements, façades et espaces plantés composent une continuité entre la maison et le jardin. Chaque zone est organisée pour associer circulation, détente et facilité d’entretien.",
+      approach: "Les niveaux et pentes sont étudiés pour assurer une évacuation efficace de l’eau. Le choix des revêtements tient compte de l’exposition extérieure, tandis que les raccords avec la piscine et les façades sont exécutés avec attention.",
+      result: "Un cadre extérieur cohérent et accueillant, où minéral, végétal et eau s’équilibrent autour des usages quotidiens.",
+      services: ["Terrasses et cheminements", "Abords de piscine", "Revêtements extérieurs", "Coordination des espaces verts"],
+    },
     images: [
       { src: "/images/portfolio-2026/exteriors/exterieur-piscine-01.webp", alt: "Piscine extérieure entourée d’une pelouse aménagée" },
       { src: "/images/portfolio-2026/exteriors/exterieur-piscine-02.webp", alt: "Jardin paysager avec terrasse, cheminement et piscine" },
@@ -111,9 +211,19 @@ export const projects = [
   },
   {
     id: "11",
+    slug: "facades-travaux-exterieurs",
     title: "Façades & travaux extérieurs",
     subtitle: "Réalisations extérieures et présentation des finitions de façade",
     size: "supporting",
+    story: {
+      location: "Agadir et région",
+      category: "Façades et ouvrages extérieurs",
+      headline: "Protéger le bâtiment tout en affirmant son identité architecturale.",
+      intro: "La façade est à la fois la première image du projet et sa protection face au climat. Cette sélection présente des travaux de préparation, de parement et de finition réalisés sur différents ouvrages extérieurs.",
+      approach: "L’intervention commence par le contrôle et la préparation des supports. Les équipes veillent ensuite à la régularité des aplombs, aux raccords autour des ouvertures et à la pose précise des éléments décoratifs pour assurer une enveloppe homogène.",
+      result: "Des façades nettes et cohérentes, conçues pour résister aux conditions extérieures tout en valorisant durablement les volumes du bâtiment.",
+      services: ["Préparation des façades", "Enduits et peinture extérieure", "Pose de parements", "Finitions des abords"],
+    },
     images: [
       { src: "/images/portfolio-2026/exteriors/facades-travaux-exterieurs-01.webp", alt: "Équipe réalisant les finitions d’un espace extérieur couvert" },
       { src: "/images/portfolio-2026/exteriors/facades-travaux-exterieurs-02.webp", alt: "Façade moderne achevée avec parements décoratifs" },
@@ -121,3 +231,13 @@ export const projects = [
     ],
   },
 ] as const;
+
+export type Project = (typeof projects)[number];
+
+export function getProjectBySlug(slug: string) {
+  return projects.find((project) => project.slug === slug);
+}
+
+export function projectPath(slug: string) {
+  return `/nos-realisations/${slug}/` as const;
+}
