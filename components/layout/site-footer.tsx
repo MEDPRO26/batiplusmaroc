@@ -139,6 +139,14 @@ export function SiteFooter() {
       <div className="relative mx-auto flex max-w-[1280px] flex-col gap-3 border-t border-white/10 px-[18px] py-6 text-[0.7rem] tracking-[0.06em] text-[#718496] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <span>© {new Date().getFullYear()} S2MBOU</span>
         <span>Construction · Aménagement · Finitions</span>
+        <a
+          className="transition-colors hover:text-white"
+          href="https://www.itagroupe.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Créé par ITA Groupe
+        </a>
       </div>
     </footer>
   );
