@@ -12,6 +12,15 @@ const serviceOptions = [
 
 const inputClass = "min-h-13 w-full border-0 border-b border-[#c8d4db] bg-transparent px-0 py-3 text-base text-[#15212b] outline-none transition placeholder:text-[#89959d] focus:border-[#07598e] focus:ring-0";
 
+function RequiredMark() {
+  return (
+    <>
+      <span className="text-[#c23a3a]" aria-hidden="true"> *</span>
+      <span className="sr-only"> (obligatoire)</span>
+    </>
+  );
+}
+
 export function ContactForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -21,6 +30,24 @@ export function ContactForm() {
     const form = event.currentTarget;
     const data = new FormData(form);
 
+    const services = data.getAll("service").filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+    const city = String(data.get("city") ?? "").trim();
+    const name = String(data.get("name") ?? "").trim();
+    const phone = String(data.get("phone") ?? "").trim();
+
+    if (services.length === 0) {
+      setStatus("error");
+      setMessage("Veuillez choisir au moins un type de service.");
+      form.querySelector<HTMLInputElement>('input[name="service"]')?.focus();
+      return;
+    }
+
+    if (!city || !name || !phone) {
+      setStatus("error");
+      setMessage("Veuillez renseigner la ville, le nom complet et le téléphone.");
+      return;
+    }
+
     setStatus("sending");
     setMessage("");
 
@@ -28,7 +55,7 @@ export function ContactForm() {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(Object.fromEntries(data.entries())),
+        body: JSON.stringify({ ...Object.fromEntries(data.entries()), service: services, city, name, phone }),
       });
       const result = await response.json().catch(() => ({})) as { message?: string };
 
@@ -47,15 +74,18 @@ export function ContactForm() {
 
   return (
     <form className="grid gap-10" onSubmit={handleSubmit}>
-      <fieldset>
-        <legend className="mb-5 text-sm font-semibold text-[#15212b]">Quel type de service recherchez-vous ?</legend>
+      <fieldset aria-required="true">
+        <legend className="mb-2 text-sm font-semibold text-[#15212b]">Quel type de service recherchez-vous ?<RequiredMark /></legend>
+        <p className="mb-5 text-xs text-[#77858e]">Vous pouvez sélectionner plusieurs options. Ce champ est obligatoire.</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {serviceOptions.map((option, index) => (
             <label className={`group relative cursor-pointer ${index === serviceOptions.length - 1 ? "sm:col-span-2" : ""}`} key={option}>
-              <input className="peer sr-only" type="radio" name="service" value={option} required={index === 0} />
+              <input className="peer sr-only" type="checkbox" name="service" value={option} />
               <span className="flex min-h-14 items-center gap-3 border border-[#d5dfe5] bg-white px-4 py-3 text-sm font-medium text-[#56636d] transition hover:border-[#8aa7b9] peer-checked:border-[#07598e] peer-checked:bg-[#edf5f9] peer-checked:text-[#07598e] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#07598e]">
-                <span className="grid size-5 shrink-0 place-items-center rounded-full border border-[#aebdc7] transition peer-checked:border-[#07598e]" aria-hidden="true">
-                  <span className="size-2 rounded-full bg-[#07598e] opacity-0 transition group-has-[:checked]:opacity-100" />
+                <span className="grid size-5 shrink-0 place-items-center rounded-[4px] border border-[#aebdc7] transition group-has-[:checked]:border-[#07598e] group-has-[:checked]:bg-[#07598e]" aria-hidden="true">
+                  <svg className="size-3 opacity-0 transition group-has-[:checked]:opacity-100" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M2.4 6.2 4.8 8.6 9.6 3.4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </span>
                 {option}
               </span>
@@ -71,18 +101,18 @@ export function ContactForm() {
 
       <div className="grid gap-8 sm:grid-cols-2">
         <label className="grid gap-1">
-          <span className="text-[0.68rem] font-bold tracking-[0.15em] text-[#61717c] uppercase">Ville</span>
-          <input className={inputClass} type="text" name="city" placeholder="Votre ville" autoComplete="address-level2" required />
+          <span className="text-[0.68rem] font-bold tracking-[0.15em] text-[#61717c] uppercase">Ville<RequiredMark /></span>
+          <input className={inputClass} type="text" name="city" placeholder="Votre ville" autoComplete="address-level2" required aria-required="true" />
         </label>
         <label className="grid gap-1">
-          <span className="text-[0.68rem] font-bold tracking-[0.15em] text-[#61717c] uppercase">Nom complet</span>
-          <input className={inputClass} type="text" name="name" placeholder="Votre nom" autoComplete="name" required />
+          <span className="text-[0.68rem] font-bold tracking-[0.15em] text-[#61717c] uppercase">Nom complet<RequiredMark /></span>
+          <input className={inputClass} type="text" name="name" placeholder="Votre nom" autoComplete="name" required aria-required="true" />
         </label>
       </div>
 
       <label className="grid gap-1">
-        <span className="text-[0.68rem] font-bold tracking-[0.15em] text-[#61717c] uppercase">Téléphone</span>
-        <input className={inputClass} type="tel" name="phone" placeholder="Votre numéro" autoComplete="tel" inputMode="tel" required />
+        <span className="text-[0.68rem] font-bold tracking-[0.15em] text-[#61717c] uppercase">Téléphone<RequiredMark /></span>
+        <input className={inputClass} type="tel" name="phone" placeholder="Votre numéro" autoComplete="tel" inputMode="tel" required aria-required="true" />
       </label>
 
       <label className="grid gap-1">
