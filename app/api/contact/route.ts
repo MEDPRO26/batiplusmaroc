@@ -16,6 +16,11 @@ function cleanText(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
+function cleanServices(value: unknown) {
+  const items = Array.isArray(value) ? value : [value];
+  return [...new Set(items.map((item) => cleanText(item, 160)).filter(Boolean))];
+}
+
 function escapeHtml(value: string) {
   return value.replace(/[&<>"]/g, (character) => ({
     "&": "&amp;",
@@ -43,7 +48,7 @@ export async function POST(request: Request) {
   const email = cleanText(payload.email, 254).toLowerCase();
   const phone = cleanText(payload.phone, 40);
   const city = cleanText(payload.city, 100);
-  const service = cleanText(payload.service, 160);
+  const service = cleanServices(payload.service).join(", ");
   const details = cleanText(payload.details, 4000);
 
   if (!name || !email || !phone || !city || !service || !details) {
@@ -74,7 +79,7 @@ export async function POST(request: Request) {
       `E-mail : ${email}`,
       `Téléphone : ${phone}`,
       `Ville : ${city}`,
-      `Service : ${service}`,
+      `Services : ${service}`,
       "",
       "Besoin :",
       details,
@@ -85,7 +90,7 @@ export async function POST(request: Request) {
       <p><strong>E-mail :</strong> ${escapeHtml(email)}</p>
       <p><strong>Téléphone :</strong> ${escapeHtml(phone)}</p>
       <p><strong>Ville :</strong> ${escapeHtml(city)}</p>
-      <p><strong>Service :</strong> ${escapeHtml(service)}</p>
+      <p><strong>Services :</strong> ${escapeHtml(service)}</p>
       <h2>Besoin</h2>
       <p>${escapeHtml(details).replace(/\n/g, "<br>")}</p>
     `,
