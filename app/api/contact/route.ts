@@ -55,11 +55,11 @@ export async function POST(request: Request) {
   }
 
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  const to = process.env.CONTACT_TO_EMAIL ?? "sgta.btp@gmail.com";
+  const from = process.env.RESEND_FROM_EMAIL || "S2MBOU <contact@batiplusmaroc.com>";
+  const to = process.env.CONTACT_TO_EMAIL || "contact@batiplusmaroc.com";
 
-  if (!apiKey || !from) {
-    console.error("Missing RESEND_API_KEY or RESEND_FROM_EMAIL");
+  if (!apiKey || apiKey.startsWith("re_your_")) {
+    console.error("Missing RESEND_API_KEY");
     return Response.json({ message: "Le formulaire est momentanément indisponible." }, { status: 503 });
   }
 
