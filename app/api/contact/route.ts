@@ -1,6 +1,10 @@
 import { Resend } from "resend";
 
+import { buildContactEmailHtml, buildContactEmailText } from "@/lib/contact-email";
+
 export const runtime = "nodejs";
+
+const otherService = "Autre";
 
 type ContactPayload = {
   name?: unknown;
@@ -21,15 +25,6 @@ function cleanServices(value: unknown) {
   return [...new Set(items.map((item) => cleanText(item, 160)).filter(Boolean))];
 }
 
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"]/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-  })[character] ?? character);
-}
-
 export async function POST(request: Request) {
   let payload: ContactPayload;
 
@@ -48,14 +43,18 @@ export async function POST(request: Request) {
   const email = cleanText(payload.email, 254).toLowerCase();
   const phone = cleanText(payload.phone, 40);
   const city = cleanText(payload.city, 100);
-  const service = cleanServices(payload.service).join(", ");
+  const services = cleanServices(payload.service);
   const details = cleanText(payload.details, 4000);
 
-  if (!name || !email || !phone || !city || !service || !details) {
-    return Response.json({ message: "Veuillez remplir tous les champs." }, { status: 400 });
+  if (!name || !phone || !city || services.length === 0) {
+    return Response.json({ message: "Veuillez remplir les champs obligatoires." }, { status: 400 });
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (services.includes(otherService) && !details) {
+    return Response.json({ message: "Veuillez préciser votre service." }, { status: 400 });
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return Response.json({ message: "Veuillez saisir une adresse e-mail valide." }, { status: 400 });
   }
 
@@ -68,32 +67,15 @@ export async function POST(request: Request) {
     return Response.json({ message: "Le formulaire est momentanément indisponible." }, { status: 503 });
   }
 
+  const emailData = { name, email, phone, city, services, details };
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({
     from,
     to: [to],
-    replyTo: email,
-    subject: `Nouvelle demande — ${service}`,
-    text: [
-      `Nom complet : ${name}`,
-      `E-mail : ${email}`,
-      `Téléphone : ${phone}`,
-      `Ville : ${city}`,
-      `Services : ${service}`,
-      "",
-      "Besoin :",
-      details,
-    ].join("\n"),
-    html: `
-      <h1>Nouvelle demande de contact</h1>
-      <p><strong>Nom complet :</strong> ${escapeHtml(name)}</p>
-      <p><strong>E-mail :</strong> ${escapeHtml(email)}</p>
-      <p><strong>Téléphone :</strong> ${escapeHtml(phone)}</p>
-      <p><strong>Ville :</strong> ${escapeHtml(city)}</p>
-      <p><strong>Services :</strong> ${escapeHtml(service)}</p>
-      <h2>Besoin</h2>
-      <p>${escapeHtml(details).replace(/\n/g, "<br>")}</p>
-    `,
+    ...(email ? { replyTo: email } : {}),
+    subject: `Nouvelle demande — ${services.join(", ")}`,
+    text: buildContactEmailText(emailData),
+    html: buildContactEmailHtml(emailData),
   });
 
   if (error) {

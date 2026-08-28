@@ -10,6 +10,8 @@ const serviceOptions = [
   "Autre",
 ] as const;
 
+const otherService = "Autre";
+
 const inputClass = "min-h-13 w-full border-0 border-b border-[#c8d4db] bg-transparent px-0 py-3 text-base text-[#15212b] outline-none transition placeholder:text-[#89959d] focus:border-[#07598e] focus:ring-0";
 
 function RequiredMark() {
@@ -24,6 +26,7 @@ function RequiredMark() {
 export function ContactForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [needsDetails, setNeedsDetails] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,11 +37,19 @@ export function ContactForm() {
     const city = String(data.get("city") ?? "").trim();
     const name = String(data.get("name") ?? "").trim();
     const phone = String(data.get("phone") ?? "").trim();
+    const email = String(data.get("email") ?? "").trim();
+    const details = String(data.get("details") ?? "").trim();
 
     if (services.length === 0) {
       setStatus("error");
       setMessage("Veuillez choisir au moins un type de service.");
       form.querySelector<HTMLInputElement>('input[name="service"]')?.focus();
+      return;
+    }
+
+    if (services.includes(otherService) && !details) {
+      setStatus("error");
+      setMessage("Veuillez préciser votre service.");
       return;
     }
 
@@ -55,7 +66,7 @@ export function ContactForm() {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...Object.fromEntries(data.entries()), service: services, city, name, phone }),
+        body: JSON.stringify({ service: services, city, name, phone, email, details, website: data.get("website") }),
       });
       const result = await response.json().catch(() => ({})) as { message?: string };
 
@@ -64,6 +75,7 @@ export function ContactForm() {
       }
 
       form.reset();
+      setNeedsDetails(false);
       setStatus("success");
       setMessage("Merci ! Votre demande a bien été envoyée. Notre équipe vous répondra rapidement.");
     } catch (error) {
@@ -80,7 +92,13 @@ export function ContactForm() {
         <div className="grid gap-2 sm:grid-cols-2">
           {serviceOptions.map((option, index) => (
             <label className={`group relative cursor-pointer ${index === serviceOptions.length - 1 ? "sm:col-span-2" : ""}`} key={option}>
-              <input className="peer sr-only" type="checkbox" name="service" value={option} />
+              <input
+                className="peer sr-only"
+                type="checkbox"
+                name="service"
+                value={option}
+                onChange={option === otherService ? (event) => setNeedsDetails(event.target.checked) : undefined}
+              />
               <span className="flex min-h-14 items-center gap-3 border border-[#d5dfe5] bg-white px-4 py-3 text-sm font-medium text-[#56636d] transition hover:border-[#8aa7b9] peer-checked:border-[#07598e] peer-checked:bg-[#edf5f9] peer-checked:text-[#07598e] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#07598e]">
                 <span className="grid size-5 shrink-0 place-items-center rounded-[4px] border border-[#aebdc7] transition group-has-[:checked]:border-[#07598e] group-has-[:checked]:bg-[#07598e]" aria-hidden="true">
                   <svg className="size-3 opacity-0 transition group-has-[:checked]:opacity-100" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -94,10 +112,12 @@ export function ContactForm() {
         </div>
       </fieldset>
 
-      <label className="grid gap-2">
-        <span className="text-sm font-semibold text-[#15212b]">Précisez votre service</span>
-        <textarea className="min-h-32 resize-y border border-[#c8d4db] bg-white p-4 text-base text-[#15212b] outline-none transition placeholder:text-[#89959d] focus:border-[#07598e] focus:ring-1 focus:ring-[#07598e]" name="details" placeholder="Décrivez votre besoin" required />
-      </label>
+      {needsDetails ? (
+        <label className="grid gap-2">
+          <span className="text-sm font-semibold text-[#15212b]">Précisez votre service<RequiredMark /></span>
+          <textarea className="min-h-32 resize-y border border-[#c8d4db] bg-white p-4 text-base text-[#15212b] outline-none transition placeholder:text-[#89959d] focus:border-[#07598e] focus:ring-1 focus:ring-[#07598e]" name="details" placeholder="Décrivez le service recherché" required />
+        </label>
+      ) : null}
 
       <div className="grid gap-8 sm:grid-cols-2">
         <label className="grid gap-1">
@@ -117,7 +137,7 @@ export function ContactForm() {
 
       <label className="grid gap-1">
         <span className="text-[0.68rem] font-bold tracking-[0.15em] text-[#61717c] uppercase">E-mail</span>
-        <input className={inputClass} type="email" name="email" placeholder="vous@exemple.com" autoComplete="email" required />
+        <input className={inputClass} type="email" name="email" placeholder="vous@exemple.com (facultatif)" autoComplete="email" />
       </label>
 
       <label className="sr-only" aria-hidden="true">

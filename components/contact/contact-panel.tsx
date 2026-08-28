@@ -12,7 +12,7 @@ export function ContactPanel() {
               <p className="mb-4 text-[0.68rem] font-bold tracking-[0.18em] text-[#07598e] uppercase">Votre demande</p>
               <h2 className="m-0 max-w-2xl text-[clamp(2rem,4vw,3.7rem)] leading-[1.02] text-[#111820]!">Quelques informations pour mieux comprendre votre projet.</h2>
             </div>
-            <span className="text-[0.65rem] font-bold tracking-[0.15em] text-[#8997a0] uppercase">Tous les champs sont requis</span>
+            <span className="text-[0.65rem] font-bold tracking-[0.15em] text-[#8997a0] uppercase">Les champs marqués * sont obligatoires</span>
           </div>
           <ContactForm />
         </div>
