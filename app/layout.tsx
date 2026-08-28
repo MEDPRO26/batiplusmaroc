@@ -11,7 +11,16 @@ const siteSans = localFont({
   display: "swap",
 });
 
-export const metadata: Metadata = { metadataBase: new URL(SITE_URL), applicationName: "S2MBOU" };
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  applicationName: "S2MBOU",
+  icons: {
+    icon: [
+      { url: "/favicon-32.webp", type: "image/webp", sizes: "32x32" },
+      { url: "/favicon.webp", type: "image/webp", sizes: "500x500" },
+    ],
+  },
+};
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return <html lang="fr-FR" className={`${siteSans.variable} h-full antialiased`}><body className="group/body flex min-h-full flex-col"><SiteHeader /><main id="contenu" className="flex-1">{children}</main><SiteFooter /></body></html>;
