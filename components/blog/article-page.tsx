@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 import type { BlogArticle } from "@/content/blog";
 import { blogArticles } from "@/content/blog";
@@ -72,7 +72,7 @@ export function ArticlePage({ article }: { article: BlogArticle }) {
         </div>
       </div>
 
-      <footer className="border-t border-[#d8e1e6] bg-[#f2f6f8] px-[18px] py-14 sm:px-6 lg:px-8 lg:py-20">
+      <footer className="border-t border-[#d8e1e6] bg-white px-[18px] py-14 sm:px-6 lg:px-8 lg:py-20">
         <div className="mx-auto grid max-w-[1120px] gap-8 sm:grid-cols-[1fr_auto] sm:items-end">
           <div>
             <p className="mb-4 text-[0.68rem] font-bold tracking-[0.18em] text-[#07598e] uppercase">À lire ensuite</p>

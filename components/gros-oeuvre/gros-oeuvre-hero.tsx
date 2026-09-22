@@ -1,11 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 import { routes } from "@/lib/routes";
 
 export function GrosOeuvreHero() {
   return (
-    <section className="relative overflow-hidden bg-[#f2f6f8]">
+    <section className="relative overflow-hidden bg-white">
       <div className="pointer-events-none absolute inset-y-0 left-[8%] hidden w-px bg-brand-border/80 lg:block" aria-hidden="true" />
       <div className="pointer-events-none absolute top-0 right-0 h-56 w-56 rounded-full border border-brand/10 sm:h-80 sm:w-80 lg:-top-24 lg:right-[4%] lg:h-[520px] lg:w-[520px]" aria-hidden="true" />
 

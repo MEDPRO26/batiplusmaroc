@@ -1,25 +1,29 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import createIntlMiddleware from "next-intl/middleware";
+import {
+  convexAuthNextjsMiddleware,
+  createRouteMatcher,
+  nextjsMiddlewareRedirect,
+} from "@convex-dev/auth/nextjs/server";
+import { routing } from "./i18n/routing";
 
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+const intlMiddleware = createIntlMiddleware(routing);
 
-  if (pathname !== "/" && !pathname.endsWith("/")) {
-    const destination = new URL(request.url);
-    destination.pathname = `${pathname}/`;
+const isProtectedRoute = createRouteMatcher([
+  "/:locale/espace-client(.*)",
+  "/:locale/espace-entreprise(.*)",
+  "/:locale/client(.*)",
+  "/:locale/company(.*)",
+]);
 
-    return new Response(null, {
-      status:
-        pathname === "/second-oeuvre" || pathname === "/nos-realisations"
-          ? 301
-          : 308,
-      headers: { location: destination.toString() },
-    });
+export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
+  if (isProtectedRoute(request) && !(await convexAuth.isAuthenticated())) {
+    const locale = request.nextUrl.pathname.split("/")[1];
+    return nextjsMiddlewareRedirect(request, locale === "en" ? "/en/sign-in" : "/fr/connexion");
   }
 
-  return NextResponse.next();
-}
+  return intlMiddleware(request);
+});
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\..*).*)"],
+  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
 };

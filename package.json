@@ -6,22 +6,44 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "test:auth": "vitest run convex/auth.security.test.ts",
+    "test:account": "vitest run convex/auth.security.test.ts",
+    "test:clients": "vitest run convex/clients.test.ts",
+    "test:companies": "vitest run convex/companies.test.ts",
+    "test:verification": "vitest run convex/companyVerification.test.ts",
+    "test:portfolio": "vitest run convex/portfolio.test.ts",
+    "convex:dev": "convex dev",
+    "convex:codegen": "convex codegen",
+    "seed:companies": "node scripts/seed-companies.mjs",
+    "seed:companies:clear": "node scripts/seed-companies.mjs --clear"
   },
   "dependencies": {
+    "@auth/core": "^0.41.1",
+    "@aws-sdk/client-s3": "^3.1136.0",
+    "@aws-sdk/s3-request-presigner": "^3.1136.0",
+    "@convex-dev/auth": "^0.0.95",
+    "convex": "^1.46.0",
+    "jose": "^6.2.12",
     "next": "16.3.1",
+    "next-intl": "^4.14.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "resend": "^6.24.0"
   },
   "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "convex-test": "^0.0.59",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

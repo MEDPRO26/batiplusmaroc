@@ -1,0 +1,70 @@
+import { hasLocale } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { routing, type AppLocale } from "@/i18n/routing";
+import { createLocalizedMetadata, type AppPathname } from "@/lib/i18n-seo";
+import { routes } from "@/lib/routes";
+
+export type MetaNamespace =
+  | "home"
+  | "about"
+  | "services"
+  | "projects"
+  | "contact"
+  | "terms"
+  | "privacy"
+  | "structuralWork"
+  | "finishingWork"
+  | "categoryGeneral"
+  | "categoryStructuralWork"
+  | "constructionTrends2025"
+  | "constructionBudget"
+  | "constructionMaterials"
+  | "helloWorld"
+  | "howItWorks"
+  | "companies"
+  | "companyProfile"
+  | "browseProjects"
+  | "postProject"
+  | "postProjectWizard"
+  | "signIn"
+  | "signUp"
+  | "signUpClient"
+  | "signUpCompany"
+  | "clientDashboard"
+  | "clientOnboarding"
+  | "companyDashboard"
+  | "companyProfileManagement"
+  | "companyOnboarding"
+  | "companyVerification"
+  | "companyPortfolio";
+
+export const articleMetaByRoute = {
+  [routes.constructionTrends2025]: "constructionTrends2025",
+  [routes.constructionBudget]: "constructionBudget",
+  [routes.constructionMaterials]: "constructionMaterials",
+  [routes.helloWorld]: "helloWorld",
+} as const;
+
+export async function resolveLocale(params: Promise<{ locale: string }>): Promise<AppLocale> {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) notFound();
+  return locale;
+}
+
+export async function localizedPageMetadata(
+  params: Promise<{ locale: string }>,
+  href: AppPathname,
+  namespace: MetaNamespace,
+  extra?: { params?: Record<string, string> },
+) {
+  const locale = await resolveLocale(params);
+  const t = await getTranslations({ locale, namespace: `meta.${namespace}` });
+  return createLocalizedMetadata({
+    locale,
+    href,
+    title: t("title"),
+    description: t("description"),
+    params: extra?.params,
+  });
+}

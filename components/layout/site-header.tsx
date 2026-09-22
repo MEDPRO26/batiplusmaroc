@@ -1,31 +1,88 @@
-import Image from "next/image";
-import Link from "next/link";
-import { primaryNavigation, serviceNavigation } from "@/content/site";
+"use client";
+
+import { useQuery } from "convex/react";
+import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+import { BrandLogo } from "@/components/layout/brand-logo";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { getProjectCta } from "@/components/layout/project-cta";
+import { marketplaceNavItems } from "@/content/site";
+import { api } from "@/convex/_generated/api";
+import { Link, usePathname } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
+import { AuthSessionControls } from "@/features/auth/components/auth-session-controls";
 import { MobileNav } from "./mobile-nav";
 
-const navLink = "py-2.5 text-sm font-medium text-ink transition-colors duration-200 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand [body:has(.home-hero)_&]:text-white/90! [body:has(.home-hero)_&]:hover:text-white!";
-
 export function SiteHeader() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const [scrolled, setScrolled] = useState(false);
+  const overHero = isHome && !scrolled;
+  const t = useTranslations("nav");
+  const tBrand = useTranslations("brand");
+  const user = useQuery(api.users.currentUser);
+  const projectCta = getProjectCta(user?.accountType);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const navLink = `inline-flex min-h-11 items-center py-2.5 text-sm font-medium transition-colors duration-200 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand ${overHero ? "text-white/90 hover:text-white" : "text-ink"}`;
+  const authLink = `hidden min-h-11 items-center text-sm font-medium transition-colors duration-200 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand lg:inline-flex ${overHero ? "text-white/90 hover:text-white" : "text-ink"}`;
+
   return (
-    <header className="sticky top-0 z-50 border-b border-brand-border/85 bg-surface/95 backdrop-blur-xl [body:has(.home-hero)_&]:absolute [body:has(.home-hero)_&]:top-3.5 [body:has(.home-hero)_&]:left-1/2 [body:has(.home-hero)_&]:w-[calc(100%-28px)] [body:has(.home-hero)_&]:max-w-[1700px] [body:has(.home-hero)_&]:-translate-x-1/2 [body:has(.home-hero)_&]:border-white/15 [body:has(.home-hero)_&]:bg-transparent [body:has(.home-hero)_&]:backdrop-blur-none md:[body:has(.home-hero)_&]:top-6 md:[body:has(.home-hero)_&]:w-[calc(100%-48px)] lg:[body:has(.home-hero)_&]:top-7 lg:[body:has(.home-hero)_&]:w-[calc(100%-64px)]">
-      <div className="mx-auto flex min-h-19 w-[calc(100%-36px)] max-w-[1280px] items-center justify-between gap-6 [body:has(.home-hero)_&]:min-h-19.5 [body:has(.home-hero)_&]:w-full [body:has(.home-hero)_&]:max-w-none [body:has(.home-hero)_&]:px-5 md:[body:has(.home-hero)_&]:min-h-22 md:[body:has(.home-hero)_&]:px-8 lg:[body:has(.home-hero)_&]:min-h-23 lg:[body:has(.home-hero)_&]:px-10">
-        <Link className="inline-flex shrink-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand [body:has(.home-hero)_&]:rounded-lg [body:has(.home-hero)_&]:bg-white/95 [body:has(.home-hero)_&]:px-2.5 [body:has(.home-hero)_&]:py-1.5" href={routes.home} aria-label="S2MBOU — Accueil">
-          <Image className="h-auto w-[153px] [body:has(.home-hero)_&]:w-[132px]" src="/brand/s2mbou-logo.webp" alt="S2MBOU" width={153} height={40} priority />
+    <header
+      className={
+        isHome
+          ? `fixed left-1/2 z-50 -translate-x-1/2 border-b transition-[width,top,background-color,border-color,border-radius,box-shadow] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+              overHero
+                ? "top-3.5 w-[min(2000px,calc(100%-1.75rem))] rounded-none border-white/15 bg-transparent md:top-6 md:w-[min(2000px,calc(100%-3rem))] lg:top-7 lg:w-[min(2000px,calc(100%-4rem))] xl:w-[min(2000px,calc(100%-5rem))] 2xl:w-[min(2000px,calc(100%-6rem))]"
+                : "top-0 w-full rounded-none border-brand-border/85 bg-white/95 shadow-[0_8px_32px_rgb(23_61_99_/_0.08)] backdrop-blur-xl"
+            }`
+          : "sticky top-0 z-50 border-b border-brand-border/85 bg-surface/95 backdrop-blur-xl"
+      }
+    >
+      <div
+        className={`mx-auto grid grid-cols-[auto_1fr_auto] items-center gap-3 transition-[min-height,padding] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] sm:gap-4 ${
+          isHome
+            ? overHero
+              ? "min-h-19.5 w-full max-w-none px-5 md:min-h-22 md:px-8 lg:min-h-23 lg:px-10"
+              : "min-h-16 w-full max-w-[1280px] px-5 md:min-h-[4.5rem] md:px-8"
+            : "min-h-19 w-[calc(100%-36px)] max-w-[1280px]"
+        }`}
+      >
+        <Link
+          aria-label={tBrand("homeAria")}
+          className={`inline-flex shrink-0 items-center focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand ${overHero ? "text-white" : "text-brand"}`}
+          href={routes.home}
+        >
+          <BrandLogo className={overHero ? "text-[1.45rem] leading-none text-white" : "text-[1.55rem] leading-none"} name={tBrand("name")} />
         </Link>
-        <nav className="hidden items-center gap-[clamp(1rem,1.8vw,1.75rem)] text-sm lg:flex" aria-label="Navigation principale">
-          {primaryNavigation.slice(0, 2).map((item, index) => <Link className={`${navLink} ${index === 0 ? "[body:has(.home-hero)_&]:text-[#81c6ed]!" : ""}`} key={item.href} href={item.href}>{item.label}</Link>)}
-          <details className="group relative">
-            <summary className={`${navLink} flex cursor-pointer list-none items-center gap-1.5 [&::-webkit-details-marker]:hidden`}>Services <span className="transition-transform duration-200 group-open:rotate-180" aria-hidden="true">⌄</span></summary>
-            <div className="absolute top-[calc(100%+18px)] -left-5 grid w-[210px] rounded-[10px] border border-brand-border bg-white p-2.5 text-ink shadow-[0_20px_50px_rgb(23_61_99_/_0.12)]">
-              <Link className="rounded-[7px] p-3 transition-colors hover:bg-brand-soft hover:text-brand" href={routes.services}>Nos services</Link>
-              {serviceNavigation.map((item) => <Link className="rounded-[7px] p-3 transition-colors hover:bg-brand-soft hover:text-brand" key={item.href} href={item.href}>{item.label}</Link>)}
-            </div>
-          </details>
-          {primaryNavigation.slice(2).map((item) => <Link className={navLink} key={item.href} href={item.href}>{item.label}</Link>)}
-          <Link className="ml-1 inline-flex min-h-12 items-center justify-center gap-3 rounded-[11px] bg-brand px-6 text-sm font-semibold text-white! transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand" href={routes.contact}>Demander un devis <span aria-hidden="true">↗</span></Link>
+        <nav className="hidden items-center justify-center gap-[clamp(0.75rem,1.6vw,1.75rem)] text-sm lg:flex" aria-label={t("main")}>
+          {marketplaceNavItems.map((item) => (
+            <Link
+              className={navLink}
+              href={(item.hash ? { pathname: item.href, hash: item.hash } : item.href) as never}
+              key={item.labelKey}
+            >
+              {t(item.labelKey)}
+            </Link>
+          ))}
         </nav>
-        <MobileNav />
+        <div className="flex items-center justify-end gap-2 sm:gap-3 lg:gap-4">
+          <AuthSessionControls className={authLink} inverted={overHero} />
+          <Link
+            className="inline-flex min-h-11 items-center justify-center rounded-[11px] bg-brand px-3 text-[0.82rem] font-semibold whitespace-nowrap text-white! transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:text-white! focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:px-4 sm:text-sm lg:min-h-12 lg:px-5"
+            href={projectCta.href}
+          >
+            {t(projectCta.labelKey)}
+          </Link>
+          <LanguageSwitcher inverted={overHero} />
+          <MobileNav inverted={overHero} projectCta={projectCta} />
+        </div>
       </div>
     </header>
   );

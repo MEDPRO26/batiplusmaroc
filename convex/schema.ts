@@ -1,0 +1,352 @@
+import { authTables } from "@convex-dev/auth/server";
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+const accountType = v.union(v.literal("client"), v.literal("company"), v.literal("admin"));
+const onboardingStatus = v.union(v.literal("pending"), v.literal("completed"));
+const companySize = v.union(
+  v.literal("solo"),
+  v.literal("2to10"),
+  v.literal("11to50"),
+  v.literal("51to200"),
+  v.literal("201plus"),
+);
+const companyLanguage = v.union(
+  v.literal("arabic"),
+  v.literal("french"),
+  v.literal("english"),
+  v.literal("amazigh"),
+  v.literal("spanish"),
+);
+const companyServiceArea = v.union(
+  v.literal("agadir"),
+  v.literal("casablanca"),
+  v.literal("fes"),
+  v.literal("marrakech"),
+  v.literal("meknes"),
+  v.literal("oujda"),
+  v.literal("rabat"),
+  v.literal("sale"),
+  v.literal("tangier"),
+  v.literal("tetouan"),
+);
+const projectCategory = v.union(
+  v.literal("houseConstruction"), v.literal("buildingConstruction"), v.literal("renovation"),
+  v.literal("interior"), v.literal("structural"), v.literal("finishing"), v.literal("architecture"),
+  v.literal("pool"), v.literal("electrical"), v.literal("plumbing"), v.literal("painting"), v.literal("other"),
+);
+const projectPropertyType = v.union(v.literal("house"), v.literal("apartment"), v.literal("building"), v.literal("office"), v.literal("shop"), v.literal("land"), v.literal("other"));
+const projectBudgetRange = v.union(v.literal("under_50000"), v.literal("50000_100000"), v.literal("100000_250000"), v.literal("250000_500000"), v.literal("500000_1000000"), v.literal("1000000_plus"), v.literal("unknown"));
+const projectTimeline = v.union(v.literal("asap"), v.literal("within_1_month"), v.literal("one_to_three_months"), v.literal("three_to_six_months"), v.literal("six_plus_months"), v.literal("flexible"));
+const projectStatus = v.union(v.literal("draft"), v.literal("pending_review"), v.literal("published"), v.literal("in_discussion"), v.literal("company_selected"), v.literal("in_progress"), v.literal("completed"), v.literal("cancelled"), v.literal("archived"));
+export default defineSchema({
+  ...authTables,
+  users: defineTable({
+    name: v.optional(v.string()),
+    image: v.optional(v.string()),
+    email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    phone: v.optional(v.string()),
+    phoneVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    /** Always "MA" for V1 — set only by the backend. */
+    countryCode: v.optional(v.literal("MA")),
+    accountType: v.optional(accountType),
+    /** @deprecated Read-only compatibility for users created before termsAcceptedAt. */
+    acceptedTerms: v.optional(v.boolean()),
+    termsAcceptedAt: v.optional(v.number()),
+    marketingOptIn: v.optional(v.boolean()),
+    onboardingStatus: v.optional(onboardingStatus),
+    createdAt: v.optional(v.number()),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("email", ["email"])
+    .index("phone", ["phone"])
+    .index("by_accountType", ["accountType"]),
+
+  clientProfiles: defineTable({
+    userId: v.id("users"),
+    city: v.optional(v.string()),
+    onboardingStatus,
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_userId", ["userId"]),
+
+  projects: defineTable({
+    clientId: v.id("users"), primaryCategory: v.optional(projectCategory), customCategoryText: v.optional(v.string()),
+    city: v.optional(companyServiceArea), neighborhood: v.optional(v.string()), countryCode: v.literal("MA"),
+    title: v.optional(v.string()), propertyType: v.optional(projectPropertyType), surface: v.optional(v.number()),
+    surfaceUnknown: v.boolean(), description: v.optional(v.string()), budgetRange: v.optional(projectBudgetRange),
+    budgetMin: v.optional(v.number()), budgetMax: v.optional(v.number()), budgetUnknown: v.boolean(),
+    timeline: v.optional(projectTimeline), visibility: v.union(v.literal("marketplace"), v.literal("invite_only")),
+    status: projectStatus, lastCompletedStep: v.number(), createdAt: v.number(), updatedAt: v.number(),
+    submittedAt: v.optional(v.number()), publishedAt: v.optional(v.number()),
+  })
+    .index("by_clientId", ["clientId"])
+    .index("by_clientId_and_status", ["clientId", "status"])
+    .index("by_status", ["status"])
+    .index("by_status_and_city", ["status", "city"])
+    .index("by_primaryCategory_and_status", ["primaryCategory", "status"])
+    .index("by_createdAt", ["createdAt"]),
+
+  projectStatusHistory: defineTable({
+    projectId: v.id("projects"), oldStatus: projectStatus, newStatus: projectStatus,
+    changedBy: v.id("users"), changedAt: v.number(), reason: v.optional(v.string()),
+  }).index("by_projectId", ["projectId"]).index("by_projectId_and_changedAt", ["projectId", "changedAt"]),
+
+  projectMedia: defineTable({
+    projectId: v.id("projects"), clientId: v.id("users"), storageProvider: v.literal("r2"),
+    objectKey: v.string(), mimeType: v.string(), size: v.number(), etag: v.optional(v.string()),
+    sortOrder: v.number(), createdAt: v.number(),
+  }).index("by_projectId", ["projectId"]).index("by_clientId", ["clientId"]).index("by_objectKey", ["objectKey"]),
+
+  projectMediaUploadIntents: defineTable({
+    projectId: v.id("projects"), userId: v.id("users"), expectedContentType: v.string(), expectedSize: v.number(),
+    objectKey: v.string(), token: v.string(), expiresAt: v.number(), verifiedAt: v.optional(v.number()),
+    claimedAt: v.optional(v.number()), etag: v.optional(v.string()), createdAt: v.number(),
+  }).index("by_token", ["token"]).index("by_objectKey", ["objectKey"]),
+
+  projectAttachments: defineTable({
+    projectId: v.id("projects"), clientId: v.id("users"), storageId: v.id("_storage"), fileName: v.string(),
+    contentType: v.string(), size: v.number(), createdAt: v.number(),
+  }).index("by_projectId", ["projectId"]).index("by_clientId", ["clientId"]),
+
+  projectAttachmentUploadIntents: defineTable({
+    projectId: v.id("projects"), userId: v.id("users"), token: v.string(), expiresAt: v.number(),
+    claimedAt: v.optional(v.number()), createdAt: v.number(),
+  }).index("by_token", ["token"]),
+
+  companies: defineTable({
+    name: v.optional(v.string()),
+    legalName: v.optional(v.string()),
+    slug: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    city: v.optional(v.string()),
+    description: v.optional(v.string()),
+    yearsExperience: v.optional(v.number()),
+    foundedYear: v.optional(v.number()),
+    companySize: v.optional(companySize),
+    languages: v.optional(v.array(companyLanguage)),
+    serviceAreas: v.optional(v.array(companyServiceArea)),
+    website: v.optional(v.string()),
+    logoStorageId: v.optional(v.id("_storage")),
+    logoMediaId: v.optional(v.id("publicMedia")),
+    coverMediaId: v.optional(v.id("publicMedia")),
+    /** Denormalized public-only text used by the company directory search index. */
+    directorySearchText: v.optional(v.string()),
+    onboardingStatus,
+    verificationStatus: v.union(
+      v.literal("draft"),
+      v.literal("pending"),
+      v.literal("verified"),
+      v.literal("rejected"),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_onboardingStatus", ["onboardingStatus"])
+    .index("by_onboardingStatus_and_verificationStatus", [
+      "onboardingStatus",
+      "verificationStatus",
+    ])
+    .index("by_verificationStatus", ["verificationStatus"])
+    .searchIndex("search_directory", {
+      searchField: "directorySearchText",
+      filterFields: ["onboardingStatus", "verificationStatus"],
+    }),
+
+  companyMembers: defineTable({
+    companyId: v.id("companies"),
+    userId: v.id("users"),
+    role: v.union(v.literal("owner"), v.literal("staff")),
+    status: v.union(v.literal("active"), v.literal("inactive")),
+    createdAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_companyId", ["companyId"])
+    .index("by_companyId_and_userId", ["companyId", "userId"]),
+
+  companyServices: defineTable({
+    companyId: v.id("companies"),
+    service: v.union(
+      v.literal("houseConstruction"),
+      v.literal("renovation"),
+      v.literal("structural"),
+      v.literal("finishing"),
+      v.literal("architecture"),
+      v.literal("interior"),
+      v.literal("electrical"),
+      v.literal("plumbing"),
+      v.literal("joinery"),
+      v.literal("pool"),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_companyId", ["companyId"])
+    .index("by_companyId_and_service", ["companyId", "service"]),
+
+  companyVerifications: defineTable({
+    companyId: v.id("companies"),
+    legalName: v.string(),
+    ice: v.string(),
+    rcNumber: v.string(),
+    legalRepresentative: v.string(),
+    phone: v.string(),
+    address: v.string(),
+    submittedAt: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_companyId", ["companyId"]),
+
+  companyVerificationDocuments: defineTable({
+    verificationId: v.id("companyVerifications"),
+    companyId: v.id("companies"),
+    documentType: v.union(
+      v.literal("rc"),
+      v.literal("ice"),
+      v.literal("insurance"),
+      v.literal("other"),
+    ),
+    storageId: v.id("_storage"),
+    fileName: v.string(),
+    contentType: v.string(),
+    size: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_companyId", ["companyId"])
+    .index("by_companyId_and_documentType", ["companyId", "documentType"]),
+
+  companyVerificationUploadIntents: defineTable({
+    companyId: v.id("companies"),
+    userId: v.id("users"),
+    documentType: v.union(
+      v.literal("rc"),
+      v.literal("ice"),
+      v.literal("insurance"),
+      v.literal("other"),
+    ),
+    token: v.string(),
+    expiresAt: v.number(),
+    claimedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_token", ["token"]),
+
+  companyVerificationHistory: defineTable({
+    companyId: v.id("companies"),
+    oldStatus: v.union(
+      v.literal("draft"),
+      v.literal("pending"),
+      v.literal("verified"),
+      v.literal("rejected"),
+    ),
+    newStatus: v.union(
+      v.literal("draft"),
+      v.literal("pending"),
+      v.literal("verified"),
+      v.literal("rejected"),
+    ),
+    changedBy: v.id("users"),
+    changedAt: v.number(),
+    rejectionReason: v.optional(v.string()),
+  })
+    .index("by_companyId", ["companyId"])
+    .index("by_companyId_and_changedAt", ["companyId", "changedAt"]),
+
+  portfolioProjects: defineTable({
+    companyId: v.id("companies"),
+    title: v.string(),
+    description: v.string(),
+    city: v.string(),
+    projectType: v.union(
+      v.literal("construction"),
+      v.literal("renovation"),
+      v.literal("structural"),
+      v.literal("finishing"),
+      v.literal("interior"),
+      v.literal("exterior"),
+      v.literal("other"),
+    ),
+    surface: v.optional(v.number()),
+    durationMonths: v.optional(v.number()),
+    year: v.optional(v.number()),
+    /** @deprecated Kept while legacy Convex Storage images are migrated. */
+    coverImageStorageId: v.optional(v.id("_storage")),
+    coverMediaId: v.optional(v.id("publicMedia")),
+    status: v.union(v.literal("draft"), v.literal("published"), v.literal("hidden")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_companyId", ["companyId"])
+    .index("by_companyId_and_status", ["companyId", "status"]),
+
+  portfolioMedia: defineTable({
+    portfolioProjectId: v.id("portfolioProjects"),
+    /** @deprecated Kept while legacy Convex Storage images are migrated. */
+    storageId: v.optional(v.id("_storage")),
+    publicMediaId: v.optional(v.id("publicMedia")),
+    sortOrder: v.number(),
+    caption: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_portfolioProjectId", ["portfolioProjectId"]),
+
+  portfolioUploadIntents: defineTable({
+    companyId: v.id("companies"),
+    userId: v.id("users"),
+    kind: v.union(v.literal("cover"), v.literal("media")),
+    expectedContentType: v.string(),
+    expectedSize: v.number(),
+    token: v.string(),
+    expiresAt: v.number(),
+    claimedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_token", ["token"]),
+
+  publicMedia: defineTable({
+    storageProvider: v.literal("r2"),
+    companyId: v.id("companies"),
+    portfolioProjectId: v.optional(v.id("portfolioProjects")),
+    purpose: v.union(
+      v.literal("companyLogo"),
+      v.literal("companyCover"),
+      v.literal("portfolioCover"),
+      v.literal("portfolioMedia"),
+    ),
+    objectKey: v.string(),
+    mimeType: v.string(),
+    size: v.number(),
+    etag: v.optional(v.string()),
+    uploadedBy: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_companyId", ["companyId"])
+    .index("by_portfolioProjectId", ["portfolioProjectId"])
+    .index("by_objectKey", ["objectKey"]),
+
+  publicMediaUploadIntents: defineTable({
+    companyId: v.id("companies"),
+    userId: v.id("users"),
+    portfolioProjectId: v.optional(v.id("portfolioProjects")),
+    purpose: v.union(
+      v.literal("companyLogo"),
+      v.literal("companyCover"),
+      v.literal("portfolioCover"),
+      v.literal("portfolioMedia"),
+    ),
+    expectedContentType: v.string(),
+    expectedSize: v.number(),
+    objectKey: v.string(),
+    token: v.string(),
+    expiresAt: v.number(),
+    verifiedAt: v.optional(v.number()),
+    claimedAt: v.optional(v.number()),
+    etag: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_token", ["token"])
+    .index("by_objectKey", ["objectKey"]),
+});

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 import { getArticle } from "@/content/blog";
 import type { ProtectedRoute } from "@/lib/routes";
@@ -15,7 +15,7 @@ export function RelatedReading({
   const selectedArticles = articleHrefs.map(getArticle);
 
   return (
-    <section className="border-y border-[#d7e1e7] bg-[#f2f6f8] px-[18px] py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+    <section className="border-y border-[#d7e1e7] bg-white px-[18px] py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
       <div className="mx-auto max-w-[1280px]">
         <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>

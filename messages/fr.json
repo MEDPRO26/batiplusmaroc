@@ -1,0 +1,1560 @@
+{
+  "brand": {
+    "name": "Batiplus",
+    "homeAria": "Batiplus — Accueil"
+  },
+  "language": {
+    "label": "Langue",
+    "fr": "FR",
+    "en": "EN"
+  },
+  "common": {
+    "skipToContent": "Aller au contenu",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "menu": "Menu",
+    "close": "Fermer",
+    "learnMore": "En savoir plus",
+    "readMore": "Lire la suite",
+    "seeAll": "Tout voir",
+    "backHome": "Retour à l’accueil",
+    "contactUs": "Nous contacter",
+    "loading": "Chargement…",
+    "required": "Obligatoire",
+    "optional": "Facultatif",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "continue": "Continuer",
+    "submit": "Envoyer",
+    "search": "Rechercher",
+    "filters": "Filtres",
+    "empty": "Aucun résultat pour le moment.",
+    "error": "Une erreur est survenue. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "allFieldsRequired": "Tous les champs sont requis",
+    "comingSoon": "Bientôt disponible"
+  },
+  "breadcrumbs": {
+    "label": "Fil d’Ariane"
+  },
+  "nav": {
+    "main": "Navigation principale",
+    "mobile": "Navigation mobile",
+    "home": "Accueil",
+    "about": "À propos",
+    "services": "Services",
+    "allServices": "Nos services",
+    "structuralWork": "Gros œuvre",
+    "finishingWork": "Second œuvre",
+    "projects": "Réalisations",
+    "blog": "Blog",
+    "contact": "Contact",
+    "quote": "Demander un devis",
+    "findCompany": "Trouver une entreprise",
+    "findCompanies": "Trouver des entreprises",
+    "findProjects": "Trouver des projets",
+    "howItWorks": "Comment ça marche",
+    "signIn": "Connexion",
+    "signUp": "S’inscrire",
+    "postProject": "Publier un projet"
+  },
+  "footer": {
+    "tagline": "Batiplus — la marketplace qui relie clients et entreprises de construction.",
+    "description": "Batiplus relie clients et entreprises de construction : publiez un projet, recevez des propositions, ou trouvez des chantiers.",
+    "s2mbou": "S2MBOU construit et aménage à Agadir : villas, gros œuvre et finitions, du premier plan jusqu’à la livraison.",
+    "follow": "Suivez-nous",
+    "contact": "Contact",
+    "about": "À propos",
+    "copyright": "© {year} Batiplus",
+    "social": {
+      "facebook": "Facebook"
+    },
+    "columns": {
+      "clients": {
+        "heading": "Pour les clients",
+        "postProject": "Publier un projet",
+        "findCompany": "Trouver une entreprise",
+        "services": "Nos services",
+        "contact": "Nous contacter"
+      },
+      "companies": {
+        "heading": "Pour les entreprises",
+        "browseProjects": "Trouver des travaux",
+        "signUp": "Créer un profil",
+        "signIn": "Connexion",
+        "contact": "Parler à Batiplus"
+      },
+      "resources": {
+        "heading": "Ressources",
+        "blog": "Blog",
+        "structural": "Gros œuvre",
+        "projects": "Réalisations",
+        "howItWorks": "Comment ça marche"
+      },
+      "company": {
+        "heading": "Batiplus",
+        "about": "À propos",
+        "contact": "Contact",
+        "services": "Nos services",
+        "signIn": "Connexion"
+      }
+    }
+  },
+  "hero": {
+    "imageAlt": "Chantier de construction avec engins et chef de chantier",
+    "roleGroup": "Choisir votre profil",
+    "clientTitle": "Construisez votre projet avec les bons professionnels.",
+    "clientDescription": "Publiez votre projet ou trouvez l’entreprise adaptée à vos besoins.",
+    "companyTitle": "Trouvez des projets à la hauteur de votre savoir-faire.",
+    "companyDescription": "Parcourez les demandes de clients et envoyez vos propositions en quelques minutes.",
+    "client": "Je veux lancer un projet",
+    "company": "Je cherche des projets",
+    "searchProject": "Décrivez votre projet…",
+    "searchLabel": "Décrivez votre projet",
+    "searchButton": "Rechercher",
+    "searchExamples": "Construction villa, rénovation, piscine, gros œuvre...",
+    "findProjects": "Trouver des projets",
+    "companyHeadline": "Développez votre activité sur Batiplus",
+    "exploreProjects": "Explorer les projets",
+    "chips": {
+      "villa": "Construction villa",
+      "renovation": "Rénovation",
+      "structural": "Gros œuvre",
+      "interior": "Aménagement intérieur",
+      "villas": "Villas",
+      "buildings": "Immeubles",
+      "fitout": "Aménagement"
+    }
+  },
+  "home": {
+    "trust": {
+      "eyebrow": "Pourquoi Batiplus",
+      "title": "Un seul endroit pour lancer et gagner des projets",
+      "description": "Publiez un besoin, comparez des entreprises, recevez des propositions, puis lancez le chantier.",
+      "cta": "Publier un projet",
+      "cardCta": "Continuer",
+      "items": {
+        "0": {
+          "title": "Un projet clair, dès le départ",
+          "text": "Décrivez les travaux, la ville et le budget. Les entreprises comprennent ce que vous attendez.",
+          "alt": "Villa contemporaine prête à être lancée comme projet"
+        },
+        "1": {
+          "title": "Des entreprises à comparer",
+          "text": "Profils, réalisations et notes au même endroit. Vous choisissez sur des preuves, pas sur des promesses.",
+          "alt": "Plans et échantillons pour comparer des entreprises"
+        },
+        "2": {
+          "title": "Des propositions lisibles",
+          "text": "Chaque offre reprend le besoin. Vous voyez le prix, le délai et le savoir-faire sans relancer dix fois.",
+          "alt": "Chantier et documents pour des propositions claires"
+        },
+        "3": {
+          "title": "Jusqu’à la mission",
+          "text": "Une fois l’entreprise choisie, le projet reste suivi. Moins de flou, plus de chantier.",
+          "alt": "Villa livrée après les travaux"
+        }
+      }
+    },
+    "marketplace": {
+      "title": "Trouvez des entreprises pour tous vos travaux",
+      "categoriesLabel": "Catégories de travaux",
+      "resultsLabel": "Entreprises spécialisées en {category}",
+      "viewProfile": "Voir le profil",
+      "invite": "Inviter au projet",
+      "verified": "Entreprise vérifiée",
+      "rating": "{rating} sur 5",
+      "projects": "{count, plural, one {# réalisation} other {# réalisations}}",
+      "empty": "Aucune entreprise dans cette catégorie pour le moment.",
+      "imageAlt": "Réalisation de {company} à {city}",
+      "categories": {
+        "houseConstruction": "Construction maison",
+        "renovation": "Rénovation",
+        "structural": "Gros œuvre",
+        "finishing": "Second œuvre",
+        "architecture": "Architecture",
+        "interior": "Aménagement intérieur",
+        "electrical": "Électricité",
+        "plumbing": "Plomberie",
+        "joinery": "Menuiserie",
+        "pool": "Piscine"
+      }
+    },
+    "howItWorks": {
+      "title": "Comment ça marche",
+      "audienceLabel": "Choisir un parcours",
+      "hiring": "Pour recruter",
+      "findingWork": "Pour trouver des travaux",
+      "getStarted": "Commencer",
+      "hiringCards": {
+        "0": {
+          "title": "Publier un projet est toujours gratuit",
+          "body": "Décrivez votre besoin ou laissez-vous guider pour trouver les entreprises adaptées.",
+          "cta": "Publier un projet",
+          "imageAlt": "Villa contemporaine au Maroc, au crépuscule"
+        },
+        "1": {
+          "title": "Recevez des propositions et choisissez",
+          "body": "Comparez les profils, échangez, puis confiez le chantier à l’entreprise qui vous convient.",
+          "cta": "Explorer les entreprises",
+          "imageAlt": "Plans, échantillons et tablette pour comparer des entreprises"
+        },
+        "2": {
+          "title": "Avancez jusqu’à la réalisation",
+          "body": "Suivez les échanges et lancez les travaux quand vous êtes prêt.",
+          "cta": "Parler de mon projet",
+          "imageAlt": "Casque et ordinateur sur un chantier au coucher du soleil"
+        }
+      },
+      "findingWorkCards": {
+        "0": {
+          "title": "Trouvez des projets près de chez vous",
+          "body": "Créez votre profil pour mettre en avant vos réalisations et attirer des clients.",
+          "cta": "Créer un profil",
+          "imageAlt": "Professionnel consultant des projets sur tablette au chantier"
+        },
+        "1": {
+          "title": "Envoyez vos propositions",
+          "body": "Répondez aux demandes qui correspondent à votre savoir-faire.",
+          "cta": "Voir les projets",
+          "imageAlt": "Ordinateur et échantillons pour envoyer une proposition de travaux"
+        },
+        "2": {
+          "title": "Livrez et développez votre activité",
+          "body": "Travaillez avec des clients clairs et construisez votre réputation sur Batiplus.",
+          "cta": "Rejoindre Batiplus",
+          "imageAlt": "Villa contemporaine livrée après les travaux"
+        }
+      }
+    },
+    "feed": {
+      "eyebrow": "En ce moment",
+      "feedLabel": "Choisir ce que vous voulez voir",
+      "verifiedClient": "Client vérifié",
+      "viewProject": "Voir le projet",
+      "posted": "{days, plural, =0 {Aujourd’hui} one {Il y a # jour} other {Il y a # jours}}",
+      "proposals": "{count, plural, one {# proposition} other {# propositions}}",
+      "projects": {
+        "tab": "Projets ouverts",
+        "title": "Des projets prêts à recevoir des propositions",
+        "description": "Besoin, ville et budget au même endroit. Répondez à ceux qui correspondent à votre métier.",
+        "cta": "Voir tous les projets",
+        "0": {
+          "title": "Villa 180 m² — gros œuvre et structure",
+          "text": "Construction d’une villa à Founty. Fondations, structure et toiture. Accès chantier déjà préparé.",
+          "budget": "850 000 – 1 200 000 DH"
+        },
+        "1": {
+          "title": "Rénovation complète d’un appartement 120 m²",
+          "text": "Second œuvre, électricité et finitions à Casablanca. Le client veut un planning clair avant de démarrer.",
+          "budget": "220 000 – 310 000 DH"
+        },
+        "2": {
+          "title": "Immeuble R+3 — reprise structurelle",
+          "text": "Renforcement et gros œuvre à Rabat. Plans disponibles. Recherche d’une entreprise expérimentée.",
+          "budget": "1,4 – 1,9 M DH"
+        },
+        "3": {
+          "title": "Mise aux normes électriques d’une villa",
+          "text": "Tableau, câblage et éclairage à Marrakech. Intervention sur maison occupée, créneaux à convenir.",
+          "budget": "45 000 – 70 000 DH"
+        },
+        "4": {
+          "title": "Piscine 8 × 4 m et aménagement extérieur",
+          "text": "Terrassement, bassin et plage à Agadir. Le client compare 2 à 3 entreprises vérifiées.",
+          "budget": "180 000 – 260 000 DH"
+        },
+        "5": {
+          "title": "Aménagement intérieur d’une résidence",
+          "text": "Cuisine, menuiserie et finitions à Tanger. Moodboard fourni. Début souhaité dans 6 semaines.",
+          "budget": "95 000 – 140 000 DH"
+        }
+      },
+      "companies": {
+        "tab": "Entreprises en avant",
+        "title": "Des entreprises à comparer tout de suite",
+        "description": "Profils, notes et réalisations. Invitez celles qui correspondent à votre chantier.",
+        "cta": "Voir toutes les entreprises",
+        "s2mbou": {
+          "headline": "Entreprise générale · villas",
+          "pitch": "Villas et structure à Agadir. Dossiers clairs, planning tenu, livraisons photographiées."
+        },
+        "atlasHabitat": {
+          "headline": "Construction et architecture",
+          "pitch": "Maisons neuves à Marrakech. Du plan à la livraison, avec un interlocuteur unique."
+        },
+        "casaBati": {
+          "headline": "Construction et rénovation",
+          "pitch": "Chantiers urbains à Casablanca. Propositions lisibles, délais et postes détaillés."
+        },
+        "renovPlus": {
+          "headline": "Rénovation et second œuvre",
+          "pitch": "Appartements et maisons à Rabat. Finitions soignées et suivi jusqu’à la remise."
+        },
+        "atelierNord": {
+          "headline": "Rénovation et aménagement",
+          "pitch": "Intérieurs à Tanger. Moodboards, matériaux et exécution dans le même dossier."
+        },
+        "piscinesAtlas": {
+          "headline": "Piscines et extérieurs",
+          "pitch": "Bassins et plages à Agadir. Étanchéité, finitions et coordination avec le gros œuvre."
+        }
+      }
+    },
+    "aboutPreview": {
+      "eyebrow": "À propos",
+      "title": "Construire, aménager, valoriser.",
+      "p1": "Batiplus relie clients et entreprises de BTP pour construire, aménager et livrer des projets avec les bons professionnels.",
+      "p2": "Publiez votre besoin, comparez les entreprises, ou trouvez des missions adaptées à votre savoir-faire.",
+      "items": {
+        "0": "Un seul espace pour clients et entreprises",
+        "1": "Accompagnement de la demande à la mission",
+        "2": "Construction, aménagement et finitions"
+      },
+      "cta": "Découvrir la plateforme",
+      "imageAlt": "Chantier de construction"
+    },
+    "services": {
+      "eyebrow": "Nos services",
+      "title": "Des solutions complètes pour chaque étape de votre projet.",
+      "description": "De la structure aux finitions, trouvez l’expertise adaptée à votre chantier."
+    },
+    "expertise": {
+      "eyebrow": "Nos expertises",
+      "title": "Les métiers pour construire et aménager votre projet",
+      "scrollHelp": "Faites défiler",
+      "previous": "Voir l’expertise précédente",
+      "next": "Voir l’expertise suivante",
+      "gallery": "Galerie des domaines d’expertise"
+    },
+    "projects": {
+      "eyebrow": "Nos réalisations",
+      "title": "Des projets qui témoignent du savoir-faire des entreprises.",
+      "cta": "Voir toutes les réalisations",
+      "featured": "Projet sélectionné",
+      "openAria": "Voir le projet {title}"
+    },
+    "process": {
+      "eyebrow": "Notre méthode",
+      "title": "Un accompagnement clair, de l’idée à la réalisation.",
+      "countLabel": "étapes du projet",
+      "steps": {
+        "0": { "title": "Étude", "text": "Analyse du besoin, visite et définition du projet." },
+        "1": { "title": "Planification", "text": "Solutions techniques, matériaux, organisation et calendrier." },
+        "2": { "title": "Réalisation", "text": "Coordination des travaux et suivi du chantier." },
+        "3": { "title": "Livraison", "text": "Contrôle, finitions et remise du projet." }
+      }
+    },
+    "whyUs": {
+      "eyebrow": "Pourquoi Batiplus",
+      "title": "Une plateforme complète pour votre projet.",
+      "description": "Choisir Batiplus, c’est relier votre projet aux entreprises capables de le réaliser, avec une lecture claire des besoins, des propositions et du suivi.",
+      "points": {
+        "0": "Projets et entreprises au même endroit",
+        "1": "Demandes claires et comparables",
+        "2": "Savoir-faire construction et aménagement",
+        "3": "Suivi jusqu’à la mission",
+        "4": "Accompagnement à chaque étape"
+      },
+      "cta": "Parler de mon projet",
+      "imageAlt": "Projet de bâtiment en cours de réalisation"
+    },
+    "testimonials": {
+      "title": "Des résultats concrets sur Batiplus",
+      "items": {
+        "0": {
+          "quote": "Nous avons publié notre projet et trouvé une entreprise sérieuse, à l’écoute, capable de livrer un chantier de villa avec une qualité irréprochable.",
+          "name": "Amina Elbahaoui",
+          "role": "Cliente, Casablanca"
+        },
+        "1": {
+          "quote": "Batiplus n’est pas seulement une mise en relation. Nous recevons des demandes claires, comparables, et nous avançons plus vite du premier échange jusqu’à la mission.",
+          "name": "Aziz El Makaoui",
+          "role": "Directeur, Atlas Habitat"
+        },
+        "2": {
+          "quote": "Nous avons comparé plusieurs entreprises, échangé sur le budget, puis choisi une équipe qui a compris nos finitions. Le suivi a été simple à chaque étape.",
+          "name": "Nassima Jarti",
+          "role": "Cliente, Agadir"
+        },
+        "3": {
+          "quote": "Les dossiers sont mieux préparés que sur les réseaux. On sait ce que le client veut, on envoie une proposition, et le chantier démarre sans malentendus.",
+          "name": "Mohamed Lakhdar",
+          "role": "Gérant, Lakhdar Bâtiment"
+        },
+        "4": {
+          "quote": "Pour une rénovation complète, nous avions besoin d’un interlocuteur unique. Batiplus nous a aidés à filtrer les entreprises et à signer plus sereinement.",
+          "name": "Karim Bennis",
+          "role": "Client, Rabat"
+        },
+        "5": {
+          "quote": "Depuis que notre profil est en ligne, nous recevons des projets alignés avec notre savoir-faire gros œuvre. Moins de prospection, plus de chantiers.",
+          "name": "Leila Amrani",
+          "role": "Directrice, Amrani Construction"
+        }
+      }
+    },
+    "articles": {
+      "title": "Blog Batiplus",
+      "description": "Conseils, matériaux et actualités pour mieux lancer un projet de construction au Maroc.",
+      "categoriesLabel": "Catégories du blog",
+      "all": "Tous",
+      "general": "Général",
+      "structural": "Gros œuvre"
+    },
+    "finalCta": {
+      "title": "Rejoignez la marketplace",
+      "hire": {
+        "title": "Trouvez l’entreprise adaptée à votre chantier.",
+        "cta": "Voir les entreprises",
+        "imageAlt": "Plans et documents pour comparer des entreprises"
+      },
+      "work": {
+        "title": "Trouvez des projets près de votre métier.",
+        "cta": "Voir les projets",
+        "imageAlt": "Professionnel consultant des projets sur un chantier"
+      }
+    }
+  },
+  "content": {
+    "services": {
+      "structural": {
+        "title": "Gros œuvre",
+        "description": "Fondations, maçonnerie et structure pour donner à chaque projet une base solide.",
+        "cta": "Découvrir le gros œuvre",
+        "alt": "Poste de travail face à un chantier en construction",
+        "caption": "Structure"
+      },
+      "finishing": {
+        "title": "Second œuvre",
+        "description": "Électricité, plomberie, revêtements, menuiserie, peinture et finitions intérieures.",
+        "cta": "Découvrir le second œuvre",
+        "alt": "Responsable supervisant des engins sur un chantier",
+        "caption": "Finitions"
+      },
+      "fitout": {
+        "title": "Construction & aménagement",
+        "description": "Des solutions coordonnées pour vos projets de construction et d’aménagement intérieur ou extérieur.",
+        "cta": "Voir nos services",
+        "alt": "Équipe examinant les plans d’un projet de construction",
+        "caption": "Aménagement"
+      }
+    },
+    "expertise": {
+      "plaster": { "title": "Plâtre", "alt": "Application de plâtre sur un plafond intérieur" },
+      "tiling": { "title": "Carrelage", "alt": "Pose de carreaux de sol dans une pièce" },
+      "joinery": { "title": "Menuiserie", "alt": "Assemblage d’une pièce de bois en atelier" },
+      "aluminium": { "title": "Aluminium", "alt": "Installation d’une menuiserie vitrée" },
+      "electrical": { "title": "Électricité / Plomberie", "alt": "Intervention sur un tableau électrique" },
+      "hvac": { "title": "Climatisation", "alt": "Installation d’une unité de climatisation murale" },
+      "waterproofing": { "title": "Étanchéité", "alt": "Pose d’une membrane d’étanchéité sur une toiture" },
+      "gardening": { "title": "Jardinage", "alt": "Plantation d’un jeune plant dans un jardin" },
+      "pvc": { "title": "PVC", "alt": "Façade vitrée équipée de profilés de menuiserie" },
+      "painting": { "title": "Peinture", "alt": "Application de peinture blanche au rouleau" }
+    },
+    "articles": {
+      "trends2025": {
+        "title": "Les nouvelles tendances dans la construction en 2025",
+        "category": "Général",
+        "excerpt": "Matériaux, maisons intelligentes et chantiers plus sobres : ce qui change pour construire au Maroc en 2025."
+      },
+      "budget": {
+        "title": "Comment bien préparer son budget de construction ?",
+        "category": "Général",
+        "excerpt": "Terrain, structure, finitions et imprévus : comment chiffrer un projet sans mauvaises surprises."
+      },
+      "materials": {
+        "title": "Comment choisir les bons matériaux pour votre maison ?",
+        "category": "Gros œuvre",
+        "excerpt": "Solidité, climat, budget et confort : les critères pour choisir les matériaux adaptés à votre chantier."
+      },
+      "custom": {
+        "title": "Construction sur-mesure : quels avantages pour votre projet ?",
+        "category": "Gros œuvre",
+        "excerpt": "Un projet pensé pour votre terrain, votre usage et votre budget, plutôt qu’un plan standard."
+      }
+    },
+    "projects": {
+      "immeuble-r5-al-huda": {
+        "title": "Immeuble R+5 — Al-Huda",
+        "subtitle": "Quartier Al-Huda, Agadir · Suivi des phases de construction et gros œuvre"
+      },
+      "immeuble-r5-al-farah": {
+        "title": "Immeuble R+5 — Al Farah",
+        "subtitle": "Quartier Al Farah, Agadir · Gros œuvre et état final"
+      },
+      "villa-founty": {
+        "title": "Villa Founty",
+        "subtitle": "Agadir · Construction et finition d’une villa"
+      },
+      "finitions-interieures": {
+        "title": "Finitions intérieures",
+        "subtitle": "Décoration murale, textures, revêtements et ambiance premium"
+      },
+      "amenagement-interieur": {
+        "title": "Aménagement intérieur",
+        "subtitle": "Sols, faux plafonds, éclairage, habillage mural et finitions modernes"
+      },
+      "details-de-finition": {
+        "title": "Détails de finition",
+        "subtitle": "Jeux de lumière, niches décoratives, cheminées, carrelage et revêtements"
+      },
+      "revetements-decoratifs": {
+        "title": "Revêtements décoratifs",
+        "subtitle": "Textures murales, effets pierre, bois, béton ciré et finitions personnalisées"
+      },
+      "faux-plafonds-eclairage": {
+        "title": "Faux plafonds & éclairage",
+        "subtitle": "Conception de plafonds modernes et intégration d’éclairages décoratifs"
+      },
+      "escaliers-circulations": {
+        "title": "Escaliers & circulations",
+        "subtitle": "Finitions des cages d’escalier, halls et espaces de circulation"
+      },
+      "exterieur-piscine": {
+        "title": "Extérieur & piscine",
+        "subtitle": "Aménagements extérieurs, terrasses, façades, piscine et espaces verts"
+      },
+      "facades-travaux-exterieurs": {
+        "title": "Façades & travaux extérieurs",
+        "subtitle": "Réalisations extérieures et présentation des finitions de façade"
+      }
+    }
+  },
+  "contact": {
+    "crumb": "Contactez-nous",
+    "eyebrow": "Parlons de votre projet",
+    "title": "Formulaire de contact",
+    "imageAlt": "Immeuble R+5 en cours de construction à Agadir",
+    "brandBadge": "Batiplus",
+    "locationBadge": "Agadir · Maroc",
+    "requestEyebrow": "Votre demande",
+    "requestTitle": "Quelques informations pour mieux comprendre votre projet.",
+    "direct": "Contact direct",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "address": "Adresse",
+    "addressValue": "Hay Dakhla, Agadir",
+    "aside": "Batiplus — la marketplace qui relie clients et entreprises pour des projets de construction durables et sur mesure.",
+    "asideNav": "Découvrir Batiplus",
+    "seeServices": "Découvrir nos services",
+    "seeProjects": "Voir nos réalisations",
+    "serviceLegend": "Quel type de service recherchez-vous ?",
+    "services": {
+      "full": "Construction complète",
+      "renovation": "Rénovation intérieure",
+      "interior": "Décoration / aménagement intérieur",
+      "admin": "Suivi administratif de dossier (permis, autorisation, etc.)",
+      "other": "Autre"
+    },
+    "detailsLabel": "Précisez votre service",
+    "detailsPlaceholder": "Décrivez votre besoin",
+    "city": "Ville",
+    "cityPlaceholder": "Votre ville",
+    "name": "Nom complet",
+    "namePlaceholder": "Votre nom",
+    "phoneLabel": "Téléphone",
+    "phonePlaceholder": "Votre numéro",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "vous@exemple.com",
+    "honeypot": "Site web",
+    "privacy": "Vos informations sont envoyées directement et uniquement utilisées pour répondre à votre demande.",
+    "sending": "Envoi en cours…",
+    "submit": "Envoyer ma demande",
+    "success": "Merci ! Votre demande a bien été envoyée. Notre équipe vous répondra rapidement.",
+    "error": "L’envoi a échoué. Veuillez réessayer."
+  },
+  "blog": {
+    "eyebrow": "Conseils & actualités",
+    "description": "Des repères concrets pour mieux comprendre la construction, les matériaux et la préparation d’un projet.",
+    "categories": "Catégories du blog",
+    "general": "Général",
+    "structural": "Gros œuvre",
+    "count": "{count} articles",
+    "badge": "Batiplus · Agadir"
+  },
+  "projectPage": {
+    "kicker": "Réalisation",
+    "location": "Localisation / secteur",
+    "nature": "Nature des travaux",
+    "theProject": "Le projet",
+    "intervention": "Notre intervention",
+    "methodTitle": "Une méthode adaptée au projet et à ses contraintes.",
+    "galleryLabel": "Galerie de {title}",
+    "galleryEyebrow": "Regards sur le chantier",
+    "galleryTitle": "Le projet en images.",
+    "galleryText": "Trois vues pour lire les matières, les volumes et la qualité d’exécution.",
+    "result": "Le résultat",
+    "allProjects": "Découvrir toutes nos réalisations",
+    "yourProject": "Votre projet",
+    "ctaTitle": "Construisons votre prochaine réalisation.",
+    "cta": "Parler de mon projet"
+  },
+  "notFound": {
+    "kicker": "Erreur de navigation · Page introuvable",
+    "eyebrow": "Page non trouvée",
+    "title": "Cette page n’est pas sur le plan.",
+    "description": "L’adresse est peut-être incorrecte ou la page a été déplacée. Revenez à l’accueil ou poursuivez votre visite.",
+    "home": "Retour à l’accueil",
+    "contact": "Nous contacter",
+    "services": "Nos services",
+    "projects": "Nos réalisations"
+  },
+  "clientHowItWorks": {
+    "hero": {
+      "title": "Trouvez l’entreprise qui vous convient",
+      "lead": "Publiez votre projet gratuitement, ou invitez une entreprise. Comparez les propositions, échangez dès que l’intérêt est mutuel, puis lancez le chantier.",
+      "cta": "Publier un projet",
+      "browse": "Parcourir les entreprises",
+      "imageAlt": "Villa contemporaine prête à devenir un projet de construction"
+    },
+    "tradesLabel": "Métiers que vous pouvez confier",
+    "steps": {
+      "title": "Comment trouver une entreprise",
+      "cards": {
+        "0": {
+          "title": "Publiez votre projet (c’est gratuit)",
+          "body": "Décrivez les travaux, la ville et le budget. Les entreprises comprennent le besoin avant de proposer.",
+          "cta": "Publier un projet"
+        },
+        "1": {
+          "title": "Choisissez comment avancer",
+          "body": "Recevez des propositions, ou parcourez les profils et invitez directement l’entreprise qui vous convient.",
+          "cta": "Voir les entreprises"
+        },
+        "2": {
+          "title": "Échangez quand les deux sont d’accord",
+          "body": "La messagerie s’ouvre quand vous répondez à une proposition, ou quand l’entreprise accepte votre invitation.",
+          "cta": "Voir la suite"
+        }
+      }
+    },
+    "ways": {
+      "title": "Deux façons de trouver la bonne entreprise",
+      "post": {
+        "title": "Recevez des propositions",
+        "body": "Publiez le besoin. Les entreprises répondent avec un prix, un délai et le savoir-faire qu’elles ont déjà livré.",
+        "cta": "Publier un projet",
+        "imageAlt": "Plans et échantillons pour comparer des entreprises de construction"
+      },
+      "invite": {
+        "title": "Invitez directement",
+        "body": "Ouvrez un profil et son portfolio, puis envoyez une invitation. La discussion commence quand l’entreprise accepte.",
+        "cta": "Voir les entreprises",
+        "profile": "Voir le profil"
+      }
+    },
+    "flow": {
+      "title": "Du besoin au chantier",
+      "steps": {
+        "0": {
+          "title": "Vous publiez le projet",
+          "body": "Travaux, ville et budget. Le brief est clair pour les entreprises."
+        },
+        "1": {
+          "title": "Proposition ou invitation",
+          "body": "Elles répondent à votre projet, ou vous invitez un profil."
+        },
+        "2": {
+          "title": "Intérêt mutuel",
+          "body": "Vous ouvrez la discussion, ou l’entreprise accepte l’invitation."
+        },
+        "3": {
+          "title": "Visite, devis, choix",
+          "body": "Visite de chantier si besoin, devis final, puis vous choisissez."
+        }
+      }
+    },
+    "faq": {
+      "title": "Questions fréquentes",
+      "items": {
+        "0": {
+          "question": "Publier un projet est-il gratuit ?",
+          "answer": "Oui. Décrire votre besoin et le publier ne coûte rien. Vous comparez les propositions, puis vous choisissez l’entreprise.",
+          "more": "Publier un projet"
+        },
+        "1": {
+          "question": "Comment trouver une entreprise ?",
+          "answer": "Deux chemins. Vous publiez un projet et recevez des propositions, ou vous parcourez les profils et invitez directement une entreprise.",
+          "more": "Voir les entreprises"
+        },
+        "2": {
+          "question": "Quand puis-je écrire à une entreprise ?",
+          "answer": "La messagerie s’ouvre quand vous répondez à une proposition, ou quand l’entreprise accepte votre invitation. Il n’y a pas de discussion libre avant cet accord.",
+          "more": "Voir la suite"
+        },
+        "3": {
+          "question": "Quels travaux puis-je confier ?",
+          "answer": "Gros œuvre, second œuvre, rénovation, construction de maison, électricité, plomberie, menuiserie, piscine et aménagement. Indiquez la ville, le budget et le périmètre dans le projet.",
+          "more": "Parcourir les entreprises"
+        },
+        "4": {
+          "question": "Une entreprise doit-elle être vérifiée pour proposer ?",
+          "answer": "Oui. Seule une entreprise vérifiée par Batiplus peut envoyer une proposition sur un projet."
+        },
+        "5": {
+          "question": "Que se passe-t-il une fois l’entreprise choisie ?",
+          "answer": "Visite de chantier si vous en avez besoin, devis final, puis vous confirmez l’entreprise pour le projet.",
+          "more": "Voir les étapes"
+        }
+      }
+    }
+  },
+  "meta": {
+    "appName": "Batiplus",
+    "home": {
+      "title": "Batiplus — Marketplace de la construction au Maroc",
+      "description": "Publiez votre projet de construction ou trouvez l’entreprise qui correspond à vos besoins. Batiplus met en relation clients et professionnels du BTP."
+    },
+    "howItWorks": {
+      "title": "Comment trouver une entreprise — Batiplus",
+      "description": "Publiez un projet gratuitement ou invitez une entreprise. Comparez les propositions, échangez dès l’intérêt mutuel, puis lancez le chantier."
+    },
+    "about": {
+      "title": "À propos — Batiplus",
+      "description": "Découvrez Batiplus, la marketplace qui relie clients et entreprises de construction au Maroc."
+    },
+    "services": {
+      "title": "Services — Batiplus",
+      "description": "Explorez les métiers et expertises disponibles sur Batiplus : gros œuvre, second œuvre, construction et aménagement."
+    },
+    "projects": {
+      "title": "Réalisations — Batiplus",
+      "description": "Parcourez les réalisations d’entreprises partenaires sur Batiplus."
+    },
+    "contact": {
+      "title": "Contact — Batiplus",
+      "description": "Contactez Batiplus pour un projet de construction, une demande entreprise ou une question sur la plateforme."
+    },
+    "terms": {
+      "title": "Conditions d’utilisation — Batiplus",
+      "description": "Consultez les conditions d’utilisation de la plateforme Batiplus."
+    },
+    "privacy": {
+      "title": "Politique de confidentialité — Batiplus",
+      "description": "Consultez les informations de confidentialité de la plateforme Batiplus."
+    },
+    "structuralWork": {
+      "title": "Gros œuvre — Batiplus",
+      "description": "Trouvez des entreprises de gros œuvre : fondations, maçonnerie et structure pour vos projets de construction."
+    },
+    "finishingWork": {
+      "title": "Second œuvre — Batiplus",
+      "description": "Trouvez des entreprises de second œuvre : électricité, plomberie, peinture, carrelage et finitions."
+    },
+    "categoryGeneral": {
+      "title": "Blog · Général — Batiplus",
+      "description": "Conseils et actualités générales pour préparer un projet de construction au Maroc."
+    },
+    "categoryStructuralWork": {
+      "title": "Blog · Gros œuvre — Batiplus",
+      "description": "Conseils et actualités sur le gros œuvre, les matériaux et la construction."
+    },
+    "constructionTrends2025": {
+      "title": "Les nouvelles tendances dans la construction en 2025 — Batiplus",
+      "description": "Tour d’horizon des tendances construction 2025 : durabilité, maisons intelligentes et conception bioclimatique."
+    },
+    "constructionBudget": {
+      "title": "Comment bien préparer son budget de construction — Batiplus",
+      "description": "Les étapes pour estimer, organiser et suivre le budget d’un projet de construction."
+    },
+    "constructionMaterials": {
+      "title": "Comment choisir les bons matériaux pour votre maison — Batiplus",
+      "description": "Repères concrets pour choisir des matériaux adaptés à votre projet de construction."
+    },
+    "helloWorld": {
+      "title": "Construction sur-mesure : quels avantages pour votre projet — Batiplus",
+      "description": "Pourquoi une construction sur-mesure peut mieux servir votre projet, votre usage et votre budget."
+    },
+    "companies": {
+      "title": "Entreprises — Batiplus",
+      "description": "Trouvez l’entreprise de construction adaptée à votre projet."
+    },
+    "companyProfile": {
+      "title": "Profil entreprise — Batiplus",
+      "description": "Consultez le profil, le portfolio et les expertises d’une entreprise sur Batiplus."
+    },
+    "browseProjects": {
+      "title": "Trouver des projets — Batiplus",
+      "description": "Parcourez les projets publiés par des clients et envoyez vos propositions."
+    },
+    "postProject": {
+      "title": "Publier un projet — Batiplus",
+      "description": "Décrivez votre projet de construction et recevez des propositions d’entreprises."
+    },
+    "postProjectWizard": { "title": "Publier votre projet — Batiplus", "description": "Décrivez votre projet de construction étape par étape et envoyez-le pour validation." },
+    "signIn": {
+      "title": "Connexion — Batiplus",
+      "description": "Connectez-vous à votre espace client ou entreprise Batiplus."
+    },
+    "signUp": {
+      "title": "Créer un compte — Batiplus",
+      "description": "Créez un compte client ou entreprise pour publier un projet ou envoyer des propositions."
+    },
+    "clientOnboarding": {
+      "title": "Complétez votre profil — Batiplus",
+      "description": "Ajoutez vos coordonnées essentielles pour finaliser votre profil client Batiplus."
+    },
+    "clientDashboard": {
+      "title": "Espace client — Batiplus",
+      "description": "Accédez à votre espace client Batiplus."
+    },
+    "companyDashboard": {
+      "title": "Espace entreprise — Batiplus",
+      "description": "Accédez à votre espace entreprise Batiplus."
+    },
+    "companyProfileManagement": {
+      "title": "Gérer le profil entreprise — Batiplus",
+      "description": "Mettez à jour les informations publiques de votre entreprise sur Batiplus."
+    },
+    "companyOnboarding": {
+      "title": "Complétez votre profil entreprise — Batiplus",
+      "description": "Ajoutez les informations et services essentiels pour finaliser votre profil entreprise Batiplus."
+    },
+    "companyVerification": {
+      "title": "Vérifiez votre entreprise — Batiplus",
+      "description": "Envoyez les informations légales de votre entreprise à Batiplus pour vérification."
+    },
+    "companyPortfolio": {
+      "title": "Réalisations de l’entreprise — Batiplus",
+      "description": "Ajoutez, modifiez et publiez les réalisations de votre entreprise."
+    },
+    "signUpClient": {
+      "title": "Inscription client — Batiplus",
+      "description": "Créez un compte client pour publier vos projets et recevoir des propositions d’entreprises."
+    },
+    "signUpCompany": {
+      "title": "Inscription entreprise — Batiplus",
+      "description": "Créez un profil entreprise pour recevoir des projets et envoyer des propositions."
+    }
+  },
+  "auth": {
+    "signIn": "Connexion",
+    "signUp": "Créer un compte",
+    "signOut": "Déconnexion",
+    "workspace": "Mon espace",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "signInLead": "Accédez à votre espace pour suivre vos projets, propositions et messages.",
+    "signUpLead": "Créez un compte client ou entreprise pour utiliser Batiplus.",
+    "signInFlow": {
+      "title": "Connexion à Batiplus",
+      "emailLabel": "E-mail",
+      "emailPlaceholder": "E-mail",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Mot de passe",
+      "continue": "Continuer",
+      "continuing": "Connexion…",
+      "continueGoogle": "Continuer avec Google",
+      "continuingGoogle": "Redirection vers Google…",
+      "or": "ou",
+      "noAccount": "Vous n’avez pas de compte Batiplus ?",
+      "signUp": "S’inscrire",
+      "copyright": "© {year} Batiplus Maroc",
+      "footerTerms": "Conditions",
+      "footerPrivacy": "Confidentialité",
+      "footerContact": "Contact",
+      "validation": {
+        "required": "Veuillez saisir votre e-mail.",
+        "passwordRequired": "Veuillez saisir votre mot de passe.",
+        "terms": "Veuillez accepter les conditions d’utilisation."
+      },
+      "errors": {
+        "invalidAccountType": "Ce type de compte n’est pas autorisé.",
+        "invalidEmail": "Veuillez saisir une adresse e-mail valide.",
+        "invalidCredentials": "E-mail ou mot de passe incorrect.",
+        "accountExists": "Un compte existe déjà avec cet e-mail.",
+        "generic": "La connexion a échoué. Veuillez réessayer."
+      }
+    },
+    "signUpFlow": {
+      "welcomeTitle": "Bienvenue sur Batiplus",
+      "welcomeQuestion": "Qu’est-ce qui vous décrit le mieux ?",
+      "clientTitle": "Client",
+      "clientDescription": "Publiez un projet et trouvez des entreprises.",
+      "companyTitle": "Entreprise",
+      "companyDescription": "Recevez des projets et développez votre activité.",
+      "alreadyHaveAccount": "Vous avez déjà un compte ?",
+      "logIn": "Connexion",
+      "clientFormTitle": "Inscrivez-vous pour recruter",
+      "companyFormTitle": "Inscrivez-vous pour trouver des projets",
+      "lookingForWork": "Vous cherchez des projets ?",
+      "lookingToHire": "Vous cherchez une entreprise ?",
+      "applyAsCompany": "S’inscrire comme entreprise",
+      "applyAsClient": "S’inscrire comme client",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "workEmail": "Adresse e-mail professionnelle",
+      "email": "Adresse e-mail",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Mot de passe (8 caractères minimum)",
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe",
+      "marketingClient": "Recevoir des conseils pour trouver les bonnes entreprises pour mon projet.",
+      "marketingCompany": "Recevoir des conseils pour trouver des projets adaptés à mon activité.",
+      "terms": "Oui, j’accepte les <terms>Conditions d’utilisation</terms> de Batiplus, y compris l’accord utilisateur et la <privacy>Politique de confidentialité</privacy>.",
+      "createAccount": "Créer mon compte",
+      "creating": "Création en cours…",
+      "continueGoogle": "Continuer avec Google",
+      "continuingGoogle": "Redirection vers Google…",
+      "or": "ou",
+      "oauthChooseRole": "Votre compte Google est connecté. Choisissez un rôle pour terminer l’inscription.",
+      "validation": {
+        "required": "Veuillez remplir tous les champs (mot de passe : 8 caractères minimum).",
+        "terms": "Veuillez accepter les conditions d’utilisation."
+      },
+      "errors": {
+        "invalidAccountType": "Ce type de compte n’est pas autorisé.",
+        "invalidEmail": "Veuillez saisir une adresse e-mail valide.",
+        "invalidCredentials": "E-mail ou mot de passe incorrect.",
+        "accountExists": "Un compte existe déjà avec cet e-mail.",
+        "generic": "La création du compte a échoué. Veuillez réessayer."
+      }
+    },
+    "onboarding": {
+      "eyebrow": "Compte créé",
+      "clientTitle": "Bienvenue dans votre espace client",
+      "clientLead": "Votre compte client est prêt. Vous pourrez bientôt publier un projet et recevoir des propositions d’entreprises.",
+      "companyTitle": "Bienvenue dans votre espace entreprise",
+      "companyLead": "Votre compte entreprise est prêt. L’étape suivante sera la vérification de votre entreprise.",
+      "signedInAs": "Connecté en tant que {email}",
+      "backHome": "Retour à l’accueil"
+    },
+    "clientOnboarding": {
+      "progress": "Profil client · Une seule étape",
+      "step": "Étape {current} sur {total}",
+      "title": "Quelques informations pour commencer",
+      "lead": "Les entreprises s’en serviront pour vous contacter au sujet de votre projet. Cela ne prend qu’une minute.",
+      "sectionTitle": "Coordonnées",
+      "sectionLead": "Ajoutez les informations nécessaires pour vous contacter.",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "phone": "Téléphone",
+      "phonePlaceholder": "06 12 34 56 78",
+      "phoneHint": "Partagé uniquement avec les entreprises que vous choisissez.",
+      "city": "Ville",
+      "cityPlaceholder": "Casablanca",
+      "cityHint": "Sert à vous mettre en relation avec des entreprises près de chez vous.",
+      "continue": "Continuer",
+      "saving": "Enregistrement…",
+      "loading": "Chargement de votre profil…",
+      "validation": {
+        "name": "Saisissez un prénom et un nom valides.",
+        "phone": "Saisissez un numéro de téléphone marocain valide.",
+        "city": "Saisissez une ville valide."
+      },
+      "errors": {
+        "generic": "Impossible d’enregistrer votre profil. Veuillez réessayer."
+      }
+    },
+    "clientDashboard": {
+      "eyebrow": "Espace client",
+      "title": "Votre profil est prêt",
+      "lead": "Votre espace client est configuré. Les prochaines fonctionnalités seront disponibles ici."
+    },
+    "companyOnboarding": {
+      "step": "Étape {current} sur {total}",
+      "title": "Complétez votre profil entreprise",
+      "lead": "Ajoutez les informations essentielles dont les clients ont besoin pour connaître et contacter votre entreprise.",
+      "titleProfile": "Commençons par votre entreprise",
+      "leadProfile": "C’est la première chose que voient les clients. Restez clair et professionnel.",
+      "titleServices": "Quels travaux réalisez-vous ?",
+      "leadServices": "Sélectionnez tous les services que vous proposez régulièrement. Vous pourrez les modifier plus tard.",
+      "titleContact": "Comment les clients peuvent-ils vous joindre ?",
+      "leadContact": "Ajoutez un téléphone et une ville pour que les clients près de chez vous puissent vous contacter.",
+      "back": "Retour",
+      "createProfile": "Créer le profil",
+      "descriptionHint": "Saisissez au moins 20 caractères.",
+      "phoneHint": "Partagé uniquement avec les clients avec lesquels vous travaillez.",
+      "cityHint": "Aide les clients à trouver des entreprises dans leur région.",
+      "detailsTitle": "Informations de l’entreprise",
+      "detailsLead": "Présentez votre entreprise aux clients.",
+      "companyName": "Nom de l’entreprise",
+      "legalName": "Raison sociale si différente (facultatif)",
+      "description": "Description courte",
+      "descriptionPlaceholder": "Présentez brièvement votre entreprise, son expertise et les travaux qu’elle réalise habituellement.",
+      "yearsExperience": "Années d’expérience (facultatif)",
+      "website": "Site web (facultatif)",
+      "websitePlaceholder": "exemple.ma",
+      "logo": "Logo (facultatif)",
+      "logoHint": "JPG, PNG ou WebP. 5 Mo maximum.",
+      "logoPreviewAlt": "Logo actuel de l’entreprise",
+      "servicesTitle": "Services principaux",
+      "servicesLead": "Sélectionnez tous les services proposés régulièrement par votre entreprise.",
+      "services": {
+        "houseConstruction": "Construction maison / villa",
+        "renovation": "Rénovation",
+        "structural": "Gros œuvre",
+        "finishing": "Second œuvre",
+        "architecture": "Architecture",
+        "interior": "Aménagement intérieur",
+        "electrical": "Électricité",
+        "plumbing": "Plomberie",
+        "joinery": "Menuiserie",
+        "pool": "Piscine"
+      },
+      "contactTitle": "Contact",
+      "contactLead": "Ajoutez les coordonnées professionnelles que les clients pourront utiliser.",
+      "owner": "Propriétaire du compte : {name}",
+      "phone": "Téléphone",
+      "phonePlaceholder": "06 12 34 56 78",
+      "city": "Ville",
+      "cityPlaceholder": "Casablanca",
+      "continue": "Continuer",
+      "saving": "Enregistrement…",
+      "loading": "Chargement du profil entreprise…",
+      "validation": {
+        "companyName": "Saisissez un nom d’entreprise valide.",
+        "phone": "Saisissez un numéro de téléphone marocain valide.",
+        "city": "Saisissez une ville valide.",
+        "description": "Saisissez une description de 20 à 1 000 caractères.",
+        "services": "Sélectionnez au moins un service valide.",
+        "years": "Saisissez un nombre entier entre 0 et 100.",
+        "website": "Saisissez une adresse de site web valide.",
+        "logo": "Choisissez un logo JPG, PNG ou WebP de 5 Mo maximum."
+      },
+      "errors": {
+        "generic": "Impossible d’enregistrer le profil entreprise. Veuillez réessayer."
+      }
+    },
+    "companyDashboard": {
+      "eyebrow": "Espace entreprise",
+      "greeting": "Bonjour, {name}",
+      "greetingFallback": "Bienvenue dans votre espace",
+      "title": "Votre profil entreprise est prêt",
+      "lead": "Suivez la vérification et les prochaines étapes de votre entreprise.",
+      "verificationTitle": "Compléter la vérification de l’entreprise",
+      "verificationHeadline": {
+        "draft": "Compléter la vérification",
+        "pending": "Vérification en cours d’examen",
+        "verified": "Votre entreprise est vérifiée",
+        "rejected": "La vérification doit être corrigée"
+      },
+      "verificationLead": {
+        "draft": "Ajoutez les informations légales requises. Les documents sont facultatifs pour le moment.",
+        "pending": "Votre dossier a été reçu. L’équipe Batiplus l’examinera avant d’afficher un badge vérifié.",
+        "verified": "Les clients voient que votre entreprise a été examinée par Batiplus.",
+        "rejected": "Mettez à jour les informations demandées, puis envoyez à nouveau votre dossier."
+      },
+      "status": { "draft": "Brouillon", "pending": "En examen", "verified": "Vérifiée", "rejected": "À corriger" },
+      "startVerification": "Vérifier mon entreprise",
+      "resubmit": "Corriger et renvoyer",
+      "viewStatus": "Voir le statut",
+      "findWorkTitle": "Trouver des projets clients",
+      "findWorkLead": "Parcourez les projets ouverts qui correspondent au travail de votre entreprise.",
+      "findWorkAction": "Parcourir les projets",
+      "profileTitle": "Profil entreprise",
+      "profileLead": "Gardez vos informations publiques, services et zones d’intervention à jour.",
+      "profileAction": "Gérer le profil",
+      "portfolioTitle": "Réalisations",
+      "portfolioLead": "Vos réalisations publiées apparaîtront ici lorsque vous en ajouterez une.",
+      "portfolioAction": "Gérer les réalisations"
+    },
+    "companyVerification": {
+      "eyebrow": "Vérification entreprise",
+      "step": "Étape {current} sur {total}",
+      "title": "Vérifiez votre entreprise",
+      "lead": "Renseignez les informations légales utilisées pour examiner votre entreprise.",
+      "titleLegal": "Confirmez l’identité de votre entreprise",
+      "leadLegal": "Nous les examinons avant d’afficher un badge vérifié. Cela prend généralement quelques minutes.",
+      "titleDocuments": "Ajoutez des justificatifs",
+      "leadDocuments": "Les documents sont facultatifs pour le moment. Vous pouvez envoyer le dossier sans fichier, puis en ajouter si nous vous le demandons.",
+      "rejectedLead": "Votre dernière demande doit être corrigée. Mettez à jour les informations ci-dessous puis renvoyez-la.",
+      "legalSection": "Informations légales",
+      "legalSectionLead": "Utilisez les mêmes informations que sur vos documents officiels.",
+      "iceHint": "15 chiffres, sans espaces.",
+      "phoneHint": "Un numéro marocain que nous pourrons utiliser si une confirmation est nécessaire.",
+      "documentsSection": "Documents",
+      "documentsOptional": "Ajoutez un fichier seulement s’il est déjà prêt.",
+      "documentHint": "PDF, JPG ou PNG · 10 Mo maximum par fichier. Ces documents restent privés.",
+      "optional": "Facultatif",
+      "chooseFile": "Choisir un fichier",
+      "replaceFile": "Remplacer",
+      "noFile": "Aucun fichier",
+      "fields": { "legalName": "Raison sociale", "ice": "ICE", "rcNumber": "Numéro RC", "legalRepresentative": "Représentant légal", "phone": "Téléphone", "address": "Adresse" },
+      "documents": { "rc": "Document RC", "ice": "Document ICE", "insurance": "Assurance", "other": "Autre justificatif" },
+      "currentFile": "{name}",
+      "continue": "Continuer",
+      "back": "Retour",
+      "submit": "Envoyer pour examen",
+      "submitting": "Envoi en cours…",
+      "cancel": "Annuler",
+      "backToWorkspace": "Retour à l’espace",
+      "status": { "draft": "Brouillon", "pending": "Vérification en attente", "verified": "Entreprise vérifiée", "rejected": "Demande à corriger" },
+      "pending": { "title": "Votre demande est en cours d’examen", "lead": "Rien d’autre n’est demandé pour le moment. Le statut sera mis à jour dans votre espace." },
+      "verified": { "title": "Votre entreprise est vérifiée", "lead": "Votre profil affiche maintenant le statut vérifié sur Batiplus." },
+      "validation": {
+        "required": "Veuillez renseigner ce champ.",
+        "ice": "Saisissez un numéro ICE valide de 15 chiffres.",
+        "document": "Choisissez un fichier PDF, JPG ou PNG de 10 Mo maximum."
+      }
+    }
+  },
+  "legal": {
+    "terms": {
+      "eyebrow": "Informations légales",
+      "title": "Conditions d’utilisation",
+      "intro": "Cette page présente les conditions générales d’utilisation de Batiplus.",
+      "placeholder": "Le contenu juridique définitif sera ajouté après validation par un conseil juridique."
+    },
+    "privacy": {
+      "eyebrow": "Informations légales",
+      "title": "Politique de confidentialité",
+      "intro": "Cette page présente comment Batiplus traite et protège les données personnelles.",
+      "placeholder": "Le contenu juridique définitif sera ajouté après validation par un conseil juridique."
+    }
+  },
+  "project": {
+    "post": "Publier un projet",
+    "title": "Titre du projet",
+    "description": "Description",
+    "budget": "Budget",
+    "location": "Localisation",
+    "category": "Catégorie",
+    "submit": "Publier",
+    "empty": "Vous n’avez pas encore publié de projet.",
+    "browseTitle": "Trouver des projets",
+    "browseLead": "Les demandes clients apparaîtront ici. Envoyez ensuite vos propositions."
+  },
+  "proposal": {
+    "send": "Envoyer une proposition",
+    "empty": "Aucune proposition pour le moment."
+  },
+  "company": {
+    "profile": "Profil entreprise",
+    "portfolio": "Portfolio",
+    "invite": "Inviter cette entreprise",
+    "empty": "Aucune entreprise trouvée.",
+    "directoryTitle": "Trouver une entreprise",
+    "directoryLead": "Les profils d’entreprises vérifiées seront listés ici."
+  },
+  "companyDirectory": {
+    "eyebrow": "Annuaire des entreprises",
+    "title": "Trouvez l’entreprise adaptée à votre projet",
+    "lead": "Comparez les entreprises de construction, leurs services, leur expérience et leurs réalisations publiées partout au Maroc.",
+    "searchLabel": "Rechercher des entreprises",
+    "searchPlaceholder": "Rechercher une entreprise ou un service",
+    "filters": "Filtres",
+    "closeFilters": "Fermer les filtres",
+    "clear": "Effacer les filtres",
+    "city": {
+      "label": "Ville",
+      "placeholder": "ex. Casablanca"
+    },
+    "service": {
+      "label": "Service",
+      "all": "Tous les services",
+      "options": {
+        "houseConstruction": "Construction de maisons",
+        "renovation": "Rénovation",
+        "structural": "Gros œuvre",
+        "finishing": "Second œuvre",
+        "architecture": "Architecture",
+        "interior": "Aménagement intérieur",
+        "electrical": "Électricité",
+        "plumbing": "Plomberie",
+        "joinery": "Menuiserie",
+        "pool": "Piscines"
+      }
+    },
+    "verifiedOnly": "Entreprises vérifiées uniquement",
+    "sort": {
+      "label": "Trier par",
+      "relevance": "Meilleure correspondance",
+      "newest": "Plus récentes",
+      "oldest": "Plus anciennes"
+    },
+    "resultsLabel": "Résultats de recherche d’entreprises",
+    "loadedCount": "{count, plural, =0 {Aucune entreprise chargée} one {# entreprise chargée} other {# entreprises chargées}}",
+    "loading": "Chargement des entreprises…",
+    "loadingMore": "Chargement d’autres entreprises…",
+    "loadMore": "Voir plus",
+    "empty": "Aucune entreprise ne correspond à votre recherche.",
+    "emptyLead": "Essayez un autre terme ou effacez les filtres pour voir plus d’entreprises.",
+    "verified": "Vérifiée",
+    "years": "{count, plural, =0 {Nouvelle entreprise} one {# an d’expérience} other {# ans d’expérience}}",
+    "viewProfile": "Voir le profil",
+    "openInNewWindow": "Ouvrir le profil dans une nouvelle fenêtre",
+    "closeProfile": "Fermer le profil",
+    "about": "À propos",
+    "profileLoading": "Chargement du profil…",
+    "coverAlt": "Réalisation de construction par {name}",
+    "logoAlt": "Logo de {name}",
+    "portfolioPreview": "Réalisations publiées",
+    "portfolioAlt": "Réalisation publiée : {title}",
+    "portfolioFallback": "Aucune réalisation publiée pour le moment.",
+    "portfolioCount": "{count, plural, =0 {Aucune réalisation publiée} one {# réalisation publiée} other {# réalisations publiées affichées}}"
+  },
+  "companyProfileManager": {
+    "eyebrow": "Espace entreprise",
+    "title": "Gérer le profil entreprise",
+    "lead": "Mettez à jour les informations publiques visibles par les clients.",
+    "back": "Retour à l’espace",
+    "viewPublicProfile": "Voir le profil public",
+    "loading": "Chargement du profil entreprise…",
+    "success": "Profil entreprise mis à jour.",
+    "cancel": "Annuler",
+    "saving": "Enregistrement…",
+    "save": "Enregistrer les modifications",
+    "branding": {
+      "title": "Logo et couverture",
+      "lead": "Utilisez des images claires et récentes qui représentent votre entreprise.",
+      "logo": "Logo de l’entreprise",
+      "logoAlt": "Logo d’entreprise sélectionné",
+      "replaceLogo": "Remplacer le logo",
+      "uploadLogo": "Ajouter un logo",
+      "logoHelp": "JPG, PNG ou WebP · 5 Mo maximum.",
+      "cover": "Image de couverture",
+      "coverAlt": "Image de couverture sélectionnée",
+      "replaceCover": "Remplacer la couverture",
+      "uploadCover": "Ajouter une couverture",
+      "coverHelp": "JPG, PNG ou WebP · 10 Mo maximum. Privilégiez une image large."
+    },
+    "information": {
+      "title": "Informations de l’entreprise",
+      "lead": "Gardez à jour les coordonnées présentées aux clients."
+    },
+    "experience": {
+      "title": "Expérience et équipe",
+      "lead": "Aidez les clients à comprendre le parcours et la capacité de votre entreprise."
+    },
+    "services": {
+      "title": "Services",
+      "lead": "Sélectionnez tous les services actuellement proposés par votre entreprise."
+    },
+    "serviceAreas": {
+      "title": "Zones d’intervention",
+      "lead": "Sélectionnez les villes dans lesquelles votre équipe peut intervenir."
+    },
+    "fields": {
+      "name": "Nom de l’entreprise",
+      "city": "Ville principale",
+      "description": "Description courte",
+      "website": "Site web — facultatif",
+      "websitePlaceholder": "https://exemple.ma",
+      "phone": "Téléphone public",
+      "phonePlaceholder": "06 12 34 56 78",
+      "yearsExperience": "Années d’expérience — facultatif",
+      "foundedYear": "Année de création — facultatif",
+      "companySize": "Taille de l’entreprise",
+      "companySizePlaceholder": "Sélectionnez une taille",
+      "languages": "Langues",
+      "services": "Services de l’entreprise",
+      "serviceAreas": "Villes desservies"
+    },
+    "companySize": {
+      "solo": "Travailleur indépendant",
+      "2to10": "2 à 10 personnes",
+      "11to50": "11 à 50 personnes",
+      "51to200": "51 à 200 personnes",
+      "201plus": "201 personnes et plus"
+    },
+    "languages": {
+      "arabic": "Arabe",
+      "french": "Français",
+      "english": "Anglais",
+      "amazigh": "Amazigh",
+      "spanish": "Espagnol"
+    },
+    "serviceOptions": {
+      "houseConstruction": "Construction de maisons",
+      "renovation": "Rénovation",
+      "structural": "Gros œuvre",
+      "finishing": "Second œuvre",
+      "architecture": "Architecture",
+      "interior": "Aménagement intérieur",
+      "electrical": "Électricité",
+      "plumbing": "Plomberie",
+      "joinery": "Menuiserie",
+      "pool": "Piscines"
+    },
+    "serviceAreaOptions": {
+      "agadir": "Agadir",
+      "casablanca": "Casablanca",
+      "fes": "Fès",
+      "marrakech": "Marrakech",
+      "meknes": "Meknès",
+      "oujda": "Oujda",
+      "rabat": "Rabat",
+      "sale": "Salé",
+      "tangier": "Tanger",
+      "tetouan": "Tétouan"
+    },
+    "legal": {
+      "title": "Vérification légale",
+      "lead": "Consultez les informations actuellement utilisées pour la vérification de l’entreprise.",
+      "notice": "Les informations légales et le statut de vérification ne peuvent pas être modifiés ici. Batiplus examine séparément toute modification de ces données.",
+      "notProvided": "Non renseigné",
+      "documentsLabel": "Documents envoyés",
+      "noDocuments": "Aucun document de vérification n’a été envoyé.",
+      "documentTypes": {
+        "rc": "Registre de commerce",
+        "ice": "Document ICE",
+        "insurance": "Assurance",
+        "other": "Autre document"
+      },
+      "fields": {
+        "legalName": "Raison sociale",
+        "ice": "ICE",
+        "rcNumber": "Registre de commerce (RC)",
+        "legalRepresentative": "Représentant légal",
+        "legalPhone": "Téléphone de vérification",
+        "address": "Adresse légale"
+      }
+    },
+    "verificationStatus": {
+      "draft": "Vérification non envoyée",
+      "pending": "Vérification en cours d’examen",
+      "verified": "Entreprise vérifiée",
+      "rejected": "Vérification à corriger"
+    },
+    "validation": {
+      "name": "Saisissez un nom d’entreprise valide.",
+      "description": "Saisissez une description de 20 à 1 000 caractères.",
+      "city": "Saisissez une ville valide.",
+      "phone": "Saisissez un numéro de téléphone marocain valide.",
+      "services": "Sélectionnez au moins un service.",
+      "serviceAreas": "Sélectionnez au moins une zone d’intervention.",
+      "languages": "Sélectionnez au moins une langue.",
+      "companySize": "Sélectionnez la taille de votre entreprise."
+    }
+  },
+  "publicCompany": {
+    "coverAlt": "Image de couverture de {name}",
+    "logoAlt": "Logo de {name}",
+    "verified": "Entreprise vérifiée",
+    "invite": "Inviter à un projet",
+    "quote": "Demander un devis",
+    "ctaSoon": "Cette action sera disponible prochainement.",
+    "services": "Services",
+    "experience": "Expérience",
+    "years": "{count, plural, =0 {Moins d’un an} one {# an} other {# ans}}",
+    "foundedYear": "Création",
+    "companySizeLabel": "Taille de l’entreprise",
+    "languages": "Langues",
+    "serviceAreas": "Zones d’intervention",
+    "publicPhone": "Téléphone public",
+    "companySize": {
+      "solo": "Travailleur indépendant",
+      "2to10": "2 à 10 personnes",
+      "11to50": "11 à 50 personnes",
+      "51to200": "51 à 200 personnes",
+      "201plus": "201 personnes et plus"
+    },
+    "language": {
+      "arabic": "Arabe",
+      "french": "Français",
+      "english": "Anglais",
+      "amazigh": "Amazigh",
+      "spanish": "Espagnol"
+    },
+    "serviceArea": {
+      "agadir": "Agadir",
+      "casablanca": "Casablanca",
+      "fes": "Fès",
+      "marrakech": "Marrakech",
+      "meknes": "Meknès",
+      "oujda": "Oujda",
+      "rabat": "Rabat",
+      "sale": "Salé",
+      "tangier": "Tanger",
+      "tetouan": "Tétouan"
+    },
+    "website": "Site web",
+    "visitWebsite": "Visiter le site web",
+    "notSpecified": "Non renseigné",
+    "portfolioEyebrow": "Portfolio",
+    "portfolioTitle": "Réalisations",
+    "portfolioEmpty": "Cette entreprise n’a pas encore publié de réalisation.",
+    "projectImageAlt": "Réalisation : {title}",
+    "service": { "houseConstruction": "Construction de maisons", "renovation": "Rénovation", "structural": "Gros œuvre", "finishing": "Second œuvre", "architecture": "Architecture", "interior": "Aménagement intérieur", "electrical": "Électricité", "plumbing": "Plomberie", "joinery": "Menuiserie", "pool": "Piscines" },
+    "projectType": { "construction": "Construction", "renovation": "Rénovation", "structural": "Gros œuvre", "finishing": "Second œuvre", "interior": "Intérieur", "exterior": "Extérieur", "other": "Autre" }
+  },
+  "portfolioManager": {
+    "eyebrow": "Espace entreprise",
+    "title": "Vos réalisations",
+    "lead": "Présentez vos meilleurs travaux sur votre profil public.",
+    "viewProfile": "Voir le profil public",
+    "add": "Ajouter une réalisation",
+    "listTitle": "Liste des réalisations",
+    "empty": "Ajoutez votre première réalisation.",
+    "imageAlt": "Photo de {title}",
+    "previewAlt": "Aperçu de l’image de couverture sélectionnée",
+    "edit": "Modifier",
+    "publish": "Publier",
+    "archive": "Archiver",
+    "addTitle": "Ajouter une réalisation",
+    "editTitle": "Modifier la réalisation",
+    "formLead": "Renseignez uniquement les informations essentielles.",
+    "cancel": "Annuler",
+    "optional": "facultatif",
+    "coverRequired": "Ajoutez une image de couverture.",
+    "tooManyImages": "Vous pouvez ajouter jusqu’à {count} photos supplémentaires.",
+    "imageHelp": "JPG, PNG ou WebP · 10 Mo maximum · {count} photos supplémentaires.",
+    "saving": "Enregistrement…",
+    "saveDraft": "Enregistrer",
+    "successCreated": "Réalisation ajoutée en brouillon.",
+    "successUpdated": "Réalisation mise à jour.",
+    "successPublished": "Réalisation publiée.",
+    "successArchived": "Réalisation archivée.",
+    "status": { "draft": "Brouillon", "published": "Publiée", "hidden": "Archivée" },
+    "projectType": { "construction": "Construction", "renovation": "Rénovation", "structural": "Gros œuvre", "finishing": "Second œuvre", "interior": "Intérieur", "exterior": "Extérieur", "other": "Autre" },
+    "fields": { "title": "Titre", "description": "Description", "city": "Ville", "projectType": "Type de réalisation", "surface": "Surface (m²) — facultatif", "duration": "Durée (mois) — facultatif", "year": "Année — facultatif", "cover": "Image de couverture {optional}", "extra": "Photos supplémentaires — facultatif" }
+  },
+  "projectWizard": {
+    "loading": "Chargement de votre brouillon…", "progress": "Étape {current} sur {total}", "progressReview": "Vérification du projet", "progressComplete": "Projet envoyé", "draftSaved": "Votre brouillon a été enregistré.", "saving": "Enregistrement…", "uploading": "Envoi des fichiers…", "autosaveHint": "Enregistré après chaque étape", "back": "Retour", "continue": "Continuer", "reviewProject": "Vérifier le projet", "saveAndExit": "Enregistrer et quitter", "publishing": "Publication…", "publish": "Publier le projet", "edit": "Modifier", "optional": "facultatif", "remove": "Retirer", "notProvided": "Non renseigné",
+    "steps": {
+      "1": { "eyebrow": "Catégorie du projet", "title": "Quel type de projet souhaitez-vous réaliser ?", "lead": "Choisissez l’option qui décrit le mieux votre projet." },
+      "2": { "eyebrow": "Localisation", "title": "Où se situe votre projet ?", "lead": "Nous avons seulement besoin de la ville et, si utile, du quartier." },
+      "3": { "eyebrow": "Détails du projet", "title": "Présentez votre projet aux entreprises", "lead": "Expliquez ce que vous souhaitez construire, rénover ou modifier." },
+      "4": { "eyebrow": "Budget", "title": "Quel est votre budget estimé ?", "lead": "Une fourchette suffit. Choisissez « Je ne sais pas encore » si besoin." },
+      "5": { "eyebrow": "Calendrier", "title": "Quand souhaitez-vous commencer ?", "lead": "Choisissez l’option la plus proche. Vous pouvez rester flexible." },
+      "6": { "eyebrow": "Fichiers", "title": "Ajoutez des photos, plans ou documents", "lead": "Cette étape est facultative. Les photos peuvent être publiques ; les PDF restent privés." }
+    },
+    "validation": { "category": "Choisissez une catégorie de projet.", "customCategory": "Décrivez les travaux en au moins 3 caractères.", "city": "Choisissez une ville valide.", "title": "Saisissez un titre d’au moins 5 caractères.", "propertyType": "Choisissez un type de bien.", "surface": "Saisissez une surface positive ou cochez « Je ne sais pas ».", "description": "Décrivez votre projet en au moins 20 caractères.", "budget": "Choisissez une fourchette de budget.", "timeline": "Choisissez un délai.", "image": "Choisissez des images JPG, PNG ou WebP de 10 Mo maximum.", "document": "Choisissez des documents PDF de 15 Mo maximum." },
+    "fields": { "customCategory": "Un autre type de travaux", "customCategoryPlaceholder": "Décrivez le type de travaux", "city": "Ville", "cityPlaceholder": "Choisissez une ville", "neighborhood": "Quartier ou secteur", "title": "Titre du projet", "titlePlaceholder": "Par exemple : Rénover un appartement de 120 m²", "propertyType": "Type de bien", "propertyTypePlaceholder": "Choisissez un type de bien", "surface": "Surface en m²", "surfaceUnknown": "Je ne sais pas encore", "description": "Description", "descriptionPlaceholder": "Expliquez ce que vous souhaitez construire, rénover ou modifier." },
+    "locationPrivacy": "N’indiquez pas votre adresse exacte. Elle pourra être communiquée plus tard pour une visite.",
+    "categoryOptions": { "houseConstruction": "Construire une maison / villa", "buildingConstruction": "Construire un immeuble", "renovation": "Rénovation", "interior": "Travaux intérieurs", "structural": "Gros œuvre", "finishing": "Second œuvre et finitions", "architecture": "Architecture", "pool": "Piscine", "electrical": "Électricité", "plumbing": "Plomberie", "painting": "Peinture", "other": "Autre" },
+    "cityOptions": { "agadir": "Agadir", "casablanca": "Casablanca", "fes": "Fès", "marrakech": "Marrakech", "meknes": "Meknès", "oujda": "Oujda", "rabat": "Rabat", "sale": "Salé", "tangier": "Tanger", "tetouan": "Tétouan" },
+    "propertyTypeOptions": { "house": "Villa / maison", "apartment": "Appartement", "building": "Immeuble", "office": "Bureau", "shop": "Commerce", "land": "Terrain", "other": "Autre" },
+    "budgetOptions": { "under_50000": "Moins de 50 000 MAD", "50000_100000": "50 000–100 000 MAD", "100000_250000": "100 000–250 000 MAD", "250000_500000": "250 000–500 000 MAD", "500000_1000000": "500 000–1 000 000 MAD", "1000000_plus": "1 000 000+ MAD", "unknown": "Je ne sais pas encore" },
+    "timelineOptions": { "asap": "Dès que possible", "within_1_month": "Dans le mois", "one_to_three_months": "1–3 mois", "three_to_six_months": "3–6 mois", "six_plus_months": "Plus de 6 mois", "flexible": "Flexible / pas sûr" },
+    "files": { "imagesTitle": "Photos publiques du projet", "imagesHelp": "Jusqu’à 8 images JPG, PNG ou WebP de 10 Mo chacune.", "chooseImages": "Choisir des images", "existingImageAlt": "Photo du projet envoyée", "previewAlt": "Photo du projet sélectionnée {number}", "removeImage": "Retirer la photo sélectionnée {number}", "documentsTitle": "Plans et documents privés", "documentsHelp": "Jusqu’à 6 PDF de 15 Mo chacun. Ces fichiers ne sont pas publics.", "chooseDocuments": "Choisir des documents PDF" },
+    "review": { "eyebrow": "Vérification finale", "title": "Vérifiez votre projet", "lead": "Modifiez une section si nécessaire. Le projet sera validé avant d’être visible par les entreprises.", "category": "Catégorie", "location": "Localisation", "details": "Détails", "budget": "Budget", "timeline": "Calendrier", "files": "Fichiers", "fileCount": "{images} images · {documents} documents" },
+    "success": { "title": "Votre projet a été envoyé pour validation.", "lead": "Batiplus le vérifiera avant qu’il soit visible par les entreprises. Redirection vers votre espace client.", "action": "Aller à l’espace client", "toast": "Projet envoyé pour validation." }
+  },
+  "messages": {
+    "title": "Messages",
+    "empty": "Vos conversations apparaîtront ici.",
+    "placeholder": "Écrire un message…"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Vous n’avez aucune notification."
+  },
+  "dashboard": {
+    "client": "Espace client",
+    "company": "Espace entreprise",
+    "admin": "Administration"
+  },
+  "validation": {
+    "required": "Ce champ est obligatoire.",
+    "email": "Saisissez une adresse e-mail valide.",
+    "minLength": "Ce texte est trop court."
+  },
+  "ux": {
+    "retry": "Réessayer",
+    "offline": "Problème de connexion. Nous allons réessayer.",
+    "loading": {
+      "page": "Chargement de la page…",
+      "dashboard": "Chargement de votre espace…",
+      "form": "Chargement du formulaire…"
+    },
+    "error": {
+      "title": "Erreur",
+      "generic": "Une erreur est survenue. Veuillez réessayer.",
+      "codes": {
+        "INVALID_ACCOUNT_TYPE": "Ce type de compte n’est pas autorisé.",
+        "ACCOUNT_TYPE_MISMATCH": "Ce compte ne correspond pas à cet espace.",
+        "INVALID_EMAIL": "Veuillez saisir une adresse e-mail valide.",
+        "INVALID_CREDENTIALS": "E-mail ou mot de passe incorrect.",
+        "ACCOUNT_EXISTS": "Un compte existe déjà avec cet e-mail.",
+        "PASSWORD_TOO_SHORT": "Le mot de passe doit contenir au moins 8 caractères.",
+        "TERMS_REQUIRED": "Veuillez accepter les conditions d’utilisation.",
+        "INVALID_PROFILE": "Veuillez compléter les informations demandées.",
+        "OAUTH_ACCOUNT_LINKING_BLOCKED": "Impossible d’associer ce compte Google. Utilisez un autre e-mail ou connectez-vous autrement.",
+        "NOT_AUTHENTICATED": "Veuillez vous connecter pour continuer.",
+        "USER_NOT_FOUND": "Compte introuvable. Veuillez vous reconnecter.",
+        "INVALID_NAME": "Saisissez un prénom et un nom valides.",
+        "INVALID_PHONE": "Saisissez un numéro de téléphone marocain valide.",
+        "INVALID_CITY": "Saisissez une ville valide.",
+        "CLIENT_ACCOUNT_REQUIRED": "Un compte client est requis pour cette action.",
+        "CLIENT_ONBOARDING_REQUIRED": "Complétez votre profil client avant de publier un projet.",
+        "COMPANY_ACCOUNT_REQUIRED": "Un compte entreprise est requis pour cette action.",
+        "COMPANY_OWNER_REQUIRED": "Seul le propriétaire de l’entreprise peut faire cette action.",
+        "COMPANY_NOT_FOUND": "Cette entreprise n’existe pas ou n’est plus disponible.",
+        "DUPLICATE_ACCOUNT_FOUNDATION": "Ce compte est déjà configuré.",
+        "INVALID_COMPANY_MEMBERSHIP": "Vous n’êtes pas rattaché à cette entreprise.",
+        "INVALID_COMPANY_NAME": "Saisissez un nom d’entreprise valide.",
+        "INVALID_LEGAL_NAME": "Saisissez une raison sociale valide.",
+        "INVALID_DESCRIPTION": "Saisissez une description de 20 à 1 000 caractères.",
+        "INVALID_WEBSITE": "Saisissez une adresse de site web valide.",
+        "INVALID_YEARS_EXPERIENCE": "Saisissez un nombre entier entre 0 et 100.",
+        "INVALID_FOUNDED_YEAR": "Saisissez une année de création valide.",
+        "INVALID_SERVICE_AREAS": "Sélectionnez au moins une zone d’intervention valide.",
+        "INVALID_LANGUAGES": "Sélectionnez au moins une langue valide.",
+        "INVALID_SERVICES": "Sélectionnez au moins un service valide.",
+        "DUPLICATE_COMPANY_SERVICE": "Ce service est déjà associé à l’entreprise.",
+      "INVALID_LOGO": "Choisissez un logo JPG, PNG ou WebP de 5 Mo maximum.",
+      "INVALID_PUBLIC_MEDIA_UPLOAD": "Cet envoi d’image est invalide ou a expiré. Sélectionnez à nouveau l’image.",
+      "PUBLIC_MEDIA_UPLOAD_FAILED": "L’image n’a pas pu être envoyée. Veuillez réessayer.",
+      "PUBLIC_MEDIA_URL_NOT_CONFIGURED": "La diffusion des images publiques n’est pas encore configurée. Contactez le support.",
+      "INVALID_VERIFICATION_STATUS": "Le statut de vérification n’est pas valide.",
+      "COMPANY_ONBOARDING_REQUIRED": "Terminez d’abord votre profil entreprise.",
+      "INVALID_ICE": "Saisissez un ICE valide à 15 chiffres.",
+      "INVALID_RC_NUMBER": "Saisissez un numéro RC valide.",
+      "INVALID_LEGAL_REPRESENTATIVE": "Saisissez le nom du représentant légal.",
+      "INVALID_ADDRESS": "Saisissez une adresse valide.",
+      "INVALID_VERIFICATION_DOCUMENT": "Choisissez un document PDF, JPG ou PNG valide de 10 Mo maximum.",
+      "DOCUMENT_UPLOAD_FAILED": "Le document n’a pas pu être envoyé. Veuillez réessayer.",
+      "COMPANY_SLUG_UNAVAILABLE": "Impossible de créer l’adresse publique de l’entreprise.",
+      "INVALID_PORTFOLIO_IMAGE": "Choisissez des images JPG, PNG ou WebP de 10 Mo maximum.",
+      "INVALID_PORTFOLIO_TITLE": "Saisissez un titre valide.",
+      "INVALID_PORTFOLIO_DESCRIPTION": "Saisissez une description de 20 à 1 200 caractères.",
+      "INVALID_PORTFOLIO_CITY": "Saisissez une ville valide.",
+      "INVALID_PORTFOLIO_SURFACE": "Saisissez une surface valide.",
+      "INVALID_PORTFOLIO_DURATION": "Saisissez une durée valide.",
+      "INVALID_PORTFOLIO_YEAR": "Saisissez une année valide.",
+      "INVALID_PORTFOLIO_CAPTION": "La légende d’image n’est pas valide.",
+      "PORTFOLIO_PROJECT_NOT_FOUND": "Cette réalisation est introuvable.",
+      "PROJECT_NOT_FOUND": "Ce projet est introuvable.", "PROJECT_NOT_EDITABLE": "Ce projet ne peut plus être modifié.",
+      "INVALID_PROJECT_CATEGORY": "Choisissez une catégorie de projet valide.", "INVALID_PROJECT_NEIGHBORHOOD": "Saisissez un quartier valide.",
+      "INVALID_PROJECT_TITLE": "Saisissez un titre de projet valide.", "INVALID_PROJECT_SURFACE": "Saisissez une surface valide ou cochez « Je ne sais pas ».",
+      "INVALID_PROJECT_DESCRIPTION": "Saisissez une description de 20 à 2 000 caractères.", "INVALID_PROJECT_IMAGE": "Une image du projet est invalide ou a expiré.",
+      "PROJECT_IMAGE_UPLOAD_FAILED": "L’image du projet n’a pas pu être envoyée.", "INVALID_PROJECT_DOCUMENT": "Un PDF est invalide ou a expiré.",
+      "PROJECT_DOCUMENT_UPLOAD_FAILED": "Le PDF n’a pas pu être envoyé.", "PROJECT_INCOMPLETE": "Complétez toutes les étapes obligatoires avant publication.",
+      "INVALID_PROJECT_STATUS_TRANSITION": "Ce changement de statut n’est pas autorisé.", "PROJECT_ATTACHMENT_NOT_FOUND": "Ce document privé est introuvable.",
+        "NETWORK": "Problème de connexion. Nous allons réessayer.",
+        "UNKNOWN": "Une erreur est survenue. Veuillez réessayer."
+      }
+    },
+    "empty": {
+      "projects": {
+        "title": "Vous n’avez pas encore publié de projet.",
+        "action": "Publier un projet"
+      },
+      "projectDiscovery": {
+        "title": "Aucun projet disponible pour le moment."
+      },
+      "proposals": {
+        "title": "Aucune proposition pour le moment.",
+        "action": "Parcourir les projets"
+      },
+      "messages": {
+        "title": "Vos conversations apparaîtront ici.",
+        "action": "Retour à l’accueil"
+      },
+      "portfolio": {
+        "title": "Ajoutez votre première réalisation.",
+        "action": "Compléter le profil"
+      },
+      "companies": {
+        "title": "Aucune entreprise trouvée.",
+        "action": "Publier un projet"
+      }
+    },
+    "success": {
+      "profileSaved": "Profil enregistré.",
+      "proposalSubmitted": "Proposition envoyée.",
+      "invitationSent": "Invitation envoyée.",
+      "messageSent": "Message envoyé.",
+      "verificationSubmitted": "Documents de vérification envoyés."
+    },
+    "notFound": {
+      "company": "Cette entreprise n’existe pas ou n’est plus disponible.",
+      "project": "Ce projet est introuvable.",
+      "portfolio": "Cette réalisation n’est plus disponible."
+    }
+  }
+}

@@ -63,6 +63,9 @@ convex/_generated/ai/ai-files.state.json
 *.swp
 *.swo
 skills-lock.json
+AGENTS.md
+CONVEX.md
+CLAUDE.md
 
 # Caches and OS junk
 .eslintcache
