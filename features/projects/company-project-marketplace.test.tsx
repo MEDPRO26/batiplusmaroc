@@ -85,8 +85,10 @@ describe("company project routes and access", () => {
     expect(routing.pathnames[routes.companyProject]).toEqual({ en: "/company/projects/[projectId]", fr: "/espace-entreprise/projets/[projectId]" });
   });
 
-  test("redirects clients and incomplete companies to their correct workspace", () => {
+  test("redirects every non-company role to its own workspace", () => {
     expect(resolveCompanyProjectsRedirect({ accountType: "client", onboardingStatus: "completed" } as never)).toBe(routes.clientDashboard);
+    expect(resolveCompanyProjectsRedirect({ accountType: "admin", onboardingStatus: "completed" } as never)).toBe(routes.admin);
+    expect(resolveCompanyProjectsRedirect({ accountType: "seo_team", onboardingStatus: "completed" } as never)).toBe(routes.seoDashboard);
     expect(resolveCompanyProjectsRedirect({ accountType: "company", onboardingStatus: "pending" } as never)).toBe(routes.companyOnboarding);
     expect(resolveCompanyProjectsRedirect(null)).toBe(routes.signIn);
     expect(resolveCompanyProjectsRedirect(companyUser as never)).toBeNull();

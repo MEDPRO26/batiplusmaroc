@@ -52,6 +52,9 @@ describe("admin route access", () => {
     expect(adminAccessRedirect({ accountType: "company", onboardingStatus: "pending" })).toBe(
       routes.companyOnboarding,
     );
+    expect(adminAccessRedirect({ accountType: "seo_team", onboardingStatus: "completed" })).toBe(
+      routes.seoDashboard,
+    );
     expect(adminAccessRedirect({ accountType: "admin", onboardingStatus: "completed" })).toBeNull();
   });
 

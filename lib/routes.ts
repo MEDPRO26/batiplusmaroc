@@ -39,16 +39,20 @@ export const routes = {
   admin: "/admin",
   adminProjects: "/admin/projects",
   adminVerification: "/admin/verification",
+  seoRoot: "/seo",
+  seoDashboard: "/seo/dashboard",
   messages: "/messages",
+  messagesConversation: "/messages/[conversationId]",
   notifications: "/notifications",
 } as const;
 
 export type AppRoute = Exclude<
   (typeof routes)[keyof typeof routes],
-  typeof routes.clientProject | typeof routes.companyProject | typeof routes.companyInitialQuote
+  typeof routes.clientProject | typeof routes.companyProject | typeof routes.companyInitialQuote | typeof routes.messagesConversation
 >;
 export type DynamicAppRoute =
   | typeof routes.clientProject
   | typeof routes.companyProject
-  | typeof routes.companyInitialQuote;
+  | typeof routes.companyInitialQuote
+  | typeof routes.messagesConversation;
 export type ProtectedRoute = AppRoute;

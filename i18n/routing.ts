@@ -165,7 +165,10 @@ export const routing = defineRouting({
       fr: "/admin/verification",
       en: "/admin/verification",
     },
+    "/seo": "/seo",
+    "/seo/dashboard": "/seo/dashboard",
     "/messages": "/messages",
+    "/messages/[conversationId]": "/messages/[conversationId]",
     "/notifications": "/notifications",
   },
 });

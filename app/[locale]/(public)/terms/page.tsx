@@ -1,4 +1,4 @@
-import { LegalPlaceholder } from "@/features/shared/components/legal-placeholder";
+import { LegalDocument } from "@/features/shared/components/legal-document";
 import { localizedPageMetadata } from "@/lib/page-meta";
 import { routes } from "@/lib/routes";
 
@@ -9,5 +9,5 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default function TermsPage({ params }: Props) {
-  return <LegalPlaceholder params={params} page="terms" />;
+  return <LegalDocument page="terms" params={params} />;
 }

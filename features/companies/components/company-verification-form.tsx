@@ -8,6 +8,7 @@ import { OnboardingChrome } from "@/features/auth/components/onboarding-chrome";
 import { FriendlyAlert } from "@/features/shared/components/error-state";
 import { FormSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { mapConvexFailure } from "@/lib/errors";
 import { focusFirstInvalidField } from "@/lib/forms/submit";
 import { routes } from "@/lib/routes";
@@ -39,11 +40,8 @@ export function CompanyVerificationForm() {
 
   useEffect(() => {
     if (user === null) router.replace(routes.signIn);
-    if (user?.accountType === "client") {
-      router.replace(user.onboardingStatus === "completed" ? routes.clientDashboard : routes.clientOnboarding);
-    }
-    if (user?.accountType === "company" && user.onboardingStatus !== "completed") {
-      router.replace(routes.companyOnboarding);
+    else if (user && !(user.accountType === "company" && user.onboardingStatus === "completed")) {
+      router.replace(workspaceRouteForUser(user));
     }
   }, [router, user]);
 

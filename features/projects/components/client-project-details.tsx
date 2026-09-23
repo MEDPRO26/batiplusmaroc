@@ -10,6 +10,7 @@ import { StatusBadge } from "@/features/clients/components/client-dashboard";
 import { ErrorState } from "@/features/shared/components/error-state";
 import { PageSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 import { ClientReceivedQuotes } from "@/features/quotes/components/client-received-quotes";
 
@@ -25,8 +26,10 @@ export function ClientProjectDetails({ projectId }: { projectId: string }) {
   const project = useQuery(api.projects.index.getMyProject, canLoad ? { projectId } : "skip");
   const router = useRouter();
   useEffect(() => {
-    if (user?.accountType === "company") router.replace(user.onboardingStatus === "completed" ? routes.companyDashboard : routes.companyOnboarding);
-    else if (user?.accountType === "client" && user.onboardingStatus !== "completed") router.replace(routes.clientOnboarding);
+    if (user === null) router.replace(routes.signIn);
+    else if (user && user.accountType !== "admin" && !(user.accountType === "client" && user.onboardingStatus === "completed")) {
+      router.replace(workspaceRouteForUser(user));
+    }
   }, [router, user]);
   if (user === undefined || project === undefined) return <PageSkeleton label={t("loadingDetails")} />;
   if (!canLoad || project === null) return <ErrorState backHref={routes.clientDashboard} backLabel={t("backToProjects")} description={tUx("notFound.project")} retryLabel={tUx("retry")} title={t("notFoundTitle")} />;

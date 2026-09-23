@@ -47,7 +47,11 @@ export default async function LocaleLayout({
   const t = await getTranslations("common");
 
   return (
-    <html lang={htmlLang(locale)} className={`${siteSans.variable} h-full antialiased`}>
+    <html
+      lang={htmlLang(locale)}
+      className={`${siteSans.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
+    >
       <body className="group/body flex min-h-full flex-col bg-white">
         <ConvexClientProvider>
           <NextIntlClientProvider messages={messages}>

@@ -11,6 +11,7 @@ import {
   projectTimelineValidator,
 } from "../projects/constants";
 import { getPublicMediaUrl } from "../storage/publicUrl";
+import { ensureConversationForQuote } from "../messages/index";
 import { assertQuoteTransition, isActiveQuoteStatus, type QuoteStatus } from "./state";
 
 const MAX_ESTIMATED_PRICE_MAD = 100_000_000;
@@ -464,14 +465,17 @@ const reviewActionValidator = v.union(
   v.literal("open_discussion"),
 );
 
-/** Owner review action only; opening discussion intentionally creates no message thread. */
+/** Owner review action. Opening discussion atomically unlocks one conversation. */
 export const reviewInitialQuote = mutation({
   args: {
     quoteId: v.id("projectQuotes"),
     action: reviewActionValidator,
     reason: v.optional(v.string()),
   },
-  returns: v.object({ status: quoteStatusValidator }),
+  returns: v.object({
+    status: quoteStatusValidator,
+    conversationId: v.union(v.id("conversations"), v.null()),
+  }),
   handler: async (ctx, args) => {
     const { quote, userId } = await requireProjectOwnerQuote(ctx, args.quoteId);
     const reason = args.reason?.trim();
@@ -481,6 +485,28 @@ export const reviewInitialQuote = mutation({
       : args.action === "decline"
         ? "declined"
         : "discussion_open";
-    return { status: await appendStatusHistory(ctx, quote, nextStatus, userId, reason || undefined) };
+    if (args.action === "open_discussion") {
+      const project = await requireOwnedProject(ctx, userId, quote.projectId);
+      if (quote.status === "discussion_open") {
+        return {
+          status: quote.status,
+          conversationId: await ensureConversationForQuote(ctx, quote, project, userId),
+        };
+      }
+      const status = await appendStatusHistory(ctx, quote, nextStatus, userId, reason || undefined);
+      return {
+        status,
+        conversationId: await ensureConversationForQuote(
+          ctx,
+          { ...quote, status, updatedAt: Date.now() },
+          project,
+          userId,
+        ),
+      };
+    }
+    return {
+      status: await appendStatusHistory(ctx, quote, nextStatus, userId, reason || undefined),
+      conversationId: null,
+    };
   },
 });

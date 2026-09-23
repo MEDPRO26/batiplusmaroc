@@ -18,6 +18,8 @@ type CreateOrUpdateAuthUserArgs = {
   profile: AuthProfile;
 };
 
+export const SEO_TEAM_ACCOUNT_CREATION_MARKER = "internal-seo-team-account" as const;
+
 function asString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -129,6 +131,48 @@ export async function createOrUpdateAuthUser(
       });
     }
     return args.existingUserId;
+  }
+
+  // Only the internal SEO account action can construct this profile. Public
+  // password signup goes through buildPasswordProfile(), which deliberately
+  // accepts only client/company and never copies this marker from input.
+  if (
+    args.type === "credentials" &&
+    args.profile.accountType === "seo_team" &&
+    args.profile.internalAccountCreation === SEO_TEAM_ACCOUNT_CREATION_MARKER
+  ) {
+    const email = asString(args.profile.email).toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new ConvexError("INVALID_EMAIL");
+    }
+
+    const matches = await usersWithEmail(ctx, email);
+    if (matches.length > 1) {
+      throw new ConvexError("SEO_ACCOUNT_AMBIGUOUS_EMAIL");
+    }
+    const existing = matches[0];
+    if (existing) {
+      if (existing.accountType !== "seo_team") {
+        throw new ConvexError("SEO_ACCOUNT_TYPE_CONFLICT");
+      }
+      await ctx.db.patch(existing._id, {
+        countryCode: V1_COUNTRY_CODE,
+        onboardingStatus: "completed",
+        createdAt: existing.createdAt ?? existing._creationTime,
+        updatedAt: now,
+      });
+      return existing._id;
+    }
+
+    return await ctx.db.insert("users", {
+      email,
+      countryCode: V1_COUNTRY_CODE,
+      accountType: "seo_team",
+      marketingOptIn: false,
+      onboardingStatus: "completed",
+      createdAt: now,
+      updatedAt: now,
+    });
   }
 
   // OAuth (Google): create or link by an email that was already verified on

@@ -10,9 +10,9 @@ import { useToast } from "@/features/shared/components/app-feedback";
 import { FriendlyAlert } from "@/features/shared/components/error-state";
 import { ProfileSectionSkeleton } from "@/features/shared/components/skeletons";
 import { useRouter } from "@/i18n/navigation";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { mapConvexFailure } from "@/lib/errors";
 import { createSubmitLock, focusFirstInvalidField } from "@/lib/forms/submit";
-import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
 
 const imageTypes = ["image/jpeg", "image/png", "image/webp"];
@@ -45,14 +45,8 @@ export function ClientProfileEditor() {
 
   useEffect(() => {
     if (!user) return;
-    if (user.accountType === "company") {
-      router.replace(
-        user.onboardingStatus === "completed" ? routes.companyDashboard : routes.companyOnboarding,
-      );
-      return;
-    }
-    if (user.accountType === "client" && user.onboardingStatus !== "completed") {
-      router.replace(routes.clientOnboarding);
+    if (!(user.accountType === "client" && user.onboardingStatus === "completed")) {
+      router.replace(workspaceRouteForUser(user));
     }
   }, [router, user]);
 

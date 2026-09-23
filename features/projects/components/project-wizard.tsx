@@ -11,6 +11,7 @@ import { useToast } from "@/features/shared/components/app-feedback";
 import { FriendlyAlert } from "@/features/shared/components/error-state";
 import { FormSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { mapConvexFailure } from "@/lib/errors";
 import { createSubmitLock, focusFirstInvalidField } from "@/lib/forms/submit";
 import { routes } from "@/lib/routes";
@@ -61,10 +62,8 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
 
   useEffect(() => {
     if (user === null) router.replace(routes.signIn);
-    else if (user?.accountType === "company") {
-      router.replace(user.onboardingStatus === "completed" ? routes.companyDashboard : routes.companyOnboarding);
-    } else if (user?.accountType === "client" && user.onboardingStatus !== "completed") {
-      router.replace(routes.clientOnboarding);
+    else if (user && !(user.accountType === "client" && user.onboardingStatus === "completed")) {
+      router.replace(workspaceRouteForUser(user));
     }
   }, [router, user]);
 

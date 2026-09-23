@@ -7,12 +7,13 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import { DashboardCardsSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 
 export type Project = FunctionReturnType<typeof api.projects.index.getMyProjects>[number];
 export type ClientDashboardProfile = NonNullable<FunctionReturnType<typeof api.clients.getMyProfile>>;
 type DashboardUser = {
-  accountType: "client" | "company" | "admin" | null;
+  accountType: "client" | "company" | "admin" | "seo_team" | null;
   onboardingStatus: "pending" | "completed" | null;
 } | null | undefined;
 
@@ -55,13 +56,10 @@ export function ClientDashboard() {
 export function resolveClientDashboardRedirect(user: DashboardUser) {
   if (user === undefined) return null;
   if (user === null) return routes.signIn;
-  if (user.accountType === "company") {
-    return user.onboardingStatus === "completed" ? routes.companyDashboard : routes.companyOnboarding;
-  }
   if (user.accountType === "client" && user.onboardingStatus !== "completed") {
     return routes.clientOnboarding;
   }
-  if (user.accountType !== "client") return routes.home;
+  if (user.accountType !== "client") return workspaceRouteForUser(user);
   return null;
 }
 

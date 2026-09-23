@@ -92,6 +92,8 @@ describe("client project workspace", () => {
     expect(resolveClientDashboardRedirect(null)).toBe(routes.signIn);
     expect(resolveClientDashboardRedirect({ accountType: "company", onboardingStatus: "completed" })).toBe(routes.companyDashboard);
     expect(resolveClientDashboardRedirect({ accountType: "company", onboardingStatus: "pending" })).toBe(routes.companyOnboarding);
+    expect(resolveClientDashboardRedirect({ accountType: "admin", onboardingStatus: "completed" })).toBe(routes.admin);
+    expect(resolveClientDashboardRedirect({ accountType: "seo_team", onboardingStatus: "completed" })).toBe(routes.seoDashboard);
     expect(resolveClientDashboardRedirect({ accountType: "client", onboardingStatus: "completed" })).toBeNull();
   });
 

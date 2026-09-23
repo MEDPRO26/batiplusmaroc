@@ -11,8 +11,8 @@ import { useToast } from "@/features/shared/components/app-feedback";
 import { EmptyState, FriendlyAlert } from "@/features/shared/components/error-state";
 import { DashboardCardsSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { mapConvexFailure } from "@/lib/errors";
-import { routes } from "@/lib/routes";
 
 const imageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxImageBytes = 10 * 1024 * 1024;
@@ -40,8 +40,9 @@ export function PortfolioManager() {
 
   useEffect(() => {
     if (!user) return;
-    if (user.accountType === "client") router.replace(user.onboardingStatus === "completed" ? routes.clientDashboard : routes.clientOnboarding);
-    else if (user.accountType === "company" && user.onboardingStatus !== "completed") router.replace(routes.companyOnboarding);
+    if (!(user.accountType === "company" && user.onboardingStatus === "completed")) {
+      router.replace(workspaceRouteForUser(user));
+    }
   }, [router, user]);
 
   useEffect(() => {

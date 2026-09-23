@@ -7,12 +7,22 @@ import fr from "@/messages/fr.json";
 import { routes } from "@/lib/routes";
 
 vi.mock("convex/react", () => ({ useQuery: () => undefined }));
+vi.mock("next/image", () => ({ default: ({ alt }: { alt: string }) => <span data-image-alt={alt} /> }));
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
+  Link: ({
+    children,
+    href,
+    className,
+    ...props
+  }: Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & { href: string | { pathname: string } }) => (
+    <a className={className} href={typeof href === "string" ? href : href.pathname} {...props}>
+      {children}
+    </a>
+  ),
   useRouter: () => ({ replace: vi.fn() }),
 }));
 
-import { MessagesInboxView, resolveMessagesRedirect } from "./components/messages-inbox";
+import { MessagesInboxView, resolveMessagesRedirect, type MessageThread } from "./components/messages-inbox";
 
 function render(locale: "en" | "fr", node: React.ReactNode) {
   return renderToStaticMarkup(
@@ -37,18 +47,20 @@ describe("messages inbox", () => {
     expect(resolveMessagesRedirect({ accountType: "company", onboardingStatus: "pending" })).toBe(
       routes.companyOnboarding,
     );
-    expect(resolveMessagesRedirect({ accountType: "admin", onboardingStatus: "completed" })).toBe(routes.home);
+    expect(resolveMessagesRedirect({ accountType: "admin", onboardingStatus: "completed" })).toBe(routes.admin);
+    expect(resolveMessagesRedirect({ accountType: "seo_team", onboardingStatus: "completed" })).toBe(
+      routes.seoDashboard,
+    );
     expect(resolveMessagesRedirect({ accountType: "client", onboardingStatus: "completed" })).toBeNull();
   });
 
   test("renders the Upwork-style empty client inbox in English", () => {
     const html = render("en", <MessagesInboxView accountType="client" projects={[]} threads={[]} />);
     expect(html).toContain("Welcome to Messages");
-    expect(html).toContain("Conversations will appear here");
+    expect(html).toContain("Your conversations will appear here after a client and company open a discussion.");
     expect(html).toContain("Find companies");
     expect(html).toContain(routes.companies);
     expect(html).toContain("Unread");
-    expect(html).toContain("Favorites");
     expect(html).toContain("Projects");
     expect(html).not.toContain("Write a message");
   });
@@ -58,7 +70,7 @@ describe("messages inbox", () => {
     expect(html).toContain("Bienvenue dans Messages");
     expect(html).toContain("Trouver des projets");
     expect(html).toContain(routes.browseProjects);
-    expect(html).toContain("Les conversations apparaîtront ici");
+    expect(html).toContain("Vos conversations apparaîtront ici lorsqu’un client et une entreprise ouvriront une discussion.");
   });
 
   test("lists real owned projects in the project filter and keeps the empty thread pane", () => {
@@ -91,5 +103,32 @@ describe("messages inbox", () => {
     expect(html).toContain("Welcome to Messages");
     expect(html).not.toContain('role="listbox"');
     expect(html).not.toContain('role="option"');
+  });
+
+  test("renders conversation rows as a flat list without floating pill cards", () => {
+    const thread: MessageThread = {
+      id: "conversation-1" as Id<"conversations">,
+      projectId: "project-1" as Id<"projects">,
+      quoteId: "quote-1" as Id<"projectQuotes">,
+      projectTitle: "Villa renovation",
+      otherPartyName: "Atlas Construction",
+      otherPartyAvatarUrl: null,
+      companySlug: "atlas-construction",
+      status: "active",
+      preview: "We can schedule the site visit next week.",
+      lastMessageAt: Date.now(),
+      unread: true,
+    };
+    const html = render("en", <MessagesInboxView accountType="client" projects={[]} threads={[thread]} />);
+    expect(html).toContain("Atlas Construction");
+    expect(html).toContain("Villa renovation");
+    expect(html).toContain("We can schedule the site visit next week.");
+    expect(html).toContain("Active");
+    expect(html).toContain('<span class="sr-only">Unread</span>');
+    expect(html).toContain("divide-y");
+    expect(html).toContain("border-l-2");
+    expect(html).not.toContain("rounded-xl px-3 py-3");
+    expect(html).not.toContain("shadow-sm");
+    expect(html).not.toContain("rounded-2xl border border-brand-border bg-[#f7f9fb]");
   });
 });

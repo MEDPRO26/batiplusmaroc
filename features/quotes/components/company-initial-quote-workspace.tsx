@@ -2,9 +2,9 @@
 
 import type { FunctionReturnType } from "convex/server";
 import { useMutation, useQuery } from "convex/react";
-import { CalendarDays, Clock3, LockKeyhole, WalletCards } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, Clock3, LockKeyhole, RefreshCw, WalletCards } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -198,10 +198,70 @@ function QuoteDetail({ quote }: { quote: Quote }) {
         </dl>
         <QuoteText label={t("detail.scope")} value={quote.scope} />
         <QuoteText label={t("detail.message")} value={quote.message} />
-        <div className="mt-7 flex gap-3 rounded-xl border border-[#c9dbe8] bg-[#f1f7fb] p-4 text-sm leading-6 text-[#31546d]"><LockKeyhole aria-hidden className="mt-0.5 size-5 shrink-0" /><p className="m-0">{quote.status === "discussion_open" ? t("detail.discussionPending") : t("detail.messagingLocked")}</p></div>
+        {quote.status === "discussion_open" ? <CompanyConversationContinuation quoteId={quote.id} /> : <div className="mt-7 flex gap-3 rounded-xl border border-[#c9dbe8] bg-[#f1f7fb] p-4 text-sm leading-6 text-[#31546d]"><LockKeyhole aria-hidden className="mt-0.5 size-5 shrink-0" /><p className="m-0">{t("detail.messagingLocked")}</p></div>}
         {quote.status === "submitted" ? <button className="mt-7 inline-flex min-h-11 items-center rounded-full border border-[#c86458] px-5 text-sm font-semibold text-[#8a2f28] transition-colors hover:bg-[#fff4f2] disabled:opacity-60" disabled={withdrawing} onClick={onWithdraw} type="button">{withdrawing ? t("detail.withdrawing") : t("detail.withdraw")}</button> : null}
       </div>
     </article>
+  );
+}
+
+function CompanyConversationContinuation({ quoteId }: { quoteId: Id<"projectQuotes"> }) {
+  const threads = useQuery(api.messages.index.listMyThreads);
+  const recoverConversationMutation = useMutation(api.messages.index.recoverConversationForQuote);
+  const [recoveredConversationId, setRecoveredConversationId] = useState<Id<"conversations"> | null>(null);
+  const [recoveryStatus, setRecoveryStatus] = useState<"idle" | "pending" | "failed">("idle");
+  const automaticRecoveryQuoteRef = useRef<Id<"projectQuotes"> | null>(null);
+  const conversation = threads?.find((thread) => thread.quoteId === quoteId);
+
+  const recoverConversation = useCallback(async () => {
+    setRecoveryStatus("pending");
+    try {
+      const result = await recoverConversationMutation({ quoteId });
+      setRecoveredConversationId(result.conversationId);
+      setRecoveryStatus("idle");
+    } catch {
+      setRecoveryStatus("failed");
+    }
+  }, [quoteId, recoverConversationMutation]);
+
+  useEffect(() => {
+    if (threads === undefined || conversation || recoveredConversationId || recoveryStatus !== "idle" || automaticRecoveryQuoteRef.current === quoteId) {
+      return;
+    }
+    automaticRecoveryQuoteRef.current = quoteId;
+    let cancelled = false;
+    void recoverConversationMutation({ quoteId })
+      .then((result) => {
+        if (!cancelled) setRecoveredConversationId(result.conversationId);
+      })
+      .catch(() => {
+        if (!cancelled) setRecoveryStatus("failed");
+      });
+    return () => { cancelled = true; };
+  }, [conversation, quoteId, recoveredConversationId, recoverConversationMutation, recoveryStatus, threads]);
+
+  return <CompanyConversationPanel conversationId={recoveredConversationId ?? conversation?.id ?? null} lookupPending={threads === undefined || (!conversation && !recoveredConversationId && recoveryStatus !== "failed")} onRetry={() => void recoverConversation()} recoveryPending={recoveryStatus === "pending"} />;
+}
+
+export function CompanyConversationPanel({ conversationId, lookupPending, onRetry, recoveryPending }: { conversationId: Id<"conversations"> | null; lookupPending: boolean; onRetry: () => void; recoveryPending: boolean }) {
+  const t = useTranslations("initialQuote");
+  return (
+    <section aria-live="polite" className="mt-7 rounded-2xl border border-[#b9dac7] bg-[#eff8f2] p-5 sm:p-6">
+      <div className="flex items-start gap-3 text-[#21633d]"><Check aria-hidden className="mt-0.5 size-5 shrink-0" /><div><h2 className="m-0 text-base font-semibold">{t("detail.discussionOpenedTitle")}</h2><p className="mt-1 mb-0 text-sm leading-6">{t("detail.discussionPending")}</p></div></div>
+      {conversationId ? (
+        <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-6 text-sm font-semibold text-white shadow-[0_8px_20px_rgb(5_79_132/0.18)] transition-[transform,opacity] duration-150 hover:opacity-95 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:w-auto" href={{ pathname: routes.messagesConversation, params: { conversationId } }}>
+          {t("detail.continueInMessages")}<ArrowRight aria-hidden className="size-4" />
+        </Link>
+      ) : lookupPending ? (
+        <p className="mt-4 mb-0 text-sm text-[#31546d]" role="status">{t("detail.conversationLoading")}</p>
+      ) : (
+        <div className="mt-4 rounded-xl border border-[#e5c9a8] bg-[#fffaf2] p-4 text-[#6e4b20]" role="alert">
+          <p className="m-0 text-sm font-semibold">{t("detail.conversationUnavailableTitle")}</p>
+          <p className="mt-1 mb-0 text-sm leading-6">{t("detail.conversationUnavailableLead")}</p>
+          <button className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bd8c52] bg-white px-4 text-sm font-semibold transition-transform duration-150 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8b612f] disabled:cursor-wait disabled:opacity-60" disabled={recoveryPending} onClick={onRetry} type="button"><RefreshCw aria-hidden className="size-4" />{recoveryPending ? t("detail.conversationLoading") : t("detail.retryConversation")}</button>
+        </div>
+      )}
+    </section>
   );
 }
 

@@ -70,7 +70,7 @@ describe("navbar role selection", () => {
     ).toBe("loading");
   });
 
-  test("maps logged-out, client, and company to distinct roles", () => {
+  test("maps logged-out and marketplace roles while internal roles stay out of marketplace navigation", () => {
     expect(
       resolveNavbarRole({
         isLoading: false,
@@ -95,6 +95,16 @@ describe("navbar role selection", () => {
         userPending: false,
       }),
     ).toBe("company");
+    for (const accountType of ["admin", "seo_team"] as const) {
+      expect(
+        resolveNavbarRole({
+          isLoading: false,
+          isAuthenticated: true,
+          accountType,
+          userPending: false,
+        }),
+      ).toBe("public");
+    }
   });
 
   test("builds initials for avatar fallback", () => {

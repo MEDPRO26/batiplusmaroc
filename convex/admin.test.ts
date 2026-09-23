@@ -17,7 +17,7 @@ beforeAll(async () => {
 
 async function seedUser(
   t: ReturnType<typeof convexTest>,
-  accountType: "client" | "company" | "admin",
+  accountType: "client" | "company" | "admin" | "seo_team",
   email = `${accountType}@example.test`,
 ) {
   return await t.run((ctx) =>
@@ -39,10 +39,11 @@ function asUser(t: ReturnType<typeof convexTest>, userId: Id<"users">) {
 }
 
 describe("admin backend boundary", () => {
-  test("rejects unauthenticated, client, and company callers", async () => {
+  test("rejects unauthenticated, client, company, and SEO-team callers", async () => {
     const t = convexTest(schema, modules);
     const clientId = await seedUser(t, "client");
     const companyId = await seedUser(t, "company");
+    const seoTeamId = await seedUser(t, "seo_team");
 
     await expect(t.query(api.admin.index.getAdminSession, {})).rejects.toThrow(
       "NOT_AUTHENTICATED",
@@ -51,6 +52,9 @@ describe("admin backend boundary", () => {
       "ADMIN_REQUIRED",
     );
     await expect(asUser(t, companyId).query(api.admin.index.getAdminSession, {})).rejects.toThrow(
+      "ADMIN_REQUIRED",
+    );
+    await expect(asUser(t, seoTeamId).query(api.admin.index.getAdminSession, {})).rejects.toThrow(
       "ADMIN_REQUIRED",
     );
   });

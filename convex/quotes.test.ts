@@ -375,8 +375,9 @@ describe("client reviews initial quotes", () => {
     const { quoteId } = await asUser(t, company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId, ...validQuote });
     const owner = asUser(t, clientId);
     await expect(owner.mutation(api.quotes.index.markInitialQuoteViewed, { quoteId })).resolves.toEqual({ status: "viewed" });
-    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "shortlist" })).resolves.toEqual({ status: "shortlisted" });
-    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "open_discussion" })).resolves.toEqual({ status: "discussion_open" });
+    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "shortlist" })).resolves.toEqual({ status: "shortlisted", conversationId: null });
+    const opened = await owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "open_discussion" });
+    expect(opened).toMatchObject({ status: "discussion_open", conversationId: expect.any(String) });
     const history = await t.run((ctx) => ctx.db.query("quoteStatusHistory").withIndex("by_quoteId_and_changedAt", (q) => q.eq("quoteId", quoteId)).order("asc").take(10));
     expect(history.map((item) => [item.oldStatus, item.newStatus, item.changedBy])).toEqual([
       ["draft", "submitted", company.userId],
@@ -385,16 +386,16 @@ describe("client reviews initial quotes", () => {
       ["shortlisted", "discussion_open", clientId],
     ]);
     await expect(asUser(t, company.userId).query(api.quotes.index.getMyQuote, { quoteId })).resolves.toMatchObject({ status: "discussion_open" });
-    await expect(asUser(t, company.userId).query(api.messages.index.listMyThreads, {})).resolves.toEqual([]);
-    await expect(owner.query(api.messages.index.listMyThreads, {})).resolves.toEqual([]);
+    await expect(asUser(t, company.userId).query(api.messages.index.listMyThreads, {})).resolves.toHaveLength(1);
+    await expect(owner.query(api.messages.index.listMyThreads, {})).resolves.toHaveLength(1);
   });
 
   test("supports direct shortlist and decline while rejecting terminal-state transitions", async () => {
     const { t, clientId, projectId, company } = await setup();
     const owner = asUser(t, clientId);
     const { quoteId } = await asUser(t, company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId, ...validQuote });
-    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "shortlist" })).resolves.toEqual({ status: "shortlisted" });
-    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "decline" })).resolves.toEqual({ status: "declined" });
+    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "shortlist" })).resolves.toEqual({ status: "shortlisted", conversationId: null });
+    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "decline" })).resolves.toEqual({ status: "declined", conversationId: null });
     await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "open_discussion" })).rejects.toThrow("INVALID_QUOTE_STATUS_TRANSITION");
     await expect(asUser(t, company.userId).query(api.quotes.index.getMyQuote, { quoteId })).resolves.toMatchObject({ status: "declined" });
   });
@@ -402,7 +403,7 @@ describe("client reviews initial quotes", () => {
   test("supports submitted -> declined and rejects review of a withdrawn quote", async () => {
     const first = await setup();
     const submitted = await asUser(first.t, first.company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId: first.projectId, ...validQuote });
-    await expect(asUser(first.t, first.clientId).mutation(api.quotes.index.reviewInitialQuote, { quoteId: submitted.quoteId, action: "decline" })).resolves.toEqual({ status: "declined" });
+    await expect(asUser(first.t, first.clientId).mutation(api.quotes.index.reviewInitialQuote, { quoteId: submitted.quoteId, action: "decline" })).resolves.toEqual({ status: "declined", conversationId: null });
 
     const second = await setup();
     const withdrawn = await asUser(second.t, second.company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId: second.projectId, ...validQuote });

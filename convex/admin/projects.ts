@@ -34,7 +34,13 @@ const listItemValidator = v.object({
 const actorValidator = v.object({
   userId: v.id("users"),
   displayName: v.string(),
-  role: v.union(v.literal("client"), v.literal("company"), v.literal("admin"), v.null()),
+  role: v.union(
+    v.literal("client"),
+    v.literal("company"),
+    v.literal("admin"),
+    v.literal("seo_team"),
+    v.null(),
+  ),
 });
 
 const historyItemValidator = v.object({

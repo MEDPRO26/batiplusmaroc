@@ -12,6 +12,7 @@ import { FormSkeleton } from "@/features/shared/components/skeletons";
 import { useRouter } from "@/i18n/navigation";
 import { mapConvexFailure } from "@/lib/errors";
 import { focusFirstInvalidField } from "@/lib/forms/submit";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
 
@@ -54,14 +55,8 @@ export function CompanyOnboardingForm() {
   useEffect(() => {
     if (!user || finalized.current) return;
     if (user.accountType === "company") return;
-    if (user.accountType === "client" || user.accountType === "admin") {
-      router.replace(
-        user.accountType === "client"
-          ? user.onboardingStatus === "completed"
-            ? routes.clientDashboard
-            : routes.clientOnboarding
-          : routes.home,
-      );
+    if (user.accountType !== null) {
+      router.replace(workspaceRouteForUser(user));
       return;
     }
 

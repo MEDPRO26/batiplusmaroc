@@ -3,7 +3,7 @@ export type NavbarRole = "public" | "client" | "company" | "loading";
 export type AuthSnapshot = {
   isLoading: boolean;
   isAuthenticated: boolean;
-  accountType: "client" | "company" | "admin" | null | undefined;
+  accountType: "client" | "company" | "admin" | "seo_team" | null | undefined;
   /** True while authenticated and the Convex user query has not resolved yet. */
   userPending: boolean;
 };

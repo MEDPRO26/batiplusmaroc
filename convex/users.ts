@@ -13,7 +13,13 @@ const currentUserValidator = v.union(
     email: v.union(v.string(), v.null()),
     firstName: v.union(v.string(), v.null()),
     lastName: v.union(v.string(), v.null()),
-    accountType: v.union(v.literal("client"), v.literal("company"), v.literal("admin"), v.null()),
+    accountType: v.union(
+      v.literal("client"),
+      v.literal("company"),
+      v.literal("admin"),
+      v.literal("seo_team"),
+      v.null(),
+    ),
     acceptedTerms: v.boolean(),
     countryCode: v.union(v.literal("MA"), v.null()),
     marketingOptIn: v.boolean(),
@@ -132,7 +138,8 @@ export const finalizeOAuthSignup = mutation({
       throw new ConvexError("TERMS_REQUIRED");
     }
 
-    // Already finalized — keep existing public role; never overwrite admin.
+    // Already finalized — keep existing public role; never overwrite an
+    // internal account type such as admin or seo_team.
     if (user.accountType === "client" || user.accountType === "company") {
       if (user.accountType !== args.accountType) {
         throw new ConvexError("ACCOUNT_TYPE_MISMATCH");
@@ -144,7 +151,7 @@ export const finalizeOAuthSignup = mutation({
       });
       return { accountType: user.accountType };
     }
-    if (user.accountType === "admin") {
+    if (user.accountType !== undefined) {
       throw new ConvexError("INVALID_ACCOUNT_TYPE");
     }
 

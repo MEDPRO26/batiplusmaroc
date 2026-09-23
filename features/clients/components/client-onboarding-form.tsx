@@ -11,6 +11,7 @@ import { FormSkeleton } from "@/features/shared/components/skeletons";
 import { useRouter } from "@/i18n/navigation";
 import { mapConvexFailure } from "@/lib/errors";
 import { focusFirstInvalidField } from "@/lib/forms/submit";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
 
@@ -35,14 +36,8 @@ export function ClientOnboardingForm() {
   useEffect(() => {
     if (!user || finalized.current) return;
     if (user.accountType === "client") return;
-    if (user.accountType === "company" || user.accountType === "admin") {
-      router.replace(
-        user.accountType === "company"
-          ? user.onboardingStatus === "completed"
-            ? routes.companyDashboard
-            : routes.companyOnboarding
-          : routes.home,
-      );
+    if (user.accountType !== null) {
+      router.replace(workspaceRouteForUser(user));
       return;
     }
 

@@ -1247,17 +1247,222 @@
     }
   },
   "legal": {
+    "termsLink": "Conditions d’utilisation",
+    "privacyLink": "Politique de confidentialité",
+    "contactLink": "Contacter Batiplus",
     "terms": {
-      "eyebrow": "Informations légales",
+      "eyebrow": "Mentions légales",
       "title": "Conditions d’utilisation",
-      "intro": "Cette page présente les conditions générales d’utilisation de Batiplus.",
-      "placeholder": "Le contenu juridique définitif sera ajouté après validation par un conseil juridique."
+      "updated": "Dernière mise à jour : {date}",
+      "updatedDate": "23 septembre 2026",
+      "intro": "Les présentes Conditions d’utilisation précisent comment les clients et les entreprises de construction peuvent utiliser la marketplace Batiplus au Maroc. En créant un compte ou en utilisant la plateforme, vous acceptez ces conditions.",
+      "tocLabel": "Sommaire",
+      "footerNote": "Une question sur ces conditions ? Contactez-nous via la page contact.",
+      "sections": {
+        "purpose": {
+          "title": "1. Objet de Batiplus",
+          "paragraphs": [
+            "Batiplus est une marketplace de construction à deux faces qui met en relation des clients ayant besoin de travaux et des entreprises ou professionnels de la construction vérifiés.",
+            "Batiplus fournit la plateforme, les outils et les parcours pour publier des projets, échanger des propositions ou invitations, débloquer la messagerie après un intérêt mutuel, et accompagner les parties vers un deal. Batiplus est un intermédiaire et n’est pas l’entreprise de construction du client, sauf accord écrit distinct."
+          ]
+        },
+        "accounts": {
+          "title": "2. Comptes et éligibilité",
+          "paragraphs": [
+            "L’inscription publique crée un compte client ou un compte entreprise. Les comptes admin et staff sont créés uniquement via des processus contrôlés par Batiplus.",
+            "Vous devez fournir des informations exactes, protéger vos identifiants et nous signaler rapidement tout accès non autorisé. Vous êtes responsable de l’activité réalisée via votre compte.",
+            "Un compte entreprise peut inclure un propriétaire et des collaborateurs autorisés liés à la même entreprise. Le propriétaire reste responsable des actions de son équipe sur Batiplus."
+          ]
+        },
+        "clients": {
+          "title": "3. Obligations des clients",
+          "paragraphs": [
+            "Les clients peuvent publier des projets, inviter des entreprises, consulter des propositions, ouvrir une discussion après intérêt mutuel, et sélectionner une entreprise.",
+            "Les descriptions de projet doivent être sincères, licites et suffisamment précises. Il est interdit de publier des budgets trompeurs, de faux projets ou des contenus portant atteinte aux droits de tiers.",
+            "Le client reste seul responsable du choix de l’entreprise, de la négociation du contrat de travaux, des accès chantier, des autorisations et des paiements dans le cadre de tout accord hors plateforme."
+          ]
+        },
+        "companies": {
+          "title": "4. Obligations des entreprises et vérification",
+          "paragraphs": [
+            "Les entreprises peuvent parcourir les projets ouverts, envoyer des propositions lorsqu’elles y sont éligibles, accepter des invitations, gérer un profil public et un portfolio, et échanger avec les clients après déblocage du chat.",
+            "La vérification peut exiger des informations légales et des documents justificatifs. Fournir un ICE, un registre de commerce, une identité ou des documents faux est interdit et peut entraîner une suspension.",
+            "Les entreprises non vérifiées peuvent être limitées dans certaines actions marketplace, notamment l’envoi de propositions, tant que les exigences de vérification ne sont pas remplies."
+          ]
+        },
+        "marketplace": {
+          "title": "5. Projets, propositions et invitations",
+          "paragraphs": [
+            "Le projet est au centre de la marketplace. Les clients peuvent recevoir des propositions sur un projet ouvert ou inviter une entreprise directement.",
+            "Les propositions et invitations doivent refléter un intérêt réel et une capacité réaliste. Il est interdit de spammer, de copier le contenu privé d’une autre entreprise, ou de fausser qualifications, prix ou disponibilité.",
+            "Batiplus peut modérer, masquer ou retirer des projets, profils ou propositions qui violent ces conditions, la loi applicable ou les règles de qualité de la plateforme."
+          ]
+        },
+        "messaging": {
+          "title": "6. Règles de messagerie",
+          "paragraphs": [
+            "Il n’y a pas de chat libre avant un intérêt mutuel. Sur un projet ouvert, la messagerie se débloque après qu’une entreprise a envoyé une proposition et que le client ouvre la discussion. Sur une invitation directe, elle se débloque après acceptation par l’entreprise.",
+            "Les messages doivent porter sur le projet. Il est interdit de harceler, de partager des contenus illicites, de contourner la sécurité de la plateforme ou de solliciter des paiements frauduleux."
+          ]
+        },
+        "deals": {
+          "title": "7. Devis, sélection et deals",
+          "paragraphs": [
+            "Les devis, visites de chantier, prix finaux et la sélection d’une entreprise font partie du parcours marketplace entre le client et l’entreprise.",
+            "Un deal sur Batiplus enregistre le résultat commercial nécessaire à la commission et à l’historique. Le contrat de construction sous-jacent reste de la responsabilité du client et de l’entreprise, sauf si Batiplus en devient expressément partie par écrit."
+          ]
+        },
+        "commission": {
+          "title": "8. Commission",
+          "paragraphs": [
+            "Batiplus perçoit une commission lorsqu’une entreprise remporte un projet via la plateforme. Les taux applicables et les éventuels instantanés affichés au moment du deal déterminent le montant dû.",
+            "Les entreprises s’engagent à ne pas contourner Batiplus pour éviter la commission après une mise en relation via la plateforme. Toute tentative de contournement peut entraîner des restrictions de compte et le recouvrement des sommes dues."
+          ]
+        },
+        "content": {
+          "title": "9. Contenus et propriété intellectuelle",
+          "paragraphs": [
+            "Vous conservez vos droits sur les contenus que vous téléversez, notamment briefs, propositions, images de portfolio et informations de profil. Vous accordez à Batiplus une licence non exclusive pour héberger, afficher et traiter ces contenus afin d’exploiter la marketplace.",
+            "La marque, les logiciels et le design de Batiplus restent la propriété de Batiplus. Vous ne pouvez pas copier, aspirer ou reverse-engineer le service, sauf dans les cas autorisés par la loi."
+          ]
+        },
+        "prohibited": {
+          "title": "10. Usages interdits",
+          "paragraphs": [
+            "Il est interdit d’utiliser Batiplus pour frauder, blanchir de l’argent, discriminer illicitement, diffuser des malwares, collecter des données personnelles sans autorisation, usurper une identité ou perturber la sécurité de la plateforme.",
+            "Batiplus peut enquêter sur les abus suspectés et coopérer avec les autorités compétentes lorsque la loi l’exige."
+          ]
+        },
+        "liability": {
+          "title": "11. Limitations de responsabilité",
+          "paragraphs": [
+            "Batiplus aide clients et entreprises à se rencontrer et à gérer les parcours marketplace. Nous ne garantissons ni le résultat des travaux, ni la qualité de construction, ni les délais, ni les autorisations, ni l’exécution des paiements entre utilisateurs.",
+            "Dans les limites permises par le droit marocain, Batiplus n’est pas responsable des dommages indirects, pertes de profits ou litiges découlant uniquement des accords de construction hors plateforme. Rien dans ces conditions n’exclut une responsabilité qui ne peut être limitée par la loi."
+          ]
+        },
+        "termination": {
+          "title": "12. Suspension et résiliation",
+          "paragraphs": [
+            "Vous pouvez cesser d’utiliser Batiplus à tout moment. Nous pouvons suspendre ou résilier l’accès en cas de violation des présentes conditions, d’échec de vérification, de risque de sécurité ou d’usage abusif.",
+            "Les dispositions qui doivent survivre à la résiliation — notamment commission, limitations de responsabilité et propriété intellectuelle — restent applicables."
+          ]
+        },
+        "changes": {
+          "title": "13. Modifications",
+          "paragraphs": [
+            "Nous pouvons mettre à jour ces Conditions d’utilisation pour refléter des évolutions produit, juridiques ou opérationnelles. La date de « Dernière mise à jour » en haut de cette page sera alors modifiée.",
+            "L’utilisation continue de Batiplus après une mise à jour vaut acceptation des nouvelles conditions, sauf lorsque la loi impose un consentement supplémentaire."
+          ]
+        },
+        "law": {
+          "title": "14. Droit applicable",
+          "paragraphs": [
+            "Les présentes conditions sont régies par le droit marocain. Les tribunaux du Maroc sont compétents pour les litiges nés de ces conditions, sans préjudice des protections impératives éventuellement applicables aux consommateurs."
+          ]
+        },
+        "contact": {
+          "title": "15. Contact",
+          "paragraphs": [
+            "Pour toute question sur ces Conditions d’utilisation, utilisez la page contact de Batiplus. Les informations relatives aux données personnelles figurent dans la Politique de confidentialité."
+          ]
+        }
+      }
     },
     "privacy": {
-      "eyebrow": "Informations légales",
+      "eyebrow": "Mentions légales",
       "title": "Politique de confidentialité",
-      "intro": "Cette page présente comment Batiplus traite et protège les données personnelles.",
-      "placeholder": "Le contenu juridique définitif sera ajouté après validation par un conseil juridique."
+      "updated": "Dernière mise à jour : {date}",
+      "updatedDate": "23 septembre 2026",
+      "intro": "La présente Politique de confidentialité explique quelles données personnelles Batiplus collecte, pourquoi nous les utilisons, comment nous les partageons, et quels droits vous avez lorsque vous utilisez notre marketplace de construction au Maroc.",
+      "tocLabel": "Sommaire",
+      "footerNote": "Une question sur la confidentialité ? Contactez-nous via la page contact.",
+      "sections": {
+        "who": {
+          "title": "1. Qui sommes-nous",
+          "paragraphs": [
+            "Batiplus exploite une marketplace mettant en relation clients et entreprises de construction. Pour toute question de confidentialité liée à la plateforme, contactez-nous via la page contact.",
+            "Selon l’activité de traitement, Batiplus peut agir en tant que responsable de traitement pour les données de compte, de marketplace et de fonctionnement de la plateforme."
+          ]
+        },
+        "data": {
+          "title": "2. Données collectées",
+          "paragraphs": [
+            "Données de compte : nom, e-mail, téléphone le cas échéant, type de compte (client ou entreprise), données d’authentification et informations d’onboarding.",
+            "Données entreprise : informations de profil public, services, zones d’intervention, portfolio, et éléments de vérification tels que raison sociale, ICE, registre de commerce, identité du représentant et documents justificatifs.",
+            "Données projet et marketplace : briefs, propositions, invitations, messages échangés après déblocage, devis, historique de deal nécessaire à la commission, et historiques de statut associés.",
+            "Données techniques : informations sur l’appareil et le navigateur, adresse IP, localisation approximative dérivée du réseau, cookies ou technologies similaires, et journaux nécessaires à la sécurité et à la fiabilité."
+          ]
+        },
+        "use": {
+          "title": "3. Finalités d’utilisation",
+          "paragraphs": [
+            "Nous utilisons les données personnelles pour créer et sécuriser les comptes, faire fonctionner la marketplace, mettre en relation clients et entreprises, permettre la messagerie après intérêt mutuel, traiter la vérification, calculer la commission, prévenir la fraude, assurer le support et améliorer le produit.",
+            "Nous pouvons aussi envoyer des notifications transactionnelles relatives aux projets, propositions, vérification et sécurité. Les communications marketing ne sont envoyées que lorsque c’est autorisé et peuvent être interrompues le cas échéant."
+          ]
+        },
+        "legalBasis": {
+          "title": "4. Bases légales",
+          "paragraphs": [
+            "Nous traitons les données personnelles pour exécuter le contrat de fourniture du service Batiplus, respecter des obligations légales, poursuivre des intérêts légitimes tels que la sécurité et la prévention des abus, et le cas échéant sur la base du consentement.",
+            "La vérification des entreprises et l’intégrité de la marketplace peuvent nécessiter le traitement de documents d’identité et d’informations professionnelles sur ces bases."
+          ]
+        },
+        "sharing": {
+          "title": "5. Partage et visibilité publique",
+          "paragraphs": [
+            "Les profils publics d’entreprise peuvent afficher des informations destinées aux clients, telles que le nom, la ville, la description, les services, le portfolio et le badge de vérification. Le numéro de téléphone et l’e-mail de l’entreprise ne sont pas affichés sur le profil public.",
+            "Clients et entreprises peuvent voir des informations limitées sur leur contrepartie lorsque les conditions marketplace le permettent. Nous ne vendons pas les données personnelles.",
+            "Nous pouvons partager des données avec des prestataires d’infrastructure (hébergement, stockage, e-mail ou analytics) qui les traitent selon nos instructions, et avec les autorités lorsque la loi l’exige."
+          ]
+        },
+        "retention": {
+          "title": "6. Conservation",
+          "paragraphs": [
+            "Nous conservons les données personnelles uniquement aussi longtemps que nécessaire aux finalités décrites, notamment fonctionnement du compte, conformité, litiges, historique de commission et sécurité.",
+            "Certains historiques marketplace importants (instantanés de deal/commission ou historiques de statut) peuvent être conservés plus longtemps lorsqu’ils sont nécessaires à l’auditabilité et aux registres légitimes."
+          ]
+        },
+        "security": {
+          "title": "7. Sécurité",
+          "paragraphs": [
+            "Nous appliquons des mesures techniques et organisationnelles adaptées au risque, notamment des contrôles d’accès, un transport chiffré lorsque cela s’applique, et une surveillance des abus.",
+            "Aucun système n’est parfaitement sécurisé. Utilisez un mot de passe robuste et protégez l’accès à vos appareils et à votre boîte e-mail."
+          ]
+        },
+        "rights": {
+          "title": "8. Vos droits",
+          "paragraphs": [
+            "Sous réserve de la loi marocaine 09-08 et des règles applicables, vous pouvez demander l’accès à vos données, leur rectification, leur suppression lorsque c’est approprié, la limitation de certains traitements, ainsi que des informations sur les traitements.",
+            "Vous pouvez mettre à jour de nombreuses informations directement dans votre compte. Pour les autres demandes, contactez-nous via la page contact. Nous pouvons demander des éléments nécessaires pour vérifier votre identité."
+          ]
+        },
+        "cookies": {
+          "title": "9. Cookies et technologies similaires",
+          "paragraphs": [
+            "Batiplus utilise des cookies ou technologies similaires nécessaires pour vous maintenir connecté, protéger la sécurité et mémoriser des préférences de base telles que la langue.",
+            "Lorsque des outils optionnels d’analytics ou similaires sont utilisés, nous fournirons les informations ou contrôles requis."
+          ]
+        },
+        "children": {
+          "title": "10. Mineurs",
+          "paragraphs": [
+            "Batiplus s’adresse à des adultes agissant comme clients ou professionnels de la construction. La plateforme n’est pas destinée aux enfants et nous ne collectons pas sciemment de données personnelles d’enfants pour des comptes marketplace."
+          ]
+        },
+        "changes": {
+          "title": "11. Modifications",
+          "paragraphs": [
+            "Nous pouvons mettre à jour cette Politique de confidentialité lorsque nos pratiques ou obligations légales évoluent. La date de « Dernière mise à jour » en haut de cette page sera alors révisée.",
+            "En cas de changement important, nous pourrons fournir une information complémentaire dans le produit ou par e-mail si nécessaire."
+          ]
+        },
+        "contact": {
+          "title": "12. Contact",
+          "paragraphs": [
+            "Pour toute demande relative à la confidentialité, utilisez la page contact de Batiplus. Les règles d’usage de la plateforme sont décrites dans les Conditions d’utilisation."
+          ]
+        }
+      }
     }
   },
   "project": {
@@ -1975,6 +2180,37 @@
     "emptyTitle": "Aucun projet n’est disponible pour le moment.",
     "emptyDescription": "Les nouveaux projets clients apparaîtront ici après validation."
   },
+  "browseProjectsPage": {
+    "eyebrow": "Marketplace",
+    "title": "Parcourir les projets",
+    "lead": "Découvrez les demandes de construction publiées par des clients partout au Maroc.",
+    "searchLabel": "Rechercher des projets",
+    "searchPlaceholder": "Rechercher par titre, ville ou catégorie",
+    "clearSearch": "Effacer la recherche",
+    "filters": "Filtres",
+    "closeFilters": "Fermer les filtres",
+    "clearFilters": "Effacer les filtres",
+    "categoryFilter": "Catégorie",
+    "cityFilter": "Ville",
+    "allCategories": "Toutes les catégories",
+    "allCities": "Toutes les villes",
+    "resultsLabel": "Résultats des projets",
+    "resultsCount": "{count, plural, =0 {Aucun projet} one {# projet} other {# projets}}",
+    "loading": "Chargement des projets…",
+    "emptyTitle": "Aucun projet correspondant",
+    "emptyLead": "Essayez une autre recherche ou effacez vos filtres. Les nouveaux projets clients apparaissent ici après validation.",
+    "openAria": "Ouvrir le projet : {title}",
+    "posted": "Publié {date}",
+    "viewProject": "Voir le projet",
+    "previewTitle": "Détails du projet",
+    "closePreview": "Fermer les détails du projet",
+    "ctaTitle": "Ce projet vous intéresse ?",
+    "ctaGuestLead": "Inscrivez-vous en tant qu’entreprise pour envoyer une proposition lorsque vous serez vérifié et éligible.",
+    "ctaGuestAction": "Créer un compte entreprise",
+    "ctaSignIn": "Se connecter",
+    "ctaCompanyLead": "Ouvrez votre espace entreprise pour consulter ce projet et poursuivre le parcours de proposition.",
+    "ctaCompanyAction": "Aller à Trouver des projets"
+  },
   "messages": {
     "title": "Messages",
     "searchConversations": "Rechercher des conversations",
@@ -1986,7 +2222,7 @@
     "searchProjects": "Rechercher des projets",
     "noProjectResults": "Aucun résultat",
     "untitledProject": "Projet sans titre",
-    "conversationsEmpty": "Les conversations apparaîtront ici",
+    "conversationsEmpty": "Vos conversations apparaîtront ici lorsqu’un client et une entreprise ouvriront une discussion.",
     "noMatchingConversations": "Aucune conversation ne correspond à ces filtres.",
     "welcomeTitle": "Bienvenue dans Messages",
     "welcomeLead": "Lorsque vous et une entreprise aurez un intérêt mutuel sur un projet, vous pourrez discuter ici.",
@@ -1997,7 +2233,25 @@
     "openMenu": "Ouvrir les filtres des messages",
     "sidebarLabel": "Conversations",
     "threadPane": "Message",
-    "loading": "Chargement des messages…"
+    "loading": "Chargement des messages…",
+    "emptyDescription": "Vos conversations apparaîtront ici lorsqu’un client et une entreprise ouvriront une discussion.",
+    "selectConversation": "Sélectionnez une conversation pour lire les messages et répondre.",
+    "unknownParty": "Membre Batiplus",
+    "noMessagesYet": "Aucun message pour le moment",
+    "viewCompanyProfile": "Voir le profil de l’entreprise",
+    "loadOlder": "Charger les messages précédents",
+    "loadingOlder": "Chargement des messages précédents…",
+    "startConversation": "Discussion ouverte",
+    "startConversationDescription": "Envoyez le premier message au sujet de ce projet.",
+    "composerLabel": "Message",
+    "composerPlaceholder": "Écrivez un message…",
+    "send": "Envoyer",
+    "sending": "Envoi…",
+    "characterCount": "{count} / {max}",
+    "statusActive": "Active",
+    "statusClosed": "Fermée",
+    "backToConversations": "Retour aux conversations",
+    "closedNotice": "Cette conversation est fermée et n’accepte plus de nouveaux messages."
   },
   "notifications": {
     "title": "Notifications",
@@ -2417,7 +2671,13 @@
       "scope": "Périmètre des travaux",
       "message": "Message au client",
       "messagingLocked": "La messagerie reste verrouillée. Elle s’ouvrira uniquement si le client choisit d’ouvrir la discussion.",
-      "discussionPending": "Le client a ouvert la discussion. La messagerie reste verrouillée jusqu’à l’ajout des conversations à l’étape suivante.",
+      "discussionOpenedTitle": "Discussion ouverte",
+      "discussionPending": "Le client a ouvert une discussion concernant ce projet.",
+      "continueInMessages": "Continuer dans Messages",
+      "conversationLoading": "Préparation de votre conversation…",
+      "conversationUnavailableTitle": "Impossible de charger la conversation.",
+      "conversationUnavailableLead": "Veuillez réessayer. Si le problème persiste, contactez le support.",
+      "retryConversation": "Réessayer",
       "withdraw": "Retirer le devis",
       "withdrawing": "Retrait…",
       "withdrawnNotice": "Ce devis a été retiré et reste conservé dans votre historique."
@@ -2446,8 +2706,14 @@
     "viewProfile": "Voir le profil",
     "close": "Fermer le devis",
     "unavailable": "Ce devis n’est plus disponible.",
-    "messagingNotice": "Ouvrir la discussion enregistre votre intérêt, mais la messagerie reste verrouillée jusqu’à l’ajout des conversations à l’étape suivante.",
-    "discussionOpenedNotice": "Votre souhait de discuter a été enregistré. Aucune conversation ni messagerie n’a encore été créée.",
+    "messagingNotice": "Ouvrir la discussion crée une conversation privée liée au projet avec cette entreprise.",
+    "discussionOpenedTitle": "Discussion ouverte",
+    "discussionOpenedNotice": "Votre conversation privée liée au projet est prête.",
+    "continueInMessages": "Continuer dans Messages",
+    "conversationLoading": "Préparation de votre conversation…",
+    "conversationUnavailableTitle": "Impossible de charger la conversation.",
+    "conversationUnavailableLead": "Veuillez réessayer. Si le problème persiste, contactez le support.",
+    "retryConversation": "Réessayer",
     "status": {
       "draft": "Brouillon",
       "submitted": "Envoyé",
@@ -2477,8 +2743,15 @@
     "success": {
       "shortlist": "Devis présélectionné.",
       "decline": "Devis refusé.",
-      "open_discussion": "Votre souhait de discuter est enregistré. La messagerie n’est pas encore ouverte."
+      "open_discussion": "Discussion ouverte."
     }
+  },
+  "seoAccess": {
+    "metaTitle": "Espace SEO",
+    "metaDescription": "Espace privé de l’équipe SEO de Batiplus.",
+    "eyebrow": "Équipe SEO",
+    "title": "L’accès à l’espace SEO est sécurisé",
+    "description": "La frontière d’autorisation dédiée au SEO est active. Les modules de gestion de contenu seront ajoutés séparément."
   },
   "dashboard": {
     "client": "Espace client",
@@ -2552,6 +2825,7 @@
         "VERIFICATION_DOCUMENT_NOT_FOUND": "Ce document de vérification est introuvable.",
         "REJECTION_REASON_REQUIRED": "Saisissez un motif de refus d’au moins 3 caractères.",
         "ADMIN_REQUIRED": "Un accès administrateur est requis.",
+        "SEO_TEAM_REQUIRED": "Un accès de l’équipe SEO est requis.",
         "DOCUMENT_UPLOAD_FAILED": "Le document n’a pas pu être envoyé. Veuillez réessayer.",
         "COMPANY_SLUG_UNAVAILABLE": "Impossible de créer l’adresse publique de l’entreprise.",
         "INVALID_PORTFOLIO_IMAGE": "Choisissez des images JPG, PNG ou WebP de 10 Mo maximum.",
@@ -2591,6 +2865,14 @@
         "INVALID_QUOTE_WITHDRAWAL_REASON": "Limitez le motif de retrait à 300 caractères.",
         "INVALID_QUOTE_STATUS_TRANSITION": "Ce changement de statut du devis n’est pas autorisé.",
         "INVALID_QUOTE_REVIEW_REASON": "Limitez le motif d’examen à 300 caractères.",
+        "CONVERSATION_NOT_FOUND": "Cette conversation n’est pas disponible.",
+        "CONVERSATION_LOCKED": "La messagerie n’est pas disponible pour ce devis.",
+        "CONVERSATION_CLOSED": "Cette conversation est fermée.",
+        "CONVERSATION_INTEGRITY_ERROR": "Cette conversation n’a pas pu être ouverte. Contactez le support.",
+        "INVALID_MESSAGE_BODY": "Rédigez un message de 1 à 4 000 caractères.",
+        "INVALID_MESSAGE_ID": "Ce message n’a pas pu être envoyé. Veuillez réessayer.",
+        "INVALID_MESSAGE_PAGE_SIZE": "Cette page de messages n’a pas pu être chargée.",
+        "MESSAGE_RATE_LIMITED": "Veuillez patienter un instant avant d’envoyer un autre message.",
         "NETWORK": "Problème de connexion. Nous allons réessayer.",
         "UNKNOWN": "Une erreur est survenue. Veuillez réessayer."
       }

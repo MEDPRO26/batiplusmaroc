@@ -8,7 +8,11 @@ import fr from "@/messages/fr.json";
 
 vi.mock("next/image", () => ({ default: ({ alt }: { alt: string }) => <span data-image-alt={alt} /> }));
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href }: { children: React.ReactNode; href: { pathname: string; params: { slug: string } } }) => <a href={href.pathname.replace("[slug]", href.params.slug)}>{children}</a>,
+  Link: ({ children, href }: { children: React.ReactNode; href: string | { pathname: string; params?: Record<string, string> } }) => {
+    if (typeof href === "string") return <a href={href}>{children}</a>;
+    const resolved = Object.entries(href.params ?? {}).reduce((pathname, [key, value]) => pathname.replace(`[${key}]`, value), href.pathname);
+    return <a href={resolved}>{children}</a>;
+  },
 }));
 
 import { QuoteReviewContent, ReceivedQuoteCard } from "@/features/quotes/components/client-received-quotes";
@@ -73,7 +77,7 @@ describe("client received quote UI", () => {
     expect(html).toContain("Shortlist");
     expect(html).toContain("Open discussion");
     expect(html).toContain("Decline");
-    expect(html).toContain("messaging remains locked");
+    expect(html).toContain("creates a private project conversation");
   });
 
   test("requires explicit confirmation before declining", () => {
@@ -84,13 +88,25 @@ describe("client received quote UI", () => {
     expect(html).toContain("Keep quote");
   });
 
-  test("terminal discussion state exposes no further review actions", () => {
+  test.each([
+    ["en", "Continue in Messages"],
+    ["fr", "Continuer dans Messages"],
+  ] as const)("%s discussion state links directly to the exact conversation", (locale, label) => {
     const detail: ReceivedQuoteDetail = { ...quote, status: "discussion_open", history: [] };
-    const html = render("en", <QuoteReviewContent confirmDecline={false} error={null} onCancelDecline={vi.fn()} onConfirmDecline={vi.fn()} onReview={vi.fn()} pendingAction={null} quote={detail} success={null} />);
-    expect(html).toContain("Discussion opened");
-    expect(html).toContain("No conversation or message thread has been created yet");
+    const html = render(locale, <QuoteReviewContent confirmDecline={false} conversationId={"conversation-1" as Id<"conversations">} error={null} onCancelDecline={vi.fn()} onConfirmDecline={vi.fn()} onReview={vi.fn()} pendingAction={null} quote={detail} success={null} />);
+    expect(html).toContain(label);
+    expect(html).toContain('/messages/conversation-1');
     expect(html).not.toContain(">Shortlist<");
     expect(html).not.toContain(">Decline<");
+  });
+
+  test("discussion state fails safely and offers retry when its conversation is missing", () => {
+    const detail: ReceivedQuoteDetail = { ...quote, status: "discussion_open", history: [] };
+    const html = render("en", <QuoteReviewContent confirmDecline={false} conversationId={null} conversationLookupPending={false} error={null} onCancelDecline={vi.fn()} onConfirmDecline={vi.fn()} onReview={vi.fn()} pendingAction={null} quote={detail} success={null} />);
+    expect(html).toContain("The conversation could not be loaded.");
+    expect(html).toContain("Try again");
+    expect(html).not.toContain("conversation-1");
+    expect(html).not.toContain("ConvexError");
   });
 
   test("keeps received quote translation shapes aligned", () => {

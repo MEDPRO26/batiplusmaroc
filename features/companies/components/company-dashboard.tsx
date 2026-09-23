@@ -8,6 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { projectBudgetRanges, projectCategories, projectCities } from "@/convex/projects/constants";
 import { DashboardCardsSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
 
@@ -87,14 +88,12 @@ export function CompanyDashboard() {
 
   useEffect(() => {
     if (!user) return;
-    if (user.accountType === "client") {
-      router.replace(
-        user.onboardingStatus === "completed" ? routes.clientDashboard : routes.clientOnboarding,
-      );
-      return;
-    }
     if (user.accountType === "company" && user.onboardingStatus !== "completed") {
       router.replace(routes.companyOnboarding);
+      return;
+    }
+    if (user.accountType !== "company") {
+      router.replace(workspaceRouteForUser(user));
     }
   }, [router, user]);
 

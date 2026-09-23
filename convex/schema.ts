@@ -2,7 +2,12 @@ import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-const accountType = v.union(v.literal("client"), v.literal("company"), v.literal("admin"));
+const accountType = v.union(
+  v.literal("client"),
+  v.literal("company"),
+  v.literal("admin"),
+  v.literal("seo_team"),
+);
 const onboardingStatus = v.union(v.literal("pending"), v.literal("completed"));
 const companySize = v.union(
   v.literal("solo"),
@@ -47,6 +52,31 @@ const initialQuoteStatus = v.union(
   v.literal("discussion_open"),
   v.literal("declined"),
   v.literal("withdrawn"),
+);
+const seoLocale = v.union(v.literal("fr"), v.literal("en"));
+const seoSearchIntent = v.union(
+  v.literal("informational"),
+  v.literal("commercial"),
+  v.literal("transactional"),
+  v.literal("navigational"),
+  v.literal("local"),
+);
+const seoRobotsDirective = v.union(
+  v.literal("index,follow"),
+  v.literal("noindex,follow"),
+  v.literal("index,nofollow"),
+  v.literal("noindex,nofollow"),
+);
+const seoArticleStatus = v.union(
+  v.literal("draft"), v.literal("review"), v.literal("published"), v.literal("archived"),
+);
+const seoPillarStatus = v.union(v.literal("planned"), v.literal("active"), v.literal("archived"));
+const seoClusterStatus = v.union(
+  v.literal("planned"), v.literal("briefed"), v.literal("writing"),
+  v.literal("published"), v.literal("archived"),
+);
+const seoBriefStatus = v.union(
+  v.literal("draft"), v.literal("ready"), v.literal("converted"), v.literal("archived"),
 );
 export default defineSchema({
   ...authTables,
@@ -201,6 +231,41 @@ export default defineSchema({
   })
     .index("by_quoteId", ["quoteId"])
     .index("by_quoteId_and_changedAt", ["quoteId", "changedAt"]),
+
+  conversations: defineTable({
+    projectId: v.id("projects"),
+    quoteId: v.id("projectQuotes"),
+    clientId: v.id("users"),
+    companyId: v.id("companies"),
+    status: v.union(v.literal("active"), v.literal("closed")),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    lastMessageAt: v.optional(v.number()),
+    lastMessagePreview: v.optional(v.string()),
+    clientLastReadAt: v.optional(v.number()),
+    companyLastReadAt: v.optional(v.number()),
+    clientLastSentAt: v.optional(v.number()),
+    companyLastSentAt: v.optional(v.number()),
+  })
+    .index("by_projectId_and_companyId", ["projectId", "companyId"])
+    .index("by_clientId_and_updatedAt", ["clientId", "updatedAt"])
+    .index("by_companyId_and_updatedAt", ["companyId", "updatedAt"]),
+
+  messages: defineTable({
+    conversationId: v.id("conversations"),
+    senderUserId: v.id("users"),
+    senderType: v.union(v.literal("client"), v.literal("company")),
+    body: v.string(),
+    clientMessageId: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"])
+    .index("by_conversationId_and_senderUserId_and_clientMessageId", [
+      "conversationId",
+      "senderUserId",
+      "clientMessageId",
+    ]),
 
   companies: defineTable({
     name: v.optional(v.string()),
@@ -433,4 +498,110 @@ export default defineSchema({
   })
     .index("by_token", ["token"])
     .index("by_objectKey", ["objectKey"]),
+
+  seoMedia: defineTable({
+    objectKey: v.string(), filename: v.string(), mimeType: v.string(),
+    width: v.optional(v.number()), height: v.optional(v.number()), size: v.number(),
+    uploadedBy: v.id("users"), status: v.union(v.literal("active"), v.literal("archived")),
+    replacesMediaId: v.optional(v.id("seoMedia")), archivedAt: v.optional(v.number()),
+    createdAt: v.number(), updatedAt: v.number(),
+  })
+    .index("by_objectKey", ["objectKey"])
+    .index("by_status_and_createdAt", ["status", "createdAt"]),
+
+  seoMediaMetadata: defineTable({
+    mediaId: v.id("seoMedia"), locale: seoLocale, altText: v.string(),
+    title: v.optional(v.string()), caption: v.optional(v.string()),
+    description: v.optional(v.string()), seoFilename: v.optional(v.string()),
+    createdBy: v.id("users"), updatedBy: v.id("users"),
+    createdAt: v.number(), updatedAt: v.number(),
+  }).index("by_mediaId_and_locale", ["mediaId", "locale"]),
+
+  seoPillars: defineTable({
+    title: v.string(), slug: v.string(), description: v.string(), primaryKeyword: v.string(),
+    searchIntent: seoSearchIntent, locale: seoLocale, status: seoPillarStatus,
+    targetUrl: v.optional(v.string()), createdBy: v.id("users"), updatedBy: v.id("users"),
+    createdAt: v.number(), updatedAt: v.number(), archivedAt: v.optional(v.number()),
+  })
+    .index("by_locale_and_slug", ["locale", "slug"])
+    .index("by_locale_and_status", ["locale", "status"]),
+
+  seoClusters: defineTable({
+    pillarId: v.id("seoPillars"), topic: v.string(), primaryKeyword: v.string(),
+    secondaryKeywords: v.array(v.string()), searchIntent: seoSearchIntent, locale: seoLocale,
+    targetArticleId: v.optional(v.id("seoArticles")), targetPageKey: v.optional(v.string()),
+    status: seoClusterStatus, priority: v.number(), createdBy: v.id("users"),
+    updatedBy: v.id("users"), createdAt: v.number(), updatedAt: v.number(),
+    archivedAt: v.optional(v.number()),
+  })
+    .index("by_pillarId", ["pillarId"])
+    .index("by_locale_and_status_and_priority", ["locale", "status", "priority"]),
+
+  seoBriefs: defineTable({
+    locale: seoLocale, targetKeyword: v.string(), supportingKeywords: v.array(v.string()),
+    searchIntent: seoSearchIntent, targetAudience: v.string(), suggestedTitle: v.string(),
+    suggestedH1: v.string(), outline: v.array(v.object({
+      level: v.union(v.literal(2), v.literal(3)), heading: v.string(),
+    })), questions: v.array(v.string()),
+    internalLinkNotes: v.array(v.string()), externalReferences: v.array(v.string()),
+    wordCountTarget: v.number(), cta: v.string(), notes: v.optional(v.string()),
+    pillarId: v.optional(v.id("seoPillars")), clusterId: v.optional(v.id("seoClusters")),
+    articleId: v.optional(v.id("seoArticles")), status: seoBriefStatus,
+    createdBy: v.id("users"), updatedBy: v.id("users"), createdAt: v.number(), updatedAt: v.number(),
+    archivedAt: v.optional(v.number()),
+  })
+    .index("by_clusterId", ["clusterId"])
+    .index("by_articleId", ["articleId"])
+    .index("by_locale_and_status", ["locale", "status"]),
+
+  seoArticles: defineTable({
+    title: v.string(), slug: v.string(), excerpt: v.string(), content: v.string(),
+    featuredMediaId: v.optional(v.id("seoMedia")), authorId: v.id("users"), locale: seoLocale,
+    category: v.string(), primaryKeyword: v.string(), secondaryKeywords: v.array(v.string()),
+    searchIntent: seoSearchIntent, seoTitle: v.string(), metaDescription: v.string(),
+    canonicalUrl: v.optional(v.string()), robots: seoRobotsDirective,
+    ogTitle: v.optional(v.string()), ogDescription: v.optional(v.string()),
+    ogMediaId: v.optional(v.id("seoMedia")), pillarId: v.optional(v.id("seoPillars")),
+    clusterId: v.optional(v.id("seoClusters")), briefId: v.optional(v.id("seoBriefs")),
+    translationGroup: v.optional(v.string()), status: seoArticleStatus,
+    createdBy: v.id("users"), updatedBy: v.id("users"), createdAt: v.number(),
+    updatedAt: v.number(), publishedAt: v.optional(v.number()), archivedAt: v.optional(v.number()),
+  })
+    .index("by_locale_and_slug", ["locale", "slug"])
+    .index("by_locale_and_status", ["locale", "status"])
+    .index("by_pillarId", ["pillarId"])
+    .index("by_clusterId", ["clusterId"])
+    .index("by_translationGroup_and_locale", ["translationGroup", "locale"])
+    .index("by_canonicalUrl", ["canonicalUrl"]),
+
+  seoPageMetadata: defineTable({
+    pageKey: v.string(), locale: seoLocale, seoTitle: v.string(), metaDescription: v.string(),
+    canonicalUrl: v.optional(v.string()), robots: seoRobotsDirective,
+    ogTitle: v.optional(v.string()), ogDescription: v.optional(v.string()),
+    ogMediaId: v.optional(v.id("seoMedia")), createdBy: v.id("users"), updatedBy: v.id("users"),
+    createdAt: v.number(), updatedAt: v.number(),
+  })
+    .index("by_pageKey_and_locale", ["pageKey", "locale"])
+    .index("by_canonicalUrl", ["canonicalUrl"]),
+
+  seoArticleLinks: defineTable({
+    sourceArticleId: v.id("seoArticles"),
+    targetArticleId: v.optional(v.id("seoArticles")), targetPageKey: v.optional(v.string()),
+    anchorText: v.string(), createdBy: v.id("users"), createdAt: v.number(),
+  })
+    .index("by_sourceArticleId", ["sourceArticleId"])
+    .index("by_sourceArticleId_and_targetArticleId", ["sourceArticleId", "targetArticleId"]),
+
+  seoAuditEvents: defineTable({
+    actorId: v.id("users"), entityType: v.union(
+      v.literal("article"), v.literal("media"), v.literal("media_metadata"),
+      v.literal("page_metadata"), v.literal("pillar"), v.literal("cluster"),
+      v.literal("brief"), v.literal("article_link"),
+    ),
+    entityId: v.string(), action: v.string(), changedFields: v.array(v.string()),
+    beforeStatus: v.optional(v.string()), afterStatus: v.optional(v.string()),
+    occurredAt: v.number(),
+  })
+    .index("by_entityType_and_entityId_and_occurredAt", ["entityType", "entityId", "occurredAt"])
+    .index("by_actorId_and_occurredAt", ["actorId", "occurredAt"]),
 });

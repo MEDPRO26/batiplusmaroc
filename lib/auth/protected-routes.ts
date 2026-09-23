@@ -4,4 +4,5 @@ export const PROTECTED_ROUTE_PATTERNS = [
   "/:locale/client(.*)",
   "/:locale/company(.*)",
   "/:locale/admin(.*)",
+  "/:locale/seo(.*)",
 ] as const;

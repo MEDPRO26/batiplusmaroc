@@ -26,6 +26,11 @@ const r2Pattern = r2PublicMediaPattern();
 const nextConfig: NextConfig = {
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
+  logging: {
+    // Browser extensions can emit unrelated warnings and unhandled rejections.
+    // Keep those in DevTools instead of forwarding them into the Next.js terminal.
+    browserToTerminal: false,
+  },
   experimental: {
     globalNotFound: true,
   },

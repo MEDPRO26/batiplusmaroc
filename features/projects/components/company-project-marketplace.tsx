@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Link, useRouter } from "@/i18n/navigation";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
 
@@ -39,11 +40,7 @@ const SORT_OPTIONS: SortOption[] = ["newest", "oldest", "budget_high", "budget_l
 export function resolveCompanyProjectsRedirect(user: User) {
   if (user === undefined) return null;
   if (user === null) return routes.signIn;
-  if (user.accountType === "client") {
-    return user.onboardingStatus === "completed" ? routes.clientDashboard : routes.clientOnboarding;
-  }
-  if (user.accountType === "admin") return routes.admin;
-  if (user.accountType !== "company") return routes.home;
+  if (user.accountType !== "company") return workspaceRouteForUser(user);
   if (user.onboardingStatus !== "completed") return routes.companyOnboarding;
   return null;
 }

@@ -31,11 +31,14 @@ const validSignup = {
 };
 
 describe("password signup policy", () => {
-  test("rejects invalid and admin account types", () => {
+  test("rejects invalid and every internal account type", () => {
     expect(() => buildPasswordProfile({ ...validSignup, accountType: "other" })).toThrow(
       "INVALID_ACCOUNT_TYPE",
     );
     expect(() => buildPasswordProfile({ ...validSignup, accountType: "admin" })).toThrow(
+      "INVALID_ACCOUNT_TYPE",
+    );
+    expect(() => buildPasswordProfile({ ...validSignup, accountType: "seo_team" })).toThrow(
       "INVALID_ACCOUNT_TYPE",
     );
   });
@@ -127,6 +130,46 @@ describe("OAuth finalization policy", () => {
 
     const user = await t.run((ctx) => ctx.db.get(userId as Id<"users">));
     expect(user?.accountType).toBeUndefined();
+  });
+
+  test("cannot create an SEO team role", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await oauthUser(t);
+    const asUser = t.withIdentity({ subject: `${userId}|test-session` });
+
+    await expect(
+      asUser.mutation(api.users.finalizeOAuthSignup, {
+        accountType: "seo_team" as never,
+        acceptedTerms: true,
+        marketingOptIn: false,
+      }),
+    ).rejects.toThrow();
+
+    const user = await t.run((ctx) => ctx.db.get(userId as Id<"users">));
+    expect(user?.accountType).toBeUndefined();
+  });
+
+  test("cannot overwrite an already provisioned SEO account with a public role", async () => {
+    const t = convexTest(schema, modules);
+    const userId = await t.run((ctx) =>
+      ctx.db.insert("users", {
+        email: "seo@example.com",
+        emailVerificationTime: 123,
+        accountType: "seo_team",
+      }),
+    );
+    const asUser = t.withIdentity({ subject: `${userId}|test-session` });
+
+    await expect(
+      asUser.mutation(api.users.finalizeOAuthSignup, {
+        accountType: "client",
+        acceptedTerms: true,
+        marketingOptIn: false,
+      }),
+    ).rejects.toThrow("INVALID_ACCOUNT_TYPE");
+
+    const user = await t.run((ctx) => ctx.db.get(userId));
+    expect(user?.accountType).toBe("seo_team");
   });
 
   test("requires terms", async () => {
@@ -268,14 +311,20 @@ describe("account foundation integration", () => {
 
   test("denies privileged and unaccepted legacy accounts", async () => {
     const t = convexTest(schema, modules);
-    const [adminId, unacceptedId] = await t.run(async (ctx) => [
+    const [adminId, seoId, unacceptedId] = await t.run(async (ctx) => [
       await ctx.db.insert("users", { accountType: "admin", acceptedTerms: true }),
+      await ctx.db.insert("users", { accountType: "seo_team", acceptedTerms: true }),
       await ctx.db.insert("users", { accountType: "client", acceptedTerms: false }),
     ]);
 
     await expect(
       t
         .withIdentity({ subject: `${adminId}|test-session` })
+        .mutation(api.users.ensureCurrentUserFoundation, {}),
+    ).rejects.toThrow("INVALID_ACCOUNT_TYPE");
+    await expect(
+      t
+        .withIdentity({ subject: `${seoId}|test-session` })
         .mutation(api.users.ensureCurrentUserFoundation, {}),
     ).rejects.toThrow("INVALID_ACCOUNT_TYPE");
     await expect(

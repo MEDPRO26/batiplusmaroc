@@ -2,14 +2,15 @@
 
 import type { FunctionReturnType } from "convex/server";
 import { useMutation, useQuery } from "convex/react";
-import { BadgeCheck, CalendarDays, Check, Clock3, ExternalLink, LockKeyhole, MessageSquareText, Star, WalletCards, X } from "lucide-react";
+import { ArrowRight, BadgeCheck, CalendarDays, Check, Clock3, ExternalLink, LockKeyhole, MessageSquareText, RefreshCw, Star, WalletCards, X } from "lucide-react";
 import Image from "next/image";
 import { useFormatter, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Link } from "@/i18n/navigation";
 import { mapAppError } from "@/lib/errors";
+import { routes } from "@/lib/routes";
 
 export type ReceivedQuote = FunctionReturnType<typeof api.quotes.index.listReceivedInitialQuotes>[number];
 export type ReceivedQuoteDetail = NonNullable<FunctionReturnType<typeof api.quotes.index.getReceivedInitialQuote>>;
@@ -55,7 +56,7 @@ export function ClientReceivedQuotes({ projectId }: { projectId: Id<"projects"> 
           {quotes.map((quote) => <ReceivedQuoteCard key={quote.id} onOpen={() => void openQuote(quote)} quote={quote} />)}
         </div>
       )}
-      {selectedId ? <QuoteReviewDialog onClose={() => setSelectedId(null)} quoteId={selectedId} /> : null}
+      {selectedId ? <QuoteReviewDialog key={selectedId} onClose={() => setSelectedId(null)} quoteId={selectedId} /> : null}
     </section>
   );
 }
@@ -97,12 +98,17 @@ function QuoteReviewDialog({ quoteId, onClose }: { quoteId: Id<"projectQuotes">;
   const t = useTranslations("receivedQuotes");
   const tUx = useTranslations("ux");
   const quote = useQuery(api.quotes.index.getReceivedInitialQuote, { quoteId });
+  const threads = useQuery(api.messages.index.listMyThreads);
   const review = useMutation(api.quotes.index.reviewInitialQuote);
+  const recoverConversationMutation = useMutation(api.messages.index.recoverConversationForQuote);
+  const [openedConversationId, setOpenedConversationId] = useState<Id<"conversations"> | null>(null);
+  const [recoveryStatus, setRecoveryStatus] = useState<"idle" | "pending" | "failed">("idle");
   const [pendingAction, setPendingAction] = useState<ReviewAction | null>(null);
   const [confirmDecline, setConfirmDecline] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const automaticRecoveryQuoteRef = useRef<Id<"projectQuotes"> | null>(null);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -113,20 +119,58 @@ function QuoteReviewDialog({ quoteId, onClose }: { quoteId: Id<"projectQuotes">;
     return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", onKeyDown); };
   }, [onClose]);
 
+  const recoverConversation = useCallback(async () => {
+    setRecoveryStatus("pending");
+    setError(null);
+    try {
+      const result = await recoverConversationMutation({ quoteId });
+      setOpenedConversationId(result.conversationId);
+      setRecoveryStatus("idle");
+    } catch {
+      setRecoveryStatus("failed");
+    }
+  }, [quoteId, recoverConversationMutation]);
+
+  const listedConversationId = threads?.find((thread) => thread.quoteId === quoteId)?.id ?? null;
+
+  useEffect(() => {
+    if (quote?.status !== "discussion_open" || threads === undefined || listedConversationId || openedConversationId || recoveryStatus !== "idle" || automaticRecoveryQuoteRef.current === quoteId) {
+      return;
+    }
+    automaticRecoveryQuoteRef.current = quoteId;
+    let cancelled = false;
+    void recoverConversationMutation({ quoteId })
+      .then((result) => {
+        if (!cancelled) setOpenedConversationId(result.conversationId);
+      })
+      .catch(() => {
+        if (!cancelled) setRecoveryStatus("failed");
+      });
+    return () => { cancelled = true; };
+  }, [listedConversationId, openedConversationId, quote?.status, quoteId, recoverConversationMutation, recoveryStatus, threads]);
+
   async function runAction(action: ReviewAction) {
     setPendingAction(action);
     setError(null);
     setSuccess(null);
     try {
-      await review({ quoteId, action });
+      const result = await review({ quoteId, action });
       setConfirmDecline(false);
-      setSuccess(t(`success.${action}`));
+      if (action === "open_discussion" && result.conversationId) {
+        setOpenedConversationId(result.conversationId);
+      } else {
+        setSuccess(t(`success.${action}`));
+      }
     } catch (cause) {
       setError(mapAppError(cause, (key) => tUx(key)));
     } finally {
       setPendingAction(null);
     }
   }
+
+  const displayedQuote = quote && openedConversationId && quote.status !== "discussion_open"
+    ? { ...quote, status: "discussion_open" as const }
+    : quote;
 
   return (
     <div className="fixed inset-0 z-[80]" role="presentation">
@@ -136,13 +180,13 @@ function QuoteReviewDialog({ quoteId, onClose }: { quoteId: Id<"projectQuotes">;
           <div><p className="m-0 text-xs font-semibold tracking-[0.1em] text-brand uppercase">{t("detail.eyebrow")}</p><h2 className="mt-1 mb-0 text-lg font-semibold text-ink" id="quote-review-title">{quote?.company.name ?? t("detail.title")}</h2></div>
           <button ref={closeRef} aria-label={t("close")} className="grid size-11 shrink-0 place-items-center rounded-full border border-brand-border text-ink hover:bg-surface-muted" onClick={onClose} type="button"><X aria-hidden className="size-5" /></button>
         </header>
-        {quote === undefined ? <QuoteDetailSkeleton label={t("loadingDetail")} /> : quote === null ? <p className="p-7 text-sm text-muted">{t("unavailable")}</p> : <QuoteReviewContent confirmDecline={confirmDecline} error={error} onCancelDecline={() => setConfirmDecline(false)} onConfirmDecline={() => void runAction("decline")} onReview={(action) => action === "decline" ? setConfirmDecline(true) : void runAction(action)} pendingAction={pendingAction} quote={quote} success={success} />}
+        {displayedQuote === undefined ? <QuoteDetailSkeleton label={t("loadingDetail")} /> : displayedQuote === null ? <p className="p-7 text-sm text-muted">{t("unavailable")}</p> : <QuoteReviewContent confirmDecline={confirmDecline} conversationId={openedConversationId ?? listedConversationId} conversationLookupPending={threads === undefined || (displayedQuote.status === "discussion_open" && !openedConversationId && !listedConversationId && recoveryStatus !== "failed")} conversationRecoveryPending={recoveryStatus === "pending"} error={error} onCancelDecline={() => setConfirmDecline(false)} onConfirmDecline={() => void runAction("decline")} onRecoverConversation={() => void recoverConversation()} onReview={(action) => action === "decline" ? setConfirmDecline(true) : void runAction(action)} pendingAction={pendingAction} quote={displayedQuote} success={success} />}
       </section>
     </div>
   );
 }
 
-export function QuoteReviewContent({ quote, onReview, pendingAction, confirmDecline, onCancelDecline, onConfirmDecline, error, success }: { quote: ReceivedQuoteDetail; onReview: (action: ReviewAction) => void; pendingAction: ReviewAction | null; confirmDecline: boolean; onCancelDecline: () => void; onConfirmDecline: () => void; error: string | null; success: string | null }) {
+export function QuoteReviewContent({ quote, conversationId = null, conversationLookupPending = false, conversationRecoveryPending = false, onReview, onRecoverConversation, pendingAction, confirmDecline, onCancelDecline, onConfirmDecline, error, success }: { quote: ReceivedQuoteDetail; conversationId?: Id<"conversations"> | null; conversationLookupPending?: boolean; conversationRecoveryPending?: boolean; onReview: (action: ReviewAction) => void; onRecoverConversation?: () => void; pendingAction: ReviewAction | null; confirmDecline: boolean; onCancelDecline: () => void; onConfirmDecline: () => void; error: string | null; success: string | null }) {
   const t = useTranslations("receivedQuotes");
   const format = useFormatter();
   const canShortlist = quote.status === "submitted" || quote.status === "viewed";
@@ -168,10 +212,27 @@ export function QuoteReviewContent({ quote, onReview, pendingAction, confirmDecl
       </dl>
       <QuoteText label={t("scope")} value={quote.scope} />
       <QuoteText label={t("message")} value={quote.message} />
-      <div className="mt-7 flex gap-3 rounded-xl border border-[#c9dbe8] bg-[#f1f7fb] p-4 text-sm leading-6 text-[#31546d]"><LockKeyhole aria-hidden className="mt-0.5 size-5 shrink-0" /><p className="m-0">{t("messagingNotice")}</p></div>
+      {quote.status !== "discussion_open" ? <div className="mt-7 flex gap-3 rounded-xl border border-[#c9dbe8] bg-[#f1f7fb] p-4 text-sm leading-6 text-[#31546d]"><LockKeyhole aria-hidden className="mt-0.5 size-5 shrink-0" /><p className="m-0">{t("messagingNotice")}</p></div> : null}
       {confirmDecline ? <div className="mt-6 rounded-2xl border border-[#edc7c2] bg-[#fff8f7] p-5" role="alertdialog" aria-label={t("declineConfirm.title")}><h3 className="m-0 text-base font-semibold text-ink">{t("declineConfirm.title")}</h3><p className="mt-2 mb-0 text-sm leading-6 text-muted">{t("declineConfirm.description")}</p><div className="mt-4 flex flex-wrap gap-3"><button className="min-h-11 rounded-full bg-[#9f3f35] px-5 text-sm font-semibold text-white disabled:opacity-60" disabled={pendingAction !== null} onClick={onConfirmDecline} type="button">{pendingAction === "decline" ? t("actions.working") : t("declineConfirm.confirm")}</button><button className="min-h-11 rounded-full border border-brand-border bg-white px-5 text-sm font-semibold text-ink" onClick={onCancelDecline} type="button">{t("declineConfirm.cancel")}</button></div></div> : null}
       {canAct && !confirmDecline ? <div className="mt-7 flex flex-wrap gap-3 border-t border-brand-border pt-6">{canShortlist ? <ActionButton disabled={pendingAction !== null} icon={<Star aria-hidden className="size-4" />} label={t("actions.shortlist")} onClick={() => onReview("shortlist")} pending={pendingAction === "shortlist"} /> : null}<ActionButton disabled={pendingAction !== null} primary icon={<MessageSquareText aria-hidden className="size-4" />} label={t("actions.openDiscussion")} onClick={() => onReview("open_discussion")} pending={pendingAction === "open_discussion"} /><button className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-[#8a2f28] disabled:opacity-60" disabled={pendingAction !== null} onClick={() => onReview("decline")} type="button">{t("actions.decline")}</button></div> : null}
-      {quote.status === "discussion_open" ? <p className="mt-7 flex items-start gap-2 rounded-xl bg-[#eff8f2] p-4 text-sm leading-6 text-[#21633d]"><Check aria-hidden className="mt-0.5 size-5 shrink-0" />{t("discussionOpenedNotice")}</p> : null}
+      {quote.status === "discussion_open" ? (
+        <section aria-live="polite" className="mt-7 rounded-2xl border border-[#b9dac7] bg-[#eff8f2] p-5 sm:p-6">
+          <div className="flex items-start gap-3 text-[#21633d]"><Check aria-hidden className="mt-0.5 size-5 shrink-0" /><div><h3 className="m-0 text-base font-semibold">{t("discussionOpenedTitle")}</h3><p className="mt-1 mb-0 text-sm leading-6">{t("discussionOpenedNotice")}</p></div></div>
+          {conversationId ? (
+            <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-6 text-sm font-semibold text-white shadow-[0_8px_20px_rgb(5_79_132/0.18)] transition-[transform,opacity] duration-150 hover:opacity-95 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:w-auto" href={{ pathname: routes.messagesConversation, params: { conversationId } }}>
+              {t("continueInMessages")}<ArrowRight aria-hidden className="size-4" />
+            </Link>
+          ) : conversationLookupPending ? (
+            <p className="mt-4 mb-0 text-sm text-[#31546d]" role="status">{t("conversationLoading")}</p>
+          ) : (
+            <div className="mt-4 rounded-xl border border-[#e5c9a8] bg-[#fffaf2] p-4 text-[#6e4b20]" role="alert">
+              <p className="m-0 text-sm font-semibold">{t("conversationUnavailableTitle")}</p>
+              <p className="mt-1 mb-0 text-sm leading-6">{t("conversationUnavailableLead")}</p>
+              <button className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bd8c52] bg-white px-4 text-sm font-semibold transition-transform duration-150 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8b612f] disabled:cursor-wait disabled:opacity-60" disabled={conversationRecoveryPending} onClick={onRecoverConversation} type="button"><RefreshCw aria-hidden className="size-4" />{conversationRecoveryPending ? t("actions.working") : t("retryConversation")}</button>
+            </div>
+          )}
+        </section>
+      ) : null}
     </div>
   );
 }
