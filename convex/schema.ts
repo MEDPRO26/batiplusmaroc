@@ -38,7 +38,12 @@ const projectCategory = v.union(
 const projectPropertyType = v.union(v.literal("house"), v.literal("apartment"), v.literal("building"), v.literal("office"), v.literal("shop"), v.literal("land"), v.literal("other"));
 const projectBudgetRange = v.union(v.literal("under_50000"), v.literal("50000_100000"), v.literal("100000_250000"), v.literal("250000_500000"), v.literal("500000_1000000"), v.literal("1000000_plus"), v.literal("unknown"));
 const projectTimeline = v.union(v.literal("asap"), v.literal("within_1_month"), v.literal("one_to_three_months"), v.literal("three_to_six_months"), v.literal("six_plus_months"), v.literal("flexible"));
-const projectStatus = v.union(v.literal("draft"), v.literal("pending_review"), v.literal("published"), v.literal("in_discussion"), v.literal("company_selected"), v.literal("in_progress"), v.literal("completed"), v.literal("cancelled"), v.literal("archived"));
+const projectStatus = v.union(v.literal("draft"), v.literal("pending_review"), v.literal("needs_changes"), v.literal("published"), v.literal("in_discussion"), v.literal("company_selected"), v.literal("in_progress"), v.literal("completed"), v.literal("cancelled"), v.literal("archived"));
+const initialQuoteStatus = v.union(
+  v.literal("draft"),
+  v.literal("submitted"),
+  v.literal("withdrawn"),
+);
 export default defineSchema({
   ...authTables,
   users: defineTable({
@@ -69,10 +74,31 @@ export default defineSchema({
   clientProfiles: defineTable({
     userId: v.id("users"),
     city: v.optional(v.string()),
+    /** Optional R2 object key for the client's profile photo. */
+    avatarObjectKey: v.optional(v.string()),
+    avatarMimeType: v.optional(v.string()),
+    avatarSize: v.optional(v.number()),
     onboardingStatus,
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_userId", ["userId"]),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_avatarObjectKey", ["avatarObjectKey"]),
+
+  clientAvatarUploadIntents: defineTable({
+    userId: v.id("users"),
+    expectedContentType: v.string(),
+    expectedSize: v.number(),
+    objectKey: v.string(),
+    token: v.string(),
+    expiresAt: v.number(),
+    verifiedAt: v.optional(v.number()),
+    claimedAt: v.optional(v.number()),
+    etag: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_token", ["token"])
+    .index("by_objectKey", ["objectKey"]),
 
   projects: defineTable({
     clientId: v.id("users"), primaryCategory: v.optional(projectCategory), customCategoryText: v.optional(v.string()),
@@ -81,6 +107,10 @@ export default defineSchema({
     surfaceUnknown: v.boolean(), description: v.optional(v.string()), budgetRange: v.optional(projectBudgetRange),
     budgetMin: v.optional(v.number()), budgetMax: v.optional(v.number()), budgetUnknown: v.boolean(),
     timeline: v.optional(projectTimeline), visibility: v.union(v.literal("marketplace"), v.literal("invite_only")),
+    /** Public-only denormalized text used by the authenticated company marketplace. */
+    marketplaceSearchText: v.optional(v.string()),
+    /** Denormalized budget rank for marketplace sorting (0=unknown … 6=1M+). */
+    marketplaceBudgetRank: v.optional(v.number()),
     status: projectStatus, lastCompletedStep: v.number(), createdAt: v.number(), updatedAt: v.number(),
     submittedAt: v.optional(v.number()), publishedAt: v.optional(v.number()),
   })
@@ -88,8 +118,24 @@ export default defineSchema({
     .index("by_clientId_and_status", ["clientId", "status"])
     .index("by_status", ["status"])
     .index("by_status_and_city", ["status", "city"])
+    .index("by_status_and_visibility", ["status", "visibility"])
+    .index("by_status_visibility_publishedAt", ["status", "visibility", "publishedAt"])
+    .index("by_status_visibility_city_publishedAt", ["status", "visibility", "city", "publishedAt"])
+    .index("by_status_visibility_category_publishedAt", ["status", "visibility", "primaryCategory", "publishedAt"])
+    .index("by_status_visibility_budget_publishedAt", ["status", "visibility", "budgetRange", "publishedAt"])
+    .index("by_status_visibility_timeline_publishedAt", ["status", "visibility", "timeline", "publishedAt"])
+    .index("by_status_visibility_propertyType_publishedAt", ["status", "visibility", "propertyType", "publishedAt"])
+    .index("by_status_visibility_budgetRank_publishedAt", ["status", "visibility", "marketplaceBudgetRank", "publishedAt"])
+    .index("by_status_visibility_city_category_publishedAt", ["status", "visibility", "city", "primaryCategory", "publishedAt"])
+    .index("by_status_visibility_city_budget_publishedAt", ["status", "visibility", "city", "budgetRange", "publishedAt"])
+    .index("by_status_visibility_category_budget_publishedAt", ["status", "visibility", "primaryCategory", "budgetRange", "publishedAt"])
+    .index("by_status_visibility_city_category_budget_publishedAt", ["status", "visibility", "city", "primaryCategory", "budgetRange", "publishedAt"])
     .index("by_primaryCategory_and_status", ["primaryCategory", "status"])
-    .index("by_createdAt", ["createdAt"]),
+    .index("by_createdAt", ["createdAt"])
+    .searchIndex("search_marketplace", {
+      searchField: "marketplaceSearchText",
+      filterFields: ["status", "visibility", "city", "primaryCategory", "budgetRange", "timeline", "propertyType"],
+    }),
 
   projectStatusHistory: defineTable({
     projectId: v.id("projects"), oldStatus: projectStatus, newStatus: projectStatus,
@@ -117,6 +163,40 @@ export default defineSchema({
     projectId: v.id("projects"), userId: v.id("users"), token: v.string(), expiresAt: v.number(),
     claimedAt: v.optional(v.number()), createdAt: v.number(),
   }).index("by_token", ["token"]),
+
+  projectQuotes: defineTable({
+    projectId: v.id("projects"),
+    companyId: v.id("companies"),
+    submittedByUserId: v.id("users"),
+    message: v.string(),
+    estimatedPrice: v.number(),
+    currency: v.literal("MAD"),
+    /** Estimated calendar duration in days. */
+    estimatedDuration: v.number(),
+    /** ISO calendar date (YYYY-MM-DD), kept timezone-independent. */
+    availableStartDate: v.string(),
+    scope: v.string(),
+    quoteType: v.literal("initial"),
+    status: initialQuoteStatus,
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    submittedAt: v.number(),
+    withdrawnAt: v.optional(v.number()),
+  })
+    .index("by_projectId_and_companyId", ["projectId", "companyId"])
+    .index("by_projectId_and_status", ["projectId", "status"])
+    .index("by_companyId_and_status", ["companyId", "status"]),
+
+  quoteStatusHistory: defineTable({
+    quoteId: v.id("projectQuotes"),
+    oldStatus: initialQuoteStatus,
+    newStatus: initialQuoteStatus,
+    changedBy: v.id("users"),
+    changedAt: v.number(),
+    reason: v.optional(v.string()),
+  })
+    .index("by_quoteId", ["quoteId"])
+    .index("by_quoteId_and_changedAt", ["quoteId", "changedAt"]),
 
   companies: defineTable({
     name: v.optional(v.string()),

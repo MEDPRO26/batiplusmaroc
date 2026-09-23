@@ -5,6 +5,7 @@ import { useConvexAuth, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { Link, useRouter } from "@/i18n/navigation";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 
 export function AuthSessionControls({ className }: { className: string; inverted?: boolean }) {
@@ -20,14 +21,7 @@ export function AuthSessionControls({ className }: { className: string; inverted
   }
 
   if (isAuthenticated) {
-    const workspace =
-      user?.accountType === "company"
-        ? user.onboardingStatus === "completed"
-          ? routes.companyDashboard
-          : routes.companyOnboarding
-        : user?.onboardingStatus === "completed"
-          ? routes.clientDashboard
-          : routes.clientOnboarding;
+    const workspace = user ? workspaceRouteForUser(user) : routes.signIn;
 
     return (
       <>
@@ -72,14 +66,7 @@ export function MobileAuthSessionControls({ onNavigate }: { onNavigate: () => vo
   if (isLoading) return null;
 
   if (isAuthenticated) {
-    const workspace =
-      user?.accountType === "company"
-        ? user.onboardingStatus === "completed"
-          ? routes.companyDashboard
-          : routes.companyOnboarding
-        : user?.onboardingStatus === "completed"
-          ? routes.clientDashboard
-          : routes.clientOnboarding;
+    const workspace = user ? workspaceRouteForUser(user) : routes.signIn;
     return (
       <>
         <Link className={itemClass} href={workspace} onClick={onNavigate}>

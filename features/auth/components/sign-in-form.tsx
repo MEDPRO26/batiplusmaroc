@@ -11,6 +11,7 @@ import { mapAuthError } from "@/features/auth/lib/map-auth-error";
 import { FriendlyAlert } from "@/features/shared/components/error-state";
 import { getPathname, Link, useRouter } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
+import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { focusFirstInvalidField } from "@/lib/forms/submit";
 import { routes } from "@/lib/routes";
 
@@ -29,20 +30,7 @@ export function SignInForm({ brandName }: { brandName: string }) {
 
   useEffect(() => {
     if (!user) return;
-    if (user.accountType === "company") {
-      router.replace(
-        user.onboardingStatus === "completed" ? routes.companyDashboard : routes.companyOnboarding,
-      );
-      return;
-    }
-    if (user.accountType === "client") {
-      router.replace(
-        user.onboardingStatus === "completed" ? routes.clientDashboard : routes.clientOnboarding,
-      );
-      return;
-    }
-    // OAuth user without a role yet — pick Client / Company.
-    router.replace(routes.signUp);
+    router.replace(workspaceRouteForUser(user));
   }, [router, user]);
 
   async function onGoogleSignIn() {

@@ -104,17 +104,41 @@ export const routing = defineRouting({
       fr: "/espace-client",
       en: "/client",
     },
+    "/espace-client/tableau-de-bord": {
+      fr: "/espace-client/tableau-de-bord",
+      en: "/client/dashboard",
+    },
     "/espace-client/projets/nouveau": {
       fr: "/espace-client/projets/nouveau",
       en: "/client/projects/new",
+    },
+    "/espace-client/projets/[projectId]": {
+      fr: "/espace-client/projets/[projectId]",
+      en: "/client/projects/[projectId]",
     },
     "/espace-client/onboarding": {
       fr: "/espace-client/onboarding",
       en: "/client/onboarding",
     },
+    "/espace-client/profil": {
+      fr: "/espace-client/profil",
+      en: "/client/profile",
+    },
     "/espace-entreprise": {
       fr: "/espace-entreprise",
       en: "/company",
+    },
+    "/espace-entreprise/projets": {
+      fr: "/espace-entreprise/projets",
+      en: "/company/projects",
+    },
+    "/espace-entreprise/projets/[projectId]": {
+      fr: "/espace-entreprise/projets/[projectId]",
+      en: "/company/projects/[projectId]",
+    },
+    "/espace-entreprise/projets/[projectId]/devis": {
+      fr: "/espace-entreprise/projets/[projectId]/devis",
+      en: "/company/projects/[projectId]/quote",
     },
     "/espace-entreprise/profil": {
       fr: "/espace-entreprise/profil",
@@ -133,6 +157,14 @@ export const routing = defineRouting({
       en: "/company/portfolio",
     },
     "/admin": "/admin",
+    "/admin/projects": {
+      fr: "/admin/projets",
+      en: "/admin/projects",
+    },
+    "/admin/verification": {
+      fr: "/admin/verification",
+      en: "/admin/verification",
+    },
     "/messages": "/messages",
     "/notifications": "/notifications",
   },

@@ -5,15 +5,11 @@ import {
   nextjsMiddlewareRedirect,
 } from "@convex-dev/auth/nextjs/server";
 import { routing } from "./i18n/routing";
+import { PROTECTED_ROUTE_PATTERNS } from "./lib/auth/protected-routes";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
-const isProtectedRoute = createRouteMatcher([
-  "/:locale/espace-client(.*)",
-  "/:locale/espace-entreprise(.*)",
-  "/:locale/client(.*)",
-  "/:locale/company(.*)",
-]);
+const isProtectedRoute = createRouteMatcher([...PROTECTED_ROUTE_PATTERNS]);
 
 export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
   if (isProtectedRoute(request) && !(await convexAuth.isAuthenticated())) {

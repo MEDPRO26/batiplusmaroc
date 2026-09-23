@@ -26,6 +26,9 @@ const r2Pattern = r2PublicMediaPattern();
 const nextConfig: NextConfig = {
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
+  experimental: {
+    globalNotFound: true,
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "*.convex.cloud" },

@@ -56,7 +56,39 @@
     "howItWorks": "Comment ça marche",
     "signIn": "Connexion",
     "signUp": "S’inscrire",
-    "postProject": "Publier un projet"
+    "postProject": "Publier un projet",
+    "myProjects": "Mes projets",
+    "messages": "Messages",
+    "searchLabel": "Rechercher des entreprises et des services",
+    "searchPlaceholder": "Rechercher une entreprise ou un service",
+    "companySearchLabel": "Rechercher des projets",
+    "companySearchPlaceholder": "Rechercher des projets",
+    "searchScopeProjects": "Projets",
+    "clearSearch": "Effacer la recherche",
+    "submitSearch": "Rechercher",
+    "notifications": "Notifications",
+    "notificationsEmpty": "Vos notifications apparaîtront ici lorsqu’il y aura du nouveau.",
+    "myWorkspace": "Mon espace",
+    "portfolio": "Portfolio",
+    "clientMain": "Navigation client",
+    "companyMain": "Navigation entreprise",
+    "profileMenu": {
+      "openMenu": "Ouvrir le menu du compte",
+      "client": {
+        "role": "Client",
+        "fallbackName": "Compte client",
+        "myProfile": "Mon profil",
+        "myProjects": "Mes projets",
+        "accountSettings": "Paramètres du compte"
+      },
+      "company": {
+        "role": "Entreprise",
+        "fallbackName": "Compte entreprise",
+        "companyProfile": "Profil entreprise",
+        "portfolio": "Portfolio",
+        "workspace": "Espace entreprise"
+      }
+    }
   },
   "footer": {
     "tagline": "Batiplus — la marketplace qui relie clients et entreprises de construction.",
@@ -339,10 +371,22 @@
       "title": "Un accompagnement clair, de l’idée à la réalisation.",
       "countLabel": "étapes du projet",
       "steps": {
-        "0": { "title": "Étude", "text": "Analyse du besoin, visite et définition du projet." },
-        "1": { "title": "Planification", "text": "Solutions techniques, matériaux, organisation et calendrier." },
-        "2": { "title": "Réalisation", "text": "Coordination des travaux et suivi du chantier." },
-        "3": { "title": "Livraison", "text": "Contrôle, finitions et remise du projet." }
+        "0": {
+          "title": "Étude",
+          "text": "Analyse du besoin, visite et définition du projet."
+        },
+        "1": {
+          "title": "Planification",
+          "text": "Solutions techniques, matériaux, organisation et calendrier."
+        },
+        "2": {
+          "title": "Réalisation",
+          "text": "Coordination des travaux et suivi du chantier."
+        },
+        "3": {
+          "title": "Livraison",
+          "text": "Contrôle, finitions et remise du projet."
+        }
       }
     },
     "whyUs": {
@@ -441,16 +485,46 @@
       }
     },
     "expertise": {
-      "plaster": { "title": "Plâtre", "alt": "Application de plâtre sur un plafond intérieur" },
-      "tiling": { "title": "Carrelage", "alt": "Pose de carreaux de sol dans une pièce" },
-      "joinery": { "title": "Menuiserie", "alt": "Assemblage d’une pièce de bois en atelier" },
-      "aluminium": { "title": "Aluminium", "alt": "Installation d’une menuiserie vitrée" },
-      "electrical": { "title": "Électricité / Plomberie", "alt": "Intervention sur un tableau électrique" },
-      "hvac": { "title": "Climatisation", "alt": "Installation d’une unité de climatisation murale" },
-      "waterproofing": { "title": "Étanchéité", "alt": "Pose d’une membrane d’étanchéité sur une toiture" },
-      "gardening": { "title": "Jardinage", "alt": "Plantation d’un jeune plant dans un jardin" },
-      "pvc": { "title": "PVC", "alt": "Façade vitrée équipée de profilés de menuiserie" },
-      "painting": { "title": "Peinture", "alt": "Application de peinture blanche au rouleau" }
+      "plaster": {
+        "title": "Plâtre",
+        "alt": "Application de plâtre sur un plafond intérieur"
+      },
+      "tiling": {
+        "title": "Carrelage",
+        "alt": "Pose de carreaux de sol dans une pièce"
+      },
+      "joinery": {
+        "title": "Menuiserie",
+        "alt": "Assemblage d’une pièce de bois en atelier"
+      },
+      "aluminium": {
+        "title": "Aluminium",
+        "alt": "Installation d’une menuiserie vitrée"
+      },
+      "electrical": {
+        "title": "Électricité / Plomberie",
+        "alt": "Intervention sur un tableau électrique"
+      },
+      "hvac": {
+        "title": "Climatisation",
+        "alt": "Installation d’une unité de climatisation murale"
+      },
+      "waterproofing": {
+        "title": "Étanchéité",
+        "alt": "Pose d’une membrane d’étanchéité sur une toiture"
+      },
+      "gardening": {
+        "title": "Jardinage",
+        "alt": "Plantation d’un jeune plant dans un jardin"
+      },
+      "pvc": {
+        "title": "PVC",
+        "alt": "Façade vitrée équipée de profilés de menuiserie"
+      },
+      "painting": {
+        "title": "Peinture",
+        "alt": "Application de peinture blanche au rouleau"
+      }
     },
     "articles": {
       "trends2025": {
@@ -595,7 +669,9 @@
     "eyebrow": "Page non trouvée",
     "title": "Cette page n’est pas sur le plan.",
     "description": "L’adresse est peut-être incorrecte ou la page a été déplacée. Revenez à l’accueil ou poursuivez votre visite.",
+    "actionsLabel": "Options pour continuer",
     "home": "Retour à l’accueil",
+    "browseCompanies": "Trouver des entreprises",
     "contact": "Nous contacter",
     "services": "Nos services",
     "projects": "Nos réalisations"
@@ -782,7 +858,10 @@
       "title": "Publier un projet — Batiplus",
       "description": "Décrivez votre projet de construction et recevez des propositions d’entreprises."
     },
-    "postProjectWizard": { "title": "Publier votre projet — Batiplus", "description": "Décrivez votre projet de construction étape par étape et envoyez-le pour validation." },
+    "postProjectWizard": {
+      "title": "Publier votre projet — Batiplus",
+      "description": "Décrivez votre projet de construction étape par étape et envoyez-le pour validation."
+    },
     "signIn": {
       "title": "Connexion — Batiplus",
       "description": "Connectez-vous à votre espace client ou entreprise Batiplus."
@@ -798,6 +877,18 @@
     "clientDashboard": {
       "title": "Espace client — Batiplus",
       "description": "Accédez à votre espace client Batiplus."
+    },
+    "clientProfile": {
+      "title": "Mon profil — Batiplus",
+      "description": "Gérez les informations de votre compte client Batiplus."
+    },
+    "messages": {
+      "title": "Messages — Batiplus",
+      "description": "Consultez les conversations ouvertes après un intérêt mutuel sur un projet Batiplus."
+    },
+    "clientProject": {
+      "title": "Votre projet — Batiplus",
+      "description": "Consultez le statut et les informations de votre projet Batiplus."
     },
     "companyDashboard": {
       "title": "Espace entreprise — Batiplus",
@@ -818,6 +909,10 @@
     "companyPortfolio": {
       "title": "Réalisations de l’entreprise — Batiplus",
       "description": "Ajoutez, modifiez et publiez les réalisations de votre entreprise."
+    },
+    "companyProjects": {
+      "title": "Trouver des projets — Batiplus",
+      "description": "Parcourez les projets de construction validés et accessibles aux entreprises sur Batiplus."
     },
     "signUpClient": {
       "title": "Inscription client — Batiplus",
@@ -1037,7 +1132,12 @@
         "verified": "Les clients voient que votre entreprise a été examinée par Batiplus.",
         "rejected": "Mettez à jour les informations demandées, puis envoyez à nouveau votre dossier."
       },
-      "status": { "draft": "Brouillon", "pending": "En examen", "verified": "Vérifiée", "rejected": "À corriger" },
+      "status": {
+        "draft": "Brouillon",
+        "pending": "En examen",
+        "verified": "Vérifiée",
+        "rejected": "À corriger"
+      },
       "startVerification": "Vérifier mon entreprise",
       "resubmit": "Corriger et renvoyer",
       "viewStatus": "Voir le statut",
@@ -1049,7 +1149,39 @@
       "profileAction": "Gérer le profil",
       "portfolioTitle": "Réalisations",
       "portfolioLead": "Vos réalisations publiées apparaîtront ici lorsque vous en ajouterez une.",
-      "portfolioAction": "Gérer les réalisations"
+      "portfolioAction": "Gérer les réalisations",
+      "feed": {
+        "searchPlaceholder": "Rechercher des projets",
+        "filters": "Filtres",
+        "hideFilters": "Masquer les filtres",
+        "tabRecent": "Plus récents",
+        "resultsLabel": "Projets clients",
+        "posted": "Publié {when}",
+        "more": "plus",
+        "promoLead": "Vérifiez votre entreprise pour pouvoir répondre lorsqu’un projet client correspond à votre activité.",
+        "promoAction": "Vérifier l’entreprise",
+        "promoVerifiedLead": "Les projets clients ouverts apparaissent ici. Lisez le brief avant de répondre.",
+        "dismiss": "Fermer l’avis",
+        "emptyTitle": "Aucun projet à afficher",
+        "emptyLead": "Les projets clients publiés apparaîtront dans cette liste."
+      },
+      "sidebar": {
+        "profileVisibility": "Visibilité du profil",
+        "visibility": {
+          "draft": "Privé",
+          "pending": "En examen",
+          "verified": "Public",
+          "rejected": "Masqué"
+        },
+        "editProfile": "Modifier le profil entreprise",
+        "completeProfile": "Compléter votre profil",
+        "progress": "{value} %",
+        "reachMore": "Toucher plus de clients",
+        "verificationBadge": "Badge de vérification",
+        "portfolio": "Réalisations",
+        "messages": "Messages",
+        "contact": "Centre d’aide"
+      }
     },
     "companyVerification": {
       "eyebrow": "Vérification entreprise",
@@ -1072,8 +1204,20 @@
       "chooseFile": "Choisir un fichier",
       "replaceFile": "Remplacer",
       "noFile": "Aucun fichier",
-      "fields": { "legalName": "Raison sociale", "ice": "ICE", "rcNumber": "Numéro RC", "legalRepresentative": "Représentant légal", "phone": "Téléphone", "address": "Adresse" },
-      "documents": { "rc": "Document RC", "ice": "Document ICE", "insurance": "Assurance", "other": "Autre justificatif" },
+      "fields": {
+        "legalName": "Raison sociale",
+        "ice": "ICE",
+        "rcNumber": "Numéro RC",
+        "legalRepresentative": "Représentant légal",
+        "phone": "Téléphone",
+        "address": "Adresse"
+      },
+      "documents": {
+        "rc": "Document RC",
+        "ice": "Document ICE",
+        "insurance": "Assurance",
+        "other": "Autre justificatif"
+      },
       "currentFile": "{name}",
       "continue": "Continuer",
       "back": "Retour",
@@ -1081,9 +1225,20 @@
       "submitting": "Envoi en cours…",
       "cancel": "Annuler",
       "backToWorkspace": "Retour à l’espace",
-      "status": { "draft": "Brouillon", "pending": "Vérification en attente", "verified": "Entreprise vérifiée", "rejected": "Demande à corriger" },
-      "pending": { "title": "Votre demande est en cours d’examen", "lead": "Rien d’autre n’est demandé pour le moment. Le statut sera mis à jour dans votre espace." },
-      "verified": { "title": "Votre entreprise est vérifiée", "lead": "Votre profil affiche maintenant le statut vérifié sur Batiplus." },
+      "status": {
+        "draft": "Brouillon",
+        "pending": "Vérification en attente",
+        "verified": "Entreprise vérifiée",
+        "rejected": "Demande à corriger"
+      },
+      "pending": {
+        "title": "Votre demande est en cours d’examen",
+        "lead": "Rien d’autre n’est demandé pour le moment. Le statut sera mis à jour dans votre espace."
+      },
+      "verified": {
+        "title": "Votre entreprise est vérifiée",
+        "lead": "Votre profil affiche maintenant le statut vérifié sur Batiplus."
+      },
       "validation": {
         "required": "Veuillez renseigner ce champ.",
         "ice": "Saisissez un numéro ICE valide de 15 chiffres.",
@@ -1368,8 +1523,27 @@
     "portfolioTitle": "Réalisations",
     "portfolioEmpty": "Cette entreprise n’a pas encore publié de réalisation.",
     "projectImageAlt": "Réalisation : {title}",
-    "service": { "houseConstruction": "Construction de maisons", "renovation": "Rénovation", "structural": "Gros œuvre", "finishing": "Second œuvre", "architecture": "Architecture", "interior": "Aménagement intérieur", "electrical": "Électricité", "plumbing": "Plomberie", "joinery": "Menuiserie", "pool": "Piscines" },
-    "projectType": { "construction": "Construction", "renovation": "Rénovation", "structural": "Gros œuvre", "finishing": "Second œuvre", "interior": "Intérieur", "exterior": "Extérieur", "other": "Autre" }
+    "service": {
+      "houseConstruction": "Construction de maisons",
+      "renovation": "Rénovation",
+      "structural": "Gros œuvre",
+      "finishing": "Second œuvre",
+      "architecture": "Architecture",
+      "interior": "Aménagement intérieur",
+      "electrical": "Électricité",
+      "plumbing": "Plomberie",
+      "joinery": "Menuiserie",
+      "pool": "Piscines"
+    },
+    "projectType": {
+      "construction": "Construction",
+      "renovation": "Rénovation",
+      "structural": "Gros œuvre",
+      "finishing": "Second œuvre",
+      "interior": "Intérieur",
+      "exterior": "Extérieur",
+      "other": "Autre"
+    }
   },
   "portfolioManager": {
     "eyebrow": "Espace entreprise",
@@ -1398,40 +1572,814 @@
     "successUpdated": "Réalisation mise à jour.",
     "successPublished": "Réalisation publiée.",
     "successArchived": "Réalisation archivée.",
-    "status": { "draft": "Brouillon", "published": "Publiée", "hidden": "Archivée" },
-    "projectType": { "construction": "Construction", "renovation": "Rénovation", "structural": "Gros œuvre", "finishing": "Second œuvre", "interior": "Intérieur", "exterior": "Extérieur", "other": "Autre" },
-    "fields": { "title": "Titre", "description": "Description", "city": "Ville", "projectType": "Type de réalisation", "surface": "Surface (m²) — facultatif", "duration": "Durée (mois) — facultatif", "year": "Année — facultatif", "cover": "Image de couverture {optional}", "extra": "Photos supplémentaires — facultatif" }
+    "status": {
+      "draft": "Brouillon",
+      "published": "Publiée",
+      "hidden": "Archivée"
+    },
+    "projectType": {
+      "construction": "Construction",
+      "renovation": "Rénovation",
+      "structural": "Gros œuvre",
+      "finishing": "Second œuvre",
+      "interior": "Intérieur",
+      "exterior": "Extérieur",
+      "other": "Autre"
+    },
+    "fields": {
+      "title": "Titre",
+      "description": "Description",
+      "city": "Ville",
+      "projectType": "Type de réalisation",
+      "surface": "Surface (m²) — facultatif",
+      "duration": "Durée (mois) — facultatif",
+      "year": "Année — facultatif",
+      "cover": "Image de couverture {optional}",
+      "extra": "Photos supplémentaires — facultatif"
+    }
   },
   "projectWizard": {
-    "loading": "Chargement de votre brouillon…", "progress": "Étape {current} sur {total}", "progressReview": "Vérification du projet", "progressComplete": "Projet envoyé", "draftSaved": "Votre brouillon a été enregistré.", "saving": "Enregistrement…", "uploading": "Envoi des fichiers…", "autosaveHint": "Enregistré après chaque étape", "back": "Retour", "continue": "Continuer", "reviewProject": "Vérifier le projet", "saveAndExit": "Enregistrer et quitter", "publishing": "Publication…", "publish": "Publier le projet", "edit": "Modifier", "optional": "facultatif", "remove": "Retirer", "notProvided": "Non renseigné",
+    "loading": "Chargement de votre brouillon…",
+    "progress": "Étape {current} sur {total}",
+    "progressReview": "Vérification du projet",
+    "progressComplete": "Projet envoyé",
+    "draftSaved": "Votre brouillon a été enregistré.",
+    "saving": "Enregistrement…",
+    "uploading": "Envoi des fichiers…",
+    "autosaveHint": "Enregistré après chaque étape",
+    "back": "Retour",
+    "continue": "Continuer",
+    "reviewProject": "Vérifier le projet",
+    "saveAndExit": "Enregistrer et quitter",
+    "publishing": "Publication…",
+    "publish": "Publier le projet",
+    "edit": "Modifier",
+    "optional": "facultatif",
+    "remove": "Retirer",
+    "notProvided": "Non renseigné",
     "steps": {
-      "1": { "eyebrow": "Catégorie du projet", "title": "Quel type de projet souhaitez-vous réaliser ?", "lead": "Choisissez l’option qui décrit le mieux votre projet." },
-      "2": { "eyebrow": "Localisation", "title": "Où se situe votre projet ?", "lead": "Nous avons seulement besoin de la ville et, si utile, du quartier." },
-      "3": { "eyebrow": "Détails du projet", "title": "Présentez votre projet aux entreprises", "lead": "Expliquez ce que vous souhaitez construire, rénover ou modifier." },
-      "4": { "eyebrow": "Budget", "title": "Quel est votre budget estimé ?", "lead": "Une fourchette suffit. Choisissez « Je ne sais pas encore » si besoin." },
-      "5": { "eyebrow": "Calendrier", "title": "Quand souhaitez-vous commencer ?", "lead": "Choisissez l’option la plus proche. Vous pouvez rester flexible." },
-      "6": { "eyebrow": "Fichiers", "title": "Ajoutez des photos, plans ou documents", "lead": "Cette étape est facultative. Les photos peuvent être publiques ; les PDF restent privés." }
+      "1": {
+        "eyebrow": "Type de projet",
+        "title": "Quel type de projet souhaitez-vous réaliser ?",
+        "lead": "Choisissez l’option qui décrit le mieux votre projet."
+      },
+      "2": {
+        "eyebrow": "Localisation",
+        "title": "Où se situe votre projet ?",
+        "lead": "Nous avons seulement besoin de la ville et, si utile, du quartier."
+      },
+      "3": {
+        "eyebrow": "Détails du projet",
+        "title": "Parlez-nous de votre projet",
+        "lead": "Un titre clair et une courte description aident les entreprises à comprendre vos besoins."
+      },
+      "4": {
+        "eyebrow": "Budget",
+        "title": "Quel est votre budget estimé ?",
+        "lead": "Une fourchette suffit. Choisissez « Je ne sais pas encore » si besoin."
+      },
+      "5": {
+        "eyebrow": "Calendrier",
+        "title": "Quand souhaitez-vous commencer ?",
+        "lead": "Choisissez l’option la plus proche. Vous pouvez rester flexible."
+      },
+      "6": {
+        "eyebrow": "Vérification",
+        "title": "Vérifiez votre projet",
+        "lead": "Relisez les informations avant de publier. Vous pouvez modifier chaque section."
+      }
     },
-    "validation": { "category": "Choisissez une catégorie de projet.", "customCategory": "Décrivez les travaux en au moins 3 caractères.", "city": "Choisissez une ville valide.", "title": "Saisissez un titre d’au moins 5 caractères.", "propertyType": "Choisissez un type de bien.", "surface": "Saisissez une surface positive ou cochez « Je ne sais pas ».", "description": "Décrivez votre projet en au moins 20 caractères.", "budget": "Choisissez une fourchette de budget.", "timeline": "Choisissez un délai.", "image": "Choisissez des images JPG, PNG ou WebP de 10 Mo maximum.", "document": "Choisissez des documents PDF de 15 Mo maximum." },
-    "fields": { "customCategory": "Un autre type de travaux", "customCategoryPlaceholder": "Décrivez le type de travaux", "city": "Ville", "cityPlaceholder": "Choisissez une ville", "neighborhood": "Quartier ou secteur", "title": "Titre du projet", "titlePlaceholder": "Par exemple : Rénover un appartement de 120 m²", "propertyType": "Type de bien", "propertyTypePlaceholder": "Choisissez un type de bien", "surface": "Surface en m²", "surfaceUnknown": "Je ne sais pas encore", "description": "Description", "descriptionPlaceholder": "Expliquez ce que vous souhaitez construire, rénover ou modifier." },
+    "validation": {
+      "category": "Choisissez une catégorie de projet.",
+      "customCategory": "Décrivez les travaux en au moins 3 caractères.",
+      "city": "Choisissez une ville valide.",
+      "title": "Saisissez un titre d’au moins 5 caractères.",
+      "propertyType": "Choisissez un type de bien.",
+      "surface": "Saisissez une surface positive ou cochez « Je ne sais pas ».",
+      "description": "Décrivez votre projet en au moins 20 caractères.",
+      "budget": "Choisissez une fourchette de budget.",
+      "timeline": "Choisissez un délai.",
+      "image": "Choisissez des images JPG, PNG ou WebP de 10 Mo maximum.",
+      "document": "Choisissez des documents PDF de 15 Mo maximum."
+    },
+    "fields": {
+      "customCategory": "Un autre type de travaux",
+      "customCategoryPlaceholder": "Décrivez le type de travaux",
+      "city": "Ville",
+      "cityPlaceholder": "Choisissez une ville",
+      "neighborhood": "Quartier ou secteur",
+      "title": "Titre du projet",
+      "titlePlaceholder": "Par exemple : Rénover un appartement de 120 m²",
+      "propertyType": "Type de bien",
+      "propertyTypePlaceholder": "Choisissez un type de bien",
+      "surface": "Surface en m²",
+      "surfaceUnknown": "Je ne connais pas encore la surface",
+      "description": "Description",
+      "descriptionPlaceholder": "Expliquez ce que vous souhaitez construire, rénover ou modifier."
+    },
     "locationPrivacy": "N’indiquez pas votre adresse exacte. Elle pourra être communiquée plus tard pour une visite.",
-    "categoryOptions": { "houseConstruction": "Construire une maison / villa", "buildingConstruction": "Construire un immeuble", "renovation": "Rénovation", "interior": "Travaux intérieurs", "structural": "Gros œuvre", "finishing": "Second œuvre et finitions", "architecture": "Architecture", "pool": "Piscine", "electrical": "Électricité", "plumbing": "Plomberie", "painting": "Peinture", "other": "Autre" },
-    "cityOptions": { "agadir": "Agadir", "casablanca": "Casablanca", "fes": "Fès", "marrakech": "Marrakech", "meknes": "Meknès", "oujda": "Oujda", "rabat": "Rabat", "sale": "Salé", "tangier": "Tanger", "tetouan": "Tétouan" },
-    "propertyTypeOptions": { "house": "Villa / maison", "apartment": "Appartement", "building": "Immeuble", "office": "Bureau", "shop": "Commerce", "land": "Terrain", "other": "Autre" },
-    "budgetOptions": { "under_50000": "Moins de 50 000 MAD", "50000_100000": "50 000–100 000 MAD", "100000_250000": "100 000–250 000 MAD", "250000_500000": "250 000–500 000 MAD", "500000_1000000": "500 000–1 000 000 MAD", "1000000_plus": "1 000 000+ MAD", "unknown": "Je ne sais pas encore" },
-    "timelineOptions": { "asap": "Dès que possible", "within_1_month": "Dans le mois", "one_to_three_months": "1–3 mois", "three_to_six_months": "3–6 mois", "six_plus_months": "Plus de 6 mois", "flexible": "Flexible / pas sûr" },
-    "files": { "imagesTitle": "Photos publiques du projet", "imagesHelp": "Jusqu’à 8 images JPG, PNG ou WebP de 10 Mo chacune.", "chooseImages": "Choisir des images", "existingImageAlt": "Photo du projet envoyée", "previewAlt": "Photo du projet sélectionnée {number}", "removeImage": "Retirer la photo sélectionnée {number}", "documentsTitle": "Plans et documents privés", "documentsHelp": "Jusqu’à 6 PDF de 15 Mo chacun. Ces fichiers ne sont pas publics.", "chooseDocuments": "Choisir des documents PDF" },
-    "review": { "eyebrow": "Vérification finale", "title": "Vérifiez votre projet", "lead": "Modifiez une section si nécessaire. Le projet sera validé avant d’être visible par les entreprises.", "category": "Catégorie", "location": "Localisation", "details": "Détails", "budget": "Budget", "timeline": "Calendrier", "files": "Fichiers", "fileCount": "{images} images · {documents} documents" },
-    "success": { "title": "Votre projet a été envoyé pour validation.", "lead": "Batiplus le vérifiera avant qu’il soit visible par les entreprises. Redirection vers votre espace client.", "action": "Aller à l’espace client", "toast": "Projet envoyé pour validation." }
+    "categoryOptions": {
+      "houseConstruction": "Construire une maison / villa",
+      "buildingConstruction": "Construire un immeuble",
+      "renovation": "Rénovation",
+      "interior": "Travaux intérieurs",
+      "structural": "Gros œuvre",
+      "finishing": "Second œuvre et finitions",
+      "architecture": "Architecture",
+      "pool": "Piscine",
+      "electrical": "Électricité",
+      "plumbing": "Plomberie",
+      "painting": "Peinture",
+      "other": "Autre"
+    },
+    "cityOptions": {
+      "agadir": "Agadir",
+      "casablanca": "Casablanca",
+      "fes": "Fès",
+      "marrakech": "Marrakech",
+      "meknes": "Meknès",
+      "oujda": "Oujda",
+      "rabat": "Rabat",
+      "sale": "Salé",
+      "tangier": "Tanger",
+      "tetouan": "Tétouan"
+    },
+    "propertyTypeOptions": {
+      "house": "Villa / maison",
+      "apartment": "Appartement",
+      "building": "Immeuble",
+      "office": "Bureau",
+      "shop": "Commerce",
+      "land": "Terrain",
+      "other": "Autre"
+    },
+    "budgetOptions": {
+      "under_50000": "Moins de 50 000 MAD",
+      "50000_100000": "50 000–100 000 MAD",
+      "100000_250000": "100 000–250 000 MAD",
+      "250000_500000": "250 000–500 000 MAD",
+      "500000_1000000": "500 000–1 000 000 MAD",
+      "1000000_plus": "1 000 000+ MAD",
+      "unknown": "Je ne sais pas encore"
+    },
+    "timelineOptions": {
+      "asap": "Dès que possible",
+      "within_1_month": "Dans le mois",
+      "one_to_three_months": "1–3 mois",
+      "three_to_six_months": "3–6 mois",
+      "six_plus_months": "Plus de 6 mois",
+      "flexible": "Flexible"
+    },
+    "files": {
+      "imagesTitle": "Photos publiques du projet",
+      "imagesHelp": "Jusqu’à 8 images JPG, PNG ou WebP de 10 Mo chacune.",
+      "chooseImages": "Choisir des images",
+      "existingImageAlt": "Photo du projet envoyée",
+      "previewAlt": "Photo du projet sélectionnée {number}",
+      "removeImage": "Retirer la photo sélectionnée {number}",
+      "documentsTitle": "Plans et documents privés",
+      "documentsHelp": "Jusqu’à 6 PDF de 15 Mo chacun. Ces fichiers ne sont pas publics.",
+      "chooseDocuments": "Choisir des documents PDF"
+    },
+    "review": {
+      "eyebrow": "Vérification finale",
+      "title": "Vérifiez votre projet",
+      "lead": "Modifiez une section si nécessaire. Le projet sera validé avant d’être visible par les entreprises.",
+      "category": "Type de projet",
+      "location": "Localisation",
+      "projectTitle": "Titre",
+      "propertyType": "Type de bien",
+      "surface": "Surface",
+      "description": "Description",
+      "details": "Détails",
+      "budget": "Budget",
+      "timeline": "Calendrier",
+      "files": "Fichiers",
+      "fileCount": "{images} images · {documents} documents"
+    },
+    "success": {
+      "title": "Votre projet a été envoyé pour validation.",
+      "lead": "Batiplus le vérifiera avant qu’il soit visible par les entreprises. Redirection vers votre espace client.",
+      "action": "Aller à l’espace client",
+      "toast": "Projet envoyé pour validation."
+    }
+  },
+  "clientProjects": {
+    "eyebrow": "Espace client",
+    "title": "Mes projets",
+    "lead": "Suivez vos brouillons, vos projets envoyés et leur statut actuel.",
+    "manageProfile": "Gérer mon profil",
+    "sectionTitle": "Vos projets",
+    "newProject": "Publier un projet",
+    "empty": {
+      "title": "Vous n’avez pas encore publié de projet.",
+      "description": "Commencez par quelques questions simples. Vous pourrez enregistrer votre brouillon et continuer plus tard.",
+      "action": "Publier un projet"
+    },
+    "untitled": "Projet sans titre",
+    "locationPending": "Localisation non renseignée",
+    "notProvided": "Non renseigné",
+    "budget": "Budget",
+    "timeline": "Calendrier",
+    "submitted": "Envoyé le {date}",
+    "updated": "Mis à jour le {date}",
+    "continueProject": "Continuer le projet",
+    "fillDraft": "Compléter le brouillon",
+    "viewProject": "Voir le projet",
+    "draftHint": "Ajoutez des détails à votre brouillon",
+    "draftBadge": "Projet en brouillon",
+    "reviewHint": "En attente de validation Batiplus",
+    "openCardMenu": "Ouvrir les actions du projet",
+    "gridView": "Vue en cartes",
+    "listView": "Vue en liste",
+    "carouselLabel": "Vos projets",
+    "previousProjects": "Afficher les projets précédents",
+    "nextProjects": "Afficher plus de projets",
+    "statusSummaryLabel": "Résumé des statuts des projets",
+    "statusAccessible": "Statut du projet : {status}",
+    "status": {
+      "draft": "Brouillon",
+      "pending_review": "En cours de vérification",
+      "needs_changes": "Modifications requises",
+      "published": "Publié",
+      "in_discussion": "En discussion",
+      "company_selected": "Entreprise sélectionnée",
+      "in_progress": "En cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "archived": "Archivé"
+    },
+    "statusDescription": {
+      "pending_review": "Votre projet a été soumis et attend la validation de Batiplus. Les entreprises ne peuvent pas encore le voir.",
+      "needs_changes": "Batiplus demande des modifications avant la publication de ce projet. Consultez le motif dans l’historique du statut ci-dessous."
+    },
+    "detailsEyebrow": "Détails du projet",
+    "backToProjects": "Retour à mes projets",
+    "loadingDetails": "Chargement du projet…",
+    "notFoundTitle": "Projet indisponible",
+    "images": "Photos du projet",
+    "imageAlt": "Photo {number} du projet {title}",
+    "description": "Description",
+    "documents": "Documents privés",
+    "documentsPrivate": "Les informations de ces documents sont visibles uniquement par les personnes autorisées.",
+    "fileSizeKb": "{count} Ko",
+    "summary": "Résumé du projet",
+    "category": "Catégorie",
+    "location": "Localisation",
+    "propertyType": "Type de bien",
+    "surface": "Surface",
+    "surfaceUnknown": "Je ne sais pas encore",
+    "createdLabel": "Créé le",
+    "submittedLabel": "Envoyé le",
+    "history": {
+      "title": "Historique du statut",
+      "transition": "{from} → {to}",
+      "meta": "{date} · {actor}",
+      "actor": {
+        "client": "Client",
+        "staff": "Équipe Batiplus"
+      }
+    }
+  },
+  "clientDashboard": {
+    "eyebrow": "Tableau de bord client",
+    "greeting": {
+      "morning": "Bonjour, {name}",
+      "afternoon": "Bonjour, {name}",
+      "evening": "Bonjour, {name}"
+    },
+    "fallbackName": "à vous",
+    "lead": "Gérez vos projets de construction et trouvez les bonnes entreprises depuis un seul espace.",
+    "postProject": "Publier un projet",
+    "setup": {
+      "eyebrow": "État du compte",
+      "title": "Votre compte est prêt",
+      "manage": "Gérer le profil",
+      "profile": {
+        "title": "Profil complété",
+        "description": "Vos informations client essentielles sont prêtes pour vos projets."
+      },
+      "phone": {
+        "title": "Téléphone ajouté",
+        "description": "Votre numéro de contact privé est enregistré de manière sécurisée."
+      }
+    },
+    "overview": {
+      "title": "Aperçu",
+      "count": "{count, plural, one {# projet} other {# projets}} dans votre espace",
+      "empty": "Lancez votre premier projet et reprenez-le quand vous le souhaitez."
+    },
+    "postCard": {
+      "title": "Publier un projet",
+      "description": "Décrivez votre besoin et trouvez des entreprises de construction qualifiées."
+    }
+  },
+  "clientProfileManager": {
+    "eyebrow": "Espace client",
+    "settingsTitle": "Paramètres",
+    "settingsNav": "Paramètres du compte",
+    "myInfo": "Mes informations",
+    "accountTypeLead": "Ceci est un compte client",
+    "edit": "Modifier",
+    "title": "Mes informations",
+    "lead": "Gardez vos informations à jour pour la confiance et l’activité future sur vos projets.",
+    "back": "Retour à l’espace",
+    "loading": "Chargement de votre profil…",
+    "success": "Profil mis à jour.",
+    "cancel": "Annuler",
+    "saving": "Enregistrement…",
+    "save": "Enregistrer les modifications",
+    "account": {
+      "title": "Compte",
+      "role": "Client"
+    },
+    "photo": {
+      "title": "Photo de profil",
+      "lead": "Facultatif. Une photo claire aide les entreprises à vous reconnaître.",
+      "alt": "Votre photo de profil",
+      "upload": "Ajouter une photo",
+      "replace": "Remplacer la photo",
+      "remove": "Supprimer la photo",
+      "help": "JPG, PNG ou WebP · 5 Mo maximum."
+    },
+    "personal": {
+      "title": "Informations personnelles",
+      "lead": "Votre nom et votre ville apparaîtront sous une forme limitée auprès des entreprises."
+    },
+    "contact": {
+      "title": "Coordonnées",
+      "lead": "Le téléphone reste privé. L’e-mail est géré par votre compte de connexion.",
+      "emailHelp": "L’e-mail ne peut pas être modifié ici."
+    },
+    "activity": {
+      "title": "Activité du compte",
+      "lead": "Ces chiffres proviennent de vos projets et ne peuvent pas être modifiés.",
+      "joined": "Membre depuis",
+      "projectsPosted": "Projets publiés",
+      "projectsCompleted": "Projets terminés"
+    },
+    "fields": {
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "phone": "Téléphone",
+      "phonePlaceholder": "06 12 34 56 78",
+      "city": "Ville",
+      "email": "E-mail"
+    },
+    "validation": {
+      "firstName": "Saisissez un prénom valide.",
+      "lastName": "Saisissez un nom valide.",
+      "phone": "Saisissez un numéro de téléphone marocain valide.",
+      "city": "Saisissez une ville valide."
+    }
+  },
+  "projectDiscovery": {
+    "loading": "Chargement des projets disponibles…",
+    "emptyTitle": "Aucun projet n’est disponible pour le moment.",
+    "emptyDescription": "Les nouveaux projets clients apparaîtront ici après validation."
   },
   "messages": {
     "title": "Messages",
-    "empty": "Vos conversations apparaîtront ici.",
-    "placeholder": "Écrire un message…"
+    "searchConversations": "Rechercher des conversations",
+    "searchConversationsPlaceholder": "Rechercher des conversations",
+    "unread": "Non lus",
+    "favorites": "Favoris",
+    "projects": "Projets",
+    "allProjects": "Tous les projets",
+    "searchProjects": "Rechercher des projets",
+    "noProjectResults": "Aucun résultat",
+    "untitledProject": "Projet sans titre",
+    "conversationsEmpty": "Les conversations apparaîtront ici",
+    "noMatchingConversations": "Aucune conversation ne correspond à ces filtres.",
+    "welcomeTitle": "Bienvenue dans Messages",
+    "welcomeLead": "Lorsque vous et une entreprise aurez un intérêt mutuel sur un projet, vous pourrez discuter ici.",
+    "welcomeLeadCompany": "Lorsqu’un client ouvrira une discussion après votre proposition ou invitation, vous pourrez discuter ici.",
+    "ctaClient": "Trouver des entreprises",
+    "ctaCompany": "Trouver des projets",
+    "allMessages": "Tous les messages",
+    "openMenu": "Ouvrir les filtres des messages",
+    "sidebarLabel": "Conversations",
+    "threadPane": "Message",
+    "loading": "Chargement des messages…"
   },
   "notifications": {
     "title": "Notifications",
     "empty": "Vous n’avez aucune notification."
+  },
+  "adminDashboard": {
+    "sampleNote": "Aperçu visuel. Ces chiffres ne sont pas encore connectés aux données Batiplus.",
+    "searchLabel": "Recherche rapide",
+    "searchPlaceholder": "Recherche rapide",
+    "openSidebar": "Ouvrir la navigation",
+    "closeSidebar": "Fermer la navigation",
+    "sidebarLabel": "Navigation de l’administration",
+    "navHome": "Accueil",
+    "navProjects": "Projets",
+    "navCompanies": "Entreprises",
+    "navVerification": "Vérifications",
+    "navMessages": "Messages",
+    "navDeals": "Transactions",
+    "navReviews": "Avis",
+    "navProfile": "Profil",
+    "navSupport": "Support",
+    "navSettings": "Paramètres",
+    "soon": "Bientôt disponible",
+    "noNavResults": "Aucun résultat",
+    "breadcrumbLabel": "Fil d’Ariane",
+    "team": "Équipe Batiplus",
+    "area": "Administration",
+    "filters": "Filtres",
+    "filtersTitle": "Canaux affichés",
+    "newCampaign": "Nouvelle campagne",
+    "title": "Tableau de bord",
+    "range7": "7 derniers jours",
+    "range30": "30 derniers jours",
+    "range90": "90 derniers jours",
+    "rangeYear": "Cette année",
+    "rangeLabel": "Période",
+    "spend": "Dépenses pub",
+    "impressions": "Impressions",
+    "conversions": "Conversions",
+    "cpc": "Coût par clic",
+    "deltaUp": "en hausse de {value}",
+    "deltaDown": "en baisse de {value}",
+    "funnelTitle": "Entonnoir d’acquisition",
+    "visits": "Visites",
+    "signups": "Inscriptions",
+    "trials": "Essais",
+    "customers": "Clients",
+    "spendByChannel": "Dépenses par canal",
+    "paidSearchShare": "Recherche payante",
+    "paidSearch": "Recherche payante",
+    "paidSocial": "Social payant",
+    "emailChannel": "E-mail",
+    "affiliates": "Affiliés",
+    "channels": "Canaux",
+    "campaigns": "Campagnes",
+    "landingPages": "Pages d’atterrissage",
+    "sessions": "Sessions",
+    "googleAds": "Google Ads",
+    "meta": "Meta",
+    "xAds": "X Ads",
+    "linkedin": "LinkedIn",
+    "email": "E-mail",
+    "adSpend": "Dépenses publicitaires",
+    "roas": "ROAS {value}",
+    "visitors": "Visiteurs",
+    "adSpendTotal": "Dépenses pub totales",
+    "roasAverage": "ROAS moyen",
+    "organic": "Organique",
+    "paid": "Payant",
+    "social": "Social",
+    "chartSummarySpend": "Dépenses publicitaires mensuelles. Le total affiché est {total}.",
+    "chartSummaryVisitors": "Visiteurs mensuels, répartis entre organique, payant et social. Le total affiché est {total}.",
+    "barLabel": "{month} : {value}",
+    "campaignName": "Nom de la campagne",
+    "campaignChannel": "Canal",
+    "cancel": "Annuler",
+    "createCampaign": "Créer la campagne",
+    "campaignCreated": "Campagne ajoutée à l’aperçu. Elle n’est pas encore enregistrée.",
+    "close": "Fermer",
+    "dialogTitle": "Nouvelle campagne",
+    "landingHome": "Accueil",
+    "landingCompanies": "Entreprises",
+    "landingProject": "Publier un projet",
+    "landingSignIn": "Connexion",
+    "landingJournal": "Journal",
+    "campaignRequired": "Saisissez un nom de campagne.",
+    "accountFallback": "Administrateur",
+    "footerTeam": "Équipe Batiplus"
+  },
+  "adminVerification": {
+    "metaTitle": "Vérification des entreprises",
+    "metaDescription": "Examiner les dossiers de vérification des entreprises.",
+    "title": "Vérification",
+    "lead": "Examinez les dossiers de vérification en attente et approuvez ou refusez-les.",
+    "tabsLabel": "Statut de vérification",
+    "tabs": {
+      "pending": "En attente",
+      "verified": "Vérifiées",
+      "rejected": "Refusées"
+    },
+    "status": {
+      "draft": "Brouillon",
+      "pending": "En attente",
+      "verified": "Vérifiée",
+      "rejected": "Refusée"
+    },
+    "searchLabel": "Rechercher des entreprises",
+    "searchPlaceholder": "Rechercher par nom d’entreprise",
+    "cityLabel": "Ville",
+    "cityPlaceholder": "Ville",
+    "empty": "Aucun dossier de vérification dans cet onglet.",
+    "columns": {
+      "company": "Entreprise",
+      "city": "Ville",
+      "ice": "ICE",
+      "rc": "RC",
+      "representative": "Représentant légal",
+      "submitted": "Soumis le",
+      "documents": "Documents",
+      "status": "Statut",
+      "action": "Action"
+    },
+    "review": "Examiner",
+    "reviewTitle": "Examen de vérification",
+    "loadingReview": "Chargement…",
+    "close": "Fermer",
+    "notFound": "Cette vérification est introuvable.",
+    "submittedAt": "Soumis le {date}",
+    "sections": {
+      "public": "Profil public de l’entreprise",
+      "legal": "Informations légales",
+      "documents": "Documents",
+      "rejection": "Dernier motif de refus",
+      "history": "Historique de vérification",
+      "actions": "Actions d’examen"
+    },
+    "fields": {
+      "company": "Nom de l’entreprise",
+      "city": "Ville",
+      "description": "Description",
+      "publicPhone": "Téléphone public",
+      "legalName": "Raison sociale",
+      "ice": "ICE",
+      "rc": "Numéro RC",
+      "representative": "Représentant légal",
+      "phone": "Téléphone",
+      "address": "Adresse"
+    },
+    "noDocuments": "Aucun document n’a été ajouté.",
+    "documentTypes": {
+      "rc": "RC",
+      "ice": "ICE",
+      "insurance": "Assurance",
+      "other": "Autre"
+    },
+    "openDocument": "Ouvrir",
+    "documentUnavailable": "Indisponible",
+    "historyEmpty": "Aucun historique pour le moment.",
+    "approve": "Approuver",
+    "reject": "Refuser",
+    "rejectReason": "Motif du refus",
+    "confirmApprove": "Confirmer l’approbation",
+    "confirmApproveLead": "Approuver la vérification de cette entreprise ?",
+    "confirmReject": "Confirmer le refus",
+    "cancel": "Annuler",
+    "approved": "Vérification d’entreprise approuvée.",
+    "rejected": "Vérification d’entreprise refusée."
+  },
+  "adminProjects": {
+    "metaTitle": "Examen des projets",
+    "metaDescription": "Examiner les projets clients soumis à Batiplus.",
+    "title": "Projets",
+    "lead": "Examinez les projets clients avant leur mise à disposition des entreprises.",
+    "tabsLabel": "Statut d’examen des projets",
+    "tabs": {
+      "pending_review": "En attente",
+      "published": "Publiés",
+      "needs_changes": "Modifications requises",
+      "cancelled": "Annulés",
+      "all": "Tous"
+    },
+    "status": {
+      "all": "Tous",
+      "draft": "Brouillon",
+      "pending_review": "En attente",
+      "needs_changes": "Modifications requises",
+      "published": "Publié",
+      "in_discussion": "En discussion",
+      "company_selected": "Entreprise sélectionnée",
+      "in_progress": "En cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "archived": "Archivé"
+    },
+    "searchLabel": "Rechercher des projets",
+    "searchPlaceholder": "Rechercher par titre de projet",
+    "cityLabel": "Ville",
+    "allCities": "Toutes les villes",
+    "statusFilterLabel": "Statut",
+    "empty": "Aucun projet ne correspond à ces filtres.",
+    "columns": {
+      "project": "Projet",
+      "client": "Client",
+      "city": "Ville",
+      "category": "Catégorie",
+      "budget": "Budget",
+      "submitted": "Soumis le",
+      "status": "Statut",
+      "action": "Action"
+    },
+    "review": "Examiner",
+    "reviewTitle": "Examen du projet",
+    "loadingReview": "Chargement…",
+    "close": "Fermer",
+    "notFound": "Ce projet est introuvable.",
+    "submittedAt": "Soumis le {date}",
+    "sections": {
+      "project": "Détails du projet",
+      "history": "Historique du projet",
+      "actions": "Actions d’examen"
+    },
+    "fields": {
+      "title": "Titre du projet",
+      "client": "Client",
+      "category": "Catégorie",
+      "location": "Localisation",
+      "propertyType": "Type de bien",
+      "surface": "Surface",
+      "description": "Description",
+      "budget": "Budget",
+      "timeline": "Calendrier",
+      "status": "Statut actuel"
+    },
+    "surfaceUnknown": "Non renseignée",
+    "historyEmpty": "Aucun historique pour ce projet.",
+    "approve": "Approuver",
+    "requestChanges": "Demander des modifications",
+    "cancelProject": "Annuler le projet",
+    "confirmApproveLead": "Publier ce projet et le rendre accessible aux entreprises ?",
+    "confirmApprove": "Confirmer l’approbation",
+    "changesReason": "Modifications demandées",
+    "confirmChanges": "Envoyer la demande",
+    "cancelReason": "Motif d’annulation",
+    "confirmCancelProject": "Confirmer l’annulation",
+    "cancel": "Annuler",
+    "approved": "Projet approuvé et publié.",
+    "changesRequested": "Modifications demandées au client.",
+    "cancelled": "Projet annulé."
+  },
+  "adminAccess": {
+    "metaTitle": "Administration",
+    "metaDescription": "Accès sécurisé à l’administration Batiplus.",
+    "navLabel": "Administration",
+    "eyebrow": "Administration sécurisée",
+    "title": "L’espace administrateur est prêt.",
+    "lead": "L’authentification et les contrôles de rôle sont actifs. Les tableaux de bord opérationnels seront ajoutés lors des prochaines étapes.",
+    "verified": "Accès vérifié",
+    "signedInAs": "Connecté avec {email}",
+    "foundationTitle": "Fondation uniquement",
+    "foundationDescription": "Aucun outil d’administration des projets, entreprises ou transactions n’a encore été ajouté.",
+    "home": "Retour à Batiplus"
+  },
+  "companyProjects": {
+    "eyebrow": "Marché des projets",
+    "title": "Trouvez votre prochain projet de construction",
+    "lead": "Parcourez les projets clients validés par Batiplus et trouvez les missions adaptées à votre entreprise.",
+    "searchLabel": "Rechercher des projets",
+    "searchPlaceholder": "Rechercher par titre, catégorie ou ville",
+    "filters": {
+      "title": "Filtres",
+      "close": "Fermer les filtres",
+      "active": "Filtres actifs",
+      "city": "Ville",
+      "cityPlaceholder": "Rechercher une ville",
+      "allCities": "Toutes les villes",
+      "category": "Catégorie",
+      "selectCategories": "Sélectionner des catégories",
+      "selectedCount": "{count} sélectionnées",
+      "allCategories": "Toutes les catégories",
+      "budget": "Budget",
+      "allBudgets": "Tous les budgets",
+      "timeline": "Délai",
+      "propertyType": "Type de bien",
+      "surface": "Surface",
+      "posted": "Date de publication",
+      "surfaceOptions": {
+        "under_100": "Moins de 100 m²",
+        "100_200": "100–200 m²",
+        "200_500": "200–500 m²",
+        "500_plus": "500+ m²",
+        "unknown": "Inconnue"
+      },
+      "postedOptions": {
+        "last_24h": "Dernières 24 heures",
+        "last_3d": "3 derniers jours",
+        "last_7d": "7 derniers jours",
+        "last_30d": "30 derniers jours"
+      }
+    },
+    "clearFilters": "Effacer les filtres",
+    "sortNewest": "Plus récents d’abord",
+    "sort": {
+      "label": "Trier par",
+      "triggerAria": "Trier par : {option}",
+      "options": {
+        "newest": "Plus récents",
+        "oldest": "Plus anciens",
+        "budgetHigh": "Budget le plus élevé",
+        "budgetLow": "Budget le plus bas"
+      }
+    },
+    "loadedCount": "{count, plural, =0 {Aucun projet chargé} one {# projet chargé} other {# projets chargés}}",
+    "resultsLabel": "Projets disponibles",
+    "loading": "Chargement des projets…",
+    "loadingMore": "Chargement d’autres projets…",
+    "loadMore": "Voir plus",
+    "viewProject": "Voir le projet",
+    "notSpecified": "Non renseigné",
+    "card": {
+      "surface": "{value} m²",
+      "published": "Publié le {date}",
+      "client": "Publié par {name} · Membre depuis {date}",
+      "clientPrivate": "Client Batiplus",
+      "openAria": "Voir le projet : {title}"
+    },
+    "empty": {
+      "title": "Aucun projet ne correspond à vos filtres.",
+      "lead": "Effacez un ou plusieurs filtres pour découvrir d’autres projets disponibles."
+    },
+    "detail": {
+      "loading": "Chargement du projet…",
+      "back": "Retour aux projets",
+      "close": "Fermer les détails du projet",
+      "openFullPage": "Ouvrir la page complète du projet",
+      "budget": "Budget",
+      "timeline": "Délai",
+      "propertyType": "Type de bien",
+      "surface": "Surface",
+      "category": "Catégorie",
+      "city": "Ville",
+      "description": "Description du projet",
+      "projectDetails": "Détails du projet",
+      "clientTitle": "À propos du client",
+      "clientSince": "Membre depuis {date}",
+      "clientProjectsPosted": "{count, plural, =0 {Aucun projet publié} one {# projet publié} other {# projets publiés}}",
+      "clientProjectsCompleted": "{count, plural, =0 {Aucun projet terminé} one {# projet terminé} other {# projets terminés}}",
+      "clientEmailVerified": "E-mail vérifié",
+      "clientPhoneVerified": "Téléphone vérifié",
+      "clientPrivacy": "Les coordonnées restent privées jusqu’à ce que les deux parties acceptent de discuter du projet.",
+      "retry": "Réessayer",
+      "unavailableTitle": "Ce projet n’est plus disponible.",
+      "unavailableLead": "Il a peut-être été retiré du marché ou n’accepte plus de marques d’intérêt."
+    },
+    "quote": {
+      "title": "Intéressé par ce projet ?",
+      "lead": "Envoyez une première estimation claire. La messagerie reste verrouillée jusqu’à ce que le client ouvre la discussion.",
+      "submit": "Envoyer un devis estimatif",
+      "view": "Voir mon devis",
+      "verificationRequired": "Vérifiez votre entreprise avant d’envoyer un devis.",
+      "verifyAction": "Vérifier l’entreprise"
+    },
+    "error": {
+      "title": "Impossible de charger les projets",
+      "lead": "Une erreur est survenue pendant le chargement du marché. Veuillez réessayer.",
+      "retry": "Réessayer"
+    }
+  },
+  "initialQuote": {
+    "eyebrow": "Devis estimatif",
+    "title": "Envoyer un devis estimatif",
+    "lead": "Partagez une première estimation commerciale avec le client. Il ne s’agit pas du devis contractuel final.",
+    "loading": "Chargement de l’espace devis…",
+    "unavailableTitle": "Ce projet n’accepte pas de devis estimatifs.",
+    "unavailableLead": "Il n’est peut-être plus publié ou disponible sur la place de marché.",
+    "backToProject": "Retour au projet",
+    "projectSummary": "Résumé du projet",
+    "form": {
+      "message": "Message au client",
+      "messageHint": "Présentez votre entreprise et expliquez pourquoi elle convient à ce projet.",
+      "estimatedPrice": "Prix estimé",
+      "currency": "MAD",
+      "estimatedDuration": "Durée estimée",
+      "durationUnit": "jours",
+      "availableStartDate": "Disponibilité",
+      "scope": "Périmètre des travaux",
+      "scopeHint": "Résumez les principaux travaux inclus dans cette estimation.",
+      "submit": "Envoyer le devis estimatif",
+      "submitting": "Envoi du devis…"
+    },
+    "validation": {
+      "required": "Complétez tous les champs obligatoires.",
+      "message": "Rédigez au moins 20 caractères.",
+      "price": "Saisissez un prix supérieur à 0.",
+      "duration": "Saisissez un nombre entier de jours.",
+      "date": "Choisissez une date de disponibilité.",
+      "scope": "Décrivez le périmètre en au moins 20 caractères."
+    },
+    "success": "Votre devis estimatif a bien été envoyé.",
+    "verificationTitle": "Vérification de l’entreprise requise",
+    "verificationLead": "Vérifiez votre entreprise avant d’envoyer un devis.",
+    "verifyAction": "Vérifier l’entreprise",
+    "detail": {
+      "title": "Votre devis estimatif",
+      "status": "Statut",
+      "draft": "Brouillon",
+      "submitted": "Envoyé",
+      "withdrawn": "Retiré",
+      "submittedAt": "Envoyé le {date}",
+      "estimatedPrice": "Prix estimé",
+      "estimatedDuration": "Durée estimée",
+      "durationValue": "{count, plural, one {# jour} other {# jours}}",
+      "availability": "Disponibilité",
+      "scope": "Périmètre des travaux",
+      "message": "Message au client",
+      "messagingLocked": "La messagerie reste verrouillée. Elle s’ouvrira uniquement si le client choisit d’ouvrir la discussion.",
+      "withdraw": "Retirer le devis",
+      "withdrawing": "Retrait…",
+      "withdrawnNotice": "Ce devis a été retiré et reste conservé dans votre historique."
+    }
   },
   "dashboard": {
     "client": "Espace client",
@@ -1471,7 +2419,11 @@
         "INVALID_CITY": "Saisissez une ville valide.",
         "CLIENT_ACCOUNT_REQUIRED": "Un compte client est requis pour cette action.",
         "CLIENT_ONBOARDING_REQUIRED": "Complétez votre profil client avant de publier un projet.",
+        "INVALID_CLIENT_AVATAR": "Choisissez une photo JPG, PNG ou WebP de 5 Mo maximum.",
+        "CLIENT_AVATAR_UPLOAD_FAILED": "La photo de profil n’a pas pu être envoyée. Veuillez réessayer.",
         "COMPANY_ACCOUNT_REQUIRED": "Un compte entreprise est requis pour cette action.",
+        "COMPANY_MEMBERSHIP_REQUIRED": "Une adhésion active à une entreprise est requise.",
+        "COMPANY_VERIFICATION_REQUIRED": "Vérifiez votre entreprise avant d’envoyer des propositions.",
         "COMPANY_OWNER_REQUIRED": "Seul le propriétaire de l’entreprise peut faire cette action.",
         "COMPANY_NOT_FOUND": "Cette entreprise n’existe pas ou n’est plus disponible.",
         "DUPLICATE_ACCOUNT_FOUNDATION": "Ce compte est déjà configuré.",
@@ -1486,35 +2438,58 @@
         "INVALID_LANGUAGES": "Sélectionnez au moins une langue valide.",
         "INVALID_SERVICES": "Sélectionnez au moins un service valide.",
         "DUPLICATE_COMPANY_SERVICE": "Ce service est déjà associé à l’entreprise.",
-      "INVALID_LOGO": "Choisissez un logo JPG, PNG ou WebP de 5 Mo maximum.",
-      "INVALID_PUBLIC_MEDIA_UPLOAD": "Cet envoi d’image est invalide ou a expiré. Sélectionnez à nouveau l’image.",
-      "PUBLIC_MEDIA_UPLOAD_FAILED": "L’image n’a pas pu être envoyée. Veuillez réessayer.",
-      "PUBLIC_MEDIA_URL_NOT_CONFIGURED": "La diffusion des images publiques n’est pas encore configurée. Contactez le support.",
-      "INVALID_VERIFICATION_STATUS": "Le statut de vérification n’est pas valide.",
-      "COMPANY_ONBOARDING_REQUIRED": "Terminez d’abord votre profil entreprise.",
-      "INVALID_ICE": "Saisissez un ICE valide à 15 chiffres.",
-      "INVALID_RC_NUMBER": "Saisissez un numéro RC valide.",
-      "INVALID_LEGAL_REPRESENTATIVE": "Saisissez le nom du représentant légal.",
-      "INVALID_ADDRESS": "Saisissez une adresse valide.",
-      "INVALID_VERIFICATION_DOCUMENT": "Choisissez un document PDF, JPG ou PNG valide de 10 Mo maximum.",
-      "DOCUMENT_UPLOAD_FAILED": "Le document n’a pas pu être envoyé. Veuillez réessayer.",
-      "COMPANY_SLUG_UNAVAILABLE": "Impossible de créer l’adresse publique de l’entreprise.",
-      "INVALID_PORTFOLIO_IMAGE": "Choisissez des images JPG, PNG ou WebP de 10 Mo maximum.",
-      "INVALID_PORTFOLIO_TITLE": "Saisissez un titre valide.",
-      "INVALID_PORTFOLIO_DESCRIPTION": "Saisissez une description de 20 à 1 200 caractères.",
-      "INVALID_PORTFOLIO_CITY": "Saisissez une ville valide.",
-      "INVALID_PORTFOLIO_SURFACE": "Saisissez une surface valide.",
-      "INVALID_PORTFOLIO_DURATION": "Saisissez une durée valide.",
-      "INVALID_PORTFOLIO_YEAR": "Saisissez une année valide.",
-      "INVALID_PORTFOLIO_CAPTION": "La légende d’image n’est pas valide.",
-      "PORTFOLIO_PROJECT_NOT_FOUND": "Cette réalisation est introuvable.",
-      "PROJECT_NOT_FOUND": "Ce projet est introuvable.", "PROJECT_NOT_EDITABLE": "Ce projet ne peut plus être modifié.",
-      "INVALID_PROJECT_CATEGORY": "Choisissez une catégorie de projet valide.", "INVALID_PROJECT_NEIGHBORHOOD": "Saisissez un quartier valide.",
-      "INVALID_PROJECT_TITLE": "Saisissez un titre de projet valide.", "INVALID_PROJECT_SURFACE": "Saisissez une surface valide ou cochez « Je ne sais pas ».",
-      "INVALID_PROJECT_DESCRIPTION": "Saisissez une description de 20 à 2 000 caractères.", "INVALID_PROJECT_IMAGE": "Une image du projet est invalide ou a expiré.",
-      "PROJECT_IMAGE_UPLOAD_FAILED": "L’image du projet n’a pas pu être envoyée.", "INVALID_PROJECT_DOCUMENT": "Un PDF est invalide ou a expiré.",
-      "PROJECT_DOCUMENT_UPLOAD_FAILED": "Le PDF n’a pas pu être envoyé.", "PROJECT_INCOMPLETE": "Complétez toutes les étapes obligatoires avant publication.",
-      "INVALID_PROJECT_STATUS_TRANSITION": "Ce changement de statut n’est pas autorisé.", "PROJECT_ATTACHMENT_NOT_FOUND": "Ce document privé est introuvable.",
+        "INVALID_LOGO": "Choisissez un logo JPG, PNG ou WebP de 5 Mo maximum.",
+        "INVALID_PUBLIC_MEDIA_UPLOAD": "Cet envoi d’image est invalide ou a expiré. Sélectionnez à nouveau l’image.",
+        "PUBLIC_MEDIA_UPLOAD_FAILED": "L’image n’a pas pu être envoyée. Veuillez réessayer.",
+        "PUBLIC_MEDIA_URL_NOT_CONFIGURED": "La diffusion des images publiques n’est pas encore configurée. Contactez le support.",
+        "INVALID_VERIFICATION_STATUS": "Le statut de vérification n’est pas valide.",
+        "COMPANY_ONBOARDING_REQUIRED": "Terminez d’abord votre profil entreprise.",
+        "INVALID_ICE": "Saisissez un ICE valide à 15 chiffres.",
+        "INVALID_RC_NUMBER": "Saisissez un numéro RC valide.",
+        "INVALID_LEGAL_REPRESENTATIVE": "Saisissez le nom du représentant légal.",
+        "INVALID_ADDRESS": "Saisissez une adresse valide.",
+        "INVALID_VERIFICATION_DOCUMENT": "Choisissez un document PDF, JPG ou PNG valide de 10 Mo maximum.",
+        "VERIFICATION_NOT_PENDING": "Seules les vérifications en attente peuvent être examinées.",
+        "VERIFICATION_DOCUMENT_NOT_FOUND": "Ce document de vérification est introuvable.",
+        "REJECTION_REASON_REQUIRED": "Saisissez un motif de refus d’au moins 3 caractères.",
+        "ADMIN_REQUIRED": "Un accès administrateur est requis.",
+        "DOCUMENT_UPLOAD_FAILED": "Le document n’a pas pu être envoyé. Veuillez réessayer.",
+        "COMPANY_SLUG_UNAVAILABLE": "Impossible de créer l’adresse publique de l’entreprise.",
+        "INVALID_PORTFOLIO_IMAGE": "Choisissez des images JPG, PNG ou WebP de 10 Mo maximum.",
+        "INVALID_PORTFOLIO_TITLE": "Saisissez un titre valide.",
+        "INVALID_PORTFOLIO_DESCRIPTION": "Saisissez une description de 20 à 1 200 caractères.",
+        "INVALID_PORTFOLIO_CITY": "Saisissez une ville valide.",
+        "INVALID_PORTFOLIO_SURFACE": "Saisissez une surface valide.",
+        "INVALID_PORTFOLIO_DURATION": "Saisissez une durée valide.",
+        "INVALID_PORTFOLIO_YEAR": "Saisissez une année valide.",
+        "INVALID_PORTFOLIO_CAPTION": "La légende d’image n’est pas valide.",
+        "PORTFOLIO_PROJECT_NOT_FOUND": "Cette réalisation est introuvable.",
+        "PROJECT_NOT_FOUND": "Ce projet est introuvable.",
+        "PROJECT_NOT_EDITABLE": "Ce projet ne peut plus être modifié.",
+        "INVALID_PROJECT_CATEGORY": "Choisissez une catégorie de projet valide.",
+        "INVALID_PROJECT_NEIGHBORHOOD": "Saisissez un quartier valide.",
+        "INVALID_PROJECT_TITLE": "Saisissez un titre de projet valide.",
+        "INVALID_PROJECT_SURFACE": "Saisissez une surface valide ou cochez « Je ne sais pas ».",
+        "INVALID_PROJECT_DESCRIPTION": "Saisissez une description de 20 à 2 000 caractères.",
+        "INVALID_PROJECT_IMAGE": "Une image du projet est invalide ou a expiré.",
+        "PROJECT_IMAGE_UPLOAD_FAILED": "L’image du projet n’a pas pu être envoyée.",
+        "INVALID_PROJECT_DOCUMENT": "Un PDF est invalide ou a expiré.",
+        "PROJECT_DOCUMENT_UPLOAD_FAILED": "Le PDF n’a pas pu être envoyé.",
+        "PROJECT_INCOMPLETE": "Complétez toutes les étapes obligatoires avant publication.",
+        "INVALID_PROJECT_STATUS_TRANSITION": "Ce changement de statut n’est pas autorisé.",
+        "PROJECT_ATTACHMENT_NOT_FOUND": "Ce document privé est introuvable.",
+        "PROJECT_NOT_PENDING_REVIEW": "Seuls les projets en attente peuvent être modérés.",
+        "PROJECT_REVIEW_REASON_REQUIRED": "Saisissez un motif d’au moins 3 caractères.",
+        "PROJECT_NOT_ACCEPTING_QUOTES": "Ce projet n’accepte plus de devis estimatifs.",
+        "ACTIVE_QUOTE_ALREADY_EXISTS": "Votre entreprise a déjà un devis estimatif actif pour ce projet.",
+        "QUOTE_NOT_FOUND": "Ce devis estimatif est introuvable.",
+        "QUOTE_NOT_WITHDRAWABLE": "Ce devis estimatif ne peut plus être retiré.",
+        "INVALID_QUOTE_PRICE": "Saisissez un prix estimé entre 1 et 100 000 000 MAD.",
+        "INVALID_QUOTE_DURATION": "Saisissez une durée estimée de 1 à 730 jours.",
+        "INVALID_QUOTE_DATE": "Choisissez une date de disponibilité valide qui n’est pas passée.",
+        "INVALID_QUOTE_MESSAGE": "Rédigez un message de 20 à 2 000 caractères.",
+        "INVALID_QUOTE_SCOPE": "Décrivez le périmètre des travaux en 20 à 2 000 caractères.",
+        "INVALID_QUOTE_WITHDRAWAL_REASON": "Limitez le motif de retrait à 300 caractères.",
         "NETWORK": "Problème de connexion. Nous allons réessayer.",
         "UNKNOWN": "Une erreur est survenue. Veuillez réessayer."
       }

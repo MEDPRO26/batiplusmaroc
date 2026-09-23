@@ -1,16 +1,6 @@
-import Link from "next/link";
+import { GlobalNotFoundDocument } from "@/components/layout/global-not-found-document";
+import "./globals.css";
 
 export default function RootNotFound() {
-  return (
-    <html lang="fr">
-      <body>
-        <p>Cette page n’est pas sur le plan. / This page is not on the plan.</p>
-        <p>
-          <Link href="/fr/">FR</Link>
-          {" | "}
-          <Link href="/en/">EN</Link>
-        </p>
-      </body>
-    </html>
-  );
+  return <GlobalNotFoundDocument />;
 }

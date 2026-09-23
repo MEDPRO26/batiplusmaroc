@@ -1,15 +1,24 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { usePaginatedQuery, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import { useFormatter, useNow, useTranslations } from "next-intl";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
+import { projectBudgetRanges, projectCategories, projectCities } from "@/convex/projects/constants";
 import { DashboardCardsSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
 
 type VerificationStatus = "draft" | "pending" | "verified" | "rejected";
+type Profile = NonNullable<FunctionReturnType<typeof api.companies.index.getOnboardingProfile>>;
+type Project = FunctionReturnType<typeof api.projects.marketplace.listCompanyMarketplaceProjects>["page"][number];
+type City = (typeof projectCities)[number];
+type Category = (typeof projectCategories)[number];
+type Budget = (typeof projectBudgetRanges)[number];
+
+const PAGE_SIZE = 8;
 
 const verificationHeadlineKey = {
   draft: "verificationHeadline.draft",
@@ -39,13 +48,42 @@ function asVerificationStatus(value: unknown): VerificationStatus | null {
   return null;
 }
 
+function profileCompletion(profile: Profile) {
+  const checks = [
+    profile.name.trim().length > 0,
+    profile.description.trim().length >= 20,
+    profile.city.trim().length > 0,
+    profile.phone.trim().length > 0,
+    Boolean(profile.logoUrl),
+    profile.services.length > 0,
+    profile.yearsExperience !== null,
+    profile.website.trim().length > 0,
+  ];
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
+
+function initials(name: string) {
+  const letters = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+  return letters || "B";
+}
+
 export function CompanyDashboard() {
-  const t = useTranslations("auth.companyDashboard");
   const tUx = useTranslations("ux");
   const user = useQuery(api.users.currentUser);
   const canLoad = user?.accountType === "company" && user.onboardingStatus === "completed";
   const profile = useQuery(api.companies.index.getOnboardingProfile, canLoad ? {} : "skip");
   const router = useRouter();
+  const [search, setSearch] = useState("");
+  const [city, setCity] = useState<City | "">("");
+  const [category, setCategory] = useState<Category | "">("");
+  const [budgetRange, setBudgetRange] = useState<Budget | "">("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const debouncedSearch = useDebouncedValue(search, 250);
 
   useEffect(() => {
     if (!user) return;
@@ -60,212 +98,573 @@ export function CompanyDashboard() {
     }
   }, [router, user]);
 
+  const queryArgs = useMemo(
+    () =>
+      canLoad
+        ? {
+            search: debouncedSearch.trim() || undefined,
+            city: city || undefined,
+            category: category || undefined,
+            budgetRange: budgetRange || undefined,
+          }
+        : ("skip" as const),
+    [budgetRange, canLoad, category, city, debouncedSearch],
+  );
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.projects.marketplace.listCompanyMarketplaceProjects,
+    queryArgs,
+    { initialNumItems: PAGE_SIZE },
+  );
+  const projects = useMemo(
+    () => Array.from(new Map(results.map((project) => [project.id, project])).values()),
+    [results],
+  );
+
   if (!user || !canLoad || profile == null) {
     return <DashboardCardsSkeleton label={tUx("loading.dashboard")} />;
   }
 
-  const status = asVerificationStatus(profile.verificationStatus);
-  if (!status) {
+  const verification = asVerificationStatus(profile.verificationStatus);
+  if (!verification) {
     return <DashboardCardsSkeleton label={tUx("loading.dashboard")} />;
   }
 
-  const displayName = user.firstName?.trim() || profile.name.trim();
-  const showVerificationCta = status === "draft" || status === "rejected";
-  const showStatusLink = status === "pending" || status === "verified";
+  return (
+    <div className="min-h-[calc(100dvh-4.5rem)] bg-white">
+      <div className="mx-auto grid w-full max-w-[1120px] items-start gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6 lg:px-8">
+        <ProjectFeed
+          budgetRange={budgetRange}
+          category={category}
+          city={city}
+          filtersOpen={filtersOpen}
+          onBudgetChange={setBudgetRange}
+          onCategoryChange={setCategory}
+          onCityChange={setCity}
+          onClearFilters={() => {
+            setSearch("");
+            setCity("");
+            setCategory("");
+            setBudgetRange("");
+          }}
+          onSearchChange={setSearch}
+          onToggleFilters={() => setFiltersOpen((open) => !open)}
+          projects={projects}
+          search={search}
+          status={status}
+          verification={verification}
+          onLoadMore={() => loadMore(PAGE_SIZE)}
+        />
+        <CompanySidebar profile={profile} verification={verification} />
+      </div>
+    </div>
+  );
+}
+
+function ProjectFeed({
+  search,
+  onSearchChange,
+  filtersOpen,
+  onToggleFilters,
+  city,
+  category,
+  budgetRange,
+  onCityChange,
+  onCategoryChange,
+  onBudgetChange,
+  onClearFilters,
+  projects,
+  status,
+  onLoadMore,
+  verification,
+}: {
+  search: string;
+  onSearchChange: (value: string) => void;
+  filtersOpen: boolean;
+  onToggleFilters: () => void;
+  city: City | "";
+  category: Category | "";
+  budgetRange: Budget | "";
+  onCityChange: (value: City | "") => void;
+  onCategoryChange: (value: Category | "") => void;
+  onBudgetChange: (value: Budget | "") => void;
+  onClearFilters: () => void;
+  projects: Project[];
+  status: "LoadingFirstPage" | "LoadingMore" | "CanLoadMore" | "Exhausted";
+  onLoadMore: () => void;
+  verification: VerificationStatus;
+}) {
+  const t = useTranslations("auth.companyDashboard");
+  const tProjects = useTranslations("companyProjects");
+  const now = useNow({ updateInterval: 60_000 });
+  const [noticeOpen, setNoticeOpen] = useState(true);
 
   return (
-    <section className="mx-auto flex w-full max-w-[860px] flex-1 flex-col px-5 py-10 sm:px-8 sm:py-14">
-      <header className="step-enter">
-        <p className="m-0 text-[0.72rem] font-semibold tracking-[0.16em] text-brand uppercase">{t("eyebrow")}</p>
-        <h1 className="mt-3 mb-0 text-[1.7rem] font-semibold tracking-[-0.035em] text-ink sm:text-[2rem]">
-          {displayName ? t("greeting", { name: displayName }) : t("greetingFallback")}
-        </h1>
-        <p className="mt-2 mb-0 max-w-[36rem] text-[0.98rem] leading-6 text-muted">{t("lead")}</p>
-      </header>
-
-      <article
-        className="step-enter step-enter-delay mt-8 rounded-2xl border border-brand-border bg-white p-5 shadow-[0_1px_2px_rgb(23_61_99/0.05),0_10px_28px_rgb(23_61_99/0.05)] sm:p-6"
-      >
-        <div className="flex items-start justify-center gap-4">
-          <StatusGlyph status={status} />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="m-0 text-base leading-6 font-semibold tracking-[-0.02em] text-ink">
-                {t(verificationHeadlineKey[status])}
-              </h2>
-              <StatusChip status={status} label={t(verificationStatusKey[status])} />
-            </div>
-            <p className="mt-2 mb-0 text-sm leading-6 text-muted">{t(verificationLeadKey[status])}</p>
-            {(showVerificationCta || showStatusLink) && (
-              <div className="mt-5">
-                <Link
-                  className={joinClassNames(
-                    "button min-h-11 transition-[background-color,border-color,transform,color] duration-150 [transition-timing-function:cubic-bezier(0.2,0,0,1)] active:scale-[0.96]",
-                    showVerificationCta ? "button-primary" : "border border-brand-border bg-white text-ink hover:bg-brand-soft",
-                  )}
-                  href={routes.companyVerification}
-                >
-                  {showVerificationCta ? t(status === "rejected" ? "resubmit" : "startVerification") : t("viewStatus")}
+    <section aria-label={t("feed.resultsLabel")} className="min-w-0 ">
+      {noticeOpen ? (
+        <div className="mb-4 flex items-center justify-center gap-3 rounded-lg bg-[#dff6df] px-4 py-3 text-sm leading-6 text-[#135c2b]">
+          <p className="m-0 min-w-0 flex-1">
+            {verification === "verified" ? t("feed.promoVerifiedLead") : t("feed.promoLead")}
+            {verification !== "verified" ? (
+              <>
+                {" "}
+                <Link className="font-semibold underline underline-offset-2" href={routes.companyVerification}>
+                  {t("feed.promoAction")}
                 </Link>
-              </div>
-            )}
-          </div>
+              </>
+            ) : null}
+          </p>
+          <button
+            aria-label={t("feed.dismiss")}
+            className="grid size-8 shrink-0 place-items-center rounded-md text-[#135c2b] transition-transform duration-150 active:scale-[0.96]"
+            onClick={() => setNoticeOpen(false)}
+            type="button"
+          >
+            <CloseIcon />
+          </button>
         </div>
-      </article>
+      ) : null}
 
-      <div className="step-enter mt-4 grid gap-4 sm:grid-cols-2" style={{ animationDelay: "180ms" }}>
-        <NextCard
-          actionHref={routes.companyProfileManagement}
-          actionLabel={t("profileAction")}
-          icon="profile"
-          lead={t("profileLead")}
-          title={t("profileTitle")}
-        />
-        <NextCard
-          actionHref={routes.browseProjects}
-          actionLabel={t("findWorkAction")}
-          icon="search"
-          lead={t("findWorkLead")}
-          title={t("findWorkTitle")}
-        />
-        <NextCard
-          actionHref={routes.companyPortfolio}
-          actionLabel={t("portfolioAction")}
-          icon="folder"
-          lead={t("portfolioLead")}
-          title={t("portfolioTitle")}
-        />
+      <div className="flex items-center gap-3">
+        <label className="relative min-w-0 flex-1">
+          <span className="sr-only">{tProjects("searchLabel")}</span>
+          <SearchIcon />
+          <input
+            className="min-h-11 w-full rounded-full border border-[#d5ddd8] bg-white pr-4 pl-11 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted/80 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder={t("feed.searchPlaceholder")}
+            type="search"
+            value={search}
+          />
+        </label>
+        <button
+          aria-expanded={filtersOpen}
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#cfd8d2] bg-white px-4 text-sm font-semibold text-ink transition-transform duration-150 active:scale-[0.96]"
+          onClick={onToggleFilters}
+          type="button"
+        >
+          <FilterIcon />
+          {filtersOpen ? t("feed.hideFilters") : t("feed.filters")}
+        </button>
+      </div>
+
+      {filtersOpen ? (
+        <div className="mt-3 rounded-xl border border-[#e4ebe6] bg-white p-4">
+          <FilterFields
+            budgetRange={budgetRange}
+            category={category}
+            city={city}
+            onBudgetChange={onBudgetChange}
+            onCategoryChange={onCategoryChange}
+            onCityChange={onCityChange}
+            onClear={onClearFilters}
+          />
+        </div>
+      ) : null}
+
+      <div className="mt-5 border-b border-[#e4ebe6]">
+        <p className="m-0 inline-flex border-b-2 border-[#B9563B] pb-3 text-sm font-semibold text-ink">
+          {t("feed.tabRecent")}
+        </p>
+      </div>
+
+      <div aria-busy={status === "LoadingFirstPage" || status === "LoadingMore"} className="mt-2 ">
+        {status === "LoadingFirstPage" ? (
+          <FeedSkeleton />
+        ) : projects.length === 0 && status === "Exhausted" ? (
+          <div className="px-1 py-14">
+            <h2 className="m-0 text-lg font-semibold text-ink">{t("feed.emptyTitle")}</h2>
+            <p className="mt-2 mb-0 max-w-md text-sm leading-6 text-muted">{t("feed.emptyLead")}</p>
+          </div>
+        ) : (
+          <ul className="m-0 list-none p-0">
+            {projects.map((project) => (
+              <li className="border-b border-[#e7eeea]" key={project.id}>
+                <ProjectRow now={now} project={project} />
+              </li>
+            ))}
+          </ul>
+        )}
+        {status === "LoadingMore" ? <FeedSkeleton /> : null}
+        {status === "CanLoadMore" ? (
+          <div className="flex justify-center py-6">
+            <button
+              className="min-h-11 rounded-full border border-brand bg-white px-5 text-sm font-semibold text-brand transition-[background-color,color,transform] duration-150 hover:bg-[#B9563B] hover:text-white active:scale-[0.96]"
+              onClick={onLoadMore}
+              type="button"
+            >
+              {tProjects("loadMore")}
+            </button>
+          </div>
+        ) : null}
       </div>
     </section>
   );
 }
 
-function NextCard({
-  actionHref,
-  actionLabel,
-  icon,
-  lead,
-  title,
-}: {
-  actionHref?:
-    | typeof routes.browseProjects
-    | typeof routes.companyPortfolio
-    | typeof routes.companyProfileManagement;
-  actionLabel?: string;
-  icon: "search" | "folder" | "profile";
-  lead: string;
-  title: string;
-}) {
+function ProjectRow({ project, now }: { project: Project; now: Date }) {
+  const t = useTranslations("auth.companyDashboard");
+  const tProjects = useTranslations("companyProjects");
+  const tWizard = useTranslations("projectWizard");
+  const format = useFormatter();
+  const category =
+    project.primaryCategory === "other" && project.customCategoryText
+      ? project.customCategoryText
+      : tWizard(`categoryOptions.${project.primaryCategory}`);
+  const property = project.propertyType ? tWizard(`propertyTypeOptions.${project.propertyType}`) : null;
+  const surface =
+    project.surface !== null && !project.surfaceUnknown
+      ? tProjects("card.surface", { value: format.number(project.surface) })
+      : null;
+  const href = { pathname: routes.companyProject, params: { projectId: project.id } } as const;
+
   return (
-    <article className="rounded-2xl border border-brand-border bg-white p-5">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-brand">
-        {icon === "search" ? <SearchIcon /> : icon === "folder" ? <FolderIcon /> : <ProfileIcon />}
-      </div>
-      <h2 className="mt-3 mb-0 text-base leading-6 font-semibold tracking-[-0.02em] text-ink">{title}</h2>
-      <p className="mt-2 mb-0 text-sm leading-6 text-muted">{lead}</p>
-      {actionHref && actionLabel ? (
+    <article className="group -mx-4 rounded-xl px-4 py-5 transition-[background-color] duration-150 hover:bg-[#f1f4f2] focus-within:bg-[#f1f4f2]">
+      <p className="m-0 text-[13px] text-muted">
+        {project.publishedAt ? (
+          <time dateTime={new Date(project.publishedAt).toISOString()}>
+            {t("feed.posted", { when: format.relativeTime(project.publishedAt, now) })}
+          </time>
+        ) : (
+          tProjects("card.clientPrivate")
+        )}
+      </p>
+      <h2 className="mt-1.5 mb-0 text-[1.22rem] leading-7 font-semibold tracking-[-0.02em] text-ink">
         <Link
-          className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand transition-[color,transform] duration-150 [transition-timing-function:cubic-bezier(0.2,0,0,1)] hover:text-ink active:scale-[0.96]"
-          href={actionHref}
+          className="rounded-sm outline-none transition-colors duration-150  focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          href={href}
         >
-          {actionLabel}
-          <span aria-hidden className="ml-1">→</span>
+          {project.title}
         </Link>
-      ) : null}
+      </h2>
+      <p className="mt-1 mb-0 text-sm text-ink/80">
+        {tWizard(`budgetOptions.${project.budgetRange}`)}
+        <span aria-hidden> · </span>
+        {tWizard(`timelineOptions.${project.timeline}`)}
+        <span aria-hidden> · </span>
+        {tWizard(`cityOptions.${project.city}`)}
+      </p>
+      <p className="mt-3 mb-0 line-clamp-3 text-sm leading-6 text-[#3d3d3d]">
+        {project.description}{" "}
+        <Link className="font-semibold " href={href}>
+          {t("feed.more")}
+        </Link>
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Tag>{category}</Tag>
+        {property ? <Tag>{property}</Tag> : null}
+        {surface ? <Tag>{surface}</Tag> : null}
+      </div>
+      <p className="mt-4 mb-0 text-[13px] text-muted">
+        {project.client
+          ? tProjects("card.client", {
+              name: project.client.displayName,
+              date: format.dateTime(project.client.joinedAt, { month: "short", year: "numeric" }),
+            })
+          : tProjects("card.clientPrivate")}
+        <span aria-hidden> · </span>
+        {tWizard(`cityOptions.${project.city}`)}
+      </p>
     </article>
   );
 }
 
-function StatusChip({ label, status }: { label: string; status: VerificationStatus }) {
+function Tag({ children }: { children: ReactNode }) {
+  return <span className="rounded-full bg-[#efefef] px-3 py-1 text-[13px] text-[#5e5e5e]">{children}</span>;
+}
+
+function CompanySidebar({ profile, verification }: { profile: Profile; verification: VerificationStatus }) {
+  const t = useTranslations("auth.companyDashboard");
+  const tServices = useTranslations("auth.companyOnboarding.services");
+  const [reachOpen, setReachOpen] = useState(true);
+  const completion = profileCompletion(profile);
+  const serviceLine = profile.services
+    .slice(0, 2)
+    .map((service) => (tServices.has(service) ? tServices(service) : service))
+    .join(" · ");
+  const showVerificationCta = verification === "draft" || verification === "rejected";
+
   return (
-    <span
-      className={joinClassNames(
-        "inline-flex items-center rounded-full px-2.5 py-1 text-[0.7rem] font-semibold tracking-[0.02em]",
-        status === "verified" && "bg-brand-soft text-brand",
-        status === "pending" && "bg-[#f4eee3] text-[#6a4c1d]",
-        status === "rejected" && "bg-[#f8e8e6] text-[#8a2f28]",
-        status === "draft" && "bg-[#eef1f4] text-muted",
-      )}
+    <aside className="grid gap-4 lg:sticky lg:top-24">
+      <section className="rounded-2xl border border-[#e4ebe6] bg-white px-5 py-5">
+        <div className="flex items-center gap-3">
+          {profile.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              alt=""
+              className="size-14 rounded-full object-cover outline outline-black/10"
+              src={profile.logoUrl}
+            />
+          ) : (
+            <span className="grid size-14 place-items-center rounded-full bg-brand-soft text-sm font-semibold text-brand">
+              {initials(profile.name)}
+            </span>
+          )}
+          <div className="min-w-0">
+            <h2 className="m-0 truncate text-base font-semibold text-ink">{profile.name}</h2>
+            <p className="mt-0.5 mb-0 truncate text-sm text-muted">{serviceLine || profile.city}</p>
+          </div>
+        </div>
+
+        <div className="mt-5 border-t border-[#eef2f0] pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="m-0 text-sm text-ink">{t("sidebar.profileVisibility")}</p>
+            <Link
+              aria-label={t("sidebar.editProfile")}
+              className="grid size-8 place-items-center rounded-md text-muted hover:bg-[#f4f7f5] hover:text-ink"
+              href={routes.companyProfileManagement}
+            >
+              <PencilIcon />
+            </Link>
+          </div>
+          <p className="mt-2 mb-0 text-sm text-muted">{t(`sidebar.visibility.${verification}`)}</p>
+        </div>
+
+        <div className="mt-4 border-t border-[#eef2f0] pt-4">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <p className="m-0 text-ink">{t("sidebar.completeProfile")}</p>
+            <p className="m-0 font-semibold text-[#108a00]">{t("sidebar.progress", { value: completion })}</p>
+          </div>
+          <div aria-hidden className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#e6eee8]">
+            <div className="h-full rounded-full bg-[#108a00]" style={{ width: `${completion}%` }} />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-[#e4ebe6] bg-white">
+        <button
+          aria-expanded={reachOpen}
+          className="flex min-h-14 w-full items-center justify-between px-5 text-left text-[15px] font-semibold text-ink"
+          onClick={() => setReachOpen((open) => !open)}
+          type="button"
+        >
+          {t("sidebar.reachMore")}
+          <ChevronIcon open={reachOpen} />
+        </button>
+        {reachOpen ? (
+          <div className="border-t border-[#eef2f0] px-5 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="m-0 text-sm font-medium text-ink">{t("sidebar.verificationBadge")}</p>
+                <p className="mt-1 mb-0 text-sm text-muted">{t(verificationStatusKey[verification])}</p>
+              </div>
+              <Link
+                aria-label={t(verificationHeadlineKey[verification])}
+                className="grid size-8 place-items-center rounded-md text-muted hover:bg-[#f4f7f5] hover:text-ink"
+                href={routes.companyVerification}
+              >
+                <PencilIcon />
+              </Link>
+            </div>
+            <p className="mt-3 mb-0 text-sm leading-6 text-muted">{t(verificationLeadKey[verification])}</p>
+            {showVerificationCta ? (
+              <Link
+                className="mt-4 inline-flex min-h-10 items-center text-sm font-semibold text-brand hover:underline"
+                href={routes.companyVerification}
+              >
+                {t(verification === "rejected" ? "resubmit" : "startVerification")}
+              </Link>
+            ) : null}
+            <Link
+              className="mt-4 flex items-center justify-between border-t border-[#eef2f0] pt-4 text-sm text-ink hover:text-[#B9563B]"
+              href={routes.companyPortfolio}
+            >
+              <span>{t("sidebar.portfolio")}</span>
+              <span className="text-muted">{t("portfolioAction")}</span>
+            </Link>
+          </div>
+        ) : null}
+      </section>
+
+      <nav aria-label={t("sidebar.reachMore")} className="overflow-hidden rounded-2xl border border-[#e4ebe6] bg-white">
+        <SidebarLink href={routes.messages} label={t("sidebar.messages")} />
+        <SidebarLink href={routes.companyProjects} label={t("findWorkTitle")} />
+        <SidebarLink href={routes.contact} label={t("sidebar.contact")} />
+      </nav>
+    </aside>
+  );
+}
+
+function SidebarLink({
+  href,
+  label,
+}: {
+  href: typeof routes.messages | typeof routes.companyProjects | typeof routes.contact;
+  label: string;
+}) {
+  return (
+    <Link
+      className="flex min-h-12 items-center justify-between border-b border-[#eef2f0] px-5 text-sm font-medium text-ink last:border-b-0 hover:bg-[#f7faf8]"
+      href={href}
     >
       {label}
-    </span>
+      <span aria-hidden className="text-muted">
+        ›
+      </span>
+    </Link>
   );
 }
 
-function StatusGlyph({ status }: { status: VerificationStatus }) {
-  const tone =
-    status === "verified"
-      ? "bg-brand-soft text-brand"
-      : status === "rejected"
-        ? "bg-[#f8e8e6] text-[#8a2f28]"
-        : status === "pending"
-          ? "bg-[#f4eee3] text-[#6a4c1d]"
-          : "bg-[#eef1f4] text-muted";
+function FilterFields({
+  city,
+  category,
+  budgetRange,
+  onCityChange,
+  onCategoryChange,
+  onBudgetChange,
+  onClear,
+}: {
+  city: City | "";
+  category: Category | "";
+  budgetRange: Budget | "";
+  onCityChange: (value: City | "") => void;
+  onCategoryChange: (value: Category | "") => void;
+  onBudgetChange: (value: Budget | "") => void;
+  onClear: () => void;
+}) {
+  const t = useTranslations("companyProjects");
+  const tWizard = useTranslations("projectWizard");
 
   return (
-    <span className={joinClassNames("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", tone)} aria-hidden>
-      {status === "verified" ? <CheckIcon /> : status === "rejected" ? <AlertIcon /> : status === "pending" ? <ClockIcon /> : <ShieldIcon />}
-    </span>
+    <div>
+      <div className="mb-3 flex justify-end">
+        <button className="min-h-10 text-xs font-semibold text-brand" onClick={onClear} type="button">
+          {t("clearFilters")}
+        </button>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <FilterSelect id="company-feed-city" label={t("filters.city")} onChange={(value) => onCityChange(value as City | "")} value={city}>
+          <option value="">{t("filters.allCities")}</option>
+          {projectCities.map((item) => (
+            <option key={item} value={item}>
+              {tWizard(`cityOptions.${item}`)}
+            </option>
+          ))}
+        </FilterSelect>
+        <FilterSelect
+          id="company-feed-category"
+          label={t("filters.category")}
+          onChange={(value) => onCategoryChange(value as Category | "")}
+          value={category}
+        >
+          <option value="">{t("filters.allCategories")}</option>
+          {projectCategories.map((item) => (
+            <option key={item} value={item}>
+              {tWizard(`categoryOptions.${item}`)}
+            </option>
+          ))}
+        </FilterSelect>
+        <FilterSelect
+          id="company-feed-budget"
+          label={t("filters.budget")}
+          onChange={(value) => onBudgetChange(value as Budget | "")}
+          value={budgetRange}
+        >
+          <option value="">{t("filters.allBudgets")}</option>
+          {projectBudgetRanges.map((item) => (
+            <option key={item} value={item}>
+              {tWizard(`budgetOptions.${item}`)}
+            </option>
+          ))}
+        </FilterSelect>
+      </div>
+    </div>
   );
 }
 
-function CheckIcon() {
+function FilterSelect({
+  id,
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  children: ReactNode;
+}) {
   return (
-    <svg fill="none" height="20" viewBox="0 0 24 24" width="20">
-      <path d="M5 13.5 9.5 18 19 7" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-    </svg>
+    <label className="grid gap-1.5 text-xs font-semibold text-muted" htmlFor={id}>
+      {label}
+      <select
+        className="min-h-11 rounded-lg border border-[#d5ddd8] bg-white px-3 text-sm font-normal text-ink outline-none focus:border-brand"
+        id={id}
+        onChange={(event) => onChange(event.target.value)}
+        value={value}
+      >
+        {children}
+      </select>
+    </label>
   );
 }
 
-function ClockIcon() {
+function FeedSkeleton() {
   return (
-    <svg fill="none" height="20" viewBox="0 0 24 24" width="20">
-      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" />
-      <path d="M12 8v4.2L15 15" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-    </svg>
+    <div className="grid gap-6 py-5">
+      {Array.from({ length: 3 }, (_, index) => (
+        <div className="animate-pulse" key={index}>
+          <div className="h-3 w-28 rounded bg-[#e6eee8]" />
+          <div className="mt-3 h-6 w-4/5 rounded bg-[#e6eee8]" />
+          <div className="mt-3 h-4 w-full rounded bg-[#eef3f0]" />
+          <div className="mt-2 h-4 w-2/3 rounded bg-[#eef3f0]" />
+        </div>
+      ))}
+    </div>
   );
 }
 
-function AlertIcon() {
-  return (
-    <svg fill="none" height="20" viewBox="0 0 24 24" width="20">
-      <path d="M12 8.5v5" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
-      <circle cx="12" cy="16.5" fill="currentColor" r="1" />
-      <path d="M11.1 4.8 3.4 18.2A1 1 0 0 0 4.3 19.7h15.4a1 1 0 0 0 .9-1.5L12.9 4.8a1 1 0 0 0-1.8 0Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
-    </svg>
-  );
-}
-
-function ShieldIcon() {
-  return (
-    <svg fill="none" height="20" viewBox="0 0 24 24" width="20">
-      <path d="M12 4 6 6.5v5.2c0 3.5 2.4 6.7 6 7.8 3.6-1.1 6-4.3 6-7.8V6.5L12 4Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
-    </svg>
-  );
+function useDebouncedValue(value: string, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delay);
+    return () => window.clearTimeout(timer);
+  }, [delay, value]);
+  return debounced;
 }
 
 function SearchIcon() {
   return (
-    <svg fill="none" height="18" viewBox="0 0 24 24" width="18">
-      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="2" />
-      <path d="m16 16 4 4" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+    <svg aria-hidden className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" fill="none" viewBox="0 0 20 20">
+      <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="m12.5 12.5 4 4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
     </svg>
   );
 }
 
-function FolderIcon() {
+function FilterIcon() {
   return (
-    <svg fill="none" height="18" viewBox="0 0 24 24" width="18">
-      <path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h4.1L12 8.2h6.5A1.5 1.5 0 0 1 20 9.7v7.8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5v-10Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="2" />
+    <svg aria-hidden className="size-4" fill="none" viewBox="0 0 16 16">
+      <path d="M2 4h12M4.5 8h7M6.5 12h3" stroke="currentColor" strokeLinecap="round" strokeWidth="1.5" />
     </svg>
   );
 }
 
-function ProfileIcon() {
+function CloseIcon() {
   return (
-    <svg fill="none" height="18" viewBox="0 0 24 24" width="18">
-      <circle cx="12" cy="8" r="3.25" stroke="currentColor" strokeWidth="2" />
-      <path d="M5.5 19c.8-3.4 3-5.2 6.5-5.2s5.7 1.8 6.5 5.2" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+    <svg aria-hidden className="size-4" fill="none" viewBox="0 0 16 16">
+      <path d="m4 4 8 8M12 4 4 12" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg aria-hidden className="size-4" fill="none" viewBox="0 0 16 16">
+      <path d="M9.2 3.2 12.8 6.8 5.5 14.1 2 14.9 2.8 11.4 9.2 3.2Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      aria-hidden
+      className={joinClassNames("size-4 text-muted transition-transform duration-150", open && "rotate-180")}
+      fill="none"
+      viewBox="0 0 16 16"
+    >
+      <path d="m4 6 4 4 4-4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" />
     </svg>
   );
 }

@@ -31,9 +31,9 @@ type CompanyResult = FunctionReturnType<
 >["page"][number];
 const COMPANY_PAGE_SIZE = 12;
 
-export function CompanyDirectory() {
+export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: string }) {
   const t = useTranslations("companyDirectory");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [city, setCity] = useState("");
   const [service, setService] = useState<Service | "">("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);

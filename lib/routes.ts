@@ -22,18 +22,33 @@ export const routes = {
   signUp: "/inscription",
   signUpClient: "/inscription/client",
   signUpCompany: "/inscription/entreprise",
-  clientDashboard: "/espace-client",
+  clientRoot: "/espace-client",
+  clientDashboard: "/espace-client/tableau-de-bord",
+  clientProfile: "/espace-client/profil",
   postProjectWizard: "/espace-client/projets/nouveau",
+  clientProject: "/espace-client/projets/[projectId]",
   companyDashboard: "/espace-entreprise",
+  companyProjects: "/espace-entreprise/projets",
+  companyProject: "/espace-entreprise/projets/[projectId]",
+  companyInitialQuote: "/espace-entreprise/projets/[projectId]/devis",
   companyProfileManagement: "/espace-entreprise/profil",
   clientOnboarding: "/espace-client/onboarding",
   companyOnboarding: "/espace-entreprise/onboarding",
   companyVerification: "/espace-entreprise/verification",
   companyPortfolio: "/espace-entreprise/portfolio",
   admin: "/admin",
+  adminProjects: "/admin/projects",
+  adminVerification: "/admin/verification",
   messages: "/messages",
   notifications: "/notifications",
 } as const;
 
-export type AppRoute = (typeof routes)[keyof typeof routes];
+export type AppRoute = Exclude<
+  (typeof routes)[keyof typeof routes],
+  typeof routes.clientProject | typeof routes.companyProject | typeof routes.companyInitialQuote
+>;
+export type DynamicAppRoute =
+  | typeof routes.clientProject
+  | typeof routes.companyProject
+  | typeof routes.companyInitialQuote;
 export type ProtectedRoute = AppRoute;

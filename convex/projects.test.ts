@@ -9,10 +9,10 @@ const modules = import.meta.glob("./**/*.ts");
 vi.mock("./storage/r2Client", () => ({ createPresignedPutUrl: vi.fn(async () => "https://upload.test/project"), headPublicMediaObject: vi.fn(async () => ({ ContentType: "image/jpeg", ContentLength: 12, ETag: '"etag"' })), readPublicMediaSignature: vi.fn(async () => new Uint8Array([0xff, 0xd8, 0xff])), deletePublicMediaObject: vi.fn(async () => undefined) }));
 beforeAll(async () => { const { privateKey } = await generateKeyPair("RS256", { extractable: true }); process.env.JWT_PRIVATE_KEY = await exportPKCS8(privateKey); process.env.CONVEX_SITE_URL = "https://example.convex.site"; process.env.R2_ACCOUNT_ID = "0123456789abcdef0123456789abcdef"; process.env.R2_ACCESS_KEY_ID = "key"; process.env.R2_SECRET_ACCESS_KEY = "secret"; process.env.R2_BUCKET_NAME = "bucket"; process.env.R2_ENDPOINT = "https://r2.example"; process.env.R2_PUBLIC_BASE_URL = "https://media.example"; });
 type T = ReturnType<typeof convexTest>;
-async function user(t: T, accountType: "client" | "company" = "client", onboardingStatus: "pending" | "completed" = "completed") { return t.run((ctx) => ctx.db.insert("users", { email: `${crypto.randomUUID()}@test.dev`, accountType, onboardingStatus, countryCode: "MA", createdAt: 1, updatedAt: 1 })); }
+async function user(t: T, accountType: "client" | "company" | "admin" = "client", onboardingStatus: "pending" | "completed" = "completed") { return t.run((ctx) => ctx.db.insert("users", { email: `${crypto.randomUUID()}@test.dev`, accountType, onboardingStatus, countryCode: "MA", createdAt: 1, updatedAt: 1 })); }
 function as(t: T, id: Id<"users">) { return t.withIdentity({ subject: `${id}|session` }); }
 async function draft(t: T, id: Id<"users">) { return (await as(t, id).mutation(api.projects.index.initializeDraft, {})).projectId; }
-async function complete(t: T, id: Id<"users">, projectId: Id<"projects">) { const c = as(t, id); await c.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "renovation" }); await c.mutation(api.projects.index.saveLocation, { projectId, city: "rabat" }); await c.mutation(api.projects.index.saveDetails, { projectId, title: "Rénovation appartement", propertyType: "apartment", surfaceUnknown: true, description: "Rénovation complète de l’appartement avec remise aux normes." }); await c.mutation(api.projects.index.saveBudget, { projectId, budgetRange: "unknown" }); await c.mutation(api.projects.index.saveTimeline, { projectId, timeline: "flexible" }); await c.mutation(api.projects.index.saveFiles, { projectId, imageUploadTokens: [], documents: [] }); }
+async function complete(t: T, id: Id<"users">, projectId: Id<"projects">) { const c = as(t, id); await c.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "renovation" }); await c.mutation(api.projects.index.saveLocation, { projectId, city: "rabat" }); await c.mutation(api.projects.index.saveDetails, { projectId, title: "Rénovation appartement", propertyType: "apartment", surfaceUnknown: true, description: "Rénovation complète de l’appartement avec remise aux normes." }); await c.mutation(api.projects.index.saveBudget, { projectId, budgetRange: "unknown" }); await c.mutation(api.projects.index.saveTimeline, { projectId, timeline: "flexible" }); }
 
 describe("project wizard", () => {
   test("only an onboarded client creates and resumes one MA draft", async () => { const t = convexTest(schema, modules); const client = await user(t); const company = await user(t, "company"); const pending = await user(t, "client", "pending"); await expect(t.mutation(api.projects.index.initializeDraft, {})).rejects.toThrow("NOT_AUTHENTICATED"); await expect(as(t, company).mutation(api.projects.index.initializeDraft, {})).rejects.toThrow("CLIENT_ACCOUNT_REQUIRED"); await expect(as(t, pending).mutation(api.projects.index.initializeDraft, {})).rejects.toThrow("CLIENT_ONBOARDING_REQUIRED"); const first = await as(t, client).mutation(api.projects.index.initializeDraft, {}); const second = await as(t, client).mutation(api.projects.index.initializeDraft, {}); expect(second).toEqual({ projectId: first.projectId, resumed: true }); const rows = await t.run((ctx) => ctx.db.query("projects").withIndex("by_clientId", (q) => q.eq("clientId", client)).collect()); expect(rows).toHaveLength(1); expect(rows[0]).toMatchObject({ countryCode: "MA", status: "draft", visibility: "marketplace" }); });
@@ -21,5 +21,119 @@ describe("project wizard", () => {
   test("optional files work and a verified R2 image is owner-bound and single-use", async () => { const t = convexTest(schema, modules); const id = await user(t); const c = as(t, id); const projectId = await draft(t, id); await c.mutation(api.projects.index.saveFiles, { projectId, imageUploadTokens: [], documents: [] }); const intent = await c.action(api.projects.media.requestImageUpload, { projectId, contentType: "image/jpeg", size: 12 }); await c.action(api.projects.media.verifyImageUpload, { uploadToken: intent.uploadToken }); await c.mutation(api.projects.index.saveFiles, { projectId, imageUploadTokens: [intent.uploadToken], documents: [] }); await expect(c.mutation(api.projects.index.saveFiles, { projectId, imageUploadTokens: [intent.uploadToken], documents: [] })).rejects.toThrow("INVALID_PROJECT_IMAGE"); expect(await t.run((ctx) => ctx.db.query("projectMedia").withIndex("by_projectId", (q) => q.eq("projectId", projectId)).collect())).toHaveLength(1); });
   test("private document URL is owner-only", async () => { const t = convexTest(schema, modules); const owner = await user(t); const other = await user(t); const projectId = await draft(t, owner); const storageId = await t.run((ctx) => ctx.storage.store(new Blob(["pdf"]))); const attachmentId = await t.run((ctx) => ctx.db.insert("projectAttachments", { projectId, clientId: owner, storageId, fileName: "plan.pdf", contentType: "application/pdf", size: 3, createdAt: 1 })); await expect(as(t, owner).query(api.projects.index.getAttachmentDownloadUrl, { attachmentId })).resolves.toEqual(expect.any(String)); await expect(as(t, other).query(api.projects.index.getAttachmentDownloadUrl, { attachmentId })).rejects.toThrow("PROJECT_ATTACHMENT_NOT_FOUND"); });
   test("publish validates, transitions once, records history, and remains private pending review", async () => { const t = convexTest(schema, modules); const id = await user(t); const c = as(t, id); const projectId = await draft(t, id); await expect(c.mutation(api.projects.index.publishProject, { projectId })).rejects.toThrow("PROJECT_INCOMPLETE"); await complete(t, id, projectId); await expect(c.mutation(api.projects.index.publishProject, { projectId })).resolves.toEqual({ status: "pending_review", alreadySubmitted: false }); await expect(c.mutation(api.projects.index.publishProject, { projectId })).resolves.toEqual({ status: "pending_review", alreadySubmitted: true }); expect(await t.query(api.projects.index.getPublicProject, { projectId })).toBeNull(); const history = await t.run((ctx) => ctx.db.query("projectStatusHistory").withIndex("by_projectId", (q) => q.eq("projectId", projectId)).collect()); expect(history).toHaveLength(1); expect(history[0]).toMatchObject({ oldStatus: "draft", newStatus: "pending_review", changedBy: id }); });
+
+  test("old drafts with attachments remain intact when publishing without the removed upload step", async () => {
+    const t = convexTest(schema, modules);
+    const id = await user(t);
+    const c = as(t, id);
+    const projectId = await draft(t, id);
+    await complete(t, id, projectId);
+    const storageId = await t.run((ctx) => ctx.storage.store(new Blob(["pdf"])));
+    await t.run(async (ctx) => {
+      await ctx.db.insert("projectAttachments", {
+        projectId,
+        clientId: id,
+        storageId,
+        fileName: "legacy-plan.pdf",
+        contentType: "application/pdf",
+        size: 3,
+        createdAt: 1,
+      });
+      await ctx.db.insert("projectMedia", {
+        projectId,
+        clientId: id,
+        storageProvider: "r2",
+        objectKey: `projects/${projectId}/images/legacy.jpg`,
+        mimeType: "image/jpeg",
+        size: 12,
+        sortOrder: 0,
+        createdAt: 1,
+      });
+      await ctx.db.patch(projectId, { lastCompletedStep: 6 });
+    });
+
+    const wizard = await c.query(api.projects.index.getWizard, {});
+    expect(wizard.draft?.lastCompletedStep).toBe(6);
+    expect(wizard.draft?.attachments).toHaveLength(1);
+    expect(wizard.draft?.images).toHaveLength(1);
+
+    await expect(c.mutation(api.projects.index.publishProject, { projectId })).resolves.toEqual({
+      status: "pending_review",
+      alreadySubmitted: false,
+    });
+
+    const after = await t.run(async (ctx) => ({
+      attachments: await ctx.db
+        .query("projectAttachments")
+        .withIndex("by_projectId", (q) => q.eq("projectId", projectId))
+        .collect(),
+      media: await ctx.db
+        .query("projectMedia")
+        .withIndex("by_projectId", (q) => q.eq("projectId", projectId))
+        .collect(),
+      project: await ctx.db.get(projectId),
+    }));
+    expect(after.attachments).toHaveLength(1);
+    expect(after.media).toHaveLength(1);
+    expect(after.project?.status).toBe("pending_review");
+  });
+
   test("invalid status transition is rejected and only published marketplace data is public", async () => { const t = convexTest(schema, modules); const id = await user(t); const c = as(t, id); const projectId = await draft(t, id); await complete(t, id, projectId); await t.run((ctx) => ctx.db.patch(projectId, { status: "cancelled" })); await expect(c.mutation(api.projects.index.publishProject, { projectId })).rejects.toThrow("INVALID_PROJECT_STATUS_TRANSITION"); await t.run((ctx) => ctx.db.patch(projectId, { status: "published" })); await expect(t.query(api.projects.index.getPublicProject, { projectId })).resolves.toMatchObject({ city: "rabat", primaryCategory: "renovation" }); });
+
+  test("owner project list includes drafts and pending review projects, newest first, without other clients", async () => {
+    const t = convexTest(schema, modules);
+    const owner = await user(t);
+    const other = await user(t);
+    const submittedId = await draft(t, owner);
+    await complete(t, owner, submittedId);
+    await as(t, owner).mutation(api.projects.index.publishProject, { projectId: submittedId });
+    const draftId = await draft(t, owner);
+    await as(t, owner).mutation(api.projects.index.saveCategory, { projectId: draftId, primaryCategory: "architecture" });
+    await draft(t, other);
+
+    const projects = await as(t, owner).query(api.projects.index.getMyProjects, {});
+    expect(projects.map((project) => project.id)).toEqual([draftId, submittedId]);
+    expect(projects.map((project) => project.status)).toEqual(["draft", "pending_review"]);
+    expect(projects[0]).toMatchObject({ canResume: true, canView: true });
+    expect(projects[1]).toMatchObject({ canResume: false, canView: true });
+  });
+
+  test("owner and admin can inspect project details while other clients and companies receive the same not-found result", async () => {
+    const t = convexTest(schema, modules);
+    const owner = await user(t);
+    const other = await user(t);
+    const company = await user(t, "company");
+    const admin = await user(t, "admin");
+    const projectId = await draft(t, owner);
+    await complete(t, owner, projectId);
+    await as(t, owner).mutation(api.projects.index.publishProject, { projectId });
+
+    const ownerView = await as(t, owner).query(api.projects.index.getMyProject, { projectId });
+    expect(ownerView).toMatchObject({ id: projectId, status: "pending_review", viewerRole: "owner" });
+    expect(ownerView?.history).toEqual([expect.objectContaining({ oldStatus: "draft", newStatus: "pending_review", actor: "client" })]);
+    await expect(as(t, other).query(api.projects.index.getMyProject, { projectId })).resolves.toBeNull();
+    await expect(as(t, company).query(api.projects.index.getMyProject, { projectId })).resolves.toBeNull();
+    await expect(as(t, admin).query(api.projects.index.getMyProject, { projectId })).resolves.toMatchObject({ id: projectId, viewerRole: "admin" });
+    await expect(as(t, other).query(api.projects.index.getMyProject, { projectId: "not-an-id" })).resolves.toBeNull();
+  });
+
+  test("public discovery excludes pending review and invite-only projects", async () => {
+    const t = convexTest(schema, modules);
+    const firstOwner = await user(t);
+    const pendingId = await draft(t, firstOwner);
+    await complete(t, firstOwner, pendingId);
+    await as(t, firstOwner).mutation(api.projects.index.publishProject, { projectId: pendingId });
+    expect(await t.query(api.projects.index.listPublicProjects, {})).toEqual([]);
+
+    await t.run((ctx) => ctx.db.patch(pendingId, { status: "published", publishedAt: 10 }));
+    const secondOwner = await user(t);
+    const privateId = await draft(t, secondOwner);
+    await complete(t, secondOwner, privateId);
+    await t.run((ctx) => ctx.db.patch(privateId, { status: "published", visibility: "invite_only", publishedAt: 20 }));
+
+    const publicProjects = await t.query(api.projects.index.listPublicProjects, {});
+    expect(publicProjects).toHaveLength(1);
+    expect(publicProjects[0]).toMatchObject({ id: pendingId, title: "Rénovation appartement", city: "rabat" });
+    expect(publicProjects.some((project) => project.id === privateId)).toBe(false);
+  });
 });

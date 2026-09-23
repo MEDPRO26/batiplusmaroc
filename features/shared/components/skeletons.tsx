@@ -156,13 +156,19 @@ export function PortfolioGridSkeleton() {
 
 export function DashboardCardsSkeleton({ label }: { label: string }) {
   return (
-    <section aria-busy="true" className="mx-auto w-full max-w-[900px] px-5 py-16 sm:px-8" role="status">
+    <section aria-busy="true" className="mx-auto w-full max-w-[1120px] px-[18px] py-10 sm:px-6 lg:px-8" role="status">
       <span className="sr-only">{label}</span>
-      <Skeleton className="h-3 w-28" />
-      <Skeleton className="mt-5 h-10 w-[min(100%,22rem)]" />
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+      <Skeleton className="h-3 w-32" />
+      <Skeleton className="mt-5 h-12 w-[min(100%,28rem)]" />
+      <Skeleton className="mt-4 h-5 w-[min(100%,38rem)]" />
+      <div className="mt-10 grid gap-3 sm:grid-cols-2">
+        <Skeleton className="h-28 rounded-2xl" />
+        <Skeleton className="h-28 rounded-2xl" />
+      </div>
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <CardSkeleton />
         <CardSkeleton />
+        <CardSkeleton className="hidden lg:block" />
       </div>
     </section>
   );

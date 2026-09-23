@@ -75,7 +75,7 @@ export function CompanyProfileEditor() {
   }
 
   const fieldClass =
-    "mt-1.5 w-full rounded-[10px] border border-brand-border bg-white px-3.5 py-3 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted/65 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)] disabled:cursor-not-allowed disabled:bg-[#f7f9fb] disabled:text-muted";
+    "mt-1.5 w-full rounded-[10px] border border-brand-border bg-white px-3.5 py-3 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)] disabled:cursor-not-allowed disabled:bg-[#f7f9fb] disabled:text-muted";
 
   function inputClass(name: string) {
     return joinClassNames(fieldClass, invalid(name) && "border-red-400");

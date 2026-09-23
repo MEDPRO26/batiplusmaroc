@@ -32,12 +32,15 @@ export type MetaNamespace =
   | "signUpClient"
   | "signUpCompany"
   | "clientDashboard"
+  | "clientProfile"
   | "clientOnboarding"
   | "companyDashboard"
+  | "companyProjects"
   | "companyProfileManagement"
   | "companyOnboarding"
   | "companyVerification"
-  | "companyPortfolio";
+  | "companyPortfolio"
+  | "messages";
 
 export const articleMetaByRoute = {
   [routes.constructionTrends2025]: "constructionTrends2025",
