@@ -89,5 +89,7 @@ describe("messages inbox", () => {
     expect(html).toContain("Villa build");
     expect(html).toContain("All projects");
     expect(html).toContain("Welcome to Messages");
+    expect(html).not.toContain('role="listbox"');
+    expect(html).not.toContain('role="option"');
   });
 });

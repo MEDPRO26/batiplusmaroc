@@ -145,7 +145,6 @@ export const getPublicCompanyProfile = query({
     companySize: v.union(v.string(), v.null()),
     languages: v.array(v.string()),
     website: v.union(v.string(), v.null()),
-    phone: v.union(v.string(), v.null()),
     portfolio: v.array(projectOutputValidator),
   })),
   handler: async (ctx, args) => {
@@ -182,7 +181,6 @@ export const getPublicCompanyProfile = query({
       companySize: company.companySize ?? null,
       languages: company.languages ?? [],
       website: company.website ?? null,
-      phone: company.phone ?? null,
       portfolio,
     };
   },

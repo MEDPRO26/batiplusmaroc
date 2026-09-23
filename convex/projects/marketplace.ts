@@ -8,6 +8,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
+import { isActiveQuoteStatus } from "../quotes/state";
 import { toPublicClientProfile } from "../lib/clientPublicShape";
 import {
   marketplaceBudgetRank,
@@ -577,9 +578,7 @@ export const getCompanyMarketplaceProject = query({
       )
       .order("desc")
       .take(20);
-    const activeQuote =
-      recentQuotes.find((quote) => quote.status === "draft" || quote.status === "submitted") ??
-      null;
+    const activeQuote = recentQuotes.find((quote) => isActiveQuoteStatus(quote.status)) ?? null;
     return {
       ...card,
       client,

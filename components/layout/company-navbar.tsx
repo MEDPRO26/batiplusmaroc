@@ -1,7 +1,9 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { api } from "@/convex/_generated/api";
 import { NavbarLogo } from "@/components/layout/navbar-logo";
 import { ProfileMenu } from "@/components/layout/profile-menu";
 import { SignedInNavbarChrome } from "@/components/layout/signed-in-navbar-chrome";
@@ -19,6 +21,10 @@ export function CompanyNavbar({ user }: { user: CompanyUser }) {
   const t = useTranslations("nav");
   const tBrand = useTranslations("brand");
   const tMenu = useTranslations("nav.profileMenu");
+  const profile = useQuery(
+    api.companies.index.getOnboardingProfile,
+    user.onboardingStatus === "completed" ? {} : "skip",
+  );
 
   const workspaceHref =
     user.onboardingStatus === "completed" ? routes.companyDashboard : routes.companyOnboarding;
@@ -65,6 +71,7 @@ export function CompanyNavbar({ user }: { user: CompanyUser }) {
               { href: workspaceHref, label: tMenu("company.workspace") },
             ]}
             lastName={user.lastName}
+            profileImageUrl={profile?.logoUrl ?? null}
             role="company"
             roleLabel={tMenu("company.role")}
           />

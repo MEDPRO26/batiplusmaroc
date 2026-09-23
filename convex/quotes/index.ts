@@ -10,6 +10,8 @@ import {
   projectCityValidator,
   projectTimelineValidator,
 } from "../projects/constants";
+import { getPublicMediaUrl } from "../storage/publicUrl";
+import { assertQuoteTransition, isActiveQuoteStatus, type QuoteStatus } from "./state";
 
 const MAX_ESTIMATED_PRICE_MAD = 100_000_000;
 const MAX_ESTIMATED_DURATION_DAYS = 730;
@@ -22,6 +24,10 @@ const MAX_QUOTES_PER_PROJECT_RESPONSE = 100;
 const quoteStatusValidator = v.union(
   v.literal("draft"),
   v.literal("submitted"),
+  v.literal("viewed"),
+  v.literal("shortlisted"),
+  v.literal("discussion_open"),
+  v.literal("declined"),
   v.literal("withdrawn"),
 );
 
@@ -65,14 +71,28 @@ const quoteDetailValidator = v.object({
   ),
 });
 
-const receivedQuoteValidator = v.object({
+const receivedCompanyValidator = v.object({
+  name: v.string(),
+  slug: v.union(v.string(), v.null()),
+  city: v.union(v.string(), v.null()),
+  description: v.union(v.string(), v.null()),
+  logoUrl: v.union(v.string(), v.null()),
+  isVerified: v.boolean(),
+});
+
+const receivedQuoteValidator = v.object({ ...quoteFields, company: receivedCompanyValidator });
+
+const receivedQuoteDetailValidator = v.object({
   ...quoteFields,
-  company: v.object({
-    name: v.string(),
-    slug: v.union(v.string(), v.null()),
-    city: v.union(v.string(), v.null()),
-    description: v.union(v.string(), v.null()),
-  }),
+  company: receivedCompanyValidator,
+  history: v.array(
+    v.object({
+      oldStatus: quoteStatusValidator,
+      newStatus: quoteStatusValidator,
+      changedAt: v.number(),
+      reason: v.union(v.string(), v.null()),
+    }),
+  ),
 });
 
 type QuoteCtx = QueryCtx | MutationCtx;
@@ -175,7 +195,7 @@ async function quotesForCompanyProject(
 }
 
 function activeQuote(quotes: Doc<"projectQuotes">[]) {
-  return quotes.find((quote) => quote.status === "draft" || quote.status === "submitted") ?? null;
+  return quotes.find((quote) => isActiveQuoteStatus(quote.status)) ?? null;
 }
 
 async function requireOwnQuote(ctx: QuoteCtx, rawQuoteId: string) {
@@ -185,6 +205,56 @@ async function requireOwnQuote(ctx: QuoteCtx, rawQuoteId: string) {
   const quote = await ctx.db.get(quoteId);
   if (!quote || quote.companyId !== company._id) throw new ConvexError("QUOTE_NOT_FOUND");
   return { quote, userId };
+}
+
+async function requireProjectOwnerQuote(ctx: QuoteCtx, rawQuoteId: string) {
+  const { userId } = await requireClientUser(ctx);
+  const quoteId = ctx.db.normalizeId("projectQuotes", rawQuoteId);
+  if (!quoteId) throw new ConvexError("QUOTE_NOT_FOUND");
+  const quote = await ctx.db.get(quoteId);
+  if (!quote) throw new ConvexError("QUOTE_NOT_FOUND");
+  await requireOwnedProject(ctx, userId, quote.projectId);
+  return { quote, userId };
+}
+
+async function companySummary(ctx: QuoteCtx, companyId: Id<"companies">) {
+  const company = await ctx.db.get(companyId);
+  if (!company?.name) throw new ConvexError("COMPANY_NOT_FOUND");
+  const logoMedia = company.logoMediaId ? await ctx.db.get(company.logoMediaId) : null;
+  const logoUrl = logoMedia && logoMedia.companyId === company._id && logoMedia.purpose === "companyLogo"
+    ? getPublicMediaUrl(logoMedia.objectKey)
+    : company.logoStorageId
+      ? await ctx.storage.getUrl(company.logoStorageId)
+      : null;
+  return {
+    name: company.name,
+    slug: company.slug ?? null,
+    city: company.city ?? null,
+    description: company.description ?? null,
+    logoUrl,
+    isVerified: company.verificationStatus === "verified",
+  };
+}
+
+async function appendStatusHistory(
+  ctx: MutationCtx,
+  quote: Doc<"projectQuotes">,
+  nextStatus: QuoteStatus,
+  changedBy: Id<"users">,
+  reason?: string,
+) {
+  assertQuoteTransition(quote.status, nextStatus);
+  const now = Date.now();
+  await ctx.db.patch(quote._id, { status: nextStatus, updatedAt: now });
+  await ctx.db.insert("quoteStatusHistory", {
+    quoteId: quote._id,
+    oldStatus: quote.status,
+    newStatus: nextStatus,
+    changedBy,
+    changedAt: now,
+    reason,
+  });
+  return nextStatus;
 }
 
 /** Eligibility and safe project summary for the company quote workspace. */
@@ -323,60 +393,94 @@ export const withdrawInitialQuote = mutation({
     if (quote.status !== "submitted") throw new ConvexError("QUOTE_NOT_WITHDRAWABLE");
     const reason = args.reason?.trim();
     if (reason && reason.length > 300) throw new ConvexError("INVALID_QUOTE_WITHDRAWAL_REASON");
+    assertQuoteTransition(quote.status, "withdrawn");
     const now = Date.now();
     await ctx.db.patch(quote._id, { status: "withdrawn", withdrawnAt: now, updatedAt: now });
-    await ctx.db.insert("quoteStatusHistory", {
-      quoteId: quote._id,
-      oldStatus: "submitted",
-      newStatus: "withdrawn",
-      changedBy: userId,
-      changedAt: now,
-      reason: reason || undefined,
-    });
+    await ctx.db.insert("quoteStatusHistory", { quoteId: quote._id, oldStatus: quote.status, newStatus: "withdrawn", changedBy: userId, changedAt: now, reason: reason || undefined });
     return { status: "withdrawn" as const };
   },
 });
 
-/** Project-owner-only preparation for the later client review step. */
+/** Project-owner-only list. Companies and other clients cannot inspect competitors. */
 export const listReceivedInitialQuotes = query({
   args: { projectId: v.id("projects") },
   returns: v.array(receivedQuoteValidator),
   handler: async (ctx, args) => {
     const { userId } = await requireClientUser(ctx);
     await requireOwnedProject(ctx, userId, args.projectId);
-    const [submitted, withdrawn] = await Promise.all([
-      ctx.db
-        .query("projectQuotes")
-        .withIndex("by_projectId_and_status", (q) =>
-          q.eq("projectId", args.projectId).eq("status", "submitted"),
-        )
-        .order("desc")
-        .take(MAX_QUOTES_PER_PROJECT_RESPONSE),
-      ctx.db
-        .query("projectQuotes")
-        .withIndex("by_projectId_and_status", (q) =>
-          q.eq("projectId", args.projectId).eq("status", "withdrawn"),
-        )
-        .order("desc")
-        .take(MAX_QUOTES_PER_PROJECT_RESPONSE),
-    ]);
-    const quotes = [...submitted, ...withdrawn]
+    const statuses = ["submitted", "viewed", "shortlisted", "discussion_open", "declined", "withdrawn"] as const;
+    const byStatus = await Promise.all(statuses.map((status) => ctx.db
+      .query("projectQuotes")
+      .withIndex("by_projectId_and_status", (q) => q.eq("projectId", args.projectId).eq("status", status))
+      .order("desc")
+      .take(MAX_QUOTES_PER_PROJECT_RESPONSE)));
+    const quotes = byStatus.flat()
       .sort((a, b) => b.submittedAt - a.submittedAt)
       .slice(0, MAX_QUOTES_PER_PROJECT_RESPONSE);
     return await Promise.all(
       quotes.map(async (quote) => {
-        const company = await ctx.db.get(quote.companyId);
-        if (!company?.name) throw new ConvexError("COMPANY_NOT_FOUND");
         return {
           ...quoteFieldsFor(quote),
-          company: {
-            name: company.name,
-            slug: company.slug ?? null,
-            city: company.city ?? null,
-            description: company.description ?? null,
-          },
+          company: await companySummary(ctx, quote.companyId),
         };
       }),
     );
+  },
+});
+
+/** Full quote contents for the owning client only. */
+export const getReceivedInitialQuote = query({
+  args: { quoteId: v.string() },
+  returns: v.union(v.null(), receivedQuoteDetailValidator),
+  handler: async (ctx, args) => {
+    const { quote } = await requireProjectOwnerQuote(ctx, args.quoteId);
+    const history = await ctx.db
+      .query("quoteStatusHistory")
+      .withIndex("by_quoteId_and_changedAt", (q) => q.eq("quoteId", quote._id))
+      .order("asc")
+      .take(50);
+    return {
+      ...quoteFieldsFor(quote),
+      company: await companySummary(ctx, quote.companyId),
+      history: history.map((item) => ({ oldStatus: item.oldStatus, newStatus: item.newStatus, changedAt: item.changedAt, reason: item.reason ?? null })),
+    };
+  },
+});
+
+/** First owner open records the immutable submitted -> viewed transition. */
+export const markInitialQuoteViewed = mutation({
+  args: { quoteId: v.id("projectQuotes") },
+  returns: v.object({ status: quoteStatusValidator }),
+  handler: async (ctx, args) => {
+    const { quote, userId } = await requireProjectOwnerQuote(ctx, args.quoteId);
+    if (quote.status !== "submitted") return { status: quote.status };
+    return { status: await appendStatusHistory(ctx, quote, "viewed", userId) };
+  },
+});
+
+const reviewActionValidator = v.union(
+  v.literal("shortlist"),
+  v.literal("decline"),
+  v.literal("open_discussion"),
+);
+
+/** Owner review action only; opening discussion intentionally creates no message thread. */
+export const reviewInitialQuote = mutation({
+  args: {
+    quoteId: v.id("projectQuotes"),
+    action: reviewActionValidator,
+    reason: v.optional(v.string()),
+  },
+  returns: v.object({ status: quoteStatusValidator }),
+  handler: async (ctx, args) => {
+    const { quote, userId } = await requireProjectOwnerQuote(ctx, args.quoteId);
+    const reason = args.reason?.trim();
+    if (reason && reason.length > 300) throw new ConvexError("INVALID_QUOTE_REVIEW_REASON");
+    const nextStatus: QuoteStatus = args.action === "shortlist"
+      ? "shortlisted"
+      : args.action === "decline"
+        ? "declined"
+        : "discussion_open";
+    return { status: await appendStatusHistory(ctx, quote, nextStatus, userId, reason || undefined) };
   },
 });

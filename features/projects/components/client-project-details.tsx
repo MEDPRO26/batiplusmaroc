@@ -11,6 +11,7 @@ import { ErrorState } from "@/features/shared/components/error-state";
 import { PageSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
+import { ClientReceivedQuotes } from "@/features/quotes/components/client-received-quotes";
 
 export type ProjectDetails = NonNullable<FunctionReturnType<typeof api.projects.index.getMyProject>>;
 
@@ -29,10 +30,10 @@ export function ClientProjectDetails({ projectId }: { projectId: string }) {
   }, [router, user]);
   if (user === undefined || project === undefined) return <PageSkeleton label={t("loadingDetails")} />;
   if (!canLoad || project === null) return <ErrorState backHref={routes.clientDashboard} backLabel={t("backToProjects")} description={tUx("notFound.project")} retryLabel={tUx("retry")} title={t("notFoundTitle")} />;
-  return <ClientProjectDetailsView project={project} />;
+  return <ClientProjectDetailsView project={project} quotesSlot={<ClientReceivedQuotes projectId={project.id} />} />;
 }
 
-export function ClientProjectDetailsView({ project }: { project: ProjectDetails }) {
+export function ClientProjectDetailsView({ project, quotesSlot }: { project: ProjectDetails; quotesSlot?: React.ReactNode }) {
   const t = useTranslations("clientProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
@@ -61,6 +62,7 @@ export function ClientProjectDetailsView({ project }: { project: ProjectDetails 
           {project.history.length ? <section className="rounded-2xl border border-brand-border bg-white p-5"><h2 className="m-0 text-base font-semibold text-ink">{t("history.title")}</h2><ol className="mt-4 grid gap-4 pl-5">{project.history.map((item, index) => <li className="text-sm leading-5 text-ink" key={`${item.changedAt}-${index}`}><span className="font-medium">{t("history.transition", { from: t(`status.${item.oldStatus}`), to: t(`status.${item.newStatus}`) })}</span><span className="mt-1 block text-xs text-muted">{t("history.meta", { actor: t(`history.actor.${item.actor}`), date: format.dateTime(item.changedAt, { dateStyle: "medium", timeStyle: "short" }) })}</span>{item.reason ? <span className="mt-2 block rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">{item.reason}</span> : null}</li>)}</ol></section> : null}
         </aside>
       </div>
+      {quotesSlot}
     </main>
   );
 }

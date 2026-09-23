@@ -1346,12 +1346,34 @@
     "title": "Gérer le profil entreprise",
     "lead": "Mettez à jour les informations publiques visibles par les clients.",
     "back": "Retour à l’espace",
-    "viewPublicProfile": "Voir le profil public",
+    "viewPublicProfile": "Voir la vue publique",
     "loading": "Chargement du profil entreprise…",
     "success": "Profil entreprise mis à jour.",
     "cancel": "Annuler",
     "saving": "Enregistrement…",
     "save": "Enregistrer les modifications",
+    "badge": {
+      "verified": "Vérifiée"
+    },
+    "sidebar": {
+      "stats": "Chiffres clés",
+      "years": "Années",
+      "founded": "Fondée",
+      "team": "Équipe",
+      "contact": "Contact",
+      "verifications": "Vérifications",
+      "verifyAction": "Compléter la vérification"
+    },
+    "overview": {
+      "title": "Présentation",
+      "lead": "Décrivez votre entreprise, votre expertise et le type de projets que vous réalisez."
+    },
+    "portfolio": {
+      "title": "Portfolio",
+      "lead": "Montrez aux clients les chantiers déjà réalisés par votre entreprise.",
+      "body": "Ajoutez et gérez vos projets de portfolio pour que les clients puissent consulter vos réalisations.",
+      "manage": "Gérer le portfolio"
+    },
     "branding": {
       "title": "Logo et couverture",
       "lead": "Utilisez des images claires et récentes qui représentent votre entreprise.",
@@ -1482,6 +1504,11 @@
     "invite": "Inviter à un projet",
     "quote": "Demander un devis",
     "ctaSoon": "Cette action sera disponible prochainement.",
+    "overview": "Présentation",
+    "stats": "Chiffres clés",
+    "statYears": "Années d’expérience",
+    "statFounded": "Année de création",
+    "statTeam": "Taille d’équipe",
     "services": "Services",
     "experience": "Expérience",
     "years": "{count, plural, =0 {Moins d’un an} one {# an} other {# ans}}",
@@ -1489,13 +1516,22 @@
     "companySizeLabel": "Taille de l’entreprise",
     "languages": "Langues",
     "serviceAreas": "Zones d’intervention",
-    "publicPhone": "Téléphone public",
+    "verifications": "Vérifications",
+    "verificationVerified": "Entreprise : vérifiée",
+    "verificationPending": "Entreprise : non vérifiée",
     "companySize": {
       "solo": "Travailleur indépendant",
       "2to10": "2 à 10 personnes",
       "11to50": "11 à 50 personnes",
       "51to200": "51 à 200 personnes",
       "201plus": "201 personnes et plus"
+    },
+    "companySizeShort": {
+      "solo": "1",
+      "2to10": "2–10",
+      "11to50": "11–50",
+      "51to200": "51–200",
+      "201plus": "201+"
     },
     "language": {
       "arabic": "Arabe",
@@ -1520,7 +1556,8 @@
     "visitWebsite": "Visiter le site web",
     "notSpecified": "Non renseigné",
     "portfolioEyebrow": "Portfolio",
-    "portfolioTitle": "Réalisations",
+    "portfolioTitle": "Portfolio",
+    "portfolioTitleCount": "Portfolio ({count})",
     "portfolioEmpty": "Cette entreprise n’a pas encore publié de réalisation.",
     "projectImageAlt": "Réalisation : {title}",
     "service": {
@@ -2367,6 +2404,10 @@
       "status": "Statut",
       "draft": "Brouillon",
       "submitted": "Envoyé",
+      "viewed": "Consulté",
+      "shortlisted": "Présélectionné",
+      "discussion_open": "Discussion ouverte",
+      "declined": "Refusé",
       "withdrawn": "Retiré",
       "submittedAt": "Envoyé le {date}",
       "estimatedPrice": "Prix estimé",
@@ -2376,9 +2417,67 @@
       "scope": "Périmètre des travaux",
       "message": "Message au client",
       "messagingLocked": "La messagerie reste verrouillée. Elle s’ouvrira uniquement si le client choisit d’ouvrir la discussion.",
+      "discussionPending": "Le client a ouvert la discussion. La messagerie reste verrouillée jusqu’à l’ajout des conversations à l’étape suivante.",
       "withdraw": "Retirer le devis",
       "withdrawing": "Retrait…",
       "withdrawnNotice": "Ce devis a été retiré et reste conservé dans votre historique."
+    }
+  },
+  "receivedQuotes": {
+    "eyebrow": "Réponses commerciales",
+    "title": "Devis reçus",
+    "count": "{count, plural, =0 {Aucun devis} one {# devis} other {# devis}}",
+    "loading": "Chargement des devis reçus…",
+    "loadingDetail": "Chargement du devis…",
+    "empty": {
+      "title": "Aucun devis reçu pour le moment.",
+      "description": "Les entreprises vérifiées peuvent envoyer une première estimation tant que votre projet est ouvert. Les nouveaux devis apparaîtront ici automatiquement."
+    },
+    "verified": "Entreprise vérifiée",
+    "cityUnavailable": "Localisation non renseignée",
+    "price": "Prix estimé",
+    "duration": "Durée estimée",
+    "durationValue": "{count, plural, one {# jour} other {# jours}}",
+    "availableStart": "Disponibilité",
+    "submittedAt": "Envoyé le {date}",
+    "scope": "Périmètre des travaux",
+    "message": "Message",
+    "openQuote": "Examiner le devis",
+    "viewProfile": "Voir le profil",
+    "close": "Fermer le devis",
+    "unavailable": "Ce devis n’est plus disponible.",
+    "messagingNotice": "Ouvrir la discussion enregistre votre intérêt, mais la messagerie reste verrouillée jusqu’à l’ajout des conversations à l’étape suivante.",
+    "discussionOpenedNotice": "Votre souhait de discuter a été enregistré. Aucune conversation ni messagerie n’a encore été créée.",
+    "status": {
+      "draft": "Brouillon",
+      "submitted": "Envoyé",
+      "viewed": "Consulté",
+      "shortlisted": "Présélectionné",
+      "discussion_open": "Discussion ouverte",
+      "declined": "Refusé",
+      "withdrawn": "Retiré"
+    },
+    "detail": {
+      "eyebrow": "Devis estimatif",
+      "title": "Détails du devis",
+      "aboutCompany": "À propos de l’entreprise"
+    },
+    "actions": {
+      "shortlist": "Présélectionner",
+      "decline": "Refuser",
+      "openDiscussion": "Ouvrir la discussion",
+      "working": "Mise à jour…"
+    },
+    "declineConfirm": {
+      "title": "Refuser ce devis ?",
+      "description": "Cette décision est irréversible. L’entreprise verra que son devis a été refusé.",
+      "confirm": "Refuser le devis",
+      "cancel": "Conserver le devis"
+    },
+    "success": {
+      "shortlist": "Devis présélectionné.",
+      "decline": "Devis refusé.",
+      "open_discussion": "Votre souhait de discuter est enregistré. La messagerie n’est pas encore ouverte."
     }
   },
   "dashboard": {
@@ -2490,6 +2589,8 @@
         "INVALID_QUOTE_MESSAGE": "Rédigez un message de 20 à 2 000 caractères.",
         "INVALID_QUOTE_SCOPE": "Décrivez le périmètre des travaux en 20 à 2 000 caractères.",
         "INVALID_QUOTE_WITHDRAWAL_REASON": "Limitez le motif de retrait à 300 caractères.",
+        "INVALID_QUOTE_STATUS_TRANSITION": "Ce changement de statut du devis n’est pas autorisé.",
+        "INVALID_QUOTE_REVIEW_REASON": "Limitez le motif d’examen à 300 caractères.",
         "NETWORK": "Problème de connexion. Nous allons réessayer.",
         "UNKNOWN": "Une erreur est survenue. Veuillez réessayer."
       }

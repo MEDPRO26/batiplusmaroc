@@ -5,17 +5,6 @@ import { featuredMarketplaceCompanies } from "@/content/marketplace";
 import { Link } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 
-const tradeKeys = [
-  "structural",
-  "finishing",
-  "renovation",
-  "houseConstruction",
-  "electrical",
-  "plumbing",
-  "joinery",
-  "pool",
-] as const;
-
 const stepCards = [
   { key: "0", href: routes.postProject, icon: "brief" },
   { key: "1", href: routes.companies, icon: "search" },

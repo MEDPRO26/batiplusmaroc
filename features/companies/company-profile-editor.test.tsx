@@ -7,7 +7,10 @@ import fr from "@/messages/fr.json";
 vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 vi.mock("convex/react", () => ({ useAction: vi.fn(), useMutation: vi.fn(), useQuery: vi.fn() }));
-vi.mock("@/i18n/navigation", () => ({ Link: () => null, useRouter: vi.fn() }));
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ children }: { children?: React.ReactNode }) => <a href="#">{children}</a>,
+  useRouter: vi.fn(),
+}));
 vi.mock("@/features/shared/components/app-feedback", () => ({
   useToast: () => ({ showToast: vi.fn() }),
 }));
@@ -45,7 +48,7 @@ describe("company profile management UX contract", () => {
     expect(html).toContain('role="status"');
     expect(html).toContain('aria-busy="true"');
     expect(html).toContain("Loading your company profile…");
-    expect(html.match(/skeleton-block/g)?.length).toBeGreaterThan(5);
+    expect(html).toContain("bg-[#f2f4f5]");
   });
 
   test("localizes every backend-provided profile option", () => {
@@ -59,7 +62,7 @@ describe("company profile management UX contract", () => {
     expect(Object.keys(en.companyProfileManager.serviceAreaOptions)).toHaveLength(10);
   });
 
-  test("renders the responsive editor with public fields and read-only legal fields", () => {
+  test("renders the responsive Upwork-like editor with public fields and read-only legal fields", () => {
     let queryIndex = 0;
     vi.mocked(useQuery).mockImplementation(() => {
       queryIndex += 1;
@@ -99,11 +102,14 @@ describe("company profile management UX contract", () => {
     });
 
     const html = renderToStaticMarkup(<CompanyProfileEditor />);
-    expect(html).toContain("branding.title");
+    expect(html).toContain("overview.title");
     expect(html).toContain("serviceAreas.title");
+    expect(html).toContain("portfolio.manage");
+    expect(html).toContain("sidebar.stats");
     expect(html).toContain('name="coverImage"');
     expect(html).toContain('name="serviceAreas"');
     expect(html).toContain('name="languages"');
+    expect(html).toContain("lg:grid-cols-[minmax(240px,28%)_minmax(0,1fr)]");
     expect(html.match(/readonly/g)?.length).toBe(6);
     expect(html).toContain("registre-commerce.pdf");
     expect(html).toContain("sm:grid-cols-2");

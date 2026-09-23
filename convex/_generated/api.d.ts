@@ -44,6 +44,7 @@ import type * as projects_mediaModel from "../projects/mediaModel.js";
 import type * as projects_state from "../projects/state.js";
 import type * as proposals_index from "../proposals/index.js";
 import type * as quotes_index from "../quotes/index.js";
+import type * as quotes_state from "../quotes/state.js";
 import type * as reviews_index from "../reviews/index.js";
 import type * as siteVisits_index from "../siteVisits/index.js";
 import type * as storage_constants from "../storage/constants.js";
@@ -97,6 +98,7 @@ declare const fullApi: ApiFromModules<{
   "projects/state": typeof projects_state;
   "proposals/index": typeof proposals_index;
   "quotes/index": typeof quotes_index;
+  "quotes/state": typeof quotes_state;
   "reviews/index": typeof reviews_index;
   "siteVisits/index": typeof siteVisits_index;
   "storage/constants": typeof storage_constants;

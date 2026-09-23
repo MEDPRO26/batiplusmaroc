@@ -1204,14 +1204,6 @@ function useDismiss(ref: { current: HTMLElement | null }, onClose: () => void) {
   }, [onClose, ref]);
 }
 
-function channelColor(id: ChannelId) {
-  if (id === "googleAds") return "#3dcc6e";
-  if (id === "meta") return "#7a6cf0";
-  if (id === "xAds") return "#5aa7ff";
-  if (id === "linkedin") return "#f08bb8";
-  return "#8b919a";
-}
-
 function navKey(id: NavId) {
   const keys: Record<
     NavId,

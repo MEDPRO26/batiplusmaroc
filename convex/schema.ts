@@ -42,6 +42,10 @@ const projectStatus = v.union(v.literal("draft"), v.literal("pending_review"), v
 const initialQuoteStatus = v.union(
   v.literal("draft"),
   v.literal("submitted"),
+  v.literal("viewed"),
+  v.literal("shortlisted"),
+  v.literal("discussion_open"),
+  v.literal("declined"),
   v.literal("withdrawn"),
 );
 export default defineSchema({

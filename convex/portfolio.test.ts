@@ -136,6 +136,18 @@ describe("public company profile", () => {
     await expect(t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "missing" })).resolves.toBeNull();
     await expect(t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "incomplete" })).resolves.toBeNull();
   });
+
+  test("never exposes company phone or email on the public profile DTO", async () => {
+    const t = convexTest(schema, modules);
+    await seedCompany(t, { slug: "privacy-public" });
+    const profile = await t.query(api.portfolio.index.getPublicCompanyProfile, {
+      slug: "privacy-public",
+    });
+    expect(profile).not.toBeNull();
+    expect(profile).not.toHaveProperty("phone");
+    expect(profile).not.toHaveProperty("email");
+    expect(JSON.stringify(profile)).not.toMatch(/0612345678|@example\.test/i);
+  });
 });
 
 describe("portfolio management", () => {

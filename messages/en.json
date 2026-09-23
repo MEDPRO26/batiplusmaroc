@@ -1346,12 +1346,34 @@
     "title": "Manage company profile",
     "lead": "Update the public information clients see when they discover your company.",
     "back": "Back to workspace",
-    "viewPublicProfile": "View public profile",
+    "viewPublicProfile": "See public view",
     "loading": "Loading your company profile…",
     "success": "Company profile updated.",
     "cancel": "Cancel",
     "saving": "Saving…",
     "save": "Save changes",
+    "badge": {
+      "verified": "Verified"
+    },
+    "sidebar": {
+      "stats": "Company stats",
+      "years": "Years",
+      "founded": "Founded",
+      "team": "Team",
+      "contact": "Contact",
+      "verifications": "Verifications",
+      "verifyAction": "Complete verification"
+    },
+    "overview": {
+      "title": "Overview",
+      "lead": "Describe your company, expertise, and the type of projects you deliver."
+    },
+    "portfolio": {
+      "title": "Portfolio",
+      "lead": "Show clients the work your company has completed.",
+      "body": "Add and manage portfolio projects so clients can review your past construction work.",
+      "manage": "Manage portfolio"
+    },
     "branding": {
       "title": "Logo and cover",
       "lead": "Use clear, recent images that represent your company.",
@@ -1482,6 +1504,11 @@
     "invite": "Invite to a project",
     "quote": "Request a quote",
     "ctaSoon": "This action will be available soon.",
+    "overview": "Overview",
+    "stats": "Company stats",
+    "statYears": "Years experience",
+    "statFounded": "Year founded",
+    "statTeam": "Team size",
     "services": "Services",
     "experience": "Experience",
     "years": "{count, plural, =0 {Less than one year} one {# year} other {# years}}",
@@ -1489,13 +1516,22 @@
     "companySizeLabel": "Company size",
     "languages": "Languages",
     "serviceAreas": "Service areas",
-    "publicPhone": "Public phone",
+    "verifications": "Verifications",
+    "verificationVerified": "Company: Verified",
+    "verificationPending": "Company: Not verified",
     "companySize": {
       "solo": "Self-employed",
       "2to10": "2–10 people",
       "11to50": "11–50 people",
       "51to200": "51–200 people",
       "201plus": "201+ people"
+    },
+    "companySizeShort": {
+      "solo": "1",
+      "2to10": "2–10",
+      "11to50": "11–50",
+      "51to200": "51–200",
+      "201plus": "201+"
     },
     "language": {
       "arabic": "Arabic",
@@ -1520,7 +1556,8 @@
     "visitWebsite": "Visit website",
     "notSpecified": "Not provided",
     "portfolioEyebrow": "Portfolio",
-    "portfolioTitle": "Completed work",
+    "portfolioTitle": "Portfolio",
+    "portfolioTitleCount": "Portfolio ({count})",
     "portfolioEmpty": "This company has not published completed work yet.",
     "projectImageAlt": "Completed work: {title}",
     "service": {
@@ -2367,6 +2404,10 @@
       "status": "Status",
       "draft": "Draft",
       "submitted": "Submitted",
+      "viewed": "Viewed",
+      "shortlisted": "Shortlisted",
+      "discussion_open": "Discussion opened",
+      "declined": "Declined",
       "withdrawn": "Withdrawn",
       "submittedAt": "Sent on {date}",
       "estimatedPrice": "Estimated price",
@@ -2376,9 +2417,67 @@
       "scope": "Scope of work",
       "message": "Message to client",
       "messagingLocked": "Messaging is still locked. It will only open if the client chooses to open a discussion.",
+      "discussionPending": "The client opened a discussion. Messaging remains locked until conversations are added in the next step.",
       "withdraw": "Withdraw quote",
       "withdrawing": "Withdrawing…",
       "withdrawnNotice": "This quote has been withdrawn and remains in your history."
+    }
+  },
+  "receivedQuotes": {
+    "eyebrow": "Commercial responses",
+    "title": "Received quotes",
+    "count": "{count, plural, =0 {No quotes} one {# quote} other {# quotes}}",
+    "loading": "Loading received quotes…",
+    "loadingDetail": "Loading quote details…",
+    "empty": {
+      "title": "No quotes received yet.",
+      "description": "Verified companies can submit an initial estimate while your project is open. New quotes will appear here automatically."
+    },
+    "verified": "Verified company",
+    "cityUnavailable": "Location not provided",
+    "price": "Estimated price",
+    "duration": "Estimated duration",
+    "durationValue": "{count, plural, one {# day} other {# days}}",
+    "availableStart": "Available start",
+    "submittedAt": "Submitted {date}",
+    "scope": "Scope of work",
+    "message": "Message",
+    "openQuote": "Review quote",
+    "viewProfile": "View company profile",
+    "close": "Close quote",
+    "unavailable": "This quote is no longer available.",
+    "messagingNotice": "Opening a discussion records your interest, but messaging remains locked until the conversation feature is added in the next step.",
+    "discussionOpenedNotice": "Discussion interest has been recorded. No conversation or message thread has been created yet.",
+    "status": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "viewed": "Viewed",
+      "shortlisted": "Shortlisted",
+      "discussion_open": "Discussion opened",
+      "declined": "Declined",
+      "withdrawn": "Withdrawn"
+    },
+    "detail": {
+      "eyebrow": "Initial quote",
+      "title": "Quote details",
+      "aboutCompany": "About the company"
+    },
+    "actions": {
+      "shortlist": "Shortlist",
+      "decline": "Decline",
+      "openDiscussion": "Open discussion",
+      "working": "Updating…"
+    },
+    "declineConfirm": {
+      "title": "Decline this quote?",
+      "description": "This decision cannot be reversed. The company will see that its quote was declined.",
+      "confirm": "Decline quote",
+      "cancel": "Keep quote"
+    },
+    "success": {
+      "shortlist": "Quote shortlisted.",
+      "decline": "Quote declined.",
+      "open_discussion": "Discussion interest recorded. Messaging is not open yet."
     }
   },
   "dashboard": {
@@ -2490,6 +2589,8 @@
         "INVALID_QUOTE_MESSAGE": "Write a message between 20 and 2,000 characters.",
         "INVALID_QUOTE_SCOPE": "Describe the scope of work in 20 to 2,000 characters.",
         "INVALID_QUOTE_WITHDRAWAL_REASON": "Keep the withdrawal reason under 300 characters.",
+        "INVALID_QUOTE_STATUS_TRANSITION": "This quote status change is not allowed.",
+        "INVALID_QUOTE_REVIEW_REASON": "Keep the review reason under 300 characters.",
         "NETWORK": "Connection problem. We’ll try again.",
         "UNKNOWN": "Something went wrong. Please try again."
       }

@@ -348,13 +348,14 @@ describe("company public profile management", () => {
     expect(publicProfile).toMatchObject({
       name: "Atlas Public Construction",
       city: "Casablanca",
-      phone: "+212612345678",
       foundedYear: 2010,
       companySize: "11to50",
       languages: ["arabic", "french", "english"],
       serviceAreas: ["casablanca", "agadir", "marrakech"],
       services: ["houseConstruction", "renovation"],
     });
+    expect(publicProfile).not.toHaveProperty("phone");
+    expect(publicProfile).not.toHaveProperty("email");
 
     const directory = await t.query(api.companies.directory.listPublicCompanies, {
       paginationOpts: { numItems: 12, cursor: null },

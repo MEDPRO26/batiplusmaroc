@@ -354,3 +354,70 @@ describe("initial quote privacy and withdrawal", () => {
     await expect(caller.query(api.messages.index.listMyThreads, {})).resolves.toEqual([]);
   });
 });
+
+describe("client reviews initial quotes", () => {
+  test("only the project owner can list and open received quote details", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    const { quoteId } = await asUser(t, company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId, ...validQuote });
+    const owner = asUser(t, clientId);
+    await expect(owner.query(api.quotes.index.listReceivedInitialQuotes, { projectId })).resolves.toHaveLength(1);
+    await expect(owner.query(api.quotes.index.getReceivedInitialQuote, { quoteId })).resolves.toMatchObject({ id: quoteId, companyId: company.companyId, status: "submitted" });
+
+    const otherClient = await seedUser(t, "client");
+    await expect(asUser(t, otherClient).query(api.quotes.index.getReceivedInitialQuote, { quoteId })).rejects.toThrow("PROJECT_NOT_FOUND");
+    const competitor = await seedCompany(t);
+    await expect(asUser(t, competitor.userId).query(api.quotes.index.listReceivedInitialQuotes, { projectId })).rejects.toThrow("CLIENT_ACCOUNT_REQUIRED");
+    await expect(t.query(api.quotes.index.listReceivedInitialQuotes, { projectId })).rejects.toThrow("NOT_AUTHENTICATED");
+  });
+
+  test("records submitted -> viewed -> shortlisted -> discussion_open with immutable history", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    const { quoteId } = await asUser(t, company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId, ...validQuote });
+    const owner = asUser(t, clientId);
+    await expect(owner.mutation(api.quotes.index.markInitialQuoteViewed, { quoteId })).resolves.toEqual({ status: "viewed" });
+    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "shortlist" })).resolves.toEqual({ status: "shortlisted" });
+    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "open_discussion" })).resolves.toEqual({ status: "discussion_open" });
+    const history = await t.run((ctx) => ctx.db.query("quoteStatusHistory").withIndex("by_quoteId_and_changedAt", (q) => q.eq("quoteId", quoteId)).order("asc").take(10));
+    expect(history.map((item) => [item.oldStatus, item.newStatus, item.changedBy])).toEqual([
+      ["draft", "submitted", company.userId],
+      ["submitted", "viewed", clientId],
+      ["viewed", "shortlisted", clientId],
+      ["shortlisted", "discussion_open", clientId],
+    ]);
+    await expect(asUser(t, company.userId).query(api.quotes.index.getMyQuote, { quoteId })).resolves.toMatchObject({ status: "discussion_open" });
+    await expect(asUser(t, company.userId).query(api.messages.index.listMyThreads, {})).resolves.toEqual([]);
+    await expect(owner.query(api.messages.index.listMyThreads, {})).resolves.toEqual([]);
+  });
+
+  test("supports direct shortlist and decline while rejecting terminal-state transitions", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    const owner = asUser(t, clientId);
+    const { quoteId } = await asUser(t, company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId, ...validQuote });
+    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "shortlist" })).resolves.toEqual({ status: "shortlisted" });
+    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "decline" })).resolves.toEqual({ status: "declined" });
+    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "open_discussion" })).rejects.toThrow("INVALID_QUOTE_STATUS_TRANSITION");
+    await expect(asUser(t, company.userId).query(api.quotes.index.getMyQuote, { quoteId })).resolves.toMatchObject({ status: "declined" });
+  });
+
+  test("supports submitted -> declined and rejects review of a withdrawn quote", async () => {
+    const first = await setup();
+    const submitted = await asUser(first.t, first.company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId: first.projectId, ...validQuote });
+    await expect(asUser(first.t, first.clientId).mutation(api.quotes.index.reviewInitialQuote, { quoteId: submitted.quoteId, action: "decline" })).resolves.toEqual({ status: "declined" });
+
+    const second = await setup();
+    const withdrawn = await asUser(second.t, second.company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId: second.projectId, ...validQuote });
+    await asUser(second.t, second.company.userId).mutation(api.quotes.index.withdrawInitialQuote, { quoteId: withdrawn.quoteId });
+    await expect(asUser(second.t, second.clientId).mutation(api.quotes.index.reviewInitialQuote, { quoteId: withdrawn.quoteId, action: "open_discussion" })).rejects.toThrow("INVALID_QUOTE_STATUS_TRANSITION");
+  });
+
+  test("reactive query data reflects client transitions without a separate refresh endpoint", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    const { quoteId } = await asUser(t, company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId, ...validQuote });
+    const owner = asUser(t, clientId);
+    expect((await owner.query(api.quotes.index.listReceivedInitialQuotes, { projectId }))[0]?.status).toBe("submitted");
+    await owner.mutation(api.quotes.index.markInitialQuoteViewed, { quoteId });
+    expect((await owner.query(api.quotes.index.listReceivedInitialQuotes, { projectId }))[0]?.status).toBe("viewed");
+    expect((await asUser(t, company.userId).query(api.quotes.index.getMyQuote, { quoteId }))?.status).toBe("viewed");
+    await expect(asUser(t, company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId, ...validQuote })).rejects.toThrow("ACTIVE_QUOTE_ALREADY_EXISTS");
+  });
+});

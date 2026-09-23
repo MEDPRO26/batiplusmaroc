@@ -196,6 +196,22 @@ describe("role navbar content", () => {
     expect(html).not.toContain(routes.clientDashboard);
     expect(html).not.toContain(routes.clientProfile);
   });
+
+  test("CompanyNavbar renders the stored company logo when available", () => {
+    vi.mocked(useQuery).mockReturnValue({ logoUrl: "https://cdn.example.test/company-logo.webp" });
+    const html = renderToStaticMarkup(
+      <CompanyNavbar
+        user={{
+          firstName: "Sara",
+          lastName: "Alaoui",
+          email: "s@example.test",
+          onboardingStatus: "completed",
+        }}
+      />,
+    );
+    expect(html).toContain("https://cdn.example.test/company-logo.webp");
+    expect(html).not.toContain(">SA<");
+  });
 });
 
 describe("SiteHeader selection", () => {

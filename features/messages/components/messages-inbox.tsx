@@ -283,7 +283,6 @@ function ProjectsFilter({
       <button
         aria-controls={menuId}
         aria-expanded={open}
-        aria-haspopup="listbox"
         className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
           open || projectId
             ? "border-brand bg-brand-soft text-brand-dark"
@@ -302,7 +301,6 @@ function ProjectsFilter({
             : "hidden"
         }
         id={menuId}
-        role="listbox"
       >
         <button
           className="flex   min-h-10 w-full items-center rounded-lg border-0 bg-transparent px-2 text-start text-sm font-medium text-ink hover:bg-brand-soft/70"
@@ -310,7 +308,6 @@ function ProjectsFilter({
             onSelect(null);
             setOpen(false);
           }}
-          role="option"
           type="button"
         >
           {t("allProjects")}
@@ -335,7 +332,6 @@ function ProjectsFilter({
                     onSelect(project.id);
                     setOpen(false);
                   }}
-                  role="option"
                   type="button"
                 >
                   {project.title ?? t("untitledProject")}

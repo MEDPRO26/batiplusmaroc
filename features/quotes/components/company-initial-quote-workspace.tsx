@@ -198,7 +198,7 @@ function QuoteDetail({ quote }: { quote: Quote }) {
         </dl>
         <QuoteText label={t("detail.scope")} value={quote.scope} />
         <QuoteText label={t("detail.message")} value={quote.message} />
-        <div className="mt-7 flex gap-3 rounded-xl border border-[#c9dbe8] bg-[#f1f7fb] p-4 text-sm leading-6 text-[#31546d]"><LockKeyhole aria-hidden className="mt-0.5 size-5 shrink-0" /><p className="m-0">{t("detail.messagingLocked")}</p></div>
+        <div className="mt-7 flex gap-3 rounded-xl border border-[#c9dbe8] bg-[#f1f7fb] p-4 text-sm leading-6 text-[#31546d]"><LockKeyhole aria-hidden className="mt-0.5 size-5 shrink-0" /><p className="m-0">{quote.status === "discussion_open" ? t("detail.discussionPending") : t("detail.messagingLocked")}</p></div>
         {quote.status === "submitted" ? <button className="mt-7 inline-flex min-h-11 items-center rounded-full border border-[#c86458] px-5 text-sm font-semibold text-[#8a2f28] transition-colors hover:bg-[#fff4f2] disabled:opacity-60" disabled={withdrawing} onClick={onWithdraw} type="button">{withdrawing ? t("detail.withdrawing") : t("detail.withdraw")}</button> : null}
       </div>
     </article>
