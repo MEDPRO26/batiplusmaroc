@@ -25,6 +25,12 @@ export async function generateMetadata({ params }: Props) {
   return {
     metadataBase: new URL(SITE_URL),
     applicationName: t("appName"),
+    icons: {
+      icon: [
+        { url: "/favicon-32.webp", type: "image/webp", sizes: "32x32" },
+        { url: "/favicon.webp", type: "image/webp", sizes: "500x500" },
+      ],
+    },
   };
 }
 

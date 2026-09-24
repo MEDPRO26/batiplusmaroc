@@ -5,7 +5,6 @@ import { routes } from "@/lib/routes";
 
 export async function ContactPanel() {
   const t = await getTranslations("contact");
-  const tCommon = await getTranslations("common");
 
   return (
     <section className="bg-[#eef3f6] px-[18px] py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
@@ -13,30 +12,54 @@ export async function ContactPanel() {
         <div className="p-6 sm:p-10 lg:p-14 xl:p-16">
           <div className="mb-12 grid gap-5 border-b border-[#d9e2e7] pb-9 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
-              <p className="mb-4 text-[0.68rem] font-bold tracking-[0.18em] text-[#07598e] uppercase">{t("requestEyebrow")}</p>
-              <h2 className="m-0 max-w-2xl text-[clamp(2rem,4vw,3.7rem)] leading-[1.02] text-[#111820]!">{t("requestTitle")}</h2>
+              <p className="mb-4 text-[0.68rem] font-bold tracking-[0.18em] text-[#07598e] uppercase">
+                {t("requestEyebrow")}
+              </p>
+              <h2 className="m-0 max-w-2xl text-[clamp(2rem,4vw,3.7rem)] leading-[1.02] text-[#111820]!">
+                {t("requestTitle")}
+              </h2>
             </div>
-            <span className="text-[0.65rem] font-bold tracking-[0.15em] text-[#8997a0] uppercase">{tCommon("allFieldsRequired")}</span>
+            <span className="text-[0.65rem] font-bold tracking-[0.15em] text-[#8997a0] uppercase">
+              {t("requiredHint")}
+            </span>
           </div>
           <ContactForm />
         </div>
 
         <aside className="relative overflow-hidden bg-[#0b223a] p-7 text-white sm:p-10 lg:p-12">
-          <div className="pointer-events-none absolute -right-40 -bottom-32 size-[430px] rounded-full border border-white/8" aria-hidden="true" />
-          <div className="pointer-events-none absolute -right-24 -bottom-16 size-[270px] rounded-full border border-white/8" aria-hidden="true" />
+          <div
+            className="pointer-events-none absolute -right-40 -bottom-32 size-[430px] rounded-full border border-white/8"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute -right-24 -bottom-16 size-[270px] rounded-full border border-white/8"
+            aria-hidden="true"
+          />
           <div className="relative flex h-full flex-col">
-            <p className="mb-10 text-[0.68rem] font-bold tracking-[0.18em] text-[#e5b43c] uppercase">{t("direct")}</p>
+            <p className="mb-10 text-[0.68rem] font-bold tracking-[0.18em] text-[#e5b43c] uppercase">
+              {t("direct")}
+            </p>
             <div className="grid gap-8">
               <a className="group border-t border-white/15 pt-5" href="tel:+212766018650">
-                <span className="block text-[0.65rem] font-bold tracking-[0.15em] text-white/45 uppercase">{t("phone")}</span>
-                <span className="mt-2 block text-xl font-semibold text-white transition-colors group-hover:text-[#83cef3]">+212 766-018650</span>
+                <span className="block text-[0.65rem] font-bold tracking-[0.15em] text-white/45 uppercase">
+                  {t("phone")}
+                </span>
+                <span className="mt-2 block text-xl font-semibold text-white transition-colors group-hover:text-[#83cef3]">
+                  +212 766-018650
+                </span>
               </a>
               <a className="group border-t border-white/15 pt-5" href="mailto:sgta.btp@gmail.com">
-                <span className="block text-[0.65rem] font-bold tracking-[0.15em] text-white/45 uppercase">{t("email")}</span>
-                <span className="mt-2 block break-all text-lg font-semibold text-white transition-colors group-hover:text-[#83cef3]">sgta.btp@gmail.com</span>
+                <span className="block text-[0.65rem] font-bold tracking-[0.15em] text-white/45 uppercase">
+                  {t("email")}
+                </span>
+                <span className="mt-2 block break-all text-lg font-semibold text-white transition-colors group-hover:text-[#83cef3]">
+                  sgta.btp@gmail.com
+                </span>
               </a>
               <div className="border-t border-white/15 pt-5">
-                <span className="block text-[0.65rem] font-bold tracking-[0.15em] text-white/45 uppercase">{t("address")}</span>
+                <span className="block text-[0.65rem] font-bold tracking-[0.15em] text-white/45 uppercase">
+                  {t("address")}
+                </span>
                 <span className="mt-2 block text-lg font-semibold text-white">{t("addressValue")}</span>
               </div>
             </div>
@@ -44,10 +67,16 @@ export async function ContactPanel() {
               <p className="m-0 text-sm leading-7 text-white/65">{t("aside")}</p>
             </div>
             <nav className="relative mt-8 grid gap-2" aria-label={t("asideNav")}>
-              <Link className="flex min-h-12 items-center justify-between border-t border-white/15 py-3 text-sm font-semibold text-white transition-colors hover:text-[#83cef3]" href={routes.services}>
+              <Link
+                className="flex min-h-12 items-center justify-between border-t border-white/15 py-3 text-sm font-semibold text-white transition-colors hover:text-[#83cef3]"
+                href={routes.services}
+              >
                 {t("seeServices")} <span aria-hidden="true">→</span>
               </Link>
-              <Link className="flex min-h-12 items-center justify-between border-t border-white/15 py-3 text-sm font-semibold text-white transition-colors hover:text-[#83cef3]" href={routes.projects}>
+              <Link
+                className="flex min-h-12 items-center justify-between border-t border-white/15 py-3 text-sm font-semibold text-white transition-colors hover:text-[#83cef3]"
+                href={routes.projects}
+              >
                 {t("seeProjects")} <span aria-hidden="true">→</span>
               </Link>
             </nav>

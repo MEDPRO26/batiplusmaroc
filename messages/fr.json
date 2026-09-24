@@ -98,6 +98,7 @@
     "contact": "Contact",
     "about": "À propos",
     "copyright": "© {year} Batiplus",
+    "createdBy": "Créé par ITA Groupe",
     "social": {
       "facebook": "Facebook"
     },
@@ -614,6 +615,11 @@
     "seeServices": "Découvrir nos services",
     "seeProjects": "Voir nos réalisations",
     "serviceLegend": "Quel type de service recherchez-vous ?",
+    "serviceHint": "Vous pouvez sélectionner plusieurs options. Ce champ est obligatoire.",
+    "requiredHint": "Les champs marqués * sont obligatoires",
+    "selectServiceError": "Veuillez choisir au moins un type de service.",
+    "specifyServiceError": "Veuillez préciser votre service.",
+    "requiredFieldsError": "Veuillez renseigner la ville, le nom complet et le téléphone.",
     "services": {
       "full": "Construction complète",
       "renovation": "Rénovation intérieure",
@@ -630,7 +636,7 @@
     "phoneLabel": "Téléphone",
     "phonePlaceholder": "Votre numéro",
     "emailLabel": "E-mail",
-    "emailPlaceholder": "vous@exemple.com",
+    "emailPlaceholder": "vous@exemple.com (facultatif)",
     "honeypot": "Site web",
     "privacy": "Vos informations sont envoyées directement et uniquement utilisées pour répondre à votre demande.",
     "sending": "Envoi en cours…",

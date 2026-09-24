@@ -84,6 +84,16 @@ export async function SiteFooter() {
                 {t("about")}
               </Link>
             </li>
+            <li>
+              <a
+                className="min-h-10 inline-flex items-center hover:text-white"
+                href="https://www.itagroupe.com/"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                {t("createdBy")}
+              </a>
+            </li>
           </ul>
         </div>
       </div>

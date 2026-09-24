@@ -98,6 +98,7 @@
     "contact": "Contact",
     "about": "About",
     "copyright": "© {year} Batiplus",
+    "createdBy": "Created by ITA Groupe",
     "social": {
       "facebook": "Facebook"
     },
@@ -614,6 +615,11 @@
     "seeServices": "Discover our services",
     "seeProjects": "See our work",
     "serviceLegend": "What type of service are you looking for?",
+    "serviceHint": "You can select multiple options. This field is required.",
+    "requiredHint": "Fields marked * are required",
+    "selectServiceError": "Please choose at least one type of service.",
+    "specifyServiceError": "Please specify your service.",
+    "requiredFieldsError": "Please fill in the city, full name, and phone number.",
     "services": {
       "full": "Full construction",
       "renovation": "Interior renovation",
@@ -630,7 +636,7 @@
     "phoneLabel": "Phone",
     "phonePlaceholder": "Your number",
     "emailLabel": "Email",
-    "emailPlaceholder": "you@example.com",
+    "emailPlaceholder": "you@example.com (optional)",
     "honeypot": "Website",
     "privacy": "Your information is sent directly and used only to reply to your request.",
     "sending": "Sending…",
