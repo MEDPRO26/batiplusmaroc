@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 type ExpertiseScrollerProps = {
@@ -7,6 +8,7 @@ type ExpertiseScrollerProps = {
 };
 
 export function ExpertiseScroller({ children }: ExpertiseScrollerProps) {
+  const t = useTranslations("home.expertise");
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [canScrollPrevious, setCanScrollPrevious] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
@@ -61,12 +63,12 @@ export function ExpertiseScroller({ children }: ExpertiseScrollerProps) {
     <>
       <div className="mx-auto mt-10 flex max-w-[1280px] items-center justify-end gap-4 px-[18px] sm:px-6 md:mt-14 lg:px-8">
         <p id="expertise-scroll-help" className="mr-1 hidden text-xs font-semibold tracking-[0.14em] text-white/55 uppercase sm:block">
-          Faites défiler
+          {t("scrollHelp")}
         </p>
         <button
           type="button"
           className="grid size-11 place-items-center rounded-full border border-white/25 text-white transition-colors hover:border-sky-300 hover:bg-sky-300 hover:text-[#101f33] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300 disabled:cursor-not-allowed disabled:border-white/10 disabled:text-white/25 disabled:hover:bg-transparent sm:size-12"
-          aria-label="Voir l’expertise précédente"
+          aria-label={t("previous")}
           onClick={() => moveCards(-1)}
           disabled={!canScrollPrevious}
         >
@@ -75,7 +77,7 @@ export function ExpertiseScroller({ children }: ExpertiseScrollerProps) {
         <button
           type="button"
           className="grid size-11 place-items-center rounded-full border border-sky-300 bg-sky-300 text-[#101f33] transition-colors hover:bg-white hover:text-[#101f33] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-transparent disabled:text-white/25 sm:size-12"
-          aria-label="Voir l’expertise suivante"
+          aria-label={t("next")}
           onClick={() => moveCards(1)}
           disabled={!canScrollNext}
         >
@@ -87,7 +89,7 @@ export function ExpertiseScroller({ children }: ExpertiseScrollerProps) {
         ref={scrollerRef}
         className="mt-5 w-full snap-x snap-mandatory scroll-pl-[calc((100vw-var(--expertise-card-width))/2)] overflow-x-auto overscroll-x-contain scroll-smooth pb-2 [--expertise-card-width:min(78vw,300px)] [scrollbar-width:none] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-sky-300 sm:[--expertise-card-width:min(45vw,300px)] md:[--expertise-card-width:min(34vw,300px)] lg:[--expertise-card-width:260px] xl:[--expertise-card-width:280px] [&::-webkit-scrollbar]:hidden"
         role="region"
-        aria-label="Galerie des domaines d’expertise"
+        aria-label={t("gallery")}
         aria-describedby="expertise-scroll-help"
         tabIndex={0}
       >

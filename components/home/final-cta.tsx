@@ -1,91 +1,74 @@
 import Image from "next/image";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
+import { routes, type AppRoute } from "@/lib/routes";
+import { outfit } from "@/components/shared/outfit";
 
-import { routes } from "@/lib/routes";
+const cards = [
+  {
+    key: "hire",
+    href: routes.companies,
+    image: "/images/how-it-works/how-it-works-hiring-02.png",
+  },
+  {
+    key: "work",
+    href: routes.browseProjects,
+    image: "/images/how-it-works/how-it-works-work-01.png",
+  },
+] as const;
 
-export function FinalCta() {
+export async function FinalCta() {
+  const t = await getTranslations("home.finalCta");
+
   return (
     <section
-      className="bg-[#f7f9fb] px-[18px] py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
       aria-labelledby="final-cta-title"
+      className={`${outfit.className} bg-white py-16 text-start sm:py-22 lg:py-30`}
     >
-      <div className="relative mx-auto grid max-w-[1280px] overflow-hidden rounded-[28px] bg-[#0c223a] shadow-[0_28px_80px_rgba(12,34,58,0.16)] lg:grid-cols-[1.08fr_0.92fr]">
-        <div className="relative z-10 flex flex-col justify-center px-6 py-12 sm:px-10 sm:py-14 lg:min-h-[530px] lg:px-14 xl:px-16">
-          <div
-            className="pointer-events-none absolute -left-28 -top-28 size-72 rounded-full bg-[#0a639b]/25 blur-3xl"
-            aria-hidden="true"
-          />
-          <div className="relative">
-            <div className="mb-7 flex items-center gap-3 text-[0.7rem] font-bold tracking-[0.19em] text-[#e7b63f] uppercase sm:text-xs">
-              <span className="h-px w-9 bg-[#e7b63f]" aria-hidden="true" />
-              Parlons de votre projet
-            </div>
+      <div className="mx-auto w-[calc(100%-36px)] max-w-7xl sm:w-[calc(100%-64px)] lg:w-[calc(100%-80px)]">
+        <h2
+          className="mb-8 max-w-160 text-[clamp(1.85rem,4.4vw,3.15rem)] leading-[1.04] font-semibold tracking-[-0.045em] text-ink! sm:mb-10"
+          id="final-cta-title"
+        >
+          {t("title")}
+        </h2>
 
-            <h2
-              id="final-cta-title"
-              className="final-cta-title max-w-[720px] text-[clamp(2.35rem,5vw,4.6rem)] leading-[0.98] font-semibold tracking-[-0.055em]"
+        <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
+          {cards.map((card) => (
+            <article
+              className="flex flex-col gap-5 rounded-lg bg-surface-muted p-4 sm:flex-row sm:items-center sm:gap-7 sm:p-6"
+              key={card.key}
             >
-              Vous avez un projet de construction ou d’aménagement ?
-            </h2>
-
-            <p className="mt-6 max-w-[580px] text-base leading-7 text-[#c4d1dd] sm:text-lg">
-              Échangeons sur vos besoins et votre projet.
-            </p>
-
-            <div className="mt-9 flex flex-col items-stretch gap-5 sm:flex-row sm:items-center sm:gap-7">
-              <Link
-                className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-xl bg-[#e7b63f] px-6 py-4 text-sm font-bold text-[#0c223a] transition duration-200 hover:-translate-y-0.5 hover:bg-[#f0c85e] sm:w-fit"
-                href={routes.contact}
-              >
-                Demander un devis
-                <span
-                  className="text-lg transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1"
-                  aria-hidden="true"
-                >
-                  ↗
-                </span>
-              </Link>
-
-              <a
-                className="group flex min-h-14 items-center gap-3 rounded-xl px-1 text-white sm:px-0"
-                href="tel:+212766018650"
-              >
-                <span className="grid size-11 shrink-0 place-items-center rounded-full border border-white/20 bg-white/8 text-lg text-white transition-colors group-hover:border-[#e7b63f]/70 group-hover:text-[#e7b63f]">
-                  <span aria-hidden="true">↗</span>
-                </span>
-                <span className="grid gap-0.5">
-                  <span className="text-[0.66rem] font-bold tracking-[0.16em] text-[#8da3b7] uppercase">
-                    Appelez-nous
-                  </span>
-                  <span className="text-sm font-semibold text-white sm:text-base">
-                    +212 766-018650
-                  </span>
-                </span>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative min-h-[360px] overflow-hidden lg:min-h-full">
-          <Image
-            className="object-cover"
-            src="/images/portfolio-2026/exteriors/exterieur-piscine-02.webp"
-            alt="Réalisation extérieure avec villa et piscine"
-            fill
-            sizes="(max-width: 1023px) 100vw, 46vw"
-          />
-          <div
-            className="absolute inset-0 bg-linear-to-t from-[#0c223a]/55 via-transparent to-transparent lg:bg-linear-to-r lg:from-[#0c223a] lg:via-[#0c223a]/12 lg:to-transparent"
-            aria-hidden="true"
-          />
-          <div className="absolute right-5 bottom-5 left-5 flex items-center justify-between gap-5 rounded-2xl border border-white/20 bg-[#07182a]/70 px-5 py-4 text-white backdrop-blur-md sm:right-7 sm:bottom-7 sm:left-7">
-            <span className="text-sm font-semibold">S2MBOU Construction</span>
-            <span className="text-[0.67rem] font-bold tracking-[0.16em] text-[#d3dfE8] uppercase">
-              Agadir
-            </span>
-          </div>
+              <div className="relative aspect-4/3 w-full overflow-hidden rounded-md outline-1 outline-black/10 sm:aspect-square sm:h-[168px] sm:w-[168px] sm:shrink-0">
+                <Image
+                  alt={t(`${card.key}.imageAlt`)}
+                  className="object-cover"
+                  fill
+                  sizes="(max-width: 639px) 100vw, 168px"
+                  src={card.image}
+                />
+              </div>
+              <div className="min-w-0">
+                <h3 className="mb-5 text-[1.35rem] leading-snug font-semibold tracking-[-0.035em] text-ink sm:text-[1.55rem]">
+                  {t(`${card.key}.title`)}
+                </h3>
+                <CtaLink href={card.href}>{t(`${card.key}.cta`)}</CtaLink>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function CtaLink({ children, href }: { children: string; href: AppRoute }) {
+  return (
+    <Link
+      className="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-5 text-[0.88rem] font-semibold text-white! transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover hover:text-white! active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      href={href}
+    >
+      {children}
+    </Link>
   );
 }

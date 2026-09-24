@@ -1,0 +1,188 @@
+{
+  "audit_metadata": {
+    "captured_at_utc": "2026-08-21T09:29:08.685054+00:00",
+    "source_of_truth": "Live production HTML returned by batiplusmaroc.com",
+    "required_references_read": [
+      "./design.md",
+      "./SEO_MIGRATION.md",
+      "./migration/homepage-live-audit.json",
+      "./migration/gros-oeuvre-live-audit.json",
+      "./migration/a-propos-live-audit.json"
+    ]
+  },
+  "page": {
+    "requested_url": "https://batiplusmaroc.com/nos-services/",
+    "final_url": "https://batiplusmaroc.com/nos-services/",
+    "http_status": 200,
+    "redirect_chain": [],
+    "title": "Nos services - batiplusmaroc.com",
+    "meta_description": null,
+    "meta_description_present": false,
+    "canonical": "https://batiplusmaroc.com/nos-services/",
+    "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+    "indexable": true,
+    "html_lang": "fr-FR",
+    "h1": [
+      "Nos services"
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "level": 1,
+        "text": "Nos services"
+      },
+      {
+        "tag": "H6",
+        "level": 6,
+        "text": "S2MBOU Construction – Votre partenaire de confiance dans la réalisation de projets de construction durables et sur mesure. Nous mettons notre expertise et notre engagement au service de vos idées, pour bâtir ensemble un avenir solide."
+      },
+      {
+        "tag": "H6",
+        "level": 6,
+        "text": "Nos services"
+      },
+      {
+        "tag": "H6",
+        "level": 6,
+        "text": "Accès rapide"
+      },
+      {
+        "tag": "H6",
+        "level": 6,
+        "text": "Contactez nous"
+      }
+    ],
+    "json_ld": [
+      {
+        "order": 1,
+        "raw": "{\"@context\":\"https:\\/\\/schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/nos-services\\/\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/nos-services\\/\",\"name\":\"Nos services - batiplusmaroc.com\",\"isPartOf\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#website\"},\"datePublished\":\"2025-05-01T16:55:51+00:00\",\"dateModified\":\"2025-05-07T14:09:07+00:00\",\"breadcrumb\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/nos-services\\/#breadcrumb\"},\"inLanguage\":\"fr-FR\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https:\\/\\/batiplusmaroc.com\\/nos-services\\/\"]}]},{\"@type\":\"BreadcrumbList\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/nos-services\\/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Accueil\",\"item\":\"https:\\/\\/batiplusmaroc.com\\/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Nos services\"}]},{\"@type\":\"WebSite\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#website\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/\",\"name\":\"batiplusmaroc.com\",\"description\":\"\",\"publisher\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#organization\"},\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https:\\/\\/batiplusmaroc.com\\/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"fr-FR\"},{\"@type\":\"Organization\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#organization\",\"name\":\"batiplusmaroc.com\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/\",\"logo\":{\"@type\":\"ImageObject\",\"inLanguage\":\"fr-FR\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#\\/schema\\/logo\\/image\\/\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/wp-content\\/uploads\\/2025\\/05\\/home-build-construction-logo-153-x-40-px.png\",\"contentUrl\":\"https:\\/\\/batiplusmaroc.com\\/wp-content\\/uploads\\/2025\\/05\\/home-build-construction-logo-153-x-40-px.png\",\"width\":153,\"height\":40,\"caption\":\"batiplusmaroc.com\"},\"image\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#\\/schema\\/logo\\/image\\/\"},\"sameAs\":[\"https:\\/\\/www.facebook.com\\/sgta.btp\",\"https:\\/\\/share.google\\/j5BiBjLTGpFdjD3f8\"]}]}",
+        "parsed": {
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebPage",
+              "@id": "https://batiplusmaroc.com/nos-services/",
+              "url": "https://batiplusmaroc.com/nos-services/",
+              "name": "Nos services - batiplusmaroc.com",
+              "isPartOf": {
+                "@id": "https://batiplusmaroc.com/#website"
+              },
+              "datePublished": "2025-05-01T16:55:51+00:00",
+              "dateModified": "2025-05-07T14:09:07+00:00",
+              "breadcrumb": {
+                "@id": "https://batiplusmaroc.com/nos-services/#breadcrumb"
+              },
+              "inLanguage": "fr-FR",
+              "potentialAction": [
+                {
+                  "@type": "ReadAction",
+                  "target": [
+                    "https://batiplusmaroc.com/nos-services/"
+                  ]
+                }
+              ]
+            },
+            {
+              "@type": "BreadcrumbList",
+              "@id": "https://batiplusmaroc.com/nos-services/#breadcrumb",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Accueil",
+                  "item": "https://batiplusmaroc.com/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Nos services"
+                }
+              ]
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://batiplusmaroc.com/#website",
+              "url": "https://batiplusmaroc.com/",
+              "name": "batiplusmaroc.com",
+              "description": "",
+              "publisher": {
+                "@id": "https://batiplusmaroc.com/#organization"
+              },
+              "potentialAction": [
+                {
+                  "@type": "SearchAction",
+                  "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://batiplusmaroc.com/?s={search_term_string}"
+                  },
+                  "query-input": {
+                    "@type": "PropertyValueSpecification",
+                    "valueRequired": true,
+                    "valueName": "search_term_string"
+                  }
+                }
+              ],
+              "inLanguage": "fr-FR"
+            },
+            {
+              "@type": "Organization",
+              "@id": "https://batiplusmaroc.com/#organization",
+              "name": "batiplusmaroc.com",
+              "url": "https://batiplusmaroc.com/",
+              "logo": {
+                "@type": "ImageObject",
+                "inLanguage": "fr-FR",
+                "@id": "https://batiplusmaroc.com/#/schema/logo/image/",
+                "url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+                "contentUrl": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+                "width": 153,
+                "height": 40,
+                "caption": "batiplusmaroc.com"
+              },
+              "image": {
+                "@id": "https://batiplusmaroc.com/#/schema/logo/image/"
+              },
+              "sameAs": [
+                "https://www.facebook.com/sgta.btp",
+                "https://share.google/j5BiBjLTGpFdjD3f8"
+              ]
+            }
+          ]
+        },
+        "parse_error": null
+      }
+    ],
+    "json_ld_count": 1
+  },
+  "trailing_slash_behavior": {
+    "slash_request": {
+      "requested_url": "https://batiplusmaroc.com/nos-services/",
+      "final_url": "https://batiplusmaroc.com/nos-services/",
+      "http_status": 200,
+      "redirect_chain": []
+    },
+    "no_slash_request": {
+      "requested_url": "https://batiplusmaroc.com/nos-services",
+      "final_url": "https://batiplusmaroc.com/nos-services/",
+      "http_status": 200,
+      "redirect_chain": [
+        {
+          "url": "https://batiplusmaroc.com/nos-services",
+          "status": 301,
+          "location": "https://batiplusmaroc.com/nos-services/",
+          "resolved_location": "https://batiplusmaroc.com/nos-services/"
+        }
+      ]
+    },
+    "canonical_form": "https://batiplusmaroc.com/nos-services/"
+  },
+  "seo_lock_for_v1": {
+    "route": "/nos-services/",
+    "title": "Nos services - batiplusmaroc.com",
+    "meta_description": null,
+    "canonical": "https://batiplusmaroc.com/nos-services/",
+    "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+    "indexable": true,
+    "h1": "Nos services"
+  }
+}

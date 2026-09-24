@@ -1,0 +1,3353 @@
+{
+  "brand": {
+    "name": "Batiplus",
+    "homeAria": "Batiplus — Home"
+  },
+  "language": {
+    "label": "Language",
+    "fr": "FR",
+    "en": "EN"
+  },
+  "common": {
+    "skipToContent": "Skip to content",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "menu": "Menu",
+    "close": "Close",
+    "learnMore": "Learn more",
+    "readMore": "Read more",
+    "seeAll": "See all",
+    "backHome": "Back to home",
+    "contactUs": "Contact us",
+    "loading": "Loading…",
+    "required": "Required",
+    "optional": "Optional",
+    "save": "Save",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "submit": "Submit",
+    "search": "Search",
+    "filters": "Filters",
+    "empty": "Nothing to show yet.",
+    "error": "Something went wrong. Please try again.",
+    "retry": "Try again",
+    "allFieldsRequired": "All fields are required",
+    "comingSoon": "Coming soon"
+  },
+  "breadcrumbs": {
+    "label": "Breadcrumb"
+  },
+  "nav": {
+    "main": "Main navigation",
+    "mobile": "Mobile navigation",
+    "home": "Home",
+    "about": "About",
+    "services": "Services",
+    "allServices": "Our services",
+    "structuralWork": "Structural work",
+    "finishingWork": "Finishing work",
+    "projects": "Realisations",
+    "blog": "Blog",
+    "contact": "Contact",
+    "quote": "Request a quote",
+    "findCompany": "Find a company",
+    "findCompanies": "Find companies",
+    "findProjects": "Find projects",
+    "howItWorks": "How it works",
+    "signIn": "Log in",
+    "signUp": "Sign up",
+    "postProject": "Post a project",
+    "myProjects": "My projects",
+    "messages": "Messages",
+    "searchLabel": "Search companies and services",
+    "searchPlaceholder": "Search companies or services",
+    "companySearchLabel": "Search projects",
+    "companySearchPlaceholder": "Search projects",
+    "searchScopeProjects": "Projects",
+    "clearSearch": "Clear search",
+    "submitSearch": "Search",
+    "notifications": "Notifications",
+    "notificationsEmpty": "Notifications will appear here when there is something new.",
+    "myWorkspace": "My workspace",
+    "portfolio": "Portfolio",
+    "clientMain": "Client navigation",
+    "companyMain": "Company navigation",
+    "profileMenu": {
+      "openMenu": "Open account menu",
+      "client": {
+        "role": "Client",
+        "fallbackName": "Client account",
+        "myProfile": "My profile",
+        "myProjects": "My projects",
+        "accountSettings": "Account settings"
+      },
+      "company": {
+        "role": "Company",
+        "fallbackName": "Company account",
+        "companyProfile": "Company profile",
+        "portfolio": "Portfolio",
+        "workspace": "Company workspace"
+      }
+    }
+  },
+  "footer": {
+    "tagline": "Batiplus — the marketplace connecting clients and construction companies.",
+    "description": "Batiplus connects clients and construction companies: post a project, receive proposals, or find work.",
+    "s2mbou": "S2MBOU builds and fits out in Agadir: villas, structural work, and finishes, from the first plan through handover.",
+    "follow": "Follow us",
+    "contact": "Contact",
+    "about": "About",
+    "copyright": "© {year} Batiplus",
+    "createdBy": "Created by ITA Groupe",
+    "social": {
+      "facebook": "Facebook"
+    },
+    "columns": {
+      "clients": {
+        "heading": "For clients",
+        "postProject": "Post a project",
+        "findCompany": "Find a company",
+        "services": "Our services",
+        "contact": "Contact us"
+      },
+      "companies": {
+        "heading": "For companies",
+        "browseProjects": "Find work",
+        "signUp": "Create a profile",
+        "signIn": "Log in",
+        "contact": "Talk to Batiplus"
+      },
+      "resources": {
+        "heading": "Resources",
+        "blog": "Blog",
+        "structural": "Structural work",
+        "projects": "Completed work",
+        "howItWorks": "How it works"
+      },
+      "company": {
+        "heading": "Batiplus",
+        "about": "About us",
+        "contact": "Contact",
+        "services": "Our services",
+        "signIn": "Log in"
+      }
+    }
+  },
+  "hero": {
+    "imageAlt": "Construction site with machinery and a site supervisor",
+    "roleGroup": "Choose your profile",
+    "clientTitle": "Build your project with the right professionals.",
+    "clientDescription": "Post your project or find the right company for your needs.",
+    "companyTitle": "Find projects that match your expertise.",
+    "companyDescription": "Browse client requests and send proposals in minutes.",
+    "client": "I want to start a project",
+    "company": "I am looking for projects",
+    "searchProject": "Describe your project…",
+    "searchLabel": "Describe your project",
+    "searchButton": "Search",
+    "searchExamples": "Villa construction, renovation, pool, structural work...",
+    "findProjects": "Find projects",
+    "companyHeadline": "Grow your business on Batiplus",
+    "exploreProjects": "Explore projects",
+    "chips": {
+      "villa": "Villa construction",
+      "renovation": "Renovation",
+      "structural": "Structural work",
+      "interior": "Interior fit-out",
+      "villas": "Villas",
+      "buildings": "Buildings",
+      "fitout": "Fit-out"
+    }
+  },
+  "home": {
+    "trust": {
+      "eyebrow": "Why Batiplus",
+      "title": "One place to launch and win projects",
+      "description": "Post a need, compare companies, review proposals, then start the job.",
+      "cta": "Post a project",
+      "cardCta": "Continue",
+      "items": {
+        "0": {
+          "title": "A clear project from day one",
+          "text": "Describe the work, city, and budget so companies know exactly what you need.",
+          "alt": "Contemporary villa ready to be posted as a project"
+        },
+        "1": {
+          "title": "Companies you can compare",
+          "text": "Profiles, completed work, and ratings in one place. Choose on proof, not promises.",
+          "alt": "Plans and samples used to compare companies"
+        },
+        "2": {
+          "title": "Proposals you can read",
+          "text": "Each offer maps to the brief. See price, timing, and craft without chasing ten replies.",
+          "alt": "Job site and files for readable proposals"
+        },
+        "3": {
+          "title": "Through to the job",
+          "text": "Once you pick a company, the project stays on track. Less fog, more building.",
+          "alt": "Completed villa after the works"
+        }
+      }
+    },
+    "marketplace": {
+      "title": "Find companies for every type of construction work",
+      "categoriesLabel": "Work categories",
+      "resultsLabel": "Companies specialized in {category}",
+      "viewProfile": "View profile",
+      "invite": "Invite to project",
+      "verified": "Verified company",
+      "rating": "{rating} out of 5",
+      "projects": "{count, plural, one {# completed project} other {# completed projects}}",
+      "empty": "No companies in this category yet.",
+      "imageAlt": "Project by {company} in {city}",
+      "categories": {
+        "houseConstruction": "House construction",
+        "renovation": "Renovation",
+        "structural": "Structural work",
+        "finishing": "Finishing work",
+        "architecture": "Architecture",
+        "interior": "Interior fit-out",
+        "electrical": "Electrical",
+        "plumbing": "Plumbing",
+        "joinery": "Joinery",
+        "pool": "Swimming pool"
+      }
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "audienceLabel": "Choose a path",
+      "hiring": "For hiring",
+      "findingWork": "For finding work",
+      "getStarted": "Get started",
+      "hiringCards": {
+        "0": {
+          "title": "Posting a project is always free",
+          "body": "Describe your need or get guided matches to the right construction companies.",
+          "cta": "Post a project",
+          "imageAlt": "Contemporary Moroccan villa at dusk"
+        },
+        "1": {
+          "title": "Get proposals and hire",
+          "body": "Compare companies, talk with them, then award the job to the team that fits.",
+          "cta": "Explore companies",
+          "imageAlt": "Blueprints, material samples, and a tablet for comparing companies"
+        },
+        "2": {
+          "title": "Move forward when work is ready",
+          "body": "Keep the conversation going and start the site when you are ready.",
+          "cta": "Talk about my project",
+          "imageAlt": "Hard hat and laptop on a construction site at sunset"
+        }
+      },
+      "findingWorkCards": {
+        "0": {
+          "title": "Find clients and local jobs",
+          "body": "Create your profile to highlight your completed work and attract the right clients.",
+          "cta": "Create a profile",
+          "imageAlt": "Professional reviewing projects on a tablet at a job site"
+        },
+        "1": {
+          "title": "Submit proposals for work",
+          "body": "Respond to requests that match your trade and expertise.",
+          "cta": "Browse projects",
+          "imageAlt": "Laptop and material samples for sending a work proposal"
+        },
+        "2": {
+          "title": "Deliver and grow your business",
+          "body": "Work with clear clients and build your reputation on Batiplus.",
+          "cta": "Join Batiplus",
+          "imageAlt": "Contemporary villa after completed works"
+        }
+      }
+    },
+    "feed": {
+      "eyebrow": "Right now",
+      "feedLabel": "Choose what you want to see",
+      "verifiedClient": "Verified client",
+      "viewProject": "View project",
+      "posted": "{days, plural, =0 {Today} one {# day ago} other {# days ago}}",
+      "proposals": "{count, plural, one {# proposal} other {# proposals}}",
+      "projects": {
+        "tab": "Open projects",
+        "title": "Projects ready for proposals",
+        "description": "Need, city, and budget in one place. Reply to the jobs that match your trade.",
+        "cta": "See all projects",
+        "0": {
+          "title": "180 m² villa — structure and shell",
+          "text": "New villa in Founty. Foundations, structure, and roof. Site access is already prepared.",
+          "budget": "MAD 850k – 1.2M"
+        },
+        "1": {
+          "title": "Full renovation of a 120 m² apartment",
+          "text": "Finishes, electrical, and fit-out in Casablanca. The client wants a clear schedule before start.",
+          "budget": "MAD 220k – 310k"
+        },
+        "2": {
+          "title": "R+3 building — structural repair",
+          "text": "Reinforcement and structural work in Rabat. Plans available. Looking for an experienced company.",
+          "budget": "MAD 1.4 – 1.9M"
+        },
+        "3": {
+          "title": "Electrical upgrade for a villa",
+          "text": "Board, wiring, and lighting in Marrakech. Occupied house — hours to be agreed.",
+          "budget": "MAD 45k – 70k"
+        },
+        "4": {
+          "title": "8 × 4 m pool and outdoor works",
+          "text": "Excavation, basin, and deck in Agadir. The client is comparing 2 to 3 verified companies.",
+          "budget": "MAD 180k – 260k"
+        },
+        "5": {
+          "title": "Interior fit-out for a residence",
+          "text": "Kitchen, joinery, and finishes in Tangier. Moodboard provided. Start wanted in 6 weeks.",
+          "budget": "MAD 95k – 140k"
+        }
+      },
+      "companies": {
+        "tab": "Featured companies",
+        "title": "Companies you can compare now",
+        "description": "Profiles, ratings, and completed work. Invite the teams that fit your job site.",
+        "cta": "See all companies",
+        "s2mbou": {
+          "headline": "General contractor · villas",
+          "pitch": "Villas and structure in Agadir. Clear files, kept schedules, photographed deliveries."
+        },
+        "atlasHabitat": {
+          "headline": "Construction and architecture",
+          "pitch": "New homes in Marrakech. From plan to handover with one point of contact."
+        },
+        "casaBati": {
+          "headline": "Construction and renovation",
+          "pitch": "Urban sites in Casablanca. Readable offers with timing and line items."
+        },
+        "renovPlus": {
+          "headline": "Renovation and finishing",
+          "pitch": "Apartments and houses in Rabat. Careful finishes and follow-through to handover."
+        },
+        "atelierNord": {
+          "headline": "Renovation and interiors",
+          "pitch": "Interiors in Tangier. Moodboards, materials, and execution in one brief."
+        },
+        "piscinesAtlas": {
+          "headline": "Pools and exteriors",
+          "pitch": "Basins and decks in Agadir. Waterproofing, finishes, and coordination with the shell."
+        }
+      }
+    },
+    "aboutPreview": {
+      "eyebrow": "About",
+      "title": "Build, fit out, and deliver.",
+      "p1": "Batiplus connects clients and construction companies to build, fit out, and deliver projects with the right professionals.",
+      "p2": "Post your need, compare companies, or find jobs that match your expertise.",
+      "items": {
+        "0": "One place for clients and companies",
+        "1": "Support from request to assignment",
+        "2": "Construction, fit-out, and finishes"
+      },
+      "cta": "Discover the platform",
+      "imageAlt": "Construction site"
+    },
+    "services": {
+      "eyebrow": "Our services",
+      "title": "Complete solutions for every stage of your project.",
+      "description": "From structure to finishes, find the expertise that fits your job site."
+    },
+    "expertise": {
+      "eyebrow": "Our expertise",
+      "title": "The trades to build and fit out your project",
+      "scrollHelp": "Scroll",
+      "previous": "See previous expertise",
+      "next": "See next expertise",
+      "gallery": "Expertise gallery"
+    },
+    "projects": {
+      "eyebrow": "Our work",
+      "title": "Projects that show what companies can deliver.",
+      "cta": "See all work",
+      "featured": "Featured project",
+      "openAria": "View project {title}"
+    },
+    "process": {
+      "eyebrow": "Our method",
+      "title": "Clear support, from idea to delivery.",
+      "countLabel": "project stages",
+      "steps": {
+        "0": {
+          "title": "Study",
+          "text": "Needs analysis, site visit, and project definition."
+        },
+        "1": {
+          "title": "Planning",
+          "text": "Technical solutions, materials, organization, and schedule."
+        },
+        "2": {
+          "title": "Delivery of works",
+          "text": "Coordination of trades and site follow-up."
+        },
+        "3": {
+          "title": "Handover",
+          "text": "Checks, finishes, and project handover."
+        }
+      }
+    },
+    "whyUs": {
+      "eyebrow": "Why Batiplus",
+      "title": "A complete platform for your project.",
+      "description": "Choosing Batiplus means connecting your project with companies that can deliver it, with a clear view of needs, proposals, and follow-up.",
+      "points": {
+        "0": "Projects and companies in one place",
+        "1": "Clear, comparable requests",
+        "2": "Construction and fit-out expertise",
+        "3": "Follow-through to the job",
+        "4": "Support at every stage"
+      },
+      "cta": "Talk about my project",
+      "imageAlt": "Building project under construction"
+    },
+    "testimonials": {
+      "title": "Proven results on Batiplus",
+      "items": {
+        "0": {
+          "quote": "We posted our project and found a serious, attentive company that delivered a villa build with quality that exceeded our expectations.",
+          "name": "Amina Elbahaoui",
+          "role": "Client, Casablanca"
+        },
+        "1": {
+          "quote": "Batiplus is more than a match. We get clearer requests, comparable briefs, and we move faster from the first conversation to the job.",
+          "name": "Aziz El Makaoui",
+          "role": "Director, Atlas Habitat"
+        },
+        "2": {
+          "quote": "We compared several companies, talked through the budget, then chose a team that understood our finishes. Follow-up stayed simple at every stage.",
+          "name": "Nassima Jarti",
+          "role": "Client, Agadir"
+        },
+        "3": {
+          "quote": "The briefs are better prepared than social media leads. We know what the client wants, we send a proposal, and the site starts without confusion.",
+          "name": "Mohamed Lakhdar",
+          "role": "Manager, Lakhdar Bâtiment"
+        },
+        "4": {
+          "quote": "For a full renovation we needed one reliable counterpart. Batiplus helped us filter companies and sign with more confidence.",
+          "name": "Karim Bennis",
+          "role": "Client, Rabat"
+        },
+        "5": {
+          "quote": "Since our profile went live, we receive projects that match our structural-work expertise. Less prospecting, more job sites.",
+          "name": "Leila Amrani",
+          "role": "Director, Amrani Construction"
+        }
+      }
+    },
+    "articles": {
+      "title": "Batiplus Blog",
+      "description": "Advice, materials, and updates to help you start a construction project in Morocco.",
+      "categoriesLabel": "Blog categories",
+      "all": "All",
+      "general": "General",
+      "structural": "Structural work"
+    },
+    "finalCta": {
+      "title": "Join the marketplace",
+      "hire": {
+        "title": "Find the company that fits your job site.",
+        "cta": "See companies",
+        "imageAlt": "Plans and documents used to compare companies"
+      },
+      "work": {
+        "title": "Find projects that match your trade.",
+        "cta": "See projects",
+        "imageAlt": "Professional reviewing projects on a job site"
+      }
+    }
+  },
+  "content": {
+    "services": {
+      "structural": {
+        "title": "Structural work",
+        "description": "Foundations, masonry, and structure that give every project a solid base.",
+        "cta": "Discover structural work",
+        "alt": "Workstation facing a construction site",
+        "caption": "Structure"
+      },
+      "finishing": {
+        "title": "Finishing work",
+        "description": "Electrical, plumbing, coverings, joinery, paint, and interior finishes.",
+        "cta": "Discover finishing work",
+        "alt": "Supervisor overseeing machinery on a job site",
+        "caption": "Finishes"
+      },
+      "fitout": {
+        "title": "Construction & fit-out",
+        "description": "Coordinated solutions for construction and interior or outdoor fit-out projects.",
+        "cta": "See our services",
+        "alt": "Team reviewing construction project plans",
+        "caption": "Fit-out"
+      }
+    },
+    "expertise": {
+      "plaster": {
+        "title": "Plaster",
+        "alt": "Applying plaster to an interior ceiling"
+      },
+      "tiling": {
+        "title": "Tiling",
+        "alt": "Laying floor tiles in a room"
+      },
+      "joinery": {
+        "title": "Joinery",
+        "alt": "Assembling a wood piece in the workshop"
+      },
+      "aluminium": {
+        "title": "Aluminium",
+        "alt": "Installing glazed joinery"
+      },
+      "electrical": {
+        "title": "Electrical / Plumbing",
+        "alt": "Work on an electrical panel"
+      },
+      "hvac": {
+        "title": "Air conditioning",
+        "alt": "Installing a wall-mounted air-conditioning unit"
+      },
+      "waterproofing": {
+        "title": "Waterproofing",
+        "alt": "Laying a waterproofing membrane on a roof"
+      },
+      "gardening": {
+        "title": "Gardening",
+        "alt": "Planting a young plant in a garden"
+      },
+      "pvc": {
+        "title": "PVC",
+        "alt": "Glazed facade with joinery profiles"
+      },
+      "painting": {
+        "title": "Painting",
+        "alt": "Applying white paint with a roller"
+      }
+    },
+    "articles": {
+      "trends2025": {
+        "title": "New construction trends in 2025",
+        "category": "General",
+        "excerpt": "Materials, smarter homes, and leaner job sites: what is changing for building in Morocco in 2025."
+      },
+      "budget": {
+        "title": "How to plan a construction budget",
+        "category": "General",
+        "excerpt": "Land, structure, finishes, and contingencies: how to cost a project without nasty surprises."
+      },
+      "materials": {
+        "title": "How to choose the right materials for your house",
+        "category": "Structural work",
+        "excerpt": "Strength, climate, budget, and comfort: how to pick materials that fit your site."
+      },
+      "custom": {
+        "title": "Custom construction: what are the advantages?",
+        "category": "Structural work",
+        "excerpt": "A project shaped around your land, use, and budget — not a standard plan."
+      }
+    },
+    "projects": {
+      "immeuble-r5-al-huda": {
+        "title": "R+5 building — Al-Huda",
+        "subtitle": "Al-Huda, Agadir · Construction phases and structural work"
+      },
+      "immeuble-r5-al-farah": {
+        "title": "R+5 building — Al Farah",
+        "subtitle": "Al Farah, Agadir · Structural work and completed state"
+      },
+      "villa-founty": {
+        "title": "Villa Founty",
+        "subtitle": "Agadir · Construction and finishing of a villa"
+      },
+      "finitions-interieures": {
+        "title": "Interior finishes",
+        "subtitle": "Wall décor, textures, coverings, and a premium atmosphere"
+      },
+      "amenagement-interieur": {
+        "title": "Interior fit-out",
+        "subtitle": "Floors, ceilings, lighting, wall cladding, and modern finishes"
+      },
+      "details-de-finition": {
+        "title": "Finishing details",
+        "subtitle": "Light effects, decorative niches, fireplaces, tiling, and coverings"
+      },
+      "revetements-decoratifs": {
+        "title": "Decorative coverings",
+        "subtitle": "Wall textures, stone, wood, polished concrete, and custom finishes"
+      },
+      "faux-plafonds-eclairage": {
+        "title": "Ceilings & lighting",
+        "subtitle": "Modern ceiling design and integrated decorative lighting"
+      },
+      "escaliers-circulations": {
+        "title": "Stairs & circulation",
+        "subtitle": "Stairwell, hall, and circulation-space finishes"
+      },
+      "exterieur-piscine": {
+        "title": "Outdoor & pool",
+        "subtitle": "Outdoor fit-out, terraces, facades, pool, and green spaces"
+      },
+      "facades-travaux-exterieurs": {
+        "title": "Facades & outdoor works",
+        "subtitle": "Outdoor work and facade finish presentation"
+      }
+    }
+  },
+  "contact": {
+    "crumb": "Contact us",
+    "eyebrow": "Let’s talk about your project",
+    "title": "Contact form",
+    "imageAlt": "R+5 building under construction in Agadir",
+    "brandBadge": "Batiplus",
+    "locationBadge": "Agadir · Morocco",
+    "requestEyebrow": "Your request",
+    "requestTitle": "A few details to better understand your project.",
+    "direct": "Direct contact",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "addressValue": "Hay Dakhla, Agadir",
+    "aside": "Batiplus — the marketplace connecting clients and companies for durable, made-to-measure construction projects.",
+    "asideNav": "Discover Batiplus",
+    "seeServices": "Discover our services",
+    "seeProjects": "See our work",
+    "serviceLegend": "What type of service are you looking for?",
+    "serviceHint": "You can select multiple options. This field is required.",
+    "requiredHint": "Fields marked * are required",
+    "selectServiceError": "Please choose at least one type of service.",
+    "specifyServiceError": "Please specify your service.",
+    "requiredFieldsError": "Please fill in the city, full name, and phone number.",
+    "services": {
+      "full": "Full construction",
+      "renovation": "Interior renovation",
+      "interior": "Decoration / interior fit-out",
+      "admin": "Administrative file follow-up (permit, authorization, etc.)",
+      "other": "Other"
+    },
+    "detailsLabel": "Specify your service",
+    "detailsPlaceholder": "Describe your need",
+    "city": "City",
+    "cityPlaceholder": "Your city",
+    "name": "Full name",
+    "namePlaceholder": "Your name",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "Your number",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com (optional)",
+    "honeypot": "Website",
+    "privacy": "Your information is sent directly and used only to reply to your request.",
+    "sending": "Sending…",
+    "submit": "Send my request",
+    "success": "Thank you! Your request has been sent. Our team will get back to you shortly.",
+    "error": "Sending failed. Please try again."
+  },
+  "blog": {
+    "eyebrow": "Advice & news",
+    "description": "Practical guidance to better understand construction, materials, and project planning.",
+    "categories": "Blog categories",
+    "general": "General",
+    "structural": "Structural work",
+    "count": "{count} articles",
+    "badge": "Batiplus · Agadir"
+  },
+  "projectPage": {
+    "kicker": "Project",
+    "location": "Location / area",
+    "nature": "Type of work",
+    "theProject": "The project",
+    "intervention": "Our work",
+    "methodTitle": "A method adapted to the project and its constraints.",
+    "galleryLabel": "Gallery of {title}",
+    "galleryEyebrow": "Looks at the site",
+    "galleryTitle": "The project in pictures.",
+    "galleryText": "Three views to read the materials, volumes, and quality of execution.",
+    "result": "The result",
+    "allProjects": "Discover all our work",
+    "yourProject": "Your project",
+    "ctaTitle": "Let’s build your next project.",
+    "cta": "Talk about my project"
+  },
+  "notFound": {
+    "kicker": "Navigation error · Page not found",
+    "eyebrow": "Page not found",
+    "title": "This page is not on the plan.",
+    "description": "The address may be incorrect or the page may have moved. Go back home or continue browsing.",
+    "actionsLabel": "Ways to continue",
+    "home": "Back to home",
+    "browseCompanies": "Find companies",
+    "contact": "Contact us",
+    "services": "Our services",
+    "projects": "Our work"
+  },
+  "clientHowItWorks": {
+    "hero": {
+      "title": "Find the company that fits your site",
+      "lead": "Post a project for free, or invite a company. Compare proposals, talk once interest is mutual, then start the work.",
+      "cta": "Post a project",
+      "browse": "Browse companies",
+      "imageAlt": "Contemporary villa ready to become a construction project"
+    },
+    "tradesLabel": "Trades you can hire",
+    "steps": {
+      "title": "How to find a company",
+      "cards": {
+        "0": {
+          "title": "Post your project (it’s free)",
+          "body": "Describe the work, the city, and the budget. Companies understand the job before they propose.",
+          "cta": "Post a project"
+        },
+        "1": {
+          "title": "Choose how you want to hire",
+          "body": "Collect proposals, or browse profiles and invite the company that fits.",
+          "cta": "See companies"
+        },
+        "2": {
+          "title": "Talk once both sides agree",
+          "body": "Messaging opens when you reply to a proposal, or when the company accepts your invitation.",
+          "cta": "See what happens next"
+        }
+      }
+    },
+    "ways": {
+      "title": "Two ways to find the right company",
+      "post": {
+        "title": "Get proposals",
+        "body": "Publish the brief. Companies answer with a price, a timeline, and work they have already delivered.",
+        "cta": "Post a project",
+        "imageAlt": "Plans and samples used to compare construction companies"
+      },
+      "invite": {
+        "title": "Invite a company directly",
+        "body": "Open a profile and portfolio, then send an invitation. The conversation starts when they accept.",
+        "cta": "See companies",
+        "profile": "View profile"
+      }
+    },
+    "flow": {
+      "title": "From brief to job site",
+      "steps": {
+        "0": {
+          "title": "You post the project",
+          "body": "Work, city, and budget. Companies see a clear brief."
+        },
+        "1": {
+          "title": "Proposal or invitation",
+          "body": "They reply to your project, or you invite a profile."
+        },
+        "2": {
+          "title": "Mutual interest",
+          "body": "You open the thread, or the company accepts the invitation."
+        },
+        "3": {
+          "title": "Visit, quote, choice",
+          "body": "A site visit if you need one, a final quote, then you choose."
+        }
+      }
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "items": {
+        "0": {
+          "question": "Is it free to post a project?",
+          "answer": "Yes. Describing your need and posting it costs nothing. You compare proposals, then choose the company.",
+          "more": "Post a project"
+        },
+        "1": {
+          "question": "How do I find a company?",
+          "answer": "Two paths. Post a project and receive proposals, or browse profiles and invite a company directly.",
+          "more": "See companies"
+        },
+        "2": {
+          "question": "When can I message a company?",
+          "answer": "Messaging opens when you reply to a proposal, or when the company accepts your invitation. There is no open chat before that agreement.",
+          "more": "See what happens next"
+        },
+        "3": {
+          "question": "What kind of work can I post?",
+          "answer": "Structural work, finishing, renovation, house construction, electrical, plumbing, joinery, pools, and fit-out. Include the city, budget, and scope in the project.",
+          "more": "Browse companies"
+        },
+        "4": {
+          "question": "Does a company have to be verified to propose?",
+          "answer": "Yes. Only a company verified by Batiplus can send a proposal on a project."
+        },
+        "5": {
+          "question": "What happens after I choose a company?",
+          "answer": "A site visit if you need one, a final quote, then you confirm the company for the project.",
+          "more": "See the steps"
+        }
+      }
+    }
+  },
+  "meta": {
+    "appName": "Batiplus",
+    "home": {
+      "title": "Batiplus — Construction marketplace in Morocco",
+      "description": "Post your construction project or find the right company for your needs. Batiplus connects clients and building professionals."
+    },
+    "howItWorks": {
+      "title": "How to find a company — Batiplus",
+      "description": "Post a project for free or invite a company. Compare proposals, talk once interest is mutual, then start the work."
+    },
+    "about": {
+      "title": "About — Batiplus",
+      "description": "Discover Batiplus, the marketplace connecting clients and construction companies in Morocco."
+    },
+    "services": {
+      "title": "Services — Batiplus",
+      "description": "Explore the trades and expertise available on Batiplus: structural work, finishing, construction and fit-out."
+    },
+    "projects": {
+      "title": "Work — Batiplus",
+      "description": "Browse completed work from companies on Batiplus."
+    },
+    "contact": {
+      "title": "Contact — Batiplus",
+      "description": "Contact Batiplus about a construction project, a company request, or a question about the platform."
+    },
+    "terms": {
+      "title": "Terms of Service — Batiplus",
+      "description": "Read the terms governing use of the Batiplus platform."
+    },
+    "privacy": {
+      "title": "Privacy Policy — Batiplus",
+      "description": "Read the privacy information for the Batiplus platform."
+    },
+    "structuralWork": {
+      "title": "Structural work — Batiplus",
+      "description": "Find structural-work companies: foundations, masonry, and structure for your construction projects."
+    },
+    "finishingWork": {
+      "title": "Finishing work — Batiplus",
+      "description": "Find finishing-work companies: electrical, plumbing, painting, tiling, and finishes."
+    },
+    "categoryGeneral": {
+      "title": "Blog · General — Batiplus",
+      "description": "Advice and general news to prepare a construction project in Morocco."
+    },
+    "categoryStructuralWork": {
+      "title": "Blog · Structural work — Batiplus",
+      "description": "Advice and news on structural work, materials, and construction."
+    },
+    "constructionTrends2025": {
+      "title": "New construction trends in 2025 — Batiplus",
+      "description": "An overview of 2025 construction trends: sustainability, smart homes, and bioclimatic design."
+    },
+    "constructionBudget": {
+      "title": "How to plan a construction budget — Batiplus",
+      "description": "The steps to estimate, organize, and follow the budget of a construction project."
+    },
+    "constructionMaterials": {
+      "title": "How to choose the right materials for your house — Batiplus",
+      "description": "Practical guidance to choose materials that fit your construction project."
+    },
+    "helloWorld": {
+      "title": "Custom construction: what are the advantages — Batiplus",
+      "description": "Why custom construction can better serve your project, your use, and your budget."
+    },
+    "companies": {
+      "title": "Companies — Batiplus",
+      "description": "Find the construction company that fits your project."
+    },
+    "companyProfile": {
+      "title": "Company profile — Batiplus",
+      "description": "See a company’s profile, portfolio, and expertise on Batiplus."
+    },
+    "browseProjects": {
+      "title": "Find projects — Batiplus",
+      "description": "Browse projects posted by clients and send your proposals."
+    },
+    "postProject": {
+      "title": "Post a project — Batiplus",
+      "description": "Describe your construction project and receive proposals from companies."
+    },
+    "postProjectWizard": {
+      "title": "Post your project — Batiplus",
+      "description": "Describe your construction project step by step and submit it for review."
+    },
+    "signIn": {
+      "title": "Log in — Batiplus",
+      "description": "Log in to your Batiplus client or company workspace."
+    },
+    "signUp": {
+      "title": "Create an account — Batiplus",
+      "description": "Create a client or company account to post a project or send proposals."
+    },
+    "clientOnboarding": {
+      "title": "Complete your profile — Batiplus",
+      "description": "Add your essential contact details to finish setting up your Batiplus client profile."
+    },
+    "clientDashboard": {
+      "title": "Client workspace — Batiplus",
+      "description": "Access your Batiplus client workspace."
+    },
+    "clientProfile": {
+      "title": "My profile — Batiplus",
+      "description": "Manage your Batiplus client account information."
+    },
+    "messages": {
+      "title": "Messages — Batiplus",
+      "description": "Read conversations that open after mutual interest on a Batiplus project."
+    },
+    "clientProject": {
+      "title": "Your project — Batiplus",
+      "description": "Review the status and details of your Batiplus project."
+    },
+    "companyDashboard": {
+      "title": "Company workspace — Batiplus",
+      "description": "Access your Batiplus company workspace."
+    },
+    "companyProfileManagement": {
+      "title": "Manage company profile — Batiplus",
+      "description": "Update the public information shown on your Batiplus company profile."
+    },
+    "companyOnboarding": {
+      "title": "Complete your company profile — Batiplus",
+      "description": "Add your company details and services to finish setting up your Batiplus profile."
+    },
+    "companyVerification": {
+      "title": "Verify your company — Batiplus",
+      "description": "Submit your company legal information to Batiplus for verification."
+    },
+    "companyPortfolio": {
+      "title": "Company portfolio — Batiplus",
+      "description": "Add, edit, and publish your company’s completed work."
+    },
+    "companyProjects": {
+      "title": "Find projects — Batiplus",
+      "description": "Browse approved construction projects available to companies on Batiplus."
+    },
+    "signUpClient": {
+      "title": "Client sign-up — Batiplus",
+      "description": "Create a client account to post projects and receive proposals from companies."
+    },
+    "signUpCompany": {
+      "title": "Company sign-up — Batiplus",
+      "description": "Create a company profile to receive projects and send proposals."
+    }
+  },
+  "auth": {
+    "signIn": "Log in",
+    "signUp": "Create an account",
+    "signOut": "Log out",
+    "workspace": "My workspace",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "signInLead": "Access your workspace to follow projects, proposals, and messages.",
+    "signUpLead": "Create a client or company account to use Batiplus.",
+    "signInFlow": {
+      "title": "Log in to Batiplus",
+      "emailLabel": "Email",
+      "emailPlaceholder": "Email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Password",
+      "continue": "Continue",
+      "continuing": "Signing in…",
+      "continueGoogle": "Continue with Google",
+      "continuingGoogle": "Redirecting to Google…",
+      "or": "or",
+      "noAccount": "Don't have a Batiplus account?",
+      "signUp": "Sign Up",
+      "copyright": "© {year} Batiplus Maroc",
+      "footerTerms": "Terms",
+      "footerPrivacy": "Privacy",
+      "footerContact": "Contact",
+      "validation": {
+        "required": "Please enter your email.",
+        "passwordRequired": "Please enter your password.",
+        "terms": "Please accept the terms of service."
+      },
+      "errors": {
+        "invalidAccountType": "This account type is not allowed.",
+        "invalidEmail": "Please enter a valid email address.",
+        "invalidCredentials": "Incorrect email or password.",
+        "accountExists": "An account already exists with this email.",
+        "generic": "Sign-in failed. Please try again."
+      }
+    },
+    "signUpFlow": {
+      "welcomeTitle": "Welcome to Batiplus",
+      "welcomeQuestion": "Which describes you best?",
+      "clientTitle": "Client",
+      "clientDescription": "Post a project and hire companies.",
+      "companyTitle": "Company",
+      "companyDescription": "Find projects and grow your business.",
+      "alreadyHaveAccount": "Already have an account?",
+      "logIn": "Log in",
+      "clientFormTitle": "Sign up to hire companies",
+      "companyFormTitle": "Sign up to find work",
+      "lookingForWork": "Looking for work?",
+      "lookingToHire": "Looking to hire?",
+      "applyAsCompany": "Apply as a company",
+      "applyAsClient": "Apply as a client",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "workEmail": "Work email address",
+      "email": "Email address",
+      "password": "Password",
+      "passwordPlaceholder": "Password (8 or more characters)",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "marketingClient": "Send me tips on how to find companies that fit my project.",
+      "marketingCompany": "Send me tips on how to find projects that fit my business.",
+      "terms": "Yes, I understand and agree to the Batiplus <terms>Terms of Service</terms>, including the User Agreement and <privacy>Privacy Policy</privacy>.",
+      "createAccount": "Create my account",
+      "creating": "Creating account…",
+      "continueGoogle": "Continue with Google",
+      "continuingGoogle": "Redirecting to Google…",
+      "or": "or",
+      "oauthChooseRole": "Your Google account is connected. Choose a role to finish signup.",
+      "validation": {
+        "required": "Please fill in all fields (password: 8 characters minimum).",
+        "terms": "Please accept the terms of service."
+      },
+      "errors": {
+        "invalidAccountType": "This account type is not allowed.",
+        "invalidEmail": "Please enter a valid email address.",
+        "invalidCredentials": "Incorrect email or password.",
+        "accountExists": "An account already exists with this email.",
+        "generic": "Account creation failed. Please try again."
+      }
+    },
+    "onboarding": {
+      "eyebrow": "Account created",
+      "clientTitle": "Welcome to your client workspace",
+      "clientLead": "Your client account is ready. You will soon be able to post a project and receive proposals from companies.",
+      "companyTitle": "Welcome to your company workspace",
+      "companyLead": "Your company account is ready. The next step will be company verification.",
+      "signedInAs": "Signed in as {email}",
+      "backHome": "Back to home"
+    },
+    "clientOnboarding": {
+      "progress": "Client profile · One step",
+      "step": "Step {current} of {total}",
+      "title": "A few details to get started",
+      "lead": "Companies use this to reach you about your project. It only takes a minute.",
+      "sectionTitle": "Contact details",
+      "sectionLead": "Add the information companies need to contact you.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "phonePlaceholder": "06 12 34 56 78",
+      "phoneHint": "Shared only with companies you choose to work with.",
+      "city": "City",
+      "cityPlaceholder": "Casablanca",
+      "cityHint": "Helps match you with companies in your area.",
+      "continue": "Continue",
+      "saving": "Saving…",
+      "loading": "Loading your profile…",
+      "validation": {
+        "name": "Enter a valid first and last name.",
+        "phone": "Enter a valid Moroccan phone number.",
+        "city": "Enter a valid city."
+      },
+      "errors": {
+        "generic": "We could not save your profile. Please try again."
+      }
+    },
+    "clientDashboard": {
+      "eyebrow": "Client workspace",
+      "title": "Your profile is ready",
+      "lead": "Your client workspace is set up. The next features will be available here."
+    },
+    "companyOnboarding": {
+      "step": "Step {current} of {total}",
+      "title": "Complete your company profile",
+      "lead": "Add the essential information clients need to understand and contact your company.",
+      "titleProfile": "Let’s start with your company",
+      "leadProfile": "Clients see this first. Keep it short and professional.",
+      "titleServices": "What work do you do?",
+      "leadServices": "Select every service you regularly offer. You can update this later.",
+      "titleContact": "How can clients reach you?",
+      "leadContact": "Add a phone number and city so nearby clients can contact you.",
+      "back": "Back",
+      "createProfile": "Create your profile",
+      "descriptionHint": "Write at least 20 characters.",
+      "phoneHint": "Shared only with clients who work with you.",
+      "cityHint": "Helps clients find companies in their area.",
+      "detailsTitle": "Company details",
+      "detailsLead": "Tell clients who you are.",
+      "companyName": "Company name",
+      "legalName": "Legal company name, if different (optional)",
+      "description": "Short description",
+      "descriptionPlaceholder": "Briefly describe your company, expertise, and the work you usually handle.",
+      "yearsExperience": "Years of experience (optional)",
+      "website": "Website (optional)",
+      "websitePlaceholder": "example.ma",
+      "logo": "Logo (optional)",
+      "logoHint": "JPG, PNG, or WebP. Maximum 5 MB.",
+      "logoPreviewAlt": "Current company logo",
+      "servicesTitle": "Main services",
+      "servicesLead": "Select every service your company regularly provides.",
+      "services": {
+        "houseConstruction": "House / villa construction",
+        "renovation": "Renovation",
+        "structural": "Structural work",
+        "finishing": "Finishing work",
+        "architecture": "Architecture",
+        "interior": "Interior fit-out",
+        "electrical": "Electrical work",
+        "plumbing": "Plumbing",
+        "joinery": "Joinery",
+        "pool": "Swimming pools"
+      },
+      "contactTitle": "Contact",
+      "contactLead": "Add the business contact details clients can use.",
+      "owner": "Account owner: {name}",
+      "phone": "Phone",
+      "phonePlaceholder": "06 12 34 56 78",
+      "city": "City",
+      "cityPlaceholder": "Casablanca",
+      "continue": "Continue",
+      "saving": "Saving…",
+      "loading": "Loading your company profile…",
+      "validation": {
+        "companyName": "Enter a valid company name.",
+        "phone": "Enter a valid Moroccan phone number.",
+        "city": "Enter a valid city.",
+        "description": "Enter a description between 20 and 1,000 characters.",
+        "services": "Select at least one valid service.",
+        "years": "Enter a whole number from 0 to 100.",
+        "website": "Enter a valid website address.",
+        "logo": "Choose a JPG, PNG, or WebP logo no larger than 5 MB."
+      },
+      "errors": {
+        "generic": "We could not save your company profile. Please try again."
+      }
+    },
+    "companyDashboard": {
+      "eyebrow": "Company workspace",
+      "greeting": "Welcome, {name}",
+      "greetingFallback": "Welcome to your workspace",
+      "title": "Your company profile is ready",
+      "lead": "Track verification and the next steps for your company.",
+      "verificationTitle": "Complete company verification",
+      "verificationHeadline": {
+        "draft": "Complete company verification",
+        "pending": "Verification in review",
+        "verified": "Your company is verified",
+        "rejected": "Verification needs updates"
+      },
+      "verificationLead": {
+        "draft": "Add the required legal information. Documents are optional for now.",
+        "pending": "Your submission was received. The Batiplus team will review it before showing a verified badge.",
+        "verified": "Clients can see that your company has been reviewed by Batiplus.",
+        "rejected": "Update the requested information, then submit your verification again."
+      },
+      "status": {
+        "draft": "Draft",
+        "pending": "In review",
+        "verified": "Verified",
+        "rejected": "Needs changes"
+      },
+      "startVerification": "Verify my company",
+      "resubmit": "Update and resubmit",
+      "viewStatus": "View status",
+      "findWorkTitle": "Find client projects",
+      "findWorkLead": "Browse open projects that match the work your company does.",
+      "findWorkAction": "Browse projects",
+      "profileTitle": "Company profile",
+      "profileLead": "Keep your public information, services, and service areas up to date.",
+      "profileAction": "Manage profile",
+      "portfolioTitle": "Portfolio",
+      "portfolioLead": "Your published work will appear here once you add a project.",
+      "portfolioAction": "Manage portfolio",
+      "feed": {
+        "searchPlaceholder": "Search for projects",
+        "filters": "Filters",
+        "hideFilters": "Hide filters",
+        "tabRecent": "Most recent",
+        "resultsLabel": "Client projects",
+        "posted": "Posted {when}",
+        "more": "more",
+        "promoLead": "Verify your company so you can respond when a client project matches your work.",
+        "promoAction": "Verify company",
+        "promoVerifiedLead": "Open client projects are listed here. Review a brief before you respond.",
+        "dismiss": "Dismiss notice",
+        "emptyTitle": "No projects to show",
+        "emptyLead": "Published client projects will appear in this list."
+      },
+      "sidebar": {
+        "profileVisibility": "Profile visibility",
+        "visibility": {
+          "draft": "Private",
+          "pending": "In review",
+          "verified": "Public",
+          "rejected": "Hidden"
+        },
+        "editProfile": "Edit company profile",
+        "completeProfile": "Complete your profile",
+        "progress": "{value}%",
+        "reachMore": "Reach more clients",
+        "verificationBadge": "Verification badge",
+        "portfolio": "Portfolio",
+        "messages": "Messages",
+        "contact": "Help center"
+      }
+    },
+    "companyVerification": {
+      "eyebrow": "Company verification",
+      "step": "Step {current} of {total}",
+      "title": "Verify your company",
+      "lead": "Enter the legal information used to review your company.",
+      "titleLegal": "Confirm your company identity",
+      "leadLegal": "We review this before clients see a verified badge. It usually takes a few minutes.",
+      "titleDocuments": "Add supporting documents",
+      "leadDocuments": "Documents are optional for now. You can submit without them and add files later if we ask.",
+      "rejectedLead": "Your last submission needs changes. Update the details below and send it again.",
+      "legalSection": "Legal details",
+      "legalSectionLead": "Use the same information as on your official company documents.",
+      "iceHint": "15 digits, with no spaces.",
+      "phoneHint": "A Moroccan number we can use if we need to confirm your file.",
+      "documentsSection": "Documents",
+      "documentsOptional": "Upload a file only if you have it ready.",
+      "documentHint": "PDF, JPG, or PNG · 10 MB max per file. These stay private to Batiplus.",
+      "optional": "Optional",
+      "chooseFile": "Choose file",
+      "replaceFile": "Replace",
+      "noFile": "No file selected",
+      "fields": {
+        "legalName": "Legal company name",
+        "ice": "ICE",
+        "rcNumber": "RC number",
+        "legalRepresentative": "Legal representative",
+        "phone": "Phone",
+        "address": "Address"
+      },
+      "documents": {
+        "rc": "RC document",
+        "ice": "ICE document",
+        "insurance": "Insurance document",
+        "other": "Other supporting document"
+      },
+      "currentFile": "{name}",
+      "continue": "Continue",
+      "back": "Back",
+      "submit": "Submit for review",
+      "submitting": "Submitting…",
+      "cancel": "Cancel",
+      "backToWorkspace": "Back to workspace",
+      "status": {
+        "draft": "Draft",
+        "pending": "Verification pending",
+        "verified": "Company verified",
+        "rejected": "Changes required"
+      },
+      "pending": {
+        "title": "Your submission is under review",
+        "lead": "Nothing else is needed right now. We’ll update the status in your workspace."
+      },
+      "verified": {
+        "title": "Your company is verified",
+        "lead": "Your profile now shows as verified on Batiplus."
+      },
+      "validation": {
+        "required": "Please complete this field.",
+        "ice": "Enter a valid 15-digit ICE number.",
+        "document": "Choose a PDF, JPG, or PNG file no larger than 10 MB."
+      }
+    }
+  },
+  "legal": {
+    "termsLink": "Terms of Service",
+    "privacyLink": "Privacy Policy",
+    "contactLink": "Contact Batiplus",
+    "terms": {
+      "eyebrow": "Legal",
+      "title": "Terms of Service",
+      "updated": "Last updated: {date}",
+      "updatedDate": "23 September 2026",
+      "intro": "These Terms of Service explain how clients and construction companies may use the Batiplus marketplace in Morocco. By creating an account or using the platform, you agree to these terms.",
+      "tocLabel": "Contents",
+      "footerNote": "Questions about these terms? Reach out through our contact page.",
+      "sections": {
+        "purpose": {
+          "title": "1. Purpose of Batiplus",
+          "paragraphs": [
+            "Batiplus is a two-sided construction marketplace that connects clients who need construction work with verified construction companies and professionals.",
+            "Batiplus provides the platform, tools, and workflows to publish projects, exchange proposals or invitations, unlock messaging after mutual interest, and help parties move toward a deal. Batiplus is an intermediary platform and is not the construction contractor for client projects unless expressly agreed in a separate written contract."
+          ]
+        },
+        "accounts": {
+          "title": "2. Accounts and eligibility",
+          "paragraphs": [
+            "Public signup creates either a client account or a company account. Admin and staff accounts are created only through controlled Batiplus processes.",
+            "You must provide accurate information, keep your login credentials secure, and notify us promptly if you suspect unauthorized access. You are responsible for activity carried out through your account.",
+            "Company accounts may include owner and authorized staff members linked to the same company. Owners remain responsible for actions taken by their staff on Batiplus."
+          ]
+        },
+        "clients": {
+          "title": "3. Client obligations",
+          "paragraphs": [
+            "Clients may publish projects, invite companies, review proposals, open discussions after mutual interest, and select a company for a project.",
+            "Project descriptions must be truthful, lawful, and detailed enough for companies to understand the scope. Clients must not post misleading budgets, fake projects, or content that infringes third-party rights.",
+            "Clients remain solely responsible for choosing a company, negotiating the works contract, site access, permits, and payments under any off-platform construction agreement."
+          ]
+        },
+        "companies": {
+          "title": "4. Company obligations and verification",
+          "paragraphs": [
+            "Companies may browse open projects, submit proposals when eligible, accept invitations, manage a public profile and portfolio, and communicate with clients after chat is unlocked.",
+            "Verification may require legal company details and supporting documents. Providing false ICE, trade register, identity, or verification documents is prohibited and may lead to suspension.",
+            "Unverified companies may be limited from certain marketplace actions, including submitting proposals, until verification requirements are met."
+          ]
+        },
+        "marketplace": {
+          "title": "5. Projects, proposals, and invitations",
+          "paragraphs": [
+            "The project is the center of the marketplace. Clients can receive proposals on open projects or invite a company directly.",
+            "Proposals and invitations must reflect genuine interest and realistic capacity. Companies must not spam, copy another company’s private proposal content, or misrepresent qualifications, pricing, or availability.",
+            "Batiplus may moderate, hide, or remove projects, profiles, or proposals that violate these terms, applicable law, or platform quality rules."
+          ]
+        },
+        "messaging": {
+          "title": "6. Messaging rules",
+          "paragraphs": [
+            "There is no free chat before mutual interest. For open projects, messaging unlocks after a company submits a proposal and the client opens the discussion. For direct invitations, messaging unlocks after the company accepts.",
+            "Messages must relate to the project discussion. Users must not harass others, share illegal content, attempt to bypass platform security, or solicit payment through fraudulent channels."
+          ]
+        },
+        "deals": {
+          "title": "7. Quotes, selection, and deals",
+          "paragraphs": [
+            "Quotes, site visits, final pricing, and selection of a company are part of the marketplace workflow between the client and the company.",
+            "A deal on Batiplus records the commercial outcome needed for platform commission and history. The underlying construction contract between client and company remains their responsibility unless Batiplus expressly becomes a party in writing."
+          ]
+        },
+        "commission": {
+          "title": "8. Commission",
+          "paragraphs": [
+            "Batiplus earns a commission when a company wins a project through the platform. Applicable commission rates and any snapshots shown at deal time govern the amount due.",
+            "Companies agree not to circumvent Batiplus to avoid commission after connecting through the platform for a project. Attempted circumvention may result in account restrictions and recovery of amounts owed."
+          ]
+        },
+        "content": {
+          "title": "9. Content and intellectual property",
+          "paragraphs": [
+            "You retain rights in content you upload, including project briefs, proposals, portfolio images, and profile information. You grant Batiplus a non-exclusive license to host, display, and process that content as needed to operate the marketplace.",
+            "Batiplus branding, software, and platform design remain the property of Batiplus. You may not copy, scrape, or reverse engineer the service except as allowed by law."
+          ]
+        },
+        "prohibited": {
+          "title": "10. Prohibited use",
+          "paragraphs": [
+            "You may not use Batiplus to commit fraud, launder money, discriminate unlawfully, distribute malware, harvest personal data without authorization, impersonate others, or interfere with platform security or other users’ accounts.",
+            "Batiplus may investigate suspected abuse and cooperate with competent authorities when required by law."
+          ]
+        },
+        "liability": {
+          "title": "11. Disclaimers and limitation of liability",
+          "paragraphs": [
+            "Batiplus helps clients and companies discover each other and manage marketplace workflows. We do not guarantee project outcomes, construction quality, timelines, permit approvals, or payment performance between users.",
+            "To the fullest extent permitted by Moroccan law, Batiplus is not liable for indirect damages, lost profits, or disputes arising solely from off-platform construction agreements between clients and companies. Nothing in these terms excludes liability that cannot be limited by law."
+          ]
+        },
+        "termination": {
+          "title": "12. Suspension and termination",
+          "paragraphs": [
+            "You may stop using Batiplus at any time. We may suspend or terminate access if you breach these terms, fail verification checks, create security risk, or misuse the marketplace.",
+            "Provisions that by nature should survive termination—including commission obligations, liability limits, and intellectual property—remain in effect."
+          ]
+        },
+        "changes": {
+          "title": "13. Changes to these terms",
+          "paragraphs": [
+            "We may update these Terms of Service to reflect product, legal, or operational changes. The “Last updated” date at the top of this page will change when we do.",
+            "Continued use of Batiplus after an update means you accept the revised terms, except where mandatory law requires additional consent."
+          ]
+        },
+        "law": {
+          "title": "14. Governing law",
+          "paragraphs": [
+            "These terms are governed by the laws of Morocco. Courts of Morocco have jurisdiction over disputes arising from these terms, without prejudice to mandatory consumer protections that may apply."
+          ]
+        },
+        "contact": {
+          "title": "15. Contact",
+          "paragraphs": [
+            "For questions about these Terms of Service, use the Batiplus contact page. Related information about personal data is described in our Privacy Policy."
+          ]
+        }
+      }
+    },
+    "privacy": {
+      "eyebrow": "Legal",
+      "title": "Privacy Policy",
+      "updated": "Last updated: {date}",
+      "updatedDate": "23 September 2026",
+      "intro": "This Privacy Policy explains what personal data Batiplus collects, why we use it, how we share it, and the rights available to you when you use our construction marketplace in Morocco.",
+      "tocLabel": "Contents",
+      "footerNote": "Questions about privacy? Reach out through our contact page.",
+      "sections": {
+        "who": {
+          "title": "1. Who we are",
+          "paragraphs": [
+            "Batiplus operates a marketplace connecting clients and construction companies. For privacy questions related to the platform, contact us through the Batiplus contact page.",
+            "Depending on the processing activity, Batiplus may act as data controller for account, marketplace, and platform operations data."
+          ]
+        },
+        "data": {
+          "title": "2. Data we collect",
+          "paragraphs": [
+            "Account data: name, email, phone where provided, account type (client or company), authentication data, and onboarding details.",
+            "Company data: public profile information, services, cities served, portfolio content, and verification details such as legal company name, ICE, trade register information, representative identity, and supporting documents when submitted for verification.",
+            "Project and marketplace data: project briefs, proposals, invitations, messages exchanged after unlock, quotes, deal history needed for commission, and related status history.",
+            "Technical data: device and browser information, IP address, approximate location derived from network data, cookies or similar technologies, and logs needed for security and reliability."
+          ]
+        },
+        "use": {
+          "title": "3. How we use data",
+          "paragraphs": [
+            "We use personal data to create and secure accounts, operate the marketplace, match clients and companies, enable messaging after mutual interest, process verification, calculate commission, prevent fraud, provide support, and improve the product.",
+            "We may also send transactional notices about projects, proposals, verification status, and security events. Marketing communications are sent only where allowed and can be stopped where applicable."
+          ]
+        },
+        "legalBasis": {
+          "title": "4. Legal basis",
+          "paragraphs": [
+            "We process personal data as needed to perform the contract for providing the Batiplus service, to comply with legal obligations, to pursue legitimate interests such as platform security and abuse prevention, and where required on the basis of consent.",
+            "Company verification and marketplace integrity may require processing of identification and business documents under these bases."
+          ]
+        },
+        "sharing": {
+          "title": "5. Sharing and public visibility",
+          "paragraphs": [
+            "Public company profiles may show business information intended for clients, such as company name, city, description, services, portfolio, and verification badge. Company phone numbers and email addresses are not shown on the public company profile.",
+            "Clients and companies may see limited counterpart information needed for a project discussion after the relevant marketplace conditions are met. We do not sell personal data.",
+            "We may share data with infrastructure providers (for example hosting, storage, email, or analytics) that process data on our instructions, and with authorities when required by law."
+          ]
+        },
+        "retention": {
+          "title": "6. Retention",
+          "paragraphs": [
+            "We keep personal data only as long as needed for the purposes described in this policy, including account operation, legal compliance, dispute handling, commission history, and security.",
+            "Important marketplace history (for example deal and commission snapshots or status history) may be retained longer where needed for auditability and lawful business records."
+          ]
+        },
+        "security": {
+          "title": "7. Security",
+          "paragraphs": [
+            "We apply technical and organizational measures appropriate to the risk, including access controls, encrypted transport where applicable, and monitoring for abuse.",
+            "No method of transmission or storage is perfectly secure. Please use a strong password and protect access to your devices and email inbox."
+          ]
+        },
+        "rights": {
+          "title": "8. Your rights",
+          "paragraphs": [
+            "Subject to Moroccan Law 09-08 and other applicable rules, you may request access to your personal data, correction of inaccurate data, deletion where appropriate, restriction of certain processing, and information about processing.",
+            "You can update many profile details directly in your account. For other requests, contact us through the contact page. We may ask for information needed to verify your identity before responding."
+          ]
+        },
+        "cookies": {
+          "title": "9. Cookies and similar technologies",
+          "paragraphs": [
+            "Batiplus uses cookies or similar technologies that are necessary to keep you signed in, protect security, and remember basic preferences such as language.",
+            "Where optional analytics or similar tools are used, we will provide additional notice or controls as required."
+          ]
+        },
+        "children": {
+          "title": "10. Children",
+          "paragraphs": [
+            "Batiplus is intended for adults acting as clients or construction professionals. The platform is not directed to children, and we do not knowingly collect personal data from children for marketplace accounts."
+          ]
+        },
+        "changes": {
+          "title": "11. Changes to this policy",
+          "paragraphs": [
+            "We may update this Privacy Policy when our practices or legal requirements change. The “Last updated” date at the top of this page will be revised accordingly.",
+            "If changes are material, we may provide additional notice through the product or by email where appropriate."
+          ]
+        },
+        "contact": {
+          "title": "12. Contact",
+          "paragraphs": [
+            "For privacy requests or questions, use the Batiplus contact page. Platform usage rules are described in our Terms of Service."
+          ]
+        }
+      }
+    }
+  },
+  "project": {
+    "post": "Post a project",
+    "title": "Project title",
+    "description": "Description",
+    "budget": "Budget",
+    "location": "Location",
+    "category": "Category",
+    "submit": "Publish",
+    "empty": "You haven’t posted a project yet.",
+    "browseTitle": "Find projects",
+    "browseLead": "Client requests will appear here. You can then send your proposals."
+  },
+  "proposal": {
+    "send": "Send a proposal",
+    "empty": "No proposals yet."
+  },
+  "company": {
+    "profile": "Company profile",
+    "portfolio": "Portfolio",
+    "invite": "Invite this company",
+    "empty": "No companies found.",
+    "directoryTitle": "Find a company",
+    "directoryLead": "Verified company profiles will be listed here."
+  },
+  "companyDirectory": {
+    "eyebrow": "Company directory",
+    "title": "Find the right company for your project",
+    "lead": "Compare construction companies, their services, experience, and published work across Morocco.",
+    "searchLabel": "Search companies",
+    "searchPlaceholder": "Search companies or services",
+    "filters": "Filters",
+    "closeFilters": "Close filters",
+    "clear": "Clear filters",
+    "city": {
+      "label": "City",
+      "placeholder": "e.g. Casablanca"
+    },
+    "service": {
+      "label": "Service",
+      "all": "All services",
+      "options": {
+        "houseConstruction": "House construction",
+        "renovation": "Renovation",
+        "structural": "Structural work",
+        "finishing": "Finishing work",
+        "architecture": "Architecture",
+        "interior": "Interior design",
+        "electrical": "Electrical",
+        "plumbing": "Plumbing",
+        "joinery": "Joinery",
+        "pool": "Pools"
+      }
+    },
+    "verifiedOnly": "Verified companies only",
+    "sort": {
+      "label": "Sort by",
+      "relevance": "Best match",
+      "newest": "Newest first",
+      "oldest": "Oldest first"
+    },
+    "resultsLabel": "Company search results",
+    "loadedCount": "{count, plural, =0 {No companies loaded} one {# company loaded} other {# companies loaded}}",
+    "loading": "Loading companies…",
+    "loadingMore": "Loading more companies…",
+    "loadMore": "Load more",
+    "empty": "No companies match your search.",
+    "emptyLead": "Try another term or clear the filters to see more companies.",
+    "verified": "Verified",
+    "years": "{count, plural, =0 {New company} one {# year of experience} other {# years of experience}}",
+    "viewProfile": "View profile",
+    "openInNewWindow": "Open profile in a new window",
+    "closeProfile": "Close profile",
+    "about": "About",
+    "profileLoading": "Loading profile…",
+    "coverAlt": "Construction work by {name}",
+    "logoAlt": "{name} logo",
+    "portfolioPreview": "Published work",
+    "portfolioAlt": "Published work: {title}",
+    "portfolioFallback": "No published work yet.",
+    "portfolioCount": "{count, plural, =0 {No published work} one {# published project} other {# published projects shown}}"
+  },
+  "companyProfileManager": {
+    "eyebrow": "Company workspace",
+    "title": "Manage company profile",
+    "lead": "Update the public information clients see when they discover your company.",
+    "back": "Back to workspace",
+    "viewPublicProfile": "See public view",
+    "loading": "Loading your company profile…",
+    "success": "Company profile updated.",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "save": "Save changes",
+    "badge": {
+      "verified": "Verified"
+    },
+    "sidebar": {
+      "stats": "Company stats",
+      "years": "Years",
+      "founded": "Founded",
+      "team": "Team",
+      "contact": "Contact",
+      "verifications": "Verifications",
+      "verifyAction": "Complete verification"
+    },
+    "overview": {
+      "title": "Overview",
+      "lead": "Describe your company, expertise, and the type of projects you deliver."
+    },
+    "portfolio": {
+      "title": "Portfolio",
+      "lead": "Show clients the work your company has completed.",
+      "body": "Add and manage portfolio projects so clients can review your past construction work.",
+      "manage": "Manage portfolio"
+    },
+    "branding": {
+      "title": "Logo and cover",
+      "lead": "Use clear, recent images that represent your company.",
+      "logo": "Company logo",
+      "logoAlt": "Selected company logo",
+      "replaceLogo": "Replace logo",
+      "uploadLogo": "Upload logo",
+      "logoHelp": "JPG, PNG, or WebP · 5 MB maximum.",
+      "cover": "Cover image",
+      "coverAlt": "Selected company cover image",
+      "replaceCover": "Replace cover",
+      "uploadCover": "Upload cover",
+      "coverHelp": "JPG, PNG, or WebP · 10 MB maximum. A wide image works best."
+    },
+    "information": {
+      "title": "Company information",
+      "lead": "Keep the contact details shown to clients accurate."
+    },
+    "experience": {
+      "title": "Experience and team",
+      "lead": "Help clients understand your company’s background and capacity."
+    },
+    "services": {
+      "title": "Services",
+      "lead": "Select every service your company currently provides."
+    },
+    "serviceAreas": {
+      "title": "Service areas",
+      "lead": "Select the cities where your team can take on work."
+    },
+    "fields": {
+      "name": "Company name",
+      "city": "Main city",
+      "description": "Short description",
+      "website": "Website — optional",
+      "websitePlaceholder": "https://example.com",
+      "phone": "Public phone",
+      "phonePlaceholder": "06 12 34 56 78",
+      "yearsExperience": "Years of experience — optional",
+      "foundedYear": "Founded year — optional",
+      "companySize": "Company size",
+      "companySizePlaceholder": "Select a company size",
+      "languages": "Languages",
+      "services": "Company services",
+      "serviceAreas": "Cities served"
+    },
+    "companySize": {
+      "solo": "Self-employed",
+      "2to10": "2–10 people",
+      "11to50": "11–50 people",
+      "51to200": "51–200 people",
+      "201plus": "201+ people"
+    },
+    "languages": {
+      "arabic": "Arabic",
+      "french": "French",
+      "english": "English",
+      "amazigh": "Amazigh",
+      "spanish": "Spanish"
+    },
+    "serviceOptions": {
+      "houseConstruction": "House construction",
+      "renovation": "Renovation",
+      "structural": "Structural work",
+      "finishing": "Finishing work",
+      "architecture": "Architecture",
+      "interior": "Interior design",
+      "electrical": "Electrical",
+      "plumbing": "Plumbing",
+      "joinery": "Joinery",
+      "pool": "Pools"
+    },
+    "serviceAreaOptions": {
+      "agadir": "Agadir",
+      "casablanca": "Casablanca",
+      "fes": "Fez",
+      "marrakech": "Marrakesh",
+      "meknes": "Meknes",
+      "oujda": "Oujda",
+      "rabat": "Rabat",
+      "sale": "Salé",
+      "tangier": "Tangier",
+      "tetouan": "Tetouan"
+    },
+    "legal": {
+      "title": "Legal verification",
+      "lead": "Review the information currently held for company verification.",
+      "notice": "Legal information and verification status cannot be edited here. Batiplus reviews changes to these details separately.",
+      "notProvided": "Not provided",
+      "documentsLabel": "Submitted documents",
+      "noDocuments": "No verification documents have been submitted.",
+      "documentTypes": {
+        "rc": "Trade register",
+        "ice": "ICE document",
+        "insurance": "Insurance",
+        "other": "Other document"
+      },
+      "fields": {
+        "legalName": "Legal company name",
+        "ice": "ICE",
+        "rcNumber": "Trade register (RC)",
+        "legalRepresentative": "Legal representative",
+        "legalPhone": "Verification phone",
+        "address": "Legal address"
+      }
+    },
+    "verificationStatus": {
+      "draft": "Verification not submitted",
+      "pending": "Verification in review",
+      "verified": "Company verified",
+      "rejected": "Verification needs changes"
+    },
+    "validation": {
+      "name": "Enter a valid company name.",
+      "description": "Enter a description between 20 and 1,000 characters.",
+      "city": "Enter a valid city.",
+      "phone": "Enter a valid Moroccan phone number.",
+      "services": "Select at least one service.",
+      "serviceAreas": "Select at least one service area.",
+      "languages": "Select at least one language.",
+      "companySize": "Select your company size."
+    }
+  },
+  "publicCompany": {
+    "coverAlt": "Cover image for {name}",
+    "logoAlt": "{name} logo",
+    "verified": "Verified company",
+    "invite": "Invite to a project",
+    "quote": "Request a quote",
+    "ctaSoon": "This action will be available soon.",
+    "overview": "Overview",
+    "stats": "Company stats",
+    "statYears": "Years experience",
+    "statFounded": "Year founded",
+    "statTeam": "Team size",
+    "services": "Services",
+    "experience": "Experience",
+    "years": "{count, plural, =0 {Less than one year} one {# year} other {# years}}",
+    "foundedYear": "Founded",
+    "companySizeLabel": "Company size",
+    "languages": "Languages",
+    "serviceAreas": "Service areas",
+    "verifications": "Verifications",
+    "verificationVerified": "Company: Verified",
+    "verificationPending": "Company: Not verified",
+    "companySize": {
+      "solo": "Self-employed",
+      "2to10": "2–10 people",
+      "11to50": "11–50 people",
+      "51to200": "51–200 people",
+      "201plus": "201+ people"
+    },
+    "companySizeShort": {
+      "solo": "1",
+      "2to10": "2–10",
+      "11to50": "11–50",
+      "51to200": "51–200",
+      "201plus": "201+"
+    },
+    "language": {
+      "arabic": "Arabic",
+      "french": "French",
+      "english": "English",
+      "amazigh": "Amazigh",
+      "spanish": "Spanish"
+    },
+    "serviceArea": {
+      "agadir": "Agadir",
+      "casablanca": "Casablanca",
+      "fes": "Fez",
+      "marrakech": "Marrakesh",
+      "meknes": "Meknes",
+      "oujda": "Oujda",
+      "rabat": "Rabat",
+      "sale": "Salé",
+      "tangier": "Tangier",
+      "tetouan": "Tetouan"
+    },
+    "website": "Website",
+    "visitWebsite": "Visit website",
+    "notSpecified": "Not provided",
+    "portfolioEyebrow": "Portfolio",
+    "portfolioTitle": "Portfolio",
+    "portfolioTitleCount": "Portfolio ({count})",
+    "portfolioEmpty": "This company has not published completed work yet.",
+    "projectImageAlt": "Completed work: {title}",
+    "service": {
+      "houseConstruction": "House construction",
+      "renovation": "Renovation",
+      "structural": "Structural work",
+      "finishing": "Finishing work",
+      "architecture": "Architecture",
+      "interior": "Interior design",
+      "electrical": "Electrical",
+      "plumbing": "Plumbing",
+      "joinery": "Joinery",
+      "pool": "Pools"
+    },
+    "projectType": {
+      "construction": "Construction",
+      "renovation": "Renovation",
+      "structural": "Structural work",
+      "finishing": "Finishing work",
+      "interior": "Interior",
+      "exterior": "Exterior",
+      "other": "Other"
+    }
+  },
+  "portfolioManager": {
+    "eyebrow": "Company workspace",
+    "title": "Your portfolio",
+    "lead": "Showcase your best completed work on your public profile.",
+    "viewProfile": "View public profile",
+    "add": "Add completed work",
+    "listTitle": "Portfolio projects",
+    "empty": "Add your first completed project.",
+    "imageAlt": "Photo of {title}",
+    "previewAlt": "Selected cover image preview",
+    "edit": "Edit",
+    "publish": "Publish",
+    "archive": "Archive",
+    "addTitle": "Add completed work",
+    "editTitle": "Edit completed work",
+    "formLead": "Add only the essential details for now.",
+    "cancel": "Cancel",
+    "optional": "optional",
+    "coverRequired": "Add a cover image.",
+    "tooManyImages": "You can add up to {count} extra photos.",
+    "imageHelp": "JPG, PNG, or WebP · 10 MB maximum · {count} extra photos.",
+    "saving": "Saving…",
+    "saveDraft": "Save",
+    "successCreated": "Completed work saved as a draft.",
+    "successUpdated": "Completed work updated.",
+    "successPublished": "Completed work published.",
+    "successArchived": "Completed work archived.",
+    "status": {
+      "draft": "Draft",
+      "published": "Published",
+      "hidden": "Archived"
+    },
+    "projectType": {
+      "construction": "Construction",
+      "renovation": "Renovation",
+      "structural": "Structural work",
+      "finishing": "Finishing work",
+      "interior": "Interior",
+      "exterior": "Exterior",
+      "other": "Other"
+    },
+    "fields": {
+      "title": "Title",
+      "description": "Description",
+      "city": "City",
+      "projectType": "Project type",
+      "surface": "Surface (m²) — optional",
+      "duration": "Duration (months) — optional",
+      "year": "Year — optional",
+      "cover": "Cover image {optional}",
+      "extra": "Extra photos — optional"
+    }
+  },
+  "projectWizard": {
+    "loading": "Loading your project draft…",
+    "progress": "Step {current} of {total}",
+    "progressReview": "Review your project",
+    "progressComplete": "Project submitted",
+    "draftSaved": "Your draft has been saved.",
+    "saving": "Saving…",
+    "uploading": "Uploading files…",
+    "autosaveHint": "Saved after each step",
+    "back": "Back",
+    "continue": "Continue",
+    "reviewProject": "Review project",
+    "saveAndExit": "Save and exit",
+    "publishing": "Publishing…",
+    "publish": "Publish project",
+    "edit": "Edit",
+    "optional": "optional",
+    "remove": "Remove",
+    "notProvided": "Not provided",
+    "steps": {
+      "1": {
+        "eyebrow": "Project type",
+        "title": "What do you need done?",
+        "lead": "Choose the option that best describes your project."
+      },
+      "2": {
+        "eyebrow": "Location",
+        "title": "Where is your project?",
+        "lead": "We only need the city and, optionally, the neighborhood."
+      },
+      "3": {
+        "eyebrow": "Project details",
+        "title": "Tell us about your project",
+        "lead": "A clear title and short description help companies understand your needs."
+      },
+      "4": {
+        "eyebrow": "Budget",
+        "title": "What is your estimated budget?",
+        "lead": "A range is enough. Choose “I don’t know yet” if you need guidance."
+      },
+      "5": {
+        "eyebrow": "Timeline",
+        "title": "When would you like to start?",
+        "lead": "Choose the closest option. You can stay flexible."
+      },
+      "6": {
+        "eyebrow": "Review",
+        "title": "Review your project",
+        "lead": "Check everything before publishing. You can edit any section."
+      }
+    },
+    "validation": {
+      "category": "Choose a project category.",
+      "customCategory": "Describe the work in at least 3 characters.",
+      "city": "Choose a valid city.",
+      "title": "Enter a title of at least 5 characters.",
+      "propertyType": "Choose a property type.",
+      "surface": "Enter a positive surface or select “I don’t know”.",
+      "description": "Describe your project in at least 20 characters.",
+      "budget": "Choose a budget range.",
+      "timeline": "Choose a timeline.",
+      "image": "Choose JPG, PNG, or WebP images of 10 MB or less.",
+      "document": "Choose PDF documents of 15 MB or less."
+    },
+    "fields": {
+      "customCategory": "Another type of work",
+      "customCategoryPlaceholder": "Describe the type of work",
+      "city": "City",
+      "cityPlaceholder": "Choose a city",
+      "neighborhood": "Neighborhood or area",
+      "title": "Project title",
+      "titlePlaceholder": "For example: Renovate a 120 m² apartment",
+      "propertyType": "Property type",
+      "propertyTypePlaceholder": "Choose a property type",
+      "surface": "Surface in m²",
+      "surfaceUnknown": "I don’t know the surface yet",
+      "description": "Description",
+      "descriptionPlaceholder": "Tell companies what you want to build, renovate, or change."
+    },
+    "locationPrivacy": "Do not enter your exact address. It can be shared later for a site visit.",
+    "categoryOptions": {
+      "houseConstruction": "Build a house / villa",
+      "buildingConstruction": "Build a building",
+      "renovation": "Renovation",
+      "interior": "Interior work",
+      "structural": "Structural work",
+      "finishing": "Finishing work",
+      "architecture": "Architecture",
+      "pool": "Swimming pool",
+      "electrical": "Electrical work",
+      "plumbing": "Plumbing",
+      "painting": "Painting",
+      "other": "Other"
+    },
+    "cityOptions": {
+      "agadir": "Agadir",
+      "casablanca": "Casablanca",
+      "fes": "Fez",
+      "marrakech": "Marrakech",
+      "meknes": "Meknes",
+      "oujda": "Oujda",
+      "rabat": "Rabat",
+      "sale": "Salé",
+      "tangier": "Tangier",
+      "tetouan": "Tetouan"
+    },
+    "propertyTypeOptions": {
+      "house": "Villa / house",
+      "apartment": "Apartment",
+      "building": "Building",
+      "office": "Office",
+      "shop": "Shop",
+      "land": "Land",
+      "other": "Other"
+    },
+    "budgetOptions": {
+      "under_50000": "Under 50,000 MAD",
+      "50000_100000": "50,000–100,000 MAD",
+      "100000_250000": "100,000–250,000 MAD",
+      "250000_500000": "250,000–500,000 MAD",
+      "500000_1000000": "500,000–1,000,000 MAD",
+      "1000000_plus": "1,000,000+ MAD",
+      "unknown": "I don’t know yet"
+    },
+    "timelineOptions": {
+      "asap": "As soon as possible",
+      "within_1_month": "Within 1 month",
+      "one_to_three_months": "1–3 months",
+      "three_to_six_months": "3–6 months",
+      "six_plus_months": "More than 6 months",
+      "flexible": "Flexible"
+    },
+    "files": {
+      "imagesTitle": "Public project images",
+      "imagesHelp": "Up to 8 JPG, PNG, or WebP images, 10 MB each.",
+      "chooseImages": "Choose images",
+      "existingImageAlt": "Uploaded project image",
+      "previewAlt": "Selected project image {number}",
+      "removeImage": "Remove selected image {number}",
+      "documentsTitle": "Private plans and documents",
+      "documentsHelp": "Up to 6 PDF files, 15 MB each. These files are not public.",
+      "chooseDocuments": "Choose PDF documents"
+    },
+    "review": {
+      "eyebrow": "Final review",
+      "title": "Review your project",
+      "lead": "Edit any section before publishing. Your project will be reviewed before companies can see it.",
+      "category": "Project type",
+      "location": "Location",
+      "projectTitle": "Title",
+      "propertyType": "Property type",
+      "surface": "Surface",
+      "description": "Description",
+      "details": "Details",
+      "budget": "Budget",
+      "timeline": "Timeline",
+      "files": "Files",
+      "fileCount": "{images} images · {documents} documents"
+    },
+    "success": {
+      "title": "Your project has been submitted for review.",
+      "lead": "Batiplus will review it before companies can see it. You are being redirected to your client area.",
+      "action": "Go to client area",
+      "toast": "Project submitted for review."
+    }
+  },
+  "clientProjects": {
+    "eyebrow": "Client workspace",
+    "title": "My projects",
+    "lead": "Track your project drafts, submissions, and current status.",
+    "manageProfile": "Manage my profile",
+    "sectionTitle": "Your projects",
+    "newProject": "Post a project",
+    "empty": {
+      "title": "You haven’t posted a project yet.",
+      "description": "Start with a few simple questions. You can save your draft and continue later.",
+      "action": "Post a project"
+    },
+    "untitled": "Untitled project",
+    "locationPending": "Location not added yet",
+    "notProvided": "Not provided",
+    "budget": "Budget",
+    "timeline": "Timeline",
+    "submitted": "Submitted {date}",
+    "updated": "Updated {date}",
+    "continueProject": "Continue project",
+    "fillDraft": "Fill in draft",
+    "viewProject": "View project",
+    "draftHint": "Add details to your draft",
+    "draftBadge": "Draft project",
+    "reviewHint": "Waiting for Batiplus review",
+    "openCardMenu": "Open project actions",
+    "gridView": "Grid view",
+    "listView": "List view",
+    "carouselLabel": "Your projects",
+    "previousProjects": "Show previous projects",
+    "nextProjects": "Show more projects",
+    "statusSummaryLabel": "Project status summary",
+    "statusAccessible": "Project status: {status}",
+    "status": {
+      "draft": "Draft",
+      "pending_review": "Pending review",
+      "needs_changes": "Needs changes",
+      "published": "Published",
+      "in_discussion": "In discussion",
+      "company_selected": "Company selected",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "archived": "Archived"
+    },
+    "statusDescription": {
+      "pending_review": "Your project has been submitted and is waiting for Batiplus review. Companies cannot see it yet.",
+      "needs_changes": "Batiplus requested changes before this project can be published. Review the reason in the status history below."
+    },
+    "detailsEyebrow": "Project details",
+    "backToProjects": "Back to my projects",
+    "loadingDetails": "Loading project details…",
+    "notFoundTitle": "Project unavailable",
+    "images": "Project images",
+    "imageAlt": "Project image {number} for {title}",
+    "description": "Description",
+    "documents": "Private documents",
+    "documentsPrivate": "These document details are visible only to authorized viewers.",
+    "fileSizeKb": "{count} KB",
+    "summary": "Project summary",
+    "category": "Category",
+    "location": "Location",
+    "propertyType": "Property type",
+    "surface": "Surface",
+    "surfaceUnknown": "I don’t know yet",
+    "createdLabel": "Created",
+    "submittedLabel": "Submitted",
+    "history": {
+      "title": "Status history",
+      "transition": "{from} → {to}",
+      "meta": "{date} · {actor}",
+      "actor": {
+        "client": "Client",
+        "staff": "Batiplus team"
+      }
+    }
+  },
+  "clientDashboard": {
+    "eyebrow": "Client dashboard",
+    "greeting": {
+      "morning": "Good morning, {name}",
+      "afternoon": "Good afternoon, {name}",
+      "evening": "Good evening, {name}"
+    },
+    "fallbackName": "there",
+    "lead": "Manage your construction projects and find the right companies from one place.",
+    "postProject": "Post a project",
+    "setup": {
+      "eyebrow": "Account readiness",
+      "title": "Your account is ready",
+      "manage": "Manage profile",
+      "profile": {
+        "title": "Profile completed",
+        "description": "Your essential client information is ready for project activity."
+      },
+      "phone": {
+        "title": "Phone added",
+        "description": "Your private contact number is saved securely on your account."
+      }
+    },
+    "overview": {
+      "title": "Overview",
+      "count": "{count, plural, one {# project} other {# projects}} in your workspace",
+      "empty": "Start your first project and continue whenever you are ready."
+    },
+    "postCard": {
+      "title": "Post a project",
+      "description": "Tell us what you need and connect with qualified construction companies."
+    }
+  },
+  "clientProfileManager": {
+    "eyebrow": "Client workspace",
+    "settingsTitle": "Settings",
+    "settingsNav": "Account settings",
+    "myInfo": "My info",
+    "accountTypeLead": "This is a client account",
+    "edit": "Edit",
+    "title": "My Info",
+    "lead": "Keep your account details up to date for trust and future project activity.",
+    "back": "Back to workspace",
+    "loading": "Loading your profile…",
+    "success": "Profile updated.",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "save": "Save changes",
+    "account": {
+      "title": "Account",
+      "role": "Client"
+    },
+    "photo": {
+      "title": "Profile photo",
+      "lead": "Optional. A clear photo helps companies recognize you.",
+      "alt": "Your profile photo",
+      "upload": "Upload photo",
+      "replace": "Replace photo",
+      "remove": "Remove photo",
+      "help": "JPG, PNG, or WebP · 5 MB maximum."
+    },
+    "personal": {
+      "title": "Personal information",
+      "lead": "Your name and city appear in a limited form to companies later."
+    },
+    "contact": {
+      "title": "Contact details",
+      "lead": "Phone is private. Email is managed by your sign-in account.",
+      "emailHelp": "Email cannot be changed here."
+    },
+    "activity": {
+      "title": "Account activity",
+      "lead": "These numbers come from your projects and cannot be edited.",
+      "joined": "Member since",
+      "projectsPosted": "Projects posted",
+      "projectsCompleted": "Completed projects"
+    },
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "phonePlaceholder": "06 12 34 56 78",
+      "city": "City",
+      "email": "Email"
+    },
+    "validation": {
+      "firstName": "Enter a valid first name.",
+      "lastName": "Enter a valid last name.",
+      "phone": "Enter a valid Moroccan phone number.",
+      "city": "Enter a valid city."
+    }
+  },
+  "projectDiscovery": {
+    "loading": "Loading available projects…",
+    "emptyTitle": "No projects are available yet.",
+    "emptyDescription": "New client projects will appear here after review."
+  },
+  "browseProjectsPage": {
+    "eyebrow": "Marketplace",
+    "title": "Browse projects",
+    "lead": "Explore published construction requests from clients across Morocco.",
+    "searchLabel": "Search projects",
+    "searchPlaceholder": "Search by title, city, or category",
+    "clearSearch": "Clear search",
+    "filters": "Filters",
+    "closeFilters": "Close filters",
+    "clearFilters": "Clear filters",
+    "categoryFilter": "Category",
+    "cityFilter": "City",
+    "allCategories": "All categories",
+    "allCities": "All cities",
+    "resultsLabel": "Project results",
+    "resultsCount": "{count, plural, =0 {No projects} one {# project} other {# projects}}",
+    "loading": "Loading projects…",
+    "emptyTitle": "No matching projects",
+    "emptyLead": "Try another search or clear your filters. New client projects appear here after review.",
+    "openAria": "Open project: {title}",
+    "posted": "Posted {date}",
+    "viewProject": "View project",
+    "previewTitle": "Project details",
+    "closePreview": "Close project details",
+    "ctaTitle": "Interested in this project?",
+    "ctaGuestLead": "Sign up as a company to submit a proposal when you’re verified and eligible.",
+    "ctaGuestAction": "Create a company account",
+    "ctaSignIn": "Log in",
+    "ctaCompanyLead": "Open your company workspace to review this project and continue the proposal flow.",
+    "ctaCompanyAction": "Go to Find projects"
+  },
+  "messages": {
+    "title": "Messages",
+    "searchConversations": "Search conversations",
+    "searchConversationsPlaceholder": "Search conversations",
+    "unread": "Unread",
+    "favorites": "Favorites",
+    "projects": "Projects",
+    "allProjects": "All projects",
+    "searchProjects": "Search projects",
+    "noProjectResults": "No results found",
+    "untitledProject": "Untitled project",
+    "conversationsEmpty": "Your conversations will appear here after a client and company open a discussion.",
+    "noMatchingConversations": "No conversations match these filters.",
+    "welcomeTitle": "Welcome to Messages",
+    "welcomeLead": "Once you and a company show mutual interest on a project, you’ll be able to chat here.",
+    "welcomeLeadCompany": "Once a client opens a discussion after your proposal or invitation, you’ll be able to chat here.",
+    "ctaClient": "Find companies",
+    "ctaCompany": "Find projects",
+    "allMessages": "All messages",
+    "openMenu": "Open message filters",
+    "sidebarLabel": "Conversations",
+    "threadPane": "Message",
+    "loading": "Loading messages…",
+    "emptyDescription": "Your conversations will appear here after a client and company open a discussion.",
+    "selectConversation": "Select a conversation to read and reply.",
+    "unknownParty": "Batiplus member",
+    "noMessagesYet": "No messages yet",
+    "viewCompanyProfile": "View company profile",
+    "loadOlder": "Load older messages",
+    "loadingOlder": "Loading older messages…",
+    "startConversation": "Discussion opened",
+    "startConversationDescription": "Send the first message about this project.",
+    "composerLabel": "Message",
+    "composerPlaceholder": "Write a message…",
+    "send": "Send",
+    "sending": "Sending…",
+    "characterCount": "{count} / {max}",
+    "statusActive": "Active",
+    "statusClosed": "Closed",
+    "backToConversations": "Back to conversations",
+    "closedNotice": "This conversation is closed and no longer accepts new messages."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "You have no notifications."
+  },
+  "adminDashboard": {
+    "sampleNote": "Visual preview. These figures are not connected to Batiplus data yet.",
+    "searchLabel": "Quick search",
+    "searchPlaceholder": "Quick search",
+    "openSidebar": "Open navigation",
+    "closeSidebar": "Close navigation",
+    "sidebarLabel": "Administration navigation",
+    "navHome": "Home",
+    "navProjects": "Projects",
+    "navCompanies": "Companies",
+    "navVerification": "Verification",
+    "navMessages": "Messages",
+    "navDeals": "Deals",
+    "navReviews": "Reviews",
+    "navProfile": "Profile",
+    "navSupport": "Support",
+    "navSettings": "Settings",
+    "soon": "Coming soon",
+    "noNavResults": "No results",
+    "breadcrumbLabel": "Breadcrumb",
+    "team": "Batiplus team",
+    "area": "Administration",
+    "filters": "Filters",
+    "filtersTitle": "Visible channels",
+    "newCampaign": "New campaign",
+    "title": "Dashboard",
+    "range7": "Last 7 days",
+    "range30": "Last 30 days",
+    "range90": "Last 90 days",
+    "rangeYear": "This year",
+    "rangeLabel": "Period",
+    "spend": "Ad spend",
+    "impressions": "Impressions",
+    "conversions": "Conversions",
+    "cpc": "Cost per click",
+    "deltaUp": "up {value}",
+    "deltaDown": "down {value}",
+    "funnelTitle": "Acquisition funnel",
+    "visits": "Visits",
+    "signups": "Sign-ups",
+    "trials": "Trials",
+    "customers": "Customers",
+    "spendByChannel": "Spend by channel",
+    "paidSearchShare": "Paid search",
+    "paidSearch": "Paid search",
+    "paidSocial": "Paid social",
+    "emailChannel": "Email",
+    "affiliates": "Affiliates",
+    "channels": "Channels",
+    "campaigns": "Campaigns",
+    "landingPages": "Landing pages",
+    "sessions": "Sessions",
+    "googleAds": "Google Ads",
+    "meta": "Meta",
+    "xAds": "X Ads",
+    "linkedin": "LinkedIn",
+    "email": "Email",
+    "adSpend": "Ad spend",
+    "roas": "ROAS {value}",
+    "visitors": "Visitors",
+    "adSpendTotal": "Ad spend total",
+    "roasAverage": "ROAS average",
+    "organic": "Organic",
+    "paid": "Paid",
+    "social": "Social",
+    "chartSummarySpend": "Monthly ad spend. The displayed total is {total}.",
+    "chartSummaryVisitors": "Monthly visitors split across organic, paid, and social. The displayed total is {total}.",
+    "barLabel": "{month}: {value}",
+    "campaignName": "Campaign name",
+    "campaignChannel": "Channel",
+    "cancel": "Cancel",
+    "createCampaign": "Create campaign",
+    "campaignCreated": "Campaign added to the preview. It is not saved yet.",
+    "close": "Close",
+    "dialogTitle": "New campaign",
+    "landingHome": "Home",
+    "landingCompanies": "Companies",
+    "landingProject": "Post a project",
+    "landingSignIn": "Sign in",
+    "landingJournal": "Journal",
+    "campaignRequired": "Enter a campaign name.",
+    "accountFallback": "Administrator",
+    "footerTeam": "Batiplus team"
+  },
+  "adminVerification": {
+    "metaTitle": "Company verification",
+    "metaDescription": "Review company verification submissions.",
+    "title": "Verification",
+    "lead": "Review pending company verification submissions and approve or reject them.",
+    "tabsLabel": "Verification status",
+    "tabs": {
+      "pending": "Pending",
+      "verified": "Verified",
+      "rejected": "Rejected"
+    },
+    "status": {
+      "draft": "Draft",
+      "pending": "Pending",
+      "verified": "Verified",
+      "rejected": "Rejected"
+    },
+    "searchLabel": "Search companies",
+    "searchPlaceholder": "Search by company name",
+    "cityLabel": "City",
+    "cityPlaceholder": "City",
+    "empty": "No verification submissions in this tab.",
+    "columns": {
+      "company": "Company",
+      "city": "City",
+      "ice": "ICE",
+      "rc": "RC",
+      "representative": "Legal representative",
+      "submitted": "Submitted",
+      "documents": "Documents",
+      "status": "Status",
+      "action": "Action"
+    },
+    "review": "Review",
+    "reviewTitle": "Verification review",
+    "loadingReview": "Loading…",
+    "close": "Close",
+    "notFound": "This verification could not be found.",
+    "submittedAt": "Submitted {date}",
+    "sections": {
+      "public": "Public company profile",
+      "legal": "Legal information",
+      "documents": "Documents",
+      "rejection": "Latest rejection reason",
+      "history": "Verification history",
+      "actions": "Review actions"
+    },
+    "fields": {
+      "company": "Company name",
+      "city": "City",
+      "description": "Description",
+      "publicPhone": "Public phone",
+      "legalName": "Legal company name",
+      "ice": "ICE",
+      "rc": "RC number",
+      "representative": "Legal representative",
+      "phone": "Phone",
+      "address": "Address"
+    },
+    "noDocuments": "No documents were uploaded.",
+    "documentTypes": {
+      "rc": "RC",
+      "ice": "ICE",
+      "insurance": "Insurance",
+      "other": "Other"
+    },
+    "openDocument": "Open",
+    "documentUnavailable": "Unavailable",
+    "historyEmpty": "No history yet.",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectReason": "Rejection reason",
+    "confirmApprove": "Confirm approval",
+    "confirmApproveLead": "Approve this company verification?",
+    "confirmReject": "Confirm rejection",
+    "cancel": "Cancel",
+    "approved": "Company verification approved.",
+    "rejected": "Company verification rejected."
+  },
+  "adminProjects": {
+    "metaTitle": "Project review",
+    "metaDescription": "Review client projects submitted to Batiplus.",
+    "title": "Projects",
+    "lead": "Review client projects before they become available to companies.",
+    "tabsLabel": "Project review status",
+    "tabs": {
+      "pending_review": "Pending review",
+      "published": "Published",
+      "needs_changes": "Needs changes",
+      "cancelled": "Cancelled",
+      "all": "All"
+    },
+    "status": {
+      "all": "All",
+      "draft": "Draft",
+      "pending_review": "Pending review",
+      "needs_changes": "Needs changes",
+      "published": "Published",
+      "in_discussion": "In discussion",
+      "company_selected": "Company selected",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "archived": "Archived"
+    },
+    "searchLabel": "Search projects",
+    "searchPlaceholder": "Search by project title",
+    "cityLabel": "City",
+    "allCities": "All cities",
+    "statusFilterLabel": "Status",
+    "empty": "No projects match these filters.",
+    "columns": {
+      "project": "Project",
+      "client": "Client",
+      "city": "City",
+      "category": "Category",
+      "budget": "Budget",
+      "submitted": "Submitted",
+      "status": "Status",
+      "action": "Action"
+    },
+    "review": "Review",
+    "reviewTitle": "Project review",
+    "loadingReview": "Loading…",
+    "close": "Close",
+    "notFound": "This project could not be found.",
+    "submittedAt": "Submitted {date}",
+    "sections": {
+      "project": "Project details",
+      "history": "Project history",
+      "timeline": "Marketplace timeline",
+      "actions": "Review actions"
+    },
+    "fields": {
+      "title": "Project title",
+      "client": "Client",
+      "category": "Category",
+      "location": "Location",
+      "propertyType": "Property type",
+      "surface": "Surface",
+      "description": "Description",
+      "budget": "Budget",
+      "timeline": "Timeline",
+      "status": "Current status"
+    },
+    "surfaceUnknown": "Not specified",
+    "historyEmpty": "No project history yet.",
+    "activity": {
+      "loading": "Loading marketplace timeline…",
+      "empty": "No marketplace activity has been recorded for this project yet.",
+      "byActor": "{actor} ({type})",
+      "company": "Company: {company}",
+      "statusTransition": "{oldStatus} → {newStatus}",
+      "reason": "Reason: {reason}",
+      "actorType": {
+        "client": "Client",
+        "company": "Company",
+        "admin": "Admin"
+      },
+      "status": {
+        "draft": "Draft",
+        "pending_review": "Pending review",
+        "needs_changes": "Needs changes",
+        "published": "Published",
+        "submitted": "Submitted",
+        "viewed": "Viewed",
+        "shortlisted": "Shortlisted",
+        "discussion_open": "Discussion open",
+        "invited": "Invited",
+        "accepted": "Accepted",
+        "scheduled": "Scheduled",
+        "declined": "Declined",
+        "proposed": "Proposed",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "due": "Due",
+        "paid": "Paid"
+      },
+      "events": {
+        "project_created": "Project created",
+        "project_submitted": "Project submitted for review",
+        "project_approved": "Project approved and published",
+        "project_needs_changes": "Project changes requested",
+        "initial_quote_submitted": "Initial quote submitted",
+        "quote_viewed": "Initial quote viewed",
+        "quote_shortlisted": "Initial quote shortlisted",
+        "quote_declined": "Initial quote declined",
+        "discussion_opened": "Discussion opened",
+        "site_assessment_invited": "Site assessment invitation sent",
+        "site_assessment_accepted": "Site assessment accepted",
+        "site_assessment_declined": "Site assessment declined",
+        "site_assessment_cancelled": "Site assessment cancelled",
+        "site_visit_scheduled": "Site visit scheduled",
+        "site_visit_proposed": "Site visit proposed",
+        "site_visit_confirmed": "Site visit confirmed",
+        "site_visit_completed": "Site visit completed",
+        "site_visit_cancelled": "Site visit cancelled",
+        "final_quote_submitted": "Final quote submitted",
+        "company_selected": "Company selected",
+        "deal_created": "Deal created",
+        "deal_completed": "Deal completed",
+        "commission_due": "Commission due",
+        "commission_paid": "Commission paid"
+      }
+    },
+    "approve": "Approve",
+    "requestChanges": "Request changes",
+    "cancelProject": "Cancel project",
+    "confirmApproveLead": "Publish this project and make it available to companies?",
+    "confirmApprove": "Confirm approval",
+    "changesReason": "Required changes",
+    "confirmChanges": "Send change request",
+    "cancelReason": "Cancellation reason",
+    "confirmCancelProject": "Confirm cancellation",
+    "cancel": "Cancel",
+    "approved": "Project approved and published.",
+    "changesRequested": "Changes requested from the client.",
+    "cancelled": "Project cancelled."
+  },
+  "adminAccess": {
+    "metaTitle": "Administration",
+    "metaDescription": "Secure Batiplus administration access.",
+    "navLabel": "Administration",
+    "eyebrow": "Secure administration",
+    "title": "Admin area is ready.",
+    "lead": "Authentication and role checks are active. Operational dashboards will be added in later steps.",
+    "verified": "Access verified",
+    "signedInAs": "Signed in as {email}",
+    "foundationTitle": "Foundation only",
+    "foundationDescription": "No Projects, Companies, or Deals administration tools have been added yet.",
+    "home": "Back to Batiplus"
+  },
+  "companyProjects": {
+    "eyebrow": "Project marketplace",
+    "title": "Find your next construction project",
+    "lead": "Browse client projects approved by Batiplus and find work that fits your company.",
+    "searchLabel": "Search projects",
+    "searchPlaceholder": "Search by title, category, or city",
+    "filters": {
+      "title": "Filters",
+      "close": "Close filters",
+      "active": "Active filters",
+      "city": "City",
+      "cityPlaceholder": "Search for a city",
+      "allCities": "All cities",
+      "category": "Category",
+      "selectCategories": "Select categories",
+      "selectedCount": "{count} selected",
+      "allCategories": "All categories",
+      "budget": "Budget",
+      "allBudgets": "All budgets",
+      "timeline": "Timeline",
+      "propertyType": "Property type",
+      "surface": "Surface",
+      "posted": "Posted date",
+      "surfaceOptions": {
+        "under_100": "Under 100 m²",
+        "100_200": "100–200 m²",
+        "200_500": "200–500 m²",
+        "500_plus": "500+ m²",
+        "unknown": "Unknown"
+      },
+      "postedOptions": {
+        "last_24h": "Last 24 hours",
+        "last_3d": "Last 3 days",
+        "last_7d": "Last 7 days",
+        "last_30d": "Last 30 days"
+      }
+    },
+    "clearFilters": "Clear filters",
+    "sortNewest": "Newest first",
+    "sort": {
+      "label": "Sort by",
+      "triggerAria": "Sort by: {option}",
+      "options": {
+        "newest": "Most recent",
+        "oldest": "Oldest",
+        "budgetHigh": "Highest budget",
+        "budgetLow": "Lowest budget"
+      }
+    },
+    "loadedCount": "{count, plural, =0 {No projects loaded} one {# project loaded} other {# projects loaded}}",
+    "resultsLabel": "Available projects",
+    "loading": "Loading projects…",
+    "loadingMore": "Loading more projects…",
+    "loadMore": "Load more",
+    "viewProject": "View project",
+    "notSpecified": "Not specified",
+    "card": {
+      "surface": "{value} m²",
+      "published": "Published {date}",
+      "client": "Posted by {name} · Member since {date}",
+      "clientPrivate": "Batiplus client",
+      "openAria": "View project: {title}"
+    },
+    "empty": {
+      "title": "No projects match your filters.",
+      "lead": "Try clearing one or more filters to see other available projects."
+    },
+    "detail": {
+      "loading": "Loading project details…",
+      "back": "Back to projects",
+      "close": "Close project details",
+      "openFullPage": "Open full project page",
+      "budget": "Budget",
+      "timeline": "Timeline",
+      "propertyType": "Property type",
+      "surface": "Surface",
+      "category": "Category",
+      "city": "City",
+      "description": "Project description",
+      "projectDetails": "Project details",
+      "clientTitle": "About the client",
+      "clientSince": "Member since {date}",
+      "clientProjectsPosted": "{count, plural, =0 {No projects posted} one {# project posted} other {# projects posted}}",
+      "clientProjectsCompleted": "{count, plural, =0 {No projects completed} one {# project completed} other {# projects completed}}",
+      "clientEmailVerified": "Email verified",
+      "clientPhoneVerified": "Phone verified",
+      "clientPrivacy": "Contact details stay private until both sides agree to discuss the project.",
+      "retry": "Try again",
+      "unavailableTitle": "This project is no longer available.",
+      "unavailableLead": "It may have been removed from the marketplace or is no longer accepting interest."
+    },
+    "quote": {
+      "title": "Interested in this project?",
+      "lead": "Send a clear first estimate. Messaging stays locked until the client opens a discussion.",
+      "submit": "Send an initial quote",
+      "view": "View my quote",
+      "verificationRequired": "Verify your company before sending a quote.",
+      "verifyAction": "Verify company"
+    },
+    "error": {
+      "title": "Projects could not be loaded",
+      "lead": "Something went wrong while loading the marketplace. Please try again.",
+      "retry": "Try again"
+    }
+  },
+  "initialQuote": {
+    "eyebrow": "Initial quote",
+    "title": "Send an initial quote",
+    "lead": "Share a first commercial estimate with the client. This is not the final contractual quote.",
+    "loading": "Loading the quote workspace…",
+    "unavailableTitle": "This project is not accepting initial quotes.",
+    "unavailableLead": "It may no longer be published or available on the marketplace.",
+    "backToProject": "Back to project",
+    "projectSummary": "Project summary",
+    "form": {
+      "message": "Message to client",
+      "messageHint": "Introduce your company and explain why you are a good fit.",
+      "estimatedPrice": "Estimated price",
+      "currency": "MAD",
+      "estimatedDuration": "Estimated duration",
+      "durationUnit": "days",
+      "availableStartDate": "Available start date",
+      "scope": "Scope of work",
+      "scopeHint": "Summarize the main work included in this estimate.",
+      "submit": "Send initial quote",
+      "submitting": "Sending quote…"
+    },
+    "validation": {
+      "required": "Complete all required fields.",
+      "message": "Write at least 20 characters.",
+      "price": "Enter a price greater than 0.",
+      "duration": "Enter a whole number of days.",
+      "date": "Choose an available start date.",
+      "scope": "Describe the scope in at least 20 characters."
+    },
+    "success": "Your initial quote was sent successfully.",
+    "verificationTitle": "Company verification required",
+    "verificationLead": "Verify your company before sending a quote.",
+    "verifyAction": "Verify company",
+    "detail": {
+      "title": "Your initial quote",
+      "status": "Status",
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "viewed": "Viewed",
+      "shortlisted": "Shortlisted",
+      "discussion_open": "Discussion opened",
+      "declined": "Declined",
+      "withdrawn": "Withdrawn",
+      "submittedAt": "Sent on {date}",
+      "estimatedPrice": "Estimated price",
+      "estimatedDuration": "Estimated duration",
+      "durationValue": "{count, plural, one {# day} other {# days}}",
+      "availability": "Availability",
+      "scope": "Scope of work",
+      "message": "Message to client",
+      "messagingLocked": "Messaging is still locked. It will only open if the client chooses to open a discussion.",
+      "discussionOpenedTitle": "Discussion opened",
+      "discussionPending": "The client opened a discussion about this project.",
+      "continueInMessages": "Continue in Messages",
+      "conversationLoading": "Preparing your conversation…",
+      "conversationUnavailableTitle": "The conversation could not be loaded.",
+      "conversationUnavailableLead": "Please try again. If the problem continues, contact support.",
+      "retryConversation": "Try again",
+      "withdraw": "Withdraw quote",
+      "withdrawing": "Withdrawing…",
+      "withdrawnNotice": "This quote has been withdrawn and remains in your history."
+    }
+  },
+  "receivedQuotes": {
+    "eyebrow": "Commercial responses",
+    "title": "Received quotes",
+    "count": "{count, plural, =0 {No quotes} one {# quote} other {# quotes}}",
+    "loading": "Loading received quotes…",
+    "loadingDetail": "Loading quote details…",
+    "empty": {
+      "title": "No quotes received yet.",
+      "description": "Verified companies can submit an initial estimate while your project is open. New quotes will appear here automatically."
+    },
+    "verified": "Verified company",
+    "cityUnavailable": "Location not provided",
+    "price": "Estimated price",
+    "duration": "Estimated duration",
+    "durationValue": "{count, plural, one {# day} other {# days}}",
+    "availableStart": "Available start",
+    "submittedAt": "Submitted {date}",
+    "scope": "Scope of work",
+    "message": "Message",
+    "openQuote": "Review quote",
+    "viewProfile": "View company profile",
+    "close": "Close quote",
+    "unavailable": "This quote is no longer available.",
+    "messagingNotice": "Opening a discussion creates a private project conversation with this company.",
+    "discussionOpenedTitle": "Discussion opened",
+    "discussionOpenedNotice": "Your private project conversation is ready.",
+    "continueInMessages": "Continue in Messages",
+    "conversationLoading": "Preparing your conversation…",
+    "conversationUnavailableTitle": "The conversation could not be loaded.",
+    "conversationUnavailableLead": "Please try again. If the problem continues, contact support.",
+    "retryConversation": "Try again",
+    "status": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "viewed": "Viewed",
+      "shortlisted": "Shortlisted",
+      "discussion_open": "Discussion opened",
+      "declined": "Declined",
+      "withdrawn": "Withdrawn"
+    },
+    "detail": {
+      "eyebrow": "Initial quote",
+      "title": "Quote details",
+      "aboutCompany": "About the company"
+    },
+    "actions": {
+      "shortlist": "Shortlist",
+      "decline": "Decline",
+      "openDiscussion": "Open discussion",
+      "working": "Updating…"
+    },
+    "declineConfirm": {
+      "title": "Decline this quote?",
+      "description": "This decision cannot be reversed. The company will see that its quote was declined.",
+      "confirm": "Decline quote",
+      "cancel": "Keep quote"
+    },
+    "success": {
+      "shortlist": "Quote shortlisted.",
+      "decline": "Quote declined.",
+      "open_discussion": "Discussion opened."
+    }
+  },
+  "seoCms": {
+    "workspaceLabel": "SEO team",
+    "workspaceName": "SEO workspace",
+    "accountFallback": "SEO account",
+    "closeSidebar": "Close SEO navigation",
+    "openSidebar": "Open SEO navigation",
+    "sidebarLabel": "SEO workspace navigation",
+    "breadcrumbLabel": "SEO workspace breadcrumb",
+    "signOut": "Sign out",
+    "loading": "Loading the SEO workspace…",
+    "nav": {
+      "dashboard": "Dashboard",
+      "articles": "Articles",
+      "media": "Media",
+      "pages": "Pages",
+      "pillars": "Pillars",
+      "clusters": "Clusters",
+      "briefs": "SEO Briefs"
+    },
+    "dashboard": {
+      "eyebrow": "Content operations",
+      "title": "SEO dashboard",
+      "description": "Track editorial progress and move Batiplus articles from first draft to publication.",
+      "newArticle": "New article",
+      "metricsLabel": "SEO content overview",
+      "metrics": {
+        "draftArticles": "Draft articles",
+        "reviewArticles": "In review",
+        "publishedArticles": "Published",
+        "missingMetadata": "Missing metadata",
+        "pillars": "Pillars",
+        "clusters": "Clusters"
+      },
+      "articlesTitle": "Article workspace",
+      "articlesDescription": "Create, review, publish, and maintain localized editorial content.",
+      "manageArticles": "Manage articles"
+    },
+    "articles": {
+      "metaTitle": "SEO articles",
+      "metaDescription": "Create and manage Batiplus SEO articles.",
+      "eyebrow": "Content library",
+      "title": "Articles",
+      "description": "Search, filter, and manage every French and English article from one protected workspace.",
+      "newArticle": "New article",
+      "loading": "Loading articles…",
+      "emptyTitle": "No articles found",
+      "emptyDescription": "Create an article or adjust the current filters.",
+      "edit": "Edit",
+      "filters": {
+        "searchLabel": "Search articles",
+        "searchPlaceholder": "Search by title or slug",
+        "localeLabel": "Filter by article language",
+        "statusLabel": "Filter by article status",
+        "allLocales": "All languages",
+        "allStatuses": "All statuses"
+      },
+      "locales": { "fr": "French", "en": "English" },
+      "statuses": { "draft": "Draft", "review": "In review", "published": "Published", "archived": "Archived" },
+      "columns": {
+        "title": "Title",
+        "locale": "Language",
+        "status": "Status",
+        "keyword": "Primary keyword",
+        "updated": "Updated",
+        "published": "Published",
+        "actions": "Actions"
+      }
+    },
+    "editor": {
+      "createMetaTitle": "Create SEO article",
+      "editMetaTitle": "Edit SEO article",
+      "metaDescription": "Create and edit protected Batiplus SEO content.",
+      "createTitle": "Create article",
+      "editTitle": "Edit article",
+      "description": "Write the article, complete its search metadata, and move it through the controlled publishing lifecycle.",
+      "backToArticles": "Back to articles",
+      "saveDraft": "Save draft",
+      "saveChanges": "Save changes",
+      "saving": "Saving…",
+      "preview": "Preview",
+      "hidePreview": "Hide preview",
+      "previewProtected": "Protected internal preview",
+      "previewTitle": "Article preview",
+      "closePreview": "Close preview",
+      "previewCategoryFallback": "Uncategorized",
+      "previewTitleFallback": "Untitled article",
+      "previewExcerptFallback": "The article excerpt will appear here.",
+      "loading": "Loading the article editor…",
+      "notFoundTitle": "Article not found",
+      "notFoundDescription": "This article may have been removed or is no longer available.",
+      "archivedNotice": "This article is archived. Restore it to make changes.",
+      "lifecycleTitle": "Publishing workflow",
+      "lifecycleDescription": "Status changes follow the approved editorial lifecycle.",
+      "mediaTitle": "Article media",
+      "mediaDescription": "Choose reusable images from the protected Media Library.",
+      "sections": {
+        "content": "Article content",
+        "contentDescription": "Write the localized article using simple Markdown-compatible text.",
+        "search": "Search strategy",
+        "searchDescription": "Define the topic, intent, and target search terms.",
+        "metadata": "Search and social metadata",
+        "metadataDescription": "Control how the article is described to search engines and social platforms.",
+        "strategy": "Content structure",
+        "strategyDescription": "Connect this article to its pillar and cluster when available."
+      },
+      "fields": {
+        "title": "Title",
+        "slug": "Slug",
+        "excerpt": "Excerpt",
+        "content": "Main content",
+        "locale": "Article language",
+        "category": "Category",
+        "primaryKeyword": "Primary keyword",
+        "secondaryKeywords": "Secondary keywords",
+        "searchIntent": "Search intent",
+        "seoTitle": "SEO title",
+        "metaDescription": "Meta description",
+        "canonicalUrl": "Canonical URL",
+        "robots": "Robots directive",
+        "ogTitle": "Open Graph title",
+        "ogDescription": "Open Graph description",
+        "pillar": "Pillar",
+        "cluster": "Cluster",
+        "featuredImage": "Featured image",
+        "ogImage": "Open Graph image"
+      },
+      "hints": {
+        "slug": "Lowercase letters, numbers, and hyphens only.",
+        "markdown": "Use plain text or simple Markdown headings such as ## Heading.",
+        "keywords": "Separate keywords with commas or new lines.",
+        "seoTitle": "{count}/70 characters",
+        "metaDescription": "{count}/180 characters",
+        "canonical": "Optional. Must use https://batiplusmaroc.com or www.batiplusmaroc.com."
+      },
+      "locales": { "fr": "French", "en": "English" },
+      "intents": {
+        "informational": "Informational",
+        "commercial": "Commercial",
+        "transactional": "Transactional",
+        "navigational": "Navigational",
+        "local": "Local"
+      },
+      "options": { "none": "None" },
+      "media": {
+        "selectFeatured": "Choose featured image",
+        "selectOg": "Choose Open Graph image",
+        "remove": "Remove selected image"
+      },
+      "toolbar": {
+        "label": "Article formatting",
+        "contentLabel": "Article content in Markdown",
+        "paragraph": "Paragraph",
+        "heading2": "Heading 2",
+        "heading3": "Heading 3",
+        "bold": "Bold",
+        "italic": "Italic",
+        "bulletList": "Bullet list",
+        "numberedList": "Numbered list",
+        "blockquote": "Blockquote",
+        "link": "Link",
+        "image": "Insert Media Library image",
+        "undo": "Undo",
+        "redo": "Redo",
+        "textPlaceholder": "Text",
+        "linkPlaceholder": "Link text"
+      },
+      "actions": {
+        "submitReview": "Submit for review",
+        "publish": "Publish",
+        "returnDraft": "Return to draft",
+        "unpublish": "Unpublish",
+        "archive": "Archive",
+        "restore": "Restore as draft"
+      },
+      "confirm": {
+        "publish": "Publish this article now?",
+        "unpublish": "Unpublish this article and return it to draft?",
+        "archive": "Archive this article?"
+      },
+      "success": {
+        "created": "Article draft created.",
+        "updated": "Article changes saved.",
+        "submitted": "Article submitted for review.",
+        "published": "Article published.",
+        "unpublished": "Article returned to draft.",
+        "archived": "Article archived.",
+        "restored": "Article restored as draft."
+      },
+      "errors": {
+        "slugConflict": "Another article already uses this slug in the selected language.",
+        "canonicalConflict": "This canonical URL is already assigned to another SEO record.",
+        "invalidCanonical": "Use a valid Batiplus HTTPS canonical URL without a query string or fragment.",
+        "invalidTransition": "This publishing status change is not allowed.",
+        "invalidReference": "The selected pillar or cluster does not match this article language.",
+        "invalidSlug": "Enter a valid lowercase slug using letters, numbers, and hyphens.",
+        "invalidInput": "Check the highlighted content and character limits.",
+        "generic": "The article could not be saved. Please try again."
+      }
+    },
+    "pages": {
+      "metaTitle": "SEO Page Metadata",
+      "metaDescription": "Manage localized search metadata for approved Batiplus pages.",
+      "eyebrow": "Search presentation",
+      "title": "Page metadata",
+      "description": "Maintain independent French and English metadata for approved public pages. This workspace cannot create application routes.",
+      "loading": "Loading page metadata…",
+      "loadingEditor": "Loading metadata editor…",
+      "emptyTitle": "No pages found",
+      "emptyDescription": "Adjust the current search or filters.",
+      "filters": {
+        "searchLabel": "Search approved pages",
+        "searchPlaceholder": "Search by page name, key, or path",
+        "localeLabel": "Filter page language",
+        "allLocales": "All languages",
+        "missingOnly": "Missing metadata only"
+      },
+      "locales": { "fr": "French", "en": "English" },
+      "columns": { "page": "Page", "locale": "Language", "metadata": "Metadata", "canonical": "Canonical", "robots": "Robots", "updated": "Updated", "actions": "Actions" },
+      "ready": "Ready",
+      "missing": "Missing",
+      "neverUpdated": "Not configured",
+      "editNamed": "Edit {page} metadata in {locale}",
+      "editTitle": "Edit {page}",
+      "close": "Close page metadata editor",
+      "fields": { "seoTitle": "SEO title", "metaDescription": "Meta description", "canonicalUrl": "Canonical URL", "robots": "Robots directive", "ogTitle": "Open Graph title", "ogDescription": "Open Graph description", "ogImage": "Open Graph image" },
+      "hints": { "seoTitle": "{count}/70 characters", "metaDescription": "{count}/180 characters", "canonical": "Optional. Must use an approved Batiplus HTTPS domain without a query string or fragment." },
+      "chooseImage": "Choose Open Graph image",
+      "removeImage": "Remove Open Graph image",
+      "critical": { "title": "Critical page protection", "description": "I understand that noindex removes the homepage from search results and explicitly confirm this change." },
+      "cancel": "Cancel",
+      "save": "Save metadata",
+      "saving": "Saving…",
+      "success": { "saved": "Page metadata saved." },
+      "errors": { "canonicalConflict": "This canonical URL is already assigned to another SEO record.", "invalidCanonical": "Use a valid Batiplus HTTPS canonical URL without a query string or fragment.", "confirmNoindex": "Explicitly confirm noindex for this critical page.", "invalidMedia": "Choose an active Media Library image.", "generic": "The page metadata could not be saved." },
+      "pageNames": { "homepage": "Homepage", "companiesDirectory": "Companies directory", "projectsDirectory": "Projects directory", "realisationsIndex": "Realisations", "servicesIndex": "Services", "structuralWork": "Structural work", "finishingWork": "Finishing work", "about": "About Batiplus", "contact": "Contact" }
+    },
+    "media": {
+      "metaTitle": "SEO Media Library",
+      "metaDescription": "Upload and manage localized SEO images for Batiplus.",
+      "eyebrow": "Asset library",
+      "title": "Media Library",
+      "description": "Upload approved images once, maintain French and English metadata separately, and reuse them across articles and pages.",
+      "upload": "Upload image",
+      "uploading": "Uploading…",
+      "searchLabel": "Search media",
+      "searchPlaceholder": "Search by filename",
+      "statusLabel": "Filter media status",
+      "statuses": { "active": "Active images", "archived": "Archived images" },
+      "gridLabel": "Media assets",
+      "loading": "Loading media…",
+      "emptyTitle": "No images found",
+      "emptyDescription": "Upload an image or adjust the current filters.",
+      "metadataComplete": "Metadata ready",
+      "metadataMissing": "Metadata missing",
+      "dimensionsUnknown": "Unknown dimensions",
+      "detailsEyebrow": "Media details",
+      "detailsTitle": "Image details",
+      "loadingDetails": "Loading image details…",
+      "notFound": "This media asset is no longer available.",
+      "close": "Close media details",
+      "tabsLabel": "Media detail sections",
+      "tabs": { "general": "General", "fr": "Français", "en": "English" },
+      "fields": {
+        "fileName": "Filename",
+        "type": "File type",
+        "dimensions": "Dimensions",
+        "size": "File size",
+        "created": "Uploaded",
+        "usage": "Usage",
+        "altText": "Alternative text",
+        "title": "Image title",
+        "caption": "Caption",
+        "description": "Description",
+        "seoFilename": "SEO filename"
+      },
+      "usageCount": "{count, plural, =0 {Not used} one {Used once} other {Used # times}}",
+      "seoFilenameHint": "Lowercase letters, numbers, and hyphens only.",
+      "saveMetadata": "Save metadata",
+      "replace": "Replace image",
+      "replacing": "Replacing…",
+      "archive": "Archive image",
+      "replacementHint": "This image is in use. Replacing it safely moves its article and page references to the new file.",
+      "confirmArchive": "Archive this unused image?",
+      "success": {
+        "uploaded": "Image uploaded and verified.",
+        "metadataSaved": "{locale} metadata saved.",
+        "archived": "Image archived.",
+        "replaced": "Image replaced and references updated."
+      },
+      "errors": {
+        "upload": "The image could not be uploaded. Use a JPEG, PNG, or WebP file up to 10 MB.",
+        "metadata": "The image metadata could not be saved.",
+        "archive": "The image could not be archived.",
+        "inUse": "This image is in use. Replace it to preserve its references.",
+        "replace": "The image could not be replaced."
+      }
+    },
+    "mediaPicker": {
+      "title": "Choose an image",
+      "description": "Select an active Media Library image.",
+      "close": "Close image picker",
+      "searchLabel": "Search images",
+      "searchPlaceholder": "Search by filename",
+      "upload": "Upload new",
+      "uploading": "Uploading…",
+      "uploadError": "The image could not be uploaded.",
+      "loading": "Loading images…",
+      "emptyTitle": "No images found",
+      "emptyDescription": "Upload an image or try another search.",
+      "dimensionsUnknown": "Unknown dimensions",
+      "cancel": "Cancel",
+      "select": "Use selected image"
+    },
+    "placeholder": {
+      "title": "This module is coming next",
+      "description": "The workspace navigation is ready, but this phase intentionally focuses on Articles."
+    },
+    "errorState": {
+      "title": "The SEO workspace could not load",
+      "description": "Try again. If the issue continues, verify the development backend is running.",
+      "retry": "Try again"
+    }
+  },
+  "seoAccess": {
+    "metaTitle": "SEO workspace",
+    "metaDescription": "Private workspace for the Batiplus SEO team.",
+    "eyebrow": "SEO team",
+    "title": "SEO workspace access is secured",
+    "description": "The dedicated SEO authorization boundary is active. Content-management modules will be added separately."
+  },
+  "dashboard": {
+    "client": "Client dashboard",
+    "company": "Company dashboard",
+    "admin": "Admin"
+  },
+  "validation": {
+    "required": "This field is required.",
+    "email": "Enter a valid email address.",
+    "minLength": "This text is too short."
+  },
+  "siteAssessment": {
+    "eyebrow": "Site assessment",
+    "title": "On-site assessment",
+    "company": "Selected company: {name}",
+    "invitedAt": "Invited {date}",
+    "status": {
+      "invited": "Invitation sent",
+      "accepted": "Accepted",
+      "scheduled": "Visit scheduled",
+      "completed": "Completed",
+      "declined": "Declined",
+      "cancelled": "Cancelled"
+    },
+    "invite": {
+      "description": "Invite this company to assess the site. Only one company can have an active assessment for this project.",
+      "action": "Invite to site assessment",
+      "confirmation": "The company will be selected for this project’s active site assessment. No contact details are shared yet.",
+      "confirm": "Send invitation",
+      "waiting": "Waiting for the company to accept or decline."
+    },
+    "response": {
+      "acknowledgement": "By accepting, you acknowledge that any resulting work must continue through the Batiplus marketplace and its commercial terms.",
+      "accept": "Accept assessment",
+      "decline": "Decline"
+    },
+    "schedule": {
+      "description": "Choose the visit time and provide the exact site address. The address is shared only after acceptance.",
+      "date": "Date and time",
+      "address": "Site address",
+      "note": "Note (optional)",
+      "action": "Schedule site visit",
+      "waiting": "The client can now schedule the visit and securely share the site address.",
+      "openConversation": "Open scheduling conversation",
+      "validation": "Choose a valid date and enter a complete site address."
+    },
+    "actions": { "back": "Back", "cancel": "Cancel assessment", "complete": "Mark completed" }
+  },
+  "ux": {
+    "retry": "Try again",
+    "offline": "Connection problem. We’ll try again.",
+    "loading": {
+      "page": "Loading the page…",
+      "dashboard": "Loading your workspace…",
+      "form": "Loading the form…"
+    },
+    "error": {
+      "title": "Error",
+      "generic": "Something went wrong. Please try again.",
+      "codes": {
+        "INVALID_ACCOUNT_TYPE": "This account type is not allowed.",
+        "ACCOUNT_TYPE_MISMATCH": "This account does not match this workspace.",
+        "INVALID_EMAIL": "Please enter a valid email address.",
+        "INVALID_CREDENTIALS": "Incorrect email or password.",
+        "ACCOUNT_EXISTS": "An account already exists with this email.",
+        "PASSWORD_TOO_SHORT": "The password must be at least 8 characters.",
+        "TERMS_REQUIRED": "Please accept the terms of service.",
+        "INVALID_PROFILE": "Please complete the required information.",
+        "OAUTH_ACCOUNT_LINKING_BLOCKED": "This Google account cannot be linked. Use another email or sign in another way.",
+        "NOT_AUTHENTICATED": "Please sign in to continue.",
+        "USER_NOT_FOUND": "Account not found. Please sign in again.",
+        "INVALID_NAME": "Enter a valid first and last name.",
+        "INVALID_PHONE": "Enter a valid Moroccan phone number.",
+        "INVALID_CITY": "Enter a valid city.",
+        "CLIENT_ACCOUNT_REQUIRED": "A client account is required for this action.",
+        "CLIENT_ONBOARDING_REQUIRED": "Complete your client profile before posting a project.",
+        "INVALID_CLIENT_AVATAR": "Choose a JPG, PNG, or WebP photo of 5 MB or less.",
+        "CLIENT_AVATAR_UPLOAD_FAILED": "The profile photo could not be uploaded. Please try again.",
+        "COMPANY_ACCOUNT_REQUIRED": "A company account is required for this action.",
+        "COMPANY_MEMBERSHIP_REQUIRED": "An active company membership is required.",
+        "COMPANY_VERIFICATION_REQUIRED": "Verify your company before submitting proposals.",
+        "COMPANY_OWNER_REQUIRED": "Only the company owner can do this.",
+        "COMPANY_NOT_FOUND": "This company does not exist or is no longer available.",
+        "DUPLICATE_ACCOUNT_FOUNDATION": "This account is already set up.",
+        "INVALID_COMPANY_MEMBERSHIP": "You are not linked to this company.",
+        "INVALID_COMPANY_NAME": "Enter a valid company name.",
+        "INVALID_LEGAL_NAME": "Enter a valid legal name.",
+        "INVALID_DESCRIPTION": "Enter a description between 20 and 1,000 characters.",
+        "INVALID_WEBSITE": "Enter a valid website address.",
+        "INVALID_YEARS_EXPERIENCE": "Enter a whole number between 0 and 100.",
+        "INVALID_FOUNDED_YEAR": "Enter a valid founding year.",
+        "INVALID_SERVICE_AREAS": "Select at least one valid service area.",
+        "INVALID_LANGUAGES": "Select at least one valid language.",
+        "INVALID_SERVICES": "Select at least one valid service.",
+        "DUPLICATE_COMPANY_SERVICE": "This service is already linked to the company.",
+        "INVALID_LOGO": "Choose a JPG, PNG, or WebP logo of 5 MB or less.",
+        "INVALID_PUBLIC_MEDIA_UPLOAD": "This image upload is invalid or has expired. Please select the image again.",
+        "PUBLIC_MEDIA_UPLOAD_FAILED": "The image could not be uploaded. Please try again.",
+        "PUBLIC_MEDIA_URL_NOT_CONFIGURED": "Public image delivery is not configured yet. Please contact support.",
+        "INVALID_VERIFICATION_STATUS": "The verification status is not valid.",
+        "COMPANY_ONBOARDING_REQUIRED": "Complete your company profile first.",
+        "INVALID_ICE": "Enter a valid 15-digit ICE.",
+        "INVALID_RC_NUMBER": "Enter a valid RC number.",
+        "INVALID_LEGAL_REPRESENTATIVE": "Enter the legal representative’s name.",
+        "INVALID_ADDRESS": "Enter a valid address.",
+        "INVALID_VERIFICATION_DOCUMENT": "Choose a valid PDF, JPG, or PNG document no larger than 10 MB.",
+        "VERIFICATION_NOT_PENDING": "Only pending verifications can be reviewed.",
+        "VERIFICATION_DOCUMENT_NOT_FOUND": "This verification document was not found.",
+        "REJECTION_REASON_REQUIRED": "Enter a rejection reason of at least 3 characters.",
+        "ADMIN_REQUIRED": "Administrator access is required.",
+        "SEO_TEAM_REQUIRED": "SEO team access is required.",
+        "DOCUMENT_UPLOAD_FAILED": "The document could not be uploaded. Please try again.",
+        "COMPANY_SLUG_UNAVAILABLE": "The company’s public address could not be created.",
+        "INVALID_PORTFOLIO_IMAGE": "Choose JPG, PNG, or WebP images no larger than 10 MB.",
+        "INVALID_PORTFOLIO_TITLE": "Enter a valid title.",
+        "INVALID_PORTFOLIO_DESCRIPTION": "Enter a description between 20 and 1,200 characters.",
+        "INVALID_PORTFOLIO_CITY": "Enter a valid city.",
+        "INVALID_PORTFOLIO_SURFACE": "Enter a valid surface area.",
+        "INVALID_PORTFOLIO_DURATION": "Enter a valid duration.",
+        "INVALID_PORTFOLIO_YEAR": "Enter a valid year.",
+        "INVALID_PORTFOLIO_CAPTION": "The image caption is not valid.",
+        "PORTFOLIO_PROJECT_NOT_FOUND": "This completed work could not be found.",
+        "PROJECT_NOT_FOUND": "This project could not be found.",
+        "PROJECT_NOT_EDITABLE": "This project can no longer be edited.",
+        "INVALID_PROJECT_CATEGORY": "Choose a valid project category.",
+        "INVALID_PROJECT_NEIGHBORHOOD": "Enter a valid neighborhood.",
+        "INVALID_PROJECT_TITLE": "Enter a valid project title.",
+        "INVALID_PROJECT_SURFACE": "Enter a valid surface or select “I don’t know”.",
+        "INVALID_PROJECT_DESCRIPTION": "Enter a project description between 20 and 2,000 characters.",
+        "INVALID_PROJECT_IMAGE": "A project image is invalid or expired.",
+        "PROJECT_IMAGE_UPLOAD_FAILED": "The project image could not be uploaded.",
+        "INVALID_PROJECT_DOCUMENT": "A PDF document is invalid or expired.",
+        "PROJECT_DOCUMENT_UPLOAD_FAILED": "The PDF document could not be uploaded.",
+        "PROJECT_INCOMPLETE": "Complete every required step before publishing.",
+        "INVALID_PROJECT_STATUS_TRANSITION": "This project status change is not allowed.",
+        "PROJECT_ATTACHMENT_NOT_FOUND": "This private document could not be found.",
+        "PROJECT_NOT_PENDING_REVIEW": "Only projects pending review can be moderated.",
+        "PROJECT_REVIEW_REASON_REQUIRED": "Enter a reason of at least 3 characters.",
+        "PROJECT_NOT_ACCEPTING_QUOTES": "This project is no longer accepting initial quotes.",
+        "ACTIVE_QUOTE_ALREADY_EXISTS": "Your company already has an active initial quote for this project.",
+        "QUOTE_NOT_FOUND": "This initial quote could not be found.",
+        "QUOTE_NOT_WITHDRAWABLE": "This initial quote can no longer be withdrawn.",
+        "INVALID_QUOTE_PRICE": "Enter an estimated price between 1 and 100,000,000 MAD.",
+        "INVALID_QUOTE_DURATION": "Enter an estimated duration between 1 and 730 days.",
+        "INVALID_QUOTE_DATE": "Choose a valid available start date that is not in the past.",
+        "INVALID_QUOTE_MESSAGE": "Write a message between 20 and 2,000 characters.",
+        "INVALID_QUOTE_SCOPE": "Describe the scope of work in 20 to 2,000 characters.",
+        "INVALID_QUOTE_WITHDRAWAL_REASON": "Keep the withdrawal reason under 300 characters.",
+        "INVALID_QUOTE_STATUS_TRANSITION": "This quote status change is not allowed.",
+        "INVALID_QUOTE_REVIEW_REASON": "Keep the review reason under 300 characters.",
+        "CONVERSATION_NOT_FOUND": "This conversation is unavailable.",
+        "CONVERSATION_LOCKED": "Messaging is not available for this quote.",
+        "CONVERSATION_CLOSED": "This conversation is closed.",
+        "CONVERSATION_INTEGRITY_ERROR": "This conversation could not be opened. Please contact support.",
+        "INVALID_MESSAGE_BODY": "Write a message between 1 and 4,000 characters.",
+        "INVALID_MESSAGE_ID": "This message could not be sent. Please try again.",
+        "INVALID_MESSAGE_PAGE_SIZE": "This message page could not be loaded.",
+        "MESSAGE_RATE_LIMITED": "Please wait a moment before sending another message.",
+        "SITE_ASSESSMENT_NOT_FOUND": "This site assessment is unavailable.",
+        "SITE_ASSESSMENT_REQUIRES_DISCUSSION": "Open a discussion before inviting a company for a site assessment.",
+        "PROJECT_NOT_ELIGIBLE_FOR_SITE_ASSESSMENT": "This project is not eligible for a site assessment.",
+        "ACTIVE_SITE_ASSESSMENT_ALREADY_EXISTS": "Another company already has an active site assessment for this project.",
+        "SITE_ASSESSMENT_INTEGRITY_ERROR": "The site assessment could not be loaded. Please contact support.",
+        "INVALID_SITE_ASSESSMENT_TRANSITION": "This site assessment action is no longer available.",
+        "INVALID_SITE_ASSESSMENT_NOTE": "Keep the assessment note under 1,000 characters.",
+        "INVALID_SITE_VISIT_DATE": "Choose a valid future visit date.",
+        "INVALID_SITE_VISIT_ADDRESS": "Enter a complete site address.",
+        "NETWORK": "Connection problem. We’ll try again.",
+        "UNKNOWN": "Something went wrong. Please try again."
+      }
+    },
+    "empty": {
+      "projects": {
+        "title": "You haven’t posted a project yet.",
+        "action": "Post a project"
+      },
+      "projectDiscovery": {
+        "title": "No projects available yet."
+      },
+      "proposals": {
+        "title": "No proposals yet.",
+        "action": "Browse projects"
+      },
+      "messages": {
+        "title": "Your conversations will appear here.",
+        "action": "Back to home"
+      },
+      "portfolio": {
+        "title": "Add your first project.",
+        "action": "Complete your profile"
+      },
+      "companies": {
+        "title": "No companies found.",
+        "action": "Post a project"
+      }
+    },
+    "success": {
+      "profileSaved": "Profile saved.",
+      "proposalSubmitted": "Proposal submitted.",
+      "invitationSent": "Invitation sent.",
+      "messageSent": "Message sent.",
+      "verificationSubmitted": "Verification documents submitted."
+    },
+    "notFound": {
+      "company": "This company does not exist or is no longer available.",
+      "project": "This project could not be found.",
+      "portfolio": "This portfolio item is no longer available."
+    }
+  }
+}

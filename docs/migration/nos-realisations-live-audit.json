@@ -1,0 +1,1546 @@
+{
+  "audit_metadata": {
+    "audit_type": "exact live production SEO/content snapshot",
+    "audited_at_utc": "2026-08-21T11:06:35Z",
+    "source_of_truth": "Direct production HTML from https://batiplusmaroc.com/nos-realisations/",
+    "production_html_bytes": 150460,
+    "notes": [
+      "No Next.js page, route, metadata, or production content was modified.",
+      "The CDN returned 403 to a minimal command-line client; a browser-identifying read-only request and the in-app browser both returned the production page. Exact values below come from that successful production response.",
+      "Counts refer to source HTML unless explicitly described as rendered DOM."
+    ]
+  },
+  "page": {
+    "requested_url": "https://batiplusmaroc.com/nos-realisations/",
+    "final_url": "https://batiplusmaroc.com/nos-realisations/",
+    "http_status": 200,
+    "redirect_chain": [],
+    "response_headers": {
+      "content_type": "text/html; charset=UTF-8",
+      "x_powered_by": "PHP/8.3.30",
+      "x_litespeed_cache": "hit",
+      "server": "hcdn"
+    },
+    "title": "Nos réalisations - batiplusmaroc.com",
+    "meta_description": null,
+    "meta_description_status": "ABSENT",
+    "canonical": "https://batiplusmaroc.com/nos-realisations/",
+    "meta_robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+    "open_graph_entries": [
+      {
+        "property": "og:locale",
+        "content": "fr_FR"
+      },
+      {
+        "property": "og:type",
+        "content": "article"
+      },
+      {
+        "property": "og:title",
+        "content": "Nos réalisations - batiplusmaroc.com"
+      },
+      {
+        "property": "og:url",
+        "content": "https://batiplusmaroc.com/nos-realisations/"
+      },
+      {
+        "property": "og:site_name",
+        "content": "batiplusmaroc.com"
+      },
+      {
+        "property": "article:publisher",
+        "content": "https://www.facebook.com/sgta.btp"
+      },
+      {
+        "property": "article:modified_time",
+        "content": "2025-08-28T08:43:13+00:00"
+      }
+    ],
+    "open_graph": {
+      "locale": "fr_FR",
+      "type": "article",
+      "title": "Nos réalisations - batiplusmaroc.com",
+      "description": null,
+      "url": "https://batiplusmaroc.com/nos-realisations/",
+      "image": null,
+      "site_name": "batiplusmaroc.com"
+    },
+    "twitter_entries": [
+      {
+        "name": "twitter:card",
+        "content": "summary_large_image"
+      },
+      {
+        "name": "twitter:label1",
+        "content": "Durée de lecture estimée"
+      },
+      {
+        "name": "twitter:data1",
+        "content": "5 minutes"
+      }
+    ],
+    "twitter": {
+      "card": "summary_large_image",
+      "title": null,
+      "description": null,
+      "image": null,
+      "label1": "Durée de lecture estimée",
+      "data1": "5 minutes"
+    },
+    "json_ld_blocks": [
+      {
+        "order": 1,
+        "type": "application/ld+json",
+        "class": "yoast-schema-graph",
+        "exact_text": "{\"@context\":\"https:\\/\\/schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/nos-realisations\\/\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/nos-realisations\\/\",\"name\":\"Nos réalisations - batiplusmaroc.com\",\"isPartOf\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#website\"},\"datePublished\":\"2025-05-01T17:01:19+00:00\",\"dateModified\":\"2025-08-28T08:43:13+00:00\",\"breadcrumb\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/nos-realisations\\/#breadcrumb\"},\"inLanguage\":\"fr-FR\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https:\\/\\/batiplusmaroc.com\\/nos-realisations\\/\"]}]},{\"@type\":\"BreadcrumbList\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/nos-realisations\\/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Accueil\",\"item\":\"https:\\/\\/batiplusmaroc.com\\/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Nos réalisations\"}]},{\"@type\":\"WebSite\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#website\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/\",\"name\":\"batiplusmaroc.com\",\"description\":\"\",\"publisher\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#organization\"},\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https:\\/\\/batiplusmaroc.com\\/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"fr-FR\"},{\"@type\":\"Organization\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#organization\",\"name\":\"batiplusmaroc.com\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/\",\"logo\":{\"@type\":\"ImageObject\",\"inLanguage\":\"fr-FR\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#\\/schema\\/logo\\/image\\/\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/wp-content\\/uploads\\/2025\\/05\\/home-build-construction-logo-153-x-40-px.png\",\"contentUrl\":\"https:\\/\\/batiplusmaroc.com\\/wp-content\\/uploads\\/2025\\/05\\/home-build-construction-logo-153-x-40-px.png\",\"width\":153,\"height\":40,\"caption\":\"batiplusmaroc.com\"},\"image\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#\\/schema\\/logo\\/image\\/\"},\"sameAs\":[\"https:\\/\\/www.facebook.com\\/sgta.btp\",\"https:\\/\\/share.google\\/j5BiBjLTGpFdjD3f8\"]}]}"
+      }
+    ],
+    "json_ld_parsed": [
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebPage",
+            "@id": "https://batiplusmaroc.com/nos-realisations/",
+            "url": "https://batiplusmaroc.com/nos-realisations/",
+            "name": "Nos réalisations - batiplusmaroc.com",
+            "isPartOf": {
+              "@id": "https://batiplusmaroc.com/#website"
+            },
+            "datePublished": "2025-05-01T17:01:19+00:00",
+            "dateModified": "2025-08-28T08:43:13+00:00",
+            "breadcrumb": {
+              "@id": "https://batiplusmaroc.com/nos-realisations/#breadcrumb"
+            },
+            "inLanguage": "fr-FR",
+            "potentialAction": [
+              {
+                "@type": "ReadAction",
+                "target": [
+                  "https://batiplusmaroc.com/nos-realisations/"
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://batiplusmaroc.com/nos-realisations/#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Accueil",
+                "item": "https://batiplusmaroc.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Nos réalisations"
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://batiplusmaroc.com/#website",
+            "url": "https://batiplusmaroc.com/",
+            "name": "batiplusmaroc.com",
+            "description": "",
+            "publisher": {
+              "@id": "https://batiplusmaroc.com/#organization"
+            },
+            "potentialAction": [
+              {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://batiplusmaroc.com/?s={search_term_string}"
+                },
+                "query-input": {
+                  "@type": "PropertyValueSpecification",
+                  "valueRequired": true,
+                  "valueName": "search_term_string"
+                }
+              }
+            ],
+            "inLanguage": "fr-FR"
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://batiplusmaroc.com/#organization",
+            "name": "batiplusmaroc.com",
+            "url": "https://batiplusmaroc.com/",
+            "logo": {
+              "@type": "ImageObject",
+              "inLanguage": "fr-FR",
+              "@id": "https://batiplusmaroc.com/#/schema/logo/image/",
+              "url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+              "contentUrl": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+              "width": 153,
+              "height": 40,
+              "caption": "batiplusmaroc.com"
+            },
+            "image": {
+              "@id": "https://batiplusmaroc.com/#/schema/logo/image/"
+            },
+            "sameAs": [
+              "https://www.facebook.com/sgta.btp",
+              "https://share.google/j5BiBjLTGpFdjD3f8"
+            ]
+          }
+        ]
+      }
+    ],
+    "structured_data_types": [
+      "WebPage",
+      "ReadAction",
+      "BreadcrumbList",
+      "ListItem",
+      "WebSite",
+      "SearchAction",
+      "EntryPoint",
+      "PropertyValueSpecification",
+      "Organization",
+      "ImageObject"
+    ],
+    "html_lang": "fr-FR",
+    "headings": [
+      {
+        "order": 1,
+        "level": 1,
+        "tag": "H1",
+        "text": "Nos réalisations"
+      },
+      {
+        "order": 2,
+        "level": 2,
+        "tag": "H2",
+        "text": "S2MBOU, un gage de qualité"
+      },
+      {
+        "order": 3,
+        "level": 3,
+        "tag": "H3",
+        "text": "Amical Omolkoura"
+      },
+      {
+        "order": 4,
+        "level": 3,
+        "tag": "H3",
+        "text": "Particulier privé"
+      },
+      {
+        "order": 5,
+        "level": 3,
+        "tag": "H3",
+        "text": "Amical Annajah"
+      },
+      {
+        "order": 6,
+        "level": 3,
+        "tag": "H3",
+        "text": "Villa avec sous sol"
+      },
+      {
+        "order": 7,
+        "level": 3,
+        "tag": "H3",
+        "text": "Alhouda Doha Iamar"
+      },
+      {
+        "order": 8,
+        "level": 1,
+        "tag": "H1",
+        "text": "Prêt à passer à l’étape suivante et à collaborer avec nous ?"
+      },
+      {
+        "order": 9,
+        "level": 4,
+        "tag": "H4",
+        "text": "Contactez-nous"
+      },
+      {
+        "order": 10,
+        "level": 6,
+        "tag": "H6",
+        "text": "S2MBOU Construction – Votre partenaire de confiance dans la réalisation de projets de construction durables et sur mesure. Nous mettons notre expertise et notre engagement au service de vos idées, pour bâtir ensemble un avenir solide."
+      },
+      {
+        "order": 11,
+        "level": 6,
+        "tag": "H6",
+        "text": "Nos services"
+      },
+      {
+        "order": 12,
+        "level": 6,
+        "tag": "H6",
+        "text": "Accès rapide"
+      },
+      {
+        "order": 13,
+        "level": 6,
+        "tag": "H6",
+        "text": "Contactez nous"
+      }
+    ],
+    "crawlable_text_sections": [
+      {
+        "order": 1,
+        "type": "heading",
+        "tag": "H1",
+        "text": "Nos réalisations"
+      },
+      {
+        "order": 2,
+        "type": "breadcrumb",
+        "tag": "P",
+        "text": "Accueil » Nos réalisations"
+      },
+      {
+        "order": 3,
+        "type": "heading",
+        "tag": "H2",
+        "text": "S2MBOU, un gage de qualité"
+      },
+      {
+        "order": 4,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "L’expérience de S2MBOU dans le monde de travaux btp est un atout indéniable dans vos projets de construction et de rénovation."
+      },
+      {
+        "order": 5,
+        "type": "cta_link",
+        "tag": "A",
+        "text": "Contactez-nous",
+        "href": "/contactez-nous/"
+      },
+      {
+        "order": 6,
+        "type": "portfolio_filter",
+        "tag": "A",
+        "text": "All",
+        "href": "#",
+        "data_filter": "*"
+      },
+      {
+        "order": 7,
+        "type": "portfolio_filter",
+        "tag": "A",
+        "text": "aménagement extérieur",
+        "href": "#",
+        "data_filter": ".amenagement-exterieur"
+      },
+      {
+        "order": 8,
+        "type": "portfolio_filter",
+        "tag": "A",
+        "text": "aménagement intérieur",
+        "href": "#",
+        "data_filter": ".amenagement-interieur"
+      },
+      {
+        "order": 9,
+        "type": "portfolio_filter",
+        "tag": "A",
+        "text": "Gros oeuvre",
+        "href": "#",
+        "data_filter": ".gros-oeuvre"
+      },
+      {
+        "order": 10,
+        "type": "project_heading",
+        "tag": "H3",
+        "text": "Amical Omolkoura"
+      },
+      {
+        "order": 11,
+        "type": "project_heading",
+        "tag": "H3",
+        "text": "Particulier privé"
+      },
+      {
+        "order": 12,
+        "type": "project_heading",
+        "tag": "H3",
+        "text": "Amical Annajah"
+      },
+      {
+        "order": 13,
+        "type": "project_heading",
+        "tag": "H3",
+        "text": "Villa avec sous sol"
+      },
+      {
+        "order": 14,
+        "type": "project_heading",
+        "tag": "H3",
+        "text": "Alhouda Doha Iamar"
+      },
+      {
+        "order": 15,
+        "type": "heading",
+        "tag": "H1",
+        "text": "Prêt à passer à l’étape suivante et à collaborer avec nous ?"
+      },
+      {
+        "order": 16,
+        "type": "cta_link",
+        "tag": "A",
+        "text": "Contactez-nous",
+        "href": ""
+      },
+      {
+        "order": 17,
+        "type": "heading",
+        "tag": "H6",
+        "text": "S2MBOU Construction – Votre partenaire de confiance dans la réalisation de projets de construction durables et sur mesure. Nous mettons notre expertise et notre engagement au service de vos idées, pour bâtir ensemble un avenir solide."
+      },
+      {
+        "order": 18,
+        "type": "heading",
+        "tag": "H6",
+        "text": "Nos services"
+      },
+      {
+        "order": 19,
+        "type": "heading",
+        "tag": "H6",
+        "text": "Accès rapide"
+      },
+      {
+        "order": 20,
+        "type": "heading",
+        "tag": "H6",
+        "text": "Contactez nous"
+      },
+      {
+        "order": 21,
+        "type": "plain_text",
+        "tag": "DIV",
+        "text": "+212 766-018650"
+      },
+      {
+        "order": 22,
+        "type": "plain_text",
+        "tag": "DIV",
+        "text": "sgta.btp@gmail.com"
+      },
+      {
+        "order": 23,
+        "type": "plain_text",
+        "tag": "DIV",
+        "text": "Hay dakhla, Agadir"
+      },
+      {
+        "order": 24,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Suivez nous"
+      },
+      {
+        "order": 25,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Copyright © 2025 Agence S2MBOU BATIMENT"
+      },
+      {
+        "order": 26,
+        "type": "widget_text",
+        "tag": "P",
+        "text": "Bonjour 👷‍♂️ ! Nous somme là pour vous aider. Avez-vous un projet de construction en tête ou une question particulière ? N'hésitez pas à me demander 😊"
+      }
+    ],
+    "internal_links": [
+      {
+        "dom_order": 1,
+        "anchor_text": "Skip to main content",
+        "href": "#ajax-content-wrap",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/#ajax-content-wrap",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "nectar-skip-to-content"
+      },
+      {
+        "dom_order": 3,
+        "anchor_text": "phone",
+        "href": "",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 4,
+        "anchor_text": "email",
+        "href": "",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 5,
+        "anchor_text": "Close Search",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 6,
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 7,
+        "anchor_text": "Menu",
+        "href": "#sidewidgetarea",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/#sidewidgetarea",
+        "rel": null,
+        "aria_label": "Navigation Menu",
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "closed"
+      },
+      {
+        "dom_order": 8,
+        "anchor_text": "À propos",
+        "href": "https://batiplusmaroc.com/a-propos/",
+        "resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 9,
+        "anchor_text": "Nos services",
+        "href": "https://batiplusmaroc.com/nos-services/",
+        "resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "sf-with-ul"
+      },
+      {
+        "dom_order": 10,
+        "anchor_text": "Gros oeuvre",
+        "href": "https://batiplusmaroc.com/gros-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 11,
+        "anchor_text": "Second oeuvre",
+        "href": "https://batiplusmaroc.com/second-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 12,
+        "anchor_text": "Nos réalisations",
+        "href": "https://batiplusmaroc.com/nos-realisations/",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 13,
+        "anchor_text": "Contactez-nous",
+        "href": "https://batiplusmaroc.com/contactez-nous/",
+        "resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 14,
+        "anchor_text": "Accueil",
+        "href": "https://batiplusmaroc.com/",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 15,
+        "anchor_text": "Contactez-nous",
+        "href": "/contactez-nous/",
+        "resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "link_text"
+      },
+      {
+        "dom_order": 16,
+        "anchor_text": "All",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "active"
+      },
+      {
+        "dom_order": 17,
+        "anchor_text": "aménagement extérieur",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 18,
+        "anchor_text": "aménagement intérieur",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 19,
+        "anchor_text": "Gros oeuvre",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 20,
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL.jpg",
+        "resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL.jpg",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL.jpg",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "pretty_photo"
+      },
+      {
+        "dom_order": 21,
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive.jpg",
+        "resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive.jpg",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive.jpg",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "pretty_photo"
+      },
+      {
+        "dom_order": 22,
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah.jpg",
+        "resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah.jpg",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah.jpg",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "pretty_photo"
+      },
+      {
+        "dom_order": 23,
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-scaled.jpg",
+        "resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-scaled.jpg",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-scaled.jpg",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "pretty_photo"
+      },
+      {
+        "dom_order": 24,
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-scaled.jpg",
+        "resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-scaled.jpg",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-scaled.jpg",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "pretty_photo"
+      },
+      {
+        "dom_order": 25,
+        "anchor_text": "Contactez-nous",
+        "href": "",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "link_text"
+      },
+      {
+        "dom_order": 26,
+        "anchor_text": "À propos",
+        "href": "https://batiplusmaroc.com/a-propos/",
+        "resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 27,
+        "anchor_text": "Nos services",
+        "href": "https://batiplusmaroc.com/nos-services/",
+        "resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 28,
+        "anchor_text": "Gros oeuvre",
+        "href": "https://batiplusmaroc.com/gros-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 29,
+        "anchor_text": "Second oeuvre",
+        "href": "https://batiplusmaroc.com/second-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 30,
+        "anchor_text": "Nos réalisations",
+        "href": "https://batiplusmaroc.com/nos-realisations/",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 34,
+        "anchor_text": "",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "\n\t\t"
+      },
+      {
+        "dom_order": 35,
+        "anchor_text": "À propos",
+        "href": "https://batiplusmaroc.com/a-propos/",
+        "resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 36,
+        "anchor_text": "Nos services",
+        "href": "https://batiplusmaroc.com/nos-services/",
+        "resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 37,
+        "anchor_text": "Gros oeuvre",
+        "href": "https://batiplusmaroc.com/gros-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 38,
+        "anchor_text": "Second oeuvre",
+        "href": "https://batiplusmaroc.com/second-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 39,
+        "anchor_text": "Nos réalisations",
+        "href": "https://batiplusmaroc.com/nos-realisations/",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 40,
+        "anchor_text": "Contactez-nous",
+        "href": "https://batiplusmaroc.com/contactez-nous/",
+        "resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 42,
+        "anchor_text": "phone",
+        "href": "",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 43,
+        "anchor_text": "email",
+        "href": "",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": null
+      },
+      {
+        "dom_order": 44,
+        "anchor_text": "Close Menu",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "slide_out_area_close"
+      },
+      {
+        "dom_order": 45,
+        "anchor_text": "Contactez-nous",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/#",
+        "rel": null,
+        "aria_label": "Whatsapp",
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": [],
+        "class": "Whatsapp-channel chaty-link chaty-whatsapp-channel pos-left has-chaty-box chaty-whatsapp-btn-form has-on-hover"
+      }
+    ],
+    "images": [
+      {
+        "dom_order": 1,
+        "src": "https://www.facebook.com/tr?id=1713767920020441&ev=PageView&noscript=1",
+        "real_lazy_loaded_source": null,
+        "srcset": null,
+        "lazy_srcset": null,
+        "alt": null,
+        "width": "1",
+        "height": "1",
+        "class": null,
+        "noscript_tracking_pixel": true
+      },
+      {
+        "dom_order": 2,
+        "src": "https://www.facebook.com/tr?id=26723692560601650&ev=PageView&noscript=1",
+        "real_lazy_loaded_source": null,
+        "srcset": null,
+        "lazy_srcset": null,
+        "alt": "fbpx",
+        "width": "1",
+        "height": "1",
+        "class": null,
+        "noscript_tracking_pixel": true
+      },
+      {
+        "dom_order": 3,
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+        "real_lazy_loaded_source": null,
+        "srcset": null,
+        "lazy_srcset": null,
+        "alt": "batiplusmaroc.com",
+        "width": "153",
+        "height": "40",
+        "class": "stnd skip-lazy dark-version"
+      },
+      {
+        "dom_order": 4,
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+        "real_lazy_loaded_source": null,
+        "srcset": null,
+        "lazy_srcset": null,
+        "alt": "batiplusmaroc.com",
+        "width": "153",
+        "height": "40",
+        "class": "hidden-logo"
+      },
+      {
+        "dom_order": 5,
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg",
+        "real_lazy_loaded_source": null,
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg 350w",
+        "lazy_srcset": null,
+        "alt": "",
+        "width": "500",
+        "height": "1000",
+        "class": "size-tall skip-lazy"
+      },
+      {
+        "dom_order": 6,
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-1000x1000.jpg",
+        "real_lazy_loaded_source": null,
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-1000x1000.jpg 1000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-500x500.jpg 500w",
+        "lazy_srcset": null,
+        "alt": "",
+        "width": "1000",
+        "height": "1000",
+        "class": "size-wide_tall skip-lazy"
+      },
+      {
+        "dom_order": 7,
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg",
+        "real_lazy_loaded_source": null,
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg 350w",
+        "lazy_srcset": null,
+        "alt": "",
+        "width": "500",
+        "height": "1000",
+        "class": "size-tall skip-lazy"
+      },
+      {
+        "dom_order": 8,
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-1000x500.jpg",
+        "real_lazy_loaded_source": null,
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-1000x500.jpg 1000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-670x335.jpg 670w",
+        "lazy_srcset": null,
+        "alt": "",
+        "width": "1000",
+        "height": "500",
+        "class": "size-wide skip-lazy"
+      },
+      {
+        "dom_order": 9,
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-500x500.jpg",
+        "real_lazy_loaded_source": null,
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-500x500.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-350x350.jpg 350w",
+        "lazy_srcset": null,
+        "alt": "",
+        "width": "500",
+        "height": "500",
+        "class": "size-regular skip-lazy"
+      },
+      {
+        "dom_order": 10,
+        "src": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%201000%201500'%2F%3E",
+        "real_lazy_loaded_source": "https://batiplusmaroc.com/wp-content/uploads/2025/05/2147831890.jpg",
+        "srcset": null,
+        "lazy_srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/2147831890.jpg 1000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2147831890-600x900.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2147831890-200x300.jpg 200w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2147831890-683x1024.jpg 683w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2147831890-768x1152.jpg 768w",
+        "alt": "",
+        "width": "1000",
+        "height": "1500",
+        "class": "img-with-animation skip-lazy  nectar-lazy"
+      },
+      {
+        "dom_order": 11,
+        "src": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20667%201000'%2F%3E",
+        "real_lazy_loaded_source": "https://batiplusmaroc.com/wp-content/uploads/2025/05/38581.jpg",
+        "srcset": null,
+        "lazy_srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/38581.jpg 667w, https://batiplusmaroc.com/wp-content/uploads/2025/05/38581-600x900.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/38581-200x300.jpg 200w",
+        "alt": "",
+        "width": "667",
+        "height": "1000",
+        "class": "img-with-animation skip-lazy  nectar-lazy"
+      },
+      {
+        "dom_order": 12,
+        "src": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%201500%201000'%2F%3E",
+        "real_lazy_loaded_source": "https://batiplusmaroc.com/wp-content/uploads/2025/05/2149278557.jpg",
+        "srcset": null,
+        "lazy_srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/2149278557.jpg 1500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2149278557-600x400.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2149278557-300x200.jpg 300w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2149278557-1024x683.jpg 1024w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2149278557-768x512.jpg 768w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2149278557-900x600.jpg 900w",
+        "alt": "",
+        "width": "1500",
+        "height": "1000",
+        "class": "img-with-animation skip-lazy  nectar-lazy"
+      },
+      {
+        "dom_order": 13,
+        "src": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%201500%201001'%2F%3E",
+        "real_lazy_loaded_source": "https://batiplusmaroc.com/wp-content/uploads/2025/05/2148301747.jpg",
+        "srcset": null,
+        "lazy_srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/2148301747.jpg 1500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2148301747-600x400.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2148301747-300x200.jpg 300w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2148301747-1024x683.jpg 1024w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2148301747-768x513.jpg 768w, https://batiplusmaroc.com/wp-content/uploads/2025/05/2148301747-900x600.jpg 900w",
+        "alt": "",
+        "width": "1500",
+        "height": "1001",
+        "class": "img-with-animation skip-lazy  nectar-lazy"
+      },
+      {
+        "dom_order": 14,
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px-334-x-65-px.png",
+        "real_lazy_loaded_source": null,
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px-334-x-65-px.png 334w, https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px-334-x-65-px-300x58.png 300w",
+        "lazy_srcset": null,
+        "alt": "",
+        "width": "334",
+        "height": "65",
+        "class": "img-with-animation skip-lazy "
+      },
+      {
+        "dom_order": 15,
+        "src": "https://www.facebook.com/tr?id=1713767920020441&ev=PageView&noscript=1&cd%5Bpage_title%5D=Nos+r%C3%A9alisations&cd%5Bpost_type%5D=page&cd%5Bpost_id%5D=20&cd%5Bplugin%5D=PixelYourSite&cd%5Buser_role%5D=guest&cd%5Bevent_url%5D=batiplusmaroc.com%2Fnos-realisations%2F",
+        "real_lazy_loaded_source": null,
+        "srcset": null,
+        "lazy_srcset": null,
+        "alt": "",
+        "width": "1",
+        "height": "1",
+        "class": null,
+        "noscript_tracking_pixel": true
+      }
+    ],
+    "breadcrumbs": {
+      "visible": {
+        "text": "Accueil » Nos réalisations",
+        "html": "<p id=\"breadcrumbs\" class=\"yoast\"><span><span><a href=\"https://batiplusmaroc.com/\">Accueil</a></span> » <span class=\"breadcrumb_last\" aria-current=\"page\">Nos réalisations</span></span></p>",
+        "items": [
+          {
+            "position": 1,
+            "name": "Accueil",
+            "url": "https://batiplusmaroc.com/"
+          },
+          {
+            "position": 2,
+            "name": "Nos réalisations",
+            "url": null
+          }
+        ]
+      },
+      "structured_data": [
+        {
+          "position": 1,
+          "name": "Accueil",
+          "item": "https://batiplusmaroc.com/"
+        },
+        {
+          "position": 2,
+          "name": "Nos réalisations",
+          "item": null
+        }
+      ]
+    },
+    "indexable_from_http_meta_and_canonical": true,
+    "heading_count": 13,
+    "h1": [
+      "Nos réalisations",
+      "Prêt à passer à l’étape suivante et à collaborer avec nous ?"
+    ],
+    "image_count": 15,
+    "content_and_theme_image_count_excluding_tracking_pixels": 12,
+    "internal_link_occurrence_count": 40,
+    "crawlable_internal_link_occurrence_count": 27,
+    "unique_internal_resolved_url_count_including_fragments": 14,
+    "unique_internal_http_resource_count_after_fragment_removal": 12
+  },
+  "trailing_slash_behavior": {
+    "requested_without_slash": "https://batiplusmaroc.com/nos-realisations",
+    "status": 301,
+    "location": "https://batiplusmaroc.com/nos-realisations/",
+    "redirect_chain": [
+      {
+        "url": "https://batiplusmaroc.com/nos-realisations",
+        "status": 301,
+        "location": "https://batiplusmaroc.com/nos-realisations/"
+      },
+      {
+        "url": "https://batiplusmaroc.com/nos-realisations/",
+        "status": 200
+      }
+    ],
+    "mechanism": "WordPress (x-redirect-by: WordPress)",
+    "canonical_form": "trailing slash"
+  },
+  "current_semantic_content": {
+    "h1": "Nos réalisations",
+    "introduction_heading": "S2MBOU, un gage de qualité",
+    "introduction_exact": "L’expérience de S2MBOU dans le monde de travaux btp est un atout indéniable dans vos projets de construction et de rénovation.",
+    "meaning_verified": true
+  },
+  "portfolio_filters": {
+    "items": [
+      {
+        "class": "active",
+        "data_filter": "*",
+        "href": "#",
+        "text": "All"
+      },
+      {
+        "class": "",
+        "data_filter": ".amenagement-exterieur",
+        "href": "#",
+        "text": "aménagement extérieur"
+      },
+      {
+        "class": "",
+        "data_filter": ".amenagement-interieur",
+        "href": "#",
+        "text": "aménagement intérieur"
+      },
+      {
+        "class": "",
+        "data_filter": ".gros-oeuvre",
+        "href": "#",
+        "text": "Gros oeuvre"
+      }
+    ],
+    "crawlable": false,
+    "real_urls": false,
+    "javascript_dependent": true,
+    "implementation": "Salient Portfolio plus Isotope; href=\"#\" anchors use data-filter selectors to show/hide existing .elastic-portfolio-item elements.",
+    "creates_duplicate_hidden_dom_content": false,
+    "notes": "All five project items exist once in the HTML. Filtering changes visibility; it does not create indexable archive URLs."
+  },
+  "current_projects": [
+    {
+      "title": "Amical Omolkoura",
+      "heading_level": "H3",
+      "dom_occurrence": 1,
+      "category": "amenagement-exterieur",
+      "image": {
+        "alt": "",
+        "height": "1000",
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg 350w",
+        "width": "500"
+      },
+      "project_destination": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL.jpg",
+      "project_destination_type": "direct original image/lightbox asset",
+      "project_destination_http_status": 200,
+      "dedicated_detail_page": false,
+      "controls": {
+        "view_larger": {
+          "present": true,
+          "implementation": "empty-text <a class=\"pretty_photo\"> wrapping the lightbox destination; no accessible name"
+        },
+        "more_details": {
+          "present": false
+        },
+        "love": {
+          "present": false
+        }
+      }
+    },
+    {
+      "title": "Particulier privé",
+      "heading_level": "H3",
+      "dom_occurrence": 1,
+      "category": "gros-oeuvre",
+      "image": {
+        "alt": "",
+        "height": "1000",
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-1000x1000.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-1000x1000.jpg 1000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-500x500.jpg 500w",
+        "width": "1000"
+      },
+      "project_destination": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive.jpg",
+      "project_destination_type": "direct original image/lightbox asset",
+      "project_destination_http_status": 200,
+      "dedicated_detail_page": false,
+      "controls": {
+        "view_larger": {
+          "present": true,
+          "implementation": "empty-text <a class=\"pretty_photo\"> wrapping the lightbox destination; no accessible name"
+        },
+        "more_details": {
+          "present": false
+        },
+        "love": {
+          "present": false
+        }
+      }
+    },
+    {
+      "title": "Amical Annajah",
+      "heading_level": "H3",
+      "dom_occurrence": 1,
+      "category": "amenagement-interieur",
+      "image": {
+        "alt": "",
+        "height": "1000",
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg 350w",
+        "width": "500"
+      },
+      "project_destination": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah.jpg",
+      "project_destination_type": "direct original image/lightbox asset",
+      "project_destination_http_status": 200,
+      "dedicated_detail_page": false,
+      "controls": {
+        "view_larger": {
+          "present": true,
+          "implementation": "empty-text <a class=\"pretty_photo\"> wrapping the lightbox destination; no accessible name"
+        },
+        "more_details": {
+          "present": false
+        },
+        "love": {
+          "present": false
+        }
+      }
+    },
+    {
+      "title": "Villa avec sous sol",
+      "heading_level": "H3",
+      "dom_occurrence": 1,
+      "category": "amenagement-exterieur",
+      "image": {
+        "alt": "",
+        "height": "500",
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-1000x500.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-1000x500.jpg 1000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-670x335.jpg 670w",
+        "width": "1000"
+      },
+      "project_destination": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-scaled.jpg",
+      "project_destination_type": "direct original image/lightbox asset",
+      "project_destination_http_status": 200,
+      "dedicated_detail_page": false,
+      "controls": {
+        "view_larger": {
+          "present": true,
+          "implementation": "empty-text <a class=\"pretty_photo\"> wrapping the lightbox destination; no accessible name"
+        },
+        "more_details": {
+          "present": false
+        },
+        "love": {
+          "present": false
+        }
+      }
+    },
+    {
+      "title": "Alhouda Doha Iamar",
+      "heading_level": "H3",
+      "dom_occurrence": 1,
+      "category": "amenagement-exterieur",
+      "image": {
+        "alt": "",
+        "height": "500",
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-500x500.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-500x500.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-350x350.jpg 350w",
+        "width": "500"
+      },
+      "project_destination": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-scaled.jpg",
+      "project_destination_type": "direct original image/lightbox asset",
+      "project_destination_http_status": 200,
+      "dedicated_detail_page": false,
+      "controls": {
+        "view_larger": {
+          "present": true,
+          "implementation": "empty-text <a class=\"pretty_photo\"> wrapping the lightbox destination; no accessible name"
+        },
+        "more_details": {
+          "present": false
+        },
+        "love": {
+          "present": false
+        }
+      }
+    }
+  ],
+  "project_name_occurrence_counts": {
+    "Amical Omolkoura": 1,
+    "Particulier privé": 1,
+    "Amical Annajah": 1,
+    "Villa avec sous sol": 1,
+    "Alhouda Doha Iamar": 1
+  },
+  "duplicated_dom_content": {
+    "portfolio_projects_duplicated": false,
+    "details": "Each of the five named projects appears exactly once as an H3 and exactly once as a portfolio item in the source HTML. The filters operate on the same nodes. Repeated navigation labels belong to desktop/footer/mobile menus, not duplicated portfolio content."
+  },
+  "hash_and_empty_controls": {
+    "hash_only_count": 8,
+    "empty_href_count": 5,
+    "fragment_target_count": 2,
+    "hash_only": [
+      {
+        "text": "Close Search",
+        "purpose": "theme control"
+      },
+      {
+        "text": "All",
+        "purpose": "portfolio filter"
+      },
+      {
+        "text": "aménagement extérieur",
+        "purpose": "portfolio filter"
+      },
+      {
+        "text": "aménagement intérieur",
+        "purpose": "portfolio filter"
+      },
+      {
+        "text": "Gros oeuvre",
+        "purpose": "portfolio filter"
+      },
+      {
+        "text": "",
+        "purpose": "empty social/theme icon"
+      },
+      {
+        "text": "Close Menu",
+        "purpose": "theme control"
+      },
+      {
+        "text": "Contactez-nous",
+        "purpose": "WhatsApp widget control"
+      }
+    ],
+    "empty_href": [
+      {
+        "text": "phone",
+        "occurrences": 2
+      },
+      {
+        "text": "email",
+        "occurrences": 2
+      },
+      {
+        "text": "Contactez-nous",
+        "occurrences": 1
+      }
+    ]
+  },
+  "broken_internal_http_links": {
+    "tested_unique_resources": 12,
+    "broken": [],
+    "result": "No broken same-origin HTTP resource was found among the page URLs and five portfolio image destinations; all returned 200."
+  },
+  "future_verified_client_portfolio_note_not_used_as_audit_source": [
+    "Immeuble R+5 — Quartier Al-Huda, Agadir",
+    "Immeuble R+5 — Quartier Al Farah, Agadir",
+    "Villa Founty",
+    "Finitions intérieures",
+    "Aménagement intérieur",
+    "Détails de finition",
+    "Revêtements décoratifs",
+    "Faux plafonds & éclairage",
+    "Escaliers & circulations",
+    "Extérieur & piscine",
+    "Façades & travaux extérieurs"
+  ],
+  "comparison_with_SEO_MIGRATION_md": {
+    "matches": [
+      {
+        "document_claim": "Protected route /nos-realisations/",
+        "production_finding": "https://batiplusmaroc.com/nos-realisations/"
+      },
+      {
+        "document_claim": "Rendered H1: Nos réalisations",
+        "production_finding": "Nos réalisations"
+      },
+      {
+        "document_claim": "The page presents the five known project names",
+        "production_finding": [
+          "Amical Omolkoura",
+          "Particulier privé",
+          "Amical Annajah",
+          "Villa avec sous sol",
+          "Alhouda Doha Iamar"
+        ]
+      }
+    ],
+    "discrepancies": [],
+    "notes": "SEO_MIGRATION.md does not specify an exact title, meta description, canonical, robots value, or portfolio destinations for this route, so those live technical values cannot conflict with the document."
+  },
+  "seo_and_accessibility_risks": [
+    {
+      "severity": "high",
+      "issue": "Meta description is absent."
+    },
+    {
+      "severity": "high",
+      "issue": "Every visible project image has an empty alt attribute, and each lightbox link has no anchor text or accessible name."
+    },
+    {
+      "severity": "high",
+      "issue": "Portfolio project titles do not link to dedicated project pages; destinations are direct original JPEG assets, limiting crawlable project context and internal-link value."
+    },
+    {
+      "severity": "medium",
+      "issue": "The source contains two H1 elements; the second is a generic CTA heading."
+    },
+    {
+      "severity": "medium",
+      "issue": "Heading hierarchy jumps from H3 to H1, then H4 and H6; the footer description is incorrectly marked up as H6."
+    },
+    {
+      "severity": "medium",
+      "issue": "All portfolio filters use href=\"#\" and require JavaScript; they are controls rather than real category/archive URLs."
+    },
+    {
+      "severity": "medium",
+      "issue": "Open Graph description/image and Twitter title/description/image are absent."
+    },
+    {
+      "severity": "medium",
+      "issue": "One visible Contactez-nous CTA has an empty href, and header/footer phone and email anchors also have empty href values."
+    },
+    {
+      "severity": "medium",
+      "issue": "The viewport disables user scaling with user-scalable=0, an accessibility risk."
+    },
+    {
+      "severity": "low",
+      "issue": "The page has only one short introductory paragraph and no dedicated textual project descriptions."
+    },
+    {
+      "severity": "low",
+      "issue": "Schema is generic WebPage/BreadcrumbList/WebSite/Organization only; portfolio projects have no CreativeWork/Project-level structured representation."
+    }
+  ]
+}

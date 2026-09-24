@@ -239,5 +239,8 @@ export function getProjectBySlug(slug: string) {
 }
 
 export function projectPath(slug: string) {
-  return `/nos-realisations/${slug}/` as const;
+  return {
+    pathname: "/nos-realisations/[slug]" as const,
+    params: { slug },
+  };
 }

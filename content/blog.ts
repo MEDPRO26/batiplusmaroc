@@ -29,8 +29,8 @@ export const blogArticles: readonly BlogArticle[] = [
     categoryHref: routes.categoryGeneral,
     published: "7 mai 2025",
     publishedIso: "2025-05-07",
-    image: "/images/portfolio-2026/projects/immeuble-r5-al-farah-etat-final.webp",
-    imageAlt: "Immeuble R+5 achevé à Agadir",
+    image: "/images/blog/trends-2025.webp",
+    imageAlt: "Villa contemporaine au Maroc, au crépuscule",
     introduction: [
       "L’année 2025 marque un tournant majeur dans le domaine de la construction. Les attentes des clients évoluent, les enjeux environnementaux deviennent prioritaires, et les innovations technologiques transforment les méthodes de travail. À Agadir comme ailleurs, les professionnels du secteur, dont S2MBOU, s’adaptent à ces changements pour proposer des solutions modernes, durables et intelligentes.",
       "Voici un tour d’horizon des tendances incontournables de la construction en 2025.",
@@ -104,8 +104,8 @@ export const blogArticles: readonly BlogArticle[] = [
     categoryHref: routes.categoryGeneral,
     published: "7 mai 2025",
     publishedIso: "2025-05-07",
-    image: "/images/portfolio-2026/projects/al-huda-01.webp",
-    imageAlt: "Chantier d’un immeuble R+5 à Agadir",
+    image: "/images/blog/budget.webp",
+    imageAlt: "Plans, échantillons et ordinateur pour préparer un budget de construction",
     introduction: [
       "Construire une maison est un projet de vie passionnant, mais qui nécessite une planification rigoureuse, en particulier sur le plan financier. Une bonne préparation du budget de construction permet d’éviter les mauvaises surprises, de faire les bons choix dès le départ et d’assurer la réussite du projet dans les délais.",
       "Voici un guide complet pour vous aider à bien préparer votre budget de construction, étape par étape.",
@@ -158,8 +158,8 @@ export const blogArticles: readonly BlogArticle[] = [
     categoryHref: routes.categoryStructuralWork,
     published: "7 mai 2025",
     publishedIso: "2025-05-07",
-    image: "/images/about-project.jpg",
-    imageAlt: "Plans et équipements de construction",
+    image: "/images/blog/materials.webp",
+    imageAlt: "Échantillons de matériaux de construction sur une table d’atelier",
     introduction: [
       "Choisir les matériaux de construction pour votre maison est une étape cruciale dans tout projet de construction ou de rénovation. Le bon choix garantit non seulement la solidité et la durabilité de votre habitation, mais aussi son confort, son esthétique et son efficacité énergétique. Dans cet article, nous vous guidons à travers les critères essentiels pour bien choisir les matériaux adaptés à votre projet.",
     ],
@@ -220,8 +220,8 @@ export const blogArticles: readonly BlogArticle[] = [
     categoryHref: routes.categoryStructuralWork,
     published: "20 avril 2025",
     publishedIso: "2025-04-20",
-    image: "/images/portfolio-2026/projects/villa-founty-construction.webp",
-    imageAlt: "Construction de la Villa Founty",
+    image: "/images/blog/custom.webp",
+    imageAlt: "Villa contemporaine en construction à Agadir",
     introduction: [
       "Faire construire sa maison ou son bâtiment sur-mesure est une solution de plus en plus prisée à Agadir et dans l’ensemble du Maroc. Contrairement aux constructions standardisées, un projet sur-mesure s’adapte entièrement à vos besoins, à votre mode de vie et aux particularités de votre terrain. La société S2MBOU, spécialisée dans la construction et l’aménagement à Agadir, vous accompagne dans la réalisation de projets personnalisés et de haute qualité.",
       "Dans cet article, nous vous expliquons les avantages clés d’une construction sur-mesure et pourquoi faire appel à S2MBOU peut faire toute la différence.",

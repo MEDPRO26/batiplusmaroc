@@ -1,153 +1,131 @@
-import Image from "next/image";
-import Link from "next/link";
+import type { ReactNode } from "react";
+import { getTranslations } from "next-intl/server";
+import { BrandLogo } from "@/components/layout/brand-logo";
+import { footerColumns, footerSocial } from "@/content/site";
+import { Link } from "@/i18n/navigation";
+import { routes, type AppRoute } from "@/lib/routes";
+import { outfit } from "@/components/shared/outfit";
 
-import { footerNavigation, serviceNavigation } from "@/content/site";
-import { routes } from "@/lib/routes";
+const linkClass =
+  "inline-flex min-h-10 items-center text-[0.92rem] leading-6 text-white/72 transition-colors duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
 
-const footerLinkClass =
-  "group flex min-h-10 items-center justify-between gap-4 border-b border-white/8 py-2 text-sm text-[#b6c3cf] transition-colors hover:text-white";
+export async function SiteFooter() {
+  const t = await getTranslations("footer");
+  const tBrand = await getTranslations("brand");
 
-export function SiteFooter() {
   return (
-    <footer className="relative mt-auto overflow-hidden bg-[#091728] text-white">
-      <div
-        className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-[#e7b63f]/75 to-transparent"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute -right-40 -bottom-64 size-[520px] rounded-full bg-[#0b5684]/18 blur-3xl"
-        aria-hidden="true"
-      />
-
-      <div className="relative mx-auto grid max-w-[1280px] gap-12 px-[18px] py-14 sm:px-6 sm:py-16 md:grid-cols-2 lg:grid-cols-[1.5fr_0.8fr_0.8fr_1fr] lg:gap-14 lg:px-8 lg:py-20">
-        <div>
-          <Link
-            className="inline-flex rounded-xl bg-white px-5 py-4 shadow-[0_12px_35px_rgba(0,0,0,0.16)] transition-transform duration-200 hover:-translate-y-0.5"
-            href={routes.home}
-            aria-label="S2MBOU — Accueil"
-          >
-            <Image
-              src="/brand/s2mbou-logo.webp"
-              alt="S2MBOU"
-              width={153}
-              height={40}
-            />
-          </Link>
-          <p className="mt-7 max-w-sm text-sm leading-7 text-[#9babb9] sm:text-[0.95rem]">
-            S2MBOU Construction — votre partenaire dans la réalisation de
-            projets de construction durables et sur mesure.
-          </p>
-          <Link
-            className="group mt-7 inline-flex items-center gap-3 text-sm font-semibold text-white"
-            href={routes.contact}
-          >
-            Parler de votre projet
-            <span
-              className="text-[#e7b63f] transition-transform duration-200 group-hover:translate-x-1"
-              aria-hidden="true"
+    <footer className={`${outfit.className} bg-white px-4 pb-5 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8`}>
+      <div className="mx-auto max-w-7xl rounded-xl bg-dark-section px-6 py-12 text-white sm:px-10 sm:py-14 lg:px-16 lg:py-16">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-[minmax(220px,1.35fr)_repeat(4,minmax(0,1fr))] lg:gap-10">
+          <div className="col-span-2 lg:col-span-1">
+            <Link
+              aria-label={tBrand("homeAria")}
+              className="inline-flex text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+              href={routes.home}
             >
-              →
-            </span>
-          </Link>
+              <BrandLogo className="text-[1.7rem] leading-none text-white" name={tBrand("name")} />
+            </Link>
+            <p className="mt-5 mb-0 max-w-[22rem] text-[0.88rem] leading-6 text-white/62">{t("description")}</p>
+          </div>
+
+          {footerColumns.map((column) => (
+            <nav aria-labelledby={`footer-${column.key}`} key={column.key}>
+              <p
+                className="mb-4 text-[0.82rem] leading-5 font-medium text-white/50"
+                id={`footer-${column.key}`}
+              >
+                {t(`columns.${column.key}.heading`)}
+              </p>
+              <ul className="m-0 grid list-none gap-1 p-0">
+                {column.links.map((item) => (
+                  <li key={`${column.key}-${item.labelKey}`}>
+                    <FooterLink hash={footerHash(item)} href={item.href}>
+                      {t(`columns.${column.key}.${item.labelKey}` as Parameters<typeof t>[0])}
+                    </FooterLink>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
 
-        <div>
-          <p className="mb-4 text-[0.68rem] font-bold tracking-[0.18em] text-[#e7b63f] uppercase">
-            Navigation
-          </p>
-          <nav aria-label="Navigation de pied de page">
-            <ul className="m-0 list-none p-0">
-              {footerNavigation.map((item) => (
-                <li key={item.href}>
-                  <Link className={footerLinkClass} href={item.href}>
-                    {item.label}
-                    <span
-                      className="text-[#567086] opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100"
-                      aria-hidden="true"
-                    >
-                      →
-                    </span>
-                  </Link>
+        <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-8 sm:mt-14 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-4">
+            <p className="mb-0 text-[0.82rem] text-white/50">{t("follow")}</p>
+            <ul className="m-0 flex list-none gap-2 p-0">
+              {footerSocial.map((network) => (
+                <li key={network.key}>
+                  <a
+                    aria-label={t(`social.${network.key}`)}
+                    className="grid size-10 place-items-center rounded-full text-white/80 transition-colors duration-150 hover:bg-white/8 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    href={network.href}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <FacebookIcon />
+                  </a>
                 </li>
               ))}
             </ul>
-          </nav>
+          </div>
+          <p className="mb-0 max-w-sm text-[0.82rem] leading-6 text-white/45 sm:text-end">{t("tagline")}</p>
         </div>
 
-        <div>
-          <p className="mb-4 text-[0.68rem] font-bold tracking-[0.18em] text-[#e7b63f] uppercase">
-            Services
-          </p>
-          <nav aria-label="Services">
-            <ul className="m-0 list-none p-0">
-              {serviceNavigation.map((item) => (
-                <li key={item.href}>
-                  <Link className={footerLinkClass} href={item.href}>
-                    {item.label}
-                    <span
-                      className="text-[#567086] opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100"
-                      aria-hidden="true"
-                    >
-                      →
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+        <div className="mt-8 flex flex-col gap-3 border-t border-white/10 pt-6 text-[0.78rem] text-white/40 sm:flex-row sm:items-center sm:justify-between">
+          <p className="mb-0">{t("copyright", { year: new Date().getFullYear() })}</p>
+          <ul className="m-0 flex list-none flex-wrap gap-x-5 gap-y-2 p-0">
+            <li>
+              <Link className="min-h-10 inline-flex items-center hover:text-white" href={routes.contact}>
+                {t("contact")}
+              </Link>
+            </li>
+            <li>
+              <Link className="min-h-10 inline-flex items-center hover:text-white" href={routes.about}>
+                {t("about")}
+              </Link>
+            </li>
+            <li>
+              <a
+                className="min-h-10 inline-flex items-center hover:text-white"
+                href="https://www.itagroupe.com/"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                {t("createdBy")}
+              </a>
+            </li>
+          </ul>
         </div>
-
-        <div>
-          <p className="mb-4 text-[0.68rem] font-bold tracking-[0.18em] text-[#e7b63f] uppercase">
-            Contact
-          </p>
-          <address className="grid gap-5 text-sm not-italic">
-            <a
-              className="group grid gap-1 border-b border-white/8 pb-4"
-              href="tel:+212766018650"
-            >
-              <span className="text-[0.65rem] font-bold tracking-[0.14em] text-[#6f8496] uppercase">
-                Téléphone
-              </span>
-              <span className="font-semibold text-[#d9e1e8] transition-colors group-hover:text-white">
-                +212 766-018650
-              </span>
-            </a>
-            <a
-              className="group grid gap-1 border-b border-white/8 pb-4"
-              href="mailto:sgta.btp@gmail.com"
-            >
-              <span className="text-[0.65rem] font-bold tracking-[0.14em] text-[#6f8496] uppercase">
-                E-mail
-              </span>
-              <span className="break-all font-semibold text-[#d9e1e8] transition-colors group-hover:text-white">
-                sgta.btp@gmail.com
-              </span>
-            </a>
-            <span className="grid gap-1">
-              <span className="text-[0.65rem] font-bold tracking-[0.14em] text-[#6f8496] uppercase">
-                Adresse
-              </span>
-              <span className="font-semibold text-[#d9e1e8]">
-                Hay Dakhla, Agadir
-              </span>
-            </span>
-          </address>
-        </div>
-      </div>
-
-      <div className="relative mx-auto flex max-w-[1280px] flex-col gap-3 border-t border-white/10 px-[18px] py-6 text-[0.7rem] tracking-[0.06em] text-[#718496] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-        <span>© {new Date().getFullYear()} S2MBOU</span>
-        <span>Construction · Aménagement · Finitions</span>
-        <a
-          className="transition-colors hover:text-white"
-          href="https://www.itagroupe.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Créé par ITA Groupe
-        </a>
       </div>
     </footer>
+  );
+}
+
+function footerHash(item: object) {
+  if ("hash" in item && typeof item.hash === "string") return item.hash;
+  return undefined;
+}
+
+function FooterLink({
+  children,
+  hash,
+  href,
+}: {
+  children: ReactNode;
+  hash?: string;
+  href: AppRoute;
+}) {
+  return (
+    <Link className={linkClass} href={(hash ? { pathname: href, hash } : href) as never}>
+      {children}
+    </Link>
+  );
+}
+
+function FacebookIcon() {
+  return (
+    <svg aria-hidden="true" className="size-4" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M14.5 8.5V6.8c0-.7.5-1.3 1.6-1.3h1.4V3h-2.3C12.4 3 11 4.6 11 6.7v1.8H9v2.6h2V21h3.5v-9.9h2.3l.4-2.6z" />
+    </svg>
   );
 }

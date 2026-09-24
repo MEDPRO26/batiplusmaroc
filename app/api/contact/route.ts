@@ -4,7 +4,7 @@ import { buildContactEmailHtml, buildContactEmailText } from "@/lib/contact-emai
 
 export const runtime = "nodejs";
 
-const otherService = "Autre";
+const otherServiceLabels = new Set(["Autre", "Other"]);
 
 type ContactPayload = {
   name?: unknown;
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     return Response.json({ message: "Veuillez remplir les champs obligatoires." }, { status: 400 });
   }
 
-  if (services.includes(otherService) && !details) {
+  if (services.some((service) => otherServiceLabels.has(service)) && !details) {
     return Response.json({ message: "Veuillez préciser votre service." }, { status: 400 });
   }
 

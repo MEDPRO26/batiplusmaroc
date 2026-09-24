@@ -1,0 +1,2981 @@
+{
+  "audit_metadata": {
+    "captured_at_utc": "2026-08-21T09:51:11.772059+00:00",
+    "production_source": "https://batiplusmaroc.com/second-oeuvre/",
+    "source_of_truth": "Direct production HTTP responses and returned HTML",
+    "user_agent": "Mozilla/5.0 (compatible; BatiPlusMigrationAudit/1.0; +https://batiplusmaroc.com/)",
+    "references_read": [
+      "./design.md",
+      "./SEO_MIGRATION.md",
+      "./migration/homepage-live-audit.json",
+      "./migration/gros-oeuvre-live-audit.json",
+      "./migration/a-propos-live-audit.json",
+      "./migration/nos-services-live-audit.json"
+    ]
+  },
+  "page": {
+    "requested_url": "https://batiplusmaroc.com/second-oeuvre/",
+    "final_url": "https://batiplusmaroc.com/second-oeuvre/",
+    "http_status": 200,
+    "redirect_chain": [],
+    "response_headers": {
+      "Date": "Fri, 21 Aug 2026 09:51:08 GMT",
+      "Content-Type": "text/html; charset=UTF-8",
+      "Transfer-Encoding": "chunked",
+      "Connection": "close",
+      "Vary": "Accept-Encoding",
+      "x-powered-by": "PHP/8.3.30",
+      "permissions-policy": "private-state-token-redemption=(self \"https://www.google.com\" \"https://www.gstatic.com\" \"https://recaptcha.net\" \"https://challenges.cloudflare.com\" \"https://hcaptcha.com\"), private-state-token-issuance=(self \"https://www.google.com\" \"https://www.gstatic.com\" \"https://recaptcha.net\" \"https://challenges.cloudflare.com\" \"https://hcaptcha.com\")",
+      "expires": "Thu, 19 Nov 1981 08:52:00 GMT",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      "pragma": "no-cache",
+      "link": "<https://batiplusmaroc.com/?p=172>; rel=shortlink",
+      "etag": "W/\"26-1787060421;gz\"",
+      "x-litespeed-cache": "hit",
+      "platform": "hostinger",
+      "panel": "hpanel",
+      "content-security-policy": "upgrade-insecure-requests",
+      "Server": "hcdn",
+      "alt-svc": "h3=\":443\"; ma=86400",
+      "x-hcdn-request-id": "f38e57725edf8363b5389764d52606e1-srv-edge4",
+      "x-hcdn-cache-status": "MISS",
+      "x-hcdn-upstream-rt": "0.075"
+    },
+    "title": "Second Œuvre à Agadir – rénovation & finitions Pro",
+    "meta_description": "Travaux de second œuvre à Agadir : électricité, plomberie, peinture, carrelage. Des finitions de qualité pour vos projets résidentiels .",
+    "canonical": "https://batiplusmaroc.com/second-oeuvre/",
+    "meta_robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+    "open_graph_entries": [
+      {
+        "property": "og:locale",
+        "content": "fr_FR"
+      },
+      {
+        "property": "og:type",
+        "content": "article"
+      },
+      {
+        "property": "og:title",
+        "content": "Second Œuvre à Agadir – rénovation & finitions Pro"
+      },
+      {
+        "property": "og:description",
+        "content": "Travaux de second œuvre à Agadir : électricité, plomberie, peinture, carrelage. Des finitions de qualité pour vos projets résidentiels ."
+      },
+      {
+        "property": "og:url",
+        "content": "https://batiplusmaroc.com/second-oeuvre/"
+      },
+      {
+        "property": "og:site_name",
+        "content": "batiplusmaroc.com"
+      }
+    ],
+    "open_graph": {
+      "og:locale": "fr_FR",
+      "og:type": "article",
+      "og:title": "Second Œuvre à Agadir – rénovation & finitions Pro",
+      "og:description": "Travaux de second œuvre à Agadir : électricité, plomberie, peinture, carrelage. Des finitions de qualité pour vos projets résidentiels .",
+      "og:url": "https://batiplusmaroc.com/second-oeuvre/",
+      "og:site_name": "batiplusmaroc.com"
+    },
+    "twitter_entries": [
+      {
+        "name": "twitter:card",
+        "content": "summary_large_image"
+      },
+      {
+        "name": "twitter:label1",
+        "content": "Durée de lecture estimée"
+      },
+      {
+        "name": "twitter:data1",
+        "content": "3 minutes"
+      }
+    ],
+    "twitter": {
+      "twitter:card": "summary_large_image",
+      "twitter:label1": "Durée de lecture estimée",
+      "twitter:data1": "3 minutes"
+    },
+    "json_ld_blocks": [
+      "{\"@context\":\"https:\\/\\/schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/second-oeuvre\\/\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/second-oeuvre\\/\",\"name\":\"Second Œuvre à Agadir – rénovation & finitions Pro\",\"isPartOf\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#website\"},\"datePublished\":\"2025-05-10T17:24:36+00:00\",\"dateModified\":\"2025-08-28T08:42:36+00:00\",\"description\":\"Travaux de second œuvre à Agadir : électricité, plomberie, peinture, carrelage. Des finitions de qualité pour vos projets résidentiels .\",\"breadcrumb\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/second-oeuvre\\/#breadcrumb\"},\"inLanguage\":\"fr-FR\",\"potentialAction\":[{\"@type\":\"ReadAction\",\"target\":[\"https:\\/\\/batiplusmaroc.com\\/second-oeuvre\\/\"]}]},{\"@type\":\"BreadcrumbList\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/second-oeuvre\\/#breadcrumb\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Accueil\",\"item\":\"https:\\/\\/batiplusmaroc.com\\/\"},{\"@type\":\"ListItem\",\"position\":2,\"name\":\"Second oeuvre\"}]},{\"@type\":\"WebSite\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#website\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/\",\"name\":\"batiplusmaroc.com\",\"description\":\"\",\"publisher\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#organization\"},\"potentialAction\":[{\"@type\":\"SearchAction\",\"target\":{\"@type\":\"EntryPoint\",\"urlTemplate\":\"https:\\/\\/batiplusmaroc.com\\/?s={search_term_string}\"},\"query-input\":{\"@type\":\"PropertyValueSpecification\",\"valueRequired\":true,\"valueName\":\"search_term_string\"}}],\"inLanguage\":\"fr-FR\"},{\"@type\":\"Organization\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#organization\",\"name\":\"batiplusmaroc.com\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/\",\"logo\":{\"@type\":\"ImageObject\",\"inLanguage\":\"fr-FR\",\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#\\/schema\\/logo\\/image\\/\",\"url\":\"https:\\/\\/batiplusmaroc.com\\/wp-content\\/uploads\\/2025\\/05\\/home-build-construction-logo-153-x-40-px.png\",\"contentUrl\":\"https:\\/\\/batiplusmaroc.com\\/wp-content\\/uploads\\/2025\\/05\\/home-build-construction-logo-153-x-40-px.png\",\"width\":153,\"height\":40,\"caption\":\"batiplusmaroc.com\"},\"image\":{\"@id\":\"https:\\/\\/batiplusmaroc.com\\/#\\/schema\\/logo\\/image\\/\"},\"sameAs\":[\"https:\\/\\/www.facebook.com\\/sgta.btp\",\"https:\\/\\/share.google\\/j5BiBjLTGpFdjD3f8\"]}]}"
+    ],
+    "json_ld_parsed": [
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebPage",
+            "@id": "https://batiplusmaroc.com/second-oeuvre/",
+            "url": "https://batiplusmaroc.com/second-oeuvre/",
+            "name": "Second Œuvre à Agadir – rénovation & finitions Pro",
+            "isPartOf": {
+              "@id": "https://batiplusmaroc.com/#website"
+            },
+            "datePublished": "2025-05-10T17:24:36+00:00",
+            "dateModified": "2025-08-28T08:42:36+00:00",
+            "description": "Travaux de second œuvre à Agadir : électricité, plomberie, peinture, carrelage. Des finitions de qualité pour vos projets résidentiels .",
+            "breadcrumb": {
+              "@id": "https://batiplusmaroc.com/second-oeuvre/#breadcrumb"
+            },
+            "inLanguage": "fr-FR",
+            "potentialAction": [
+              {
+                "@type": "ReadAction",
+                "target": [
+                  "https://batiplusmaroc.com/second-oeuvre/"
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://batiplusmaroc.com/second-oeuvre/#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Accueil",
+                "item": "https://batiplusmaroc.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Second oeuvre"
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://batiplusmaroc.com/#website",
+            "url": "https://batiplusmaroc.com/",
+            "name": "batiplusmaroc.com",
+            "description": "",
+            "publisher": {
+              "@id": "https://batiplusmaroc.com/#organization"
+            },
+            "potentialAction": [
+              {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://batiplusmaroc.com/?s={search_term_string}"
+                },
+                "query-input": {
+                  "@type": "PropertyValueSpecification",
+                  "valueRequired": true,
+                  "valueName": "search_term_string"
+                }
+              }
+            ],
+            "inLanguage": "fr-FR"
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://batiplusmaroc.com/#organization",
+            "name": "batiplusmaroc.com",
+            "url": "https://batiplusmaroc.com/",
+            "logo": {
+              "@type": "ImageObject",
+              "inLanguage": "fr-FR",
+              "@id": "https://batiplusmaroc.com/#/schema/logo/image/",
+              "url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+              "contentUrl": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+              "width": 153,
+              "height": 40,
+              "caption": "batiplusmaroc.com"
+            },
+            "image": {
+              "@id": "https://batiplusmaroc.com/#/schema/logo/image/"
+            },
+            "sameAs": [
+              "https://www.facebook.com/sgta.btp",
+              "https://share.google/j5BiBjLTGpFdjD3f8"
+            ]
+          }
+        ]
+      }
+    ],
+    "structured_data_types": [
+      "WebPage",
+      "ReadAction",
+      "BreadcrumbList",
+      "ListItem",
+      "WebSite",
+      "SearchAction",
+      "EntryPoint",
+      "PropertyValueSpecification",
+      "Organization",
+      "ImageObject"
+    ],
+    "html_lang": "fr-FR",
+    "headings": [
+      {
+        "level": 1,
+        "tag": "H1",
+        "text": "Second œuvre"
+      },
+      {
+        "level": 5,
+        "tag": "H5",
+        "text": "S2MBOU SARL"
+      },
+      {
+        "level": 2,
+        "tag": "H2",
+        "text": "Second Œuvre"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Amical Omolkoura"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Particulier privé"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Amical Annajah"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Villa avec sous sol"
+      },
+      {
+        "level": 3,
+        "tag": "H3",
+        "text": "Alhouda Doha Iamar"
+      },
+      {
+        "level": 4,
+        "tag": "H4",
+        "text": "Amical Omolkoura"
+      },
+      {
+        "level": 4,
+        "tag": "H4",
+        "text": "Particulier privé"
+      },
+      {
+        "level": 4,
+        "tag": "H4",
+        "text": "Amical Annajah"
+      },
+      {
+        "level": 4,
+        "tag": "H4",
+        "text": "Villa avec sous sol"
+      },
+      {
+        "level": 4,
+        "tag": "H4",
+        "text": "Alhouda Doha Iamar"
+      },
+      {
+        "level": 6,
+        "tag": "H6",
+        "text": "S2MBOU Construction – Votre partenaire de confiance dans la réalisation de projets de construction durables et sur mesure. Nous mettons notre expertise et notre engagement au service de vos idées, pour bâtir ensemble un avenir solide."
+      },
+      {
+        "level": 6,
+        "tag": "H6",
+        "text": "Nos services"
+      },
+      {
+        "level": 6,
+        "tag": "H6",
+        "text": "Accès rapide"
+      },
+      {
+        "level": 6,
+        "tag": "H6",
+        "text": "Contactez nous"
+      }
+    ],
+    "crawlable_text_sections": [
+      {
+        "order": 236,
+        "type": "heading",
+        "tag": "H5",
+        "text": "S2MBOU SARL"
+      },
+      {
+        "order": 238,
+        "type": "heading",
+        "tag": "H2",
+        "text": "Second Œuvre"
+      },
+      {
+        "order": 241,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Le second œuvre regroupe l’ensemble des travaux qui viennent après le gros œuvre dans la construction d’un bâtiment. Il vise à rendre l’habitation confortable, fonctionnelle et esthétique ."
+      },
+      {
+        "order": 244,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Nos services de second œuvre comprennent :"
+      },
+      {
+        "order": 247,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Isolation thermique et acoustique"
+      },
+      {
+        "order": 250,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Installation électrique"
+      },
+      {
+        "order": 253,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Plomberie et sanitaires"
+      },
+      {
+        "order": 256,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Pose de cloisons et plafonds"
+      },
+      {
+        "order": 259,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Revêtements de sols et murs"
+      },
+      {
+        "order": 262,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Menuiserie intérieure (portes, escaliers, rangements)"
+      },
+      {
+        "order": 265,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Peinture et finitions"
+      },
+      {
+        "order": 267,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Grâce à notre expertise, nous assurons des travaux soignés, conformes aux normes en vigueur, pour garantir votre confort et la qualité de votre bien."
+      },
+      {
+        "order": 292,
+        "type": "paragraph",
+        "tag": "P",
+        "text": "Nos Projets"
+      },
+      {
+        "order": 304,
+        "type": "list_item",
+        "tag": "LI",
+        "text": "All"
+      },
+      {
+        "order": 306,
+        "type": "list_item",
+        "tag": "LI",
+        "text": "aménagement extérieur"
+      },
+      {
+        "order": 308,
+        "type": "list_item",
+        "tag": "LI",
+        "text": "aménagement intérieur"
+      },
+      {
+        "order": 310,
+        "type": "list_item",
+        "tag": "LI",
+        "text": "Gros oeuvre"
+      },
+      {
+        "order": 324,
+        "type": "heading",
+        "tag": "H3",
+        "text": "Amical Omolkoura"
+      },
+      {
+        "order": 333,
+        "type": "heading",
+        "tag": "H3",
+        "text": "Particulier privé"
+      },
+      {
+        "order": 342,
+        "type": "heading",
+        "tag": "H3",
+        "text": "Amical Annajah"
+      },
+      {
+        "order": 351,
+        "type": "heading",
+        "tag": "H3",
+        "text": "Villa avec sous sol"
+      },
+      {
+        "order": 360,
+        "type": "heading",
+        "tag": "H3",
+        "text": "Alhouda Doha Iamar"
+      },
+      {
+        "order": 374,
+        "type": "heading",
+        "tag": "H4",
+        "text": "Amical Omolkoura"
+      },
+      {
+        "order": 391,
+        "type": "heading",
+        "tag": "H4",
+        "text": "Particulier privé"
+      },
+      {
+        "order": 408,
+        "type": "heading",
+        "tag": "H4",
+        "text": "Amical Annajah"
+      },
+      {
+        "order": 425,
+        "type": "heading",
+        "tag": "H4",
+        "text": "Villa avec sous sol"
+      },
+      {
+        "order": 442,
+        "type": "heading",
+        "tag": "H4",
+        "text": "Alhouda Doha Iamar"
+      }
+    ],
+    "internal_links": [
+      {
+        "anchor_text": "Skip to main content",
+        "href": "#ajax-content-wrap",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#ajax-content-wrap",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "phone",
+        "href": "",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "email",
+        "href": "",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Close Search",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com",
+        "resolved_url": "https://batiplusmaroc.com",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Menu",
+        "href": "#sidewidgetarea",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#sidewidgetarea",
+        "rel": null,
+        "aria_label": "Navigation Menu",
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "À propos",
+        "href": "https://batiplusmaroc.com/a-propos/",
+        "resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Nos services",
+        "href": "https://batiplusmaroc.com/nos-services/",
+        "resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Gros oeuvre",
+        "href": "https://batiplusmaroc.com/gros-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Second oeuvre",
+        "href": "https://batiplusmaroc.com/second-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Nos réalisations",
+        "href": "https://batiplusmaroc.com/nos-realisations/",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Contactez-nous",
+        "href": "https://batiplusmaroc.com/contactez-nous/",
+        "resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Accueil",
+        "href": "https://batiplusmaroc.com/",
+        "resolved_url": "https://batiplusmaroc.com/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "All",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "aménagement extérieur",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "aménagement intérieur",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Gros oeuvre",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/portfolio/projet-5/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-5/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-5/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/portfolio/projet-4/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-4/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-4/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/portfolio/projet-3/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-3/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-3/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/portfolio/projet-2/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-2/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-2/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "",
+        "href": "https://batiplusmaroc.com/portfolio/projet-1/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-1/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-1/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "View Larger",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL.jpg",
+        "resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL.jpg",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL.jpg",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "More Details",
+        "href": "https://batiplusmaroc.com/portfolio/projet-5/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-5/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-5/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Love 0",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "View Larger",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive.jpg",
+        "resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive.jpg",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive.jpg",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "More Details",
+        "href": "https://batiplusmaroc.com/portfolio/projet-4/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-4/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-4/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Love 0",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "View Larger",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah.jpg",
+        "resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah.jpg",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah.jpg",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "More Details",
+        "href": "https://batiplusmaroc.com/portfolio/projet-3/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-3/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-3/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Love 0",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "View Larger",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-scaled.jpg",
+        "resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-scaled.jpg",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-scaled.jpg",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "More Details",
+        "href": "https://batiplusmaroc.com/portfolio/projet-2/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-2/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-2/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Love 0",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "View Larger",
+        "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-scaled.jpg",
+        "resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-scaled.jpg",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-scaled.jpg",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "More Details",
+        "href": "https://batiplusmaroc.com/portfolio/projet-1/",
+        "resolved_url": "https://batiplusmaroc.com/portfolio/projet-1/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/portfolio/projet-1/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Love 0",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "À propos",
+        "href": "https://batiplusmaroc.com/a-propos/",
+        "resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Nos services",
+        "href": "https://batiplusmaroc.com/nos-services/",
+        "resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Gros oeuvre",
+        "href": "https://batiplusmaroc.com/gros-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Second oeuvre",
+        "href": "https://batiplusmaroc.com/second-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Nos réalisations",
+        "href": "https://batiplusmaroc.com/nos-realisations/",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Close Menu",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "À propos",
+        "href": "https://batiplusmaroc.com/a-propos/",
+        "resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/a-propos/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Nos services",
+        "href": "https://batiplusmaroc.com/nos-services/",
+        "resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-services/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Gros oeuvre",
+        "href": "https://batiplusmaroc.com/gros-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/gros-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Second oeuvre",
+        "href": "https://batiplusmaroc.com/second-oeuvre/",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Nos réalisations",
+        "href": "https://batiplusmaroc.com/nos-realisations/",
+        "resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/nos-realisations/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "Contactez-nous",
+        "href": "https://batiplusmaroc.com/contactez-nous/",
+        "resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": true,
+        "final_resolved_url": "https://batiplusmaroc.com/contactez-nous/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "phone",
+        "href": "",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "email",
+        "href": "",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      },
+      {
+        "anchor_text": "",
+        "href": "#",
+        "resolved_url": "https://batiplusmaroc.com/second-oeuvre/#",
+        "rel": null,
+        "aria_label": null,
+        "crawlable_http_link": false,
+        "final_resolved_url": "https://batiplusmaroc.com/second-oeuvre/",
+        "http_status": 200,
+        "redirect_chain": []
+      }
+    ],
+    "images": [
+      {
+        "src": "https://www.facebook.com/tr?id=1713767920020441&ev=PageView&noscript=1",
+        "srcset": null,
+        "alt": null,
+        "width": "1",
+        "height": "1",
+        "loading": null,
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": null
+      },
+      {
+        "src": "https://www.facebook.com/tr?id=26723692560601650&ev=PageView&noscript=1",
+        "srcset": null,
+        "alt": "fbpx",
+        "width": "1",
+        "height": "1",
+        "loading": null,
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": null
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+        "srcset": null,
+        "alt": "batiplusmaroc.com",
+        "width": "153",
+        "height": "40",
+        "loading": null,
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": null
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px.png",
+        "srcset": null,
+        "alt": "batiplusmaroc.com",
+        "width": "153",
+        "height": "40",
+        "loading": null,
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": null
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/07/18336.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/07/18336.jpg 667w, https://batiplusmaroc.com/wp-content/uploads/2025/07/18336-600x900.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/07/18336-200x300.jpg 200w",
+        "alt": "",
+        "width": "667",
+        "height": "1000",
+        "loading": null,
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "(min-width: 1000px) 45vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/07/2149278646-1.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/07/2149278646-1.jpg 667w, https://batiplusmaroc.com/wp-content/uploads/2025/07/2149278646-1-600x900.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/07/2149278646-1-200x300.jpg 200w",
+        "alt": "",
+        "width": "667",
+        "height": "1000",
+        "loading": null,
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "(min-width: 1000px) 45vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/07/2149328110-1.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/07/2149328110-1.jpg 667w, https://batiplusmaroc.com/wp-content/uploads/2025/07/2149328110-1-600x900.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/07/2149328110-1-200x300.jpg 200w",
+        "alt": "",
+        "width": "667",
+        "height": "1000",
+        "loading": null,
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "(min-width: 1000px) 45vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg 350w",
+        "alt": "",
+        "width": "500",
+        "height": "1000",
+        "loading": "lazy",
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "auto, (min-width: 1600px) 20vw, (min-width: 1300px) 25vw, (min-width: 1000px) 33.3vw, (min-width: 690px) 50vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-1000x1000.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-1000x1000.jpg 1000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-500x500.jpg 500w",
+        "alt": "",
+        "width": "1000",
+        "height": "1000",
+        "loading": "lazy",
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "auto, (min-width: 1600px) 40vw, (min-width: 1300px) 50vw, (min-width: 1000px) 66.6vw, (min-width: 690px) 100vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg 350w",
+        "alt": "",
+        "width": "500",
+        "height": "1000",
+        "loading": "lazy",
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "auto, (min-width: 1600px) 20vw, (min-width: 1300px) 25vw, (min-width: 1000px) 33.3vw, (min-width: 690px) 50vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-1000x500.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-1000x500.jpg 1000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-670x335.jpg 670w",
+        "alt": "",
+        "width": "1000",
+        "height": "500",
+        "loading": "lazy",
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "auto, (min-width: 1600px) 40vw, (min-width: 1300px) 50vw, (min-width: 1000px) 66.6vw, (min-width: 690px) 100vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-500x500.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-500x500.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-350x350.jpg 350w",
+        "alt": "",
+        "width": "500",
+        "height": "500",
+        "loading": "lazy",
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "auto, (min-width: 1600px) 20vw, (min-width: 1300px) 25vw, (min-width: 1000px) 33.3vw, (min-width: 690px) 50vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-600x403.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-900x604.jpg 900w, https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-600x403.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-400x269.jpg 400w",
+        "alt": "",
+        "width": "600",
+        "height": "403",
+        "loading": "lazy",
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "auto, (min-width: 1000px) 25vw, (min-width: 690px) 50vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-600x403.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-900x604.jpg 900w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-600x403.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-400x269.jpg 400w",
+        "alt": "",
+        "width": "600",
+        "height": "403",
+        "loading": "lazy",
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "auto, (min-width: 1000px) 25vw, (min-width: 690px) 50vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-600x403.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-900x604.jpg 900w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-600x403.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-400x269.jpg 400w",
+        "alt": "",
+        "width": "600",
+        "height": "403",
+        "loading": "lazy",
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "auto, (min-width: 1000px) 25vw, (min-width: 690px) 50vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-600x403.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-900x604.jpg 900w, https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-600x403.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-400x269.jpg 400w",
+        "alt": "",
+        "width": "600",
+        "height": "403",
+        "loading": "lazy",
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "auto, (min-width: 1000px) 25vw, (min-width: 690px) 50vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-600x403.jpg",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-900x604.jpg 900w, https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-600x403.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-400x269.jpg 400w",
+        "alt": "",
+        "width": "600",
+        "height": "403",
+        "loading": "lazy",
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "auto, (min-width: 1000px) 25vw, (min-width: 690px) 50vw, 100vw"
+      },
+      {
+        "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px-334-x-65-px.png",
+        "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px-334-x-65-px.png 334w, https://batiplusmaroc.com/wp-content/uploads/2025/05/home-build-construction-logo-153-x-40-px-334-x-65-px-300x58.png 300w",
+        "alt": "",
+        "width": "334",
+        "height": "65",
+        "loading": null,
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": "(max-width: 334px) 100vw, 334px"
+      },
+      {
+        "src": "https://www.facebook.com/tr?id=1713767920020441&ev=PageView&noscript=1&cd%5Bpage_title%5D=Second+oeuvre&cd%5Bpost_type%5D=page&cd%5Bpost_id%5D=172&cd%5Bplugin%5D=PixelYourSite&cd%5Buser_role%5D=guest&cd%5Bevent_url%5D=batiplusmaroc.com%2Fsecond-oeuvre%2F",
+        "srcset": null,
+        "alt": "",
+        "width": "1",
+        "height": "1",
+        "loading": null,
+        "lazy_source": null,
+        "lazy_srcset": null,
+        "sizes": null
+      }
+    ],
+    "css_background_images_supplemental": [
+      "https://batiplusmaroc.com/wp-content/uploads/2025/07/2148393120.jpg"
+    ],
+    "breadcrumbs": {
+      "dom": {
+        "text": "Accueil » Second oeuvre",
+        "items": [
+          {
+            "name": "Accueil",
+            "href": "https://batiplusmaroc.com/",
+            "current": false
+          },
+          {
+            "name": "Second oeuvre",
+            "href": null,
+            "current": true
+          }
+        ]
+      },
+      "json_ld": [
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://batiplusmaroc.com/second-oeuvre/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Accueil",
+              "item": "https://batiplusmaroc.com/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Second oeuvre"
+            }
+          ]
+        }
+      ]
+    },
+    "indexable_from_http_meta_and_canonical": true,
+    "heading_count": 17,
+    "h1": [
+      "Second œuvre"
+    ],
+    "image_count": 19,
+    "css_background_image_count_supplemental": 1,
+    "internal_link_occurrence_count": 52,
+    "crawlable_internal_link_occurrence_count": 36,
+    "unique_internal_url_count": 18
+  },
+  "trailing_slash_behavior": [
+    {
+      "requested_url": "https://batiplusmaroc.com/second-oeuvre",
+      "final_url": "https://batiplusmaroc.com/second-oeuvre/",
+      "http_status": 200,
+      "redirect_chain": [
+        {
+          "url": "https://batiplusmaroc.com/second-oeuvre",
+          "status": 301,
+          "location": "https://batiplusmaroc.com/second-oeuvre/",
+          "resolved_location": "https://batiplusmaroc.com/second-oeuvre/"
+        }
+      ]
+    },
+    {
+      "requested_url": "https://batiplusmaroc.com/second-oeuvre/",
+      "final_url": "https://batiplusmaroc.com/second-oeuvre/",
+      "http_status": 200,
+      "redirect_chain": []
+    }
+  ],
+  "semantic_topics_to_preserve": [
+    {
+      "topic": "S2MBOU SARL",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "Second œuvre",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "Second Œuvre",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "Le second œuvre regroupe l’ensemble des travaux qui viennent après le gros œuvre dans la construction d’un bâtiment.",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "confortable",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "fonctionnel",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "esthétique",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "Isolation thermique et acoustique",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "Installation électrique",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "Plomberie et sanitaires",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "Pose de cloisons et plafonds",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "Revêtements de sols et murs",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "Menuiserie intérieure (portes, escaliers, rangements)",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "Peinture et finitions",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "travaux soignés",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "conformes aux normes en vigueur",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "confort",
+      "present_in_crawlable_content": true
+    },
+    {
+      "topic": "qualité de votre bien",
+      "present_in_crawlable_content": true
+    }
+  ],
+  "construction_vocabulary_found_in_production_html": [
+    "second œuvre",
+    "gros œuvre",
+    "construction",
+    "bâtiment",
+    "travaux",
+    "isolation thermique",
+    "installation électrique",
+    "électricité",
+    "plomberie",
+    "sanitaires",
+    "cloisons",
+    "plafonds",
+    "revêtements",
+    "sols",
+    "murs",
+    "menuiserie intérieure",
+    "portes",
+    "escaliers",
+    "rangements",
+    "peinture",
+    "finitions",
+    "confortable",
+    "fonctionnel",
+    "esthétique",
+    "confort",
+    "qualité",
+    "normes",
+    "travaux soignés",
+    "projet",
+    "rénovation",
+    "Agadir"
+  ],
+  "construction_vocabulary_index": [
+    {
+      "term": "second œuvre",
+      "sources": [
+        "crawlable body content",
+        "title/meta description"
+      ]
+    },
+    {
+      "term": "gros œuvre",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "construction",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "bâtiment",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "travaux",
+      "sources": [
+        "crawlable body content",
+        "title/meta description"
+      ]
+    },
+    {
+      "term": "isolation thermique",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "installation électrique",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "électricité",
+      "sources": [
+        "title/meta description"
+      ]
+    },
+    {
+      "term": "plomberie",
+      "sources": [
+        "crawlable body content",
+        "title/meta description"
+      ]
+    },
+    {
+      "term": "sanitaires",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "cloisons",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "plafonds",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "revêtements",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "sols",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "murs",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "menuiserie intérieure",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "portes",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "escaliers",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "rangements",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "peinture",
+      "sources": [
+        "crawlable body content",
+        "title/meta description"
+      ]
+    },
+    {
+      "term": "finitions",
+      "sources": [
+        "crawlable body content",
+        "title/meta description"
+      ]
+    },
+    {
+      "term": "confortable",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "fonctionnel",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "esthétique",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "confort",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "qualité",
+      "sources": [
+        "crawlable body content",
+        "title/meta description"
+      ]
+    },
+    {
+      "term": "normes",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "travaux soignés",
+      "sources": [
+        "crawlable body content"
+      ]
+    },
+    {
+      "term": "projet",
+      "sources": [
+        "crawlable body content",
+        "title/meta description"
+      ]
+    },
+    {
+      "term": "rénovation",
+      "sources": [
+        "title/meta description"
+      ]
+    },
+    {
+      "term": "Agadir",
+      "sources": [
+        "title/meta description"
+      ]
+    }
+  ],
+  "current_project_content": {
+    "projects_requested_for_verification": [
+      "Amical Omolkoura",
+      "Particulier privé",
+      "Amical Annajah",
+      "Villa avec sous sol",
+      "Alhouda Doha Iamar"
+    ],
+    "summary": [
+      {
+        "project_name": "Amical Omolkoura",
+        "dom_occurrence_count": 2,
+        "raw_html_string_occurrence_count": 2,
+        "duplicated_in_dom": true
+      },
+      {
+        "project_name": "Particulier privé",
+        "dom_occurrence_count": 2,
+        "raw_html_string_occurrence_count": 2,
+        "duplicated_in_dom": true
+      },
+      {
+        "project_name": "Amical Annajah",
+        "dom_occurrence_count": 2,
+        "raw_html_string_occurrence_count": 2,
+        "duplicated_in_dom": true
+      },
+      {
+        "project_name": "Villa avec sous sol",
+        "dom_occurrence_count": 2,
+        "raw_html_string_occurrence_count": 2,
+        "duplicated_in_dom": true
+      },
+      {
+        "project_name": "Alhouda Doha Iamar",
+        "dom_occurrence_count": 2,
+        "raw_html_string_occurrence_count": 2,
+        "duplicated_in_dom": true
+      }
+    ],
+    "occurrences": [
+      {
+        "project_name": "Amical Omolkoura",
+        "occurrence": 1,
+        "raw_html_string_occurrence_count": 2,
+        "node": {
+          "tag": "H3",
+          "id": null,
+          "class": null,
+          "order": 324
+        },
+        "heading_level": 3,
+        "text": "Amical Omolkoura",
+        "link_destination": null,
+        "resolved_link_destination": null,
+        "image": {
+          "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg",
+          "real_lazy_source": null,
+          "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-500x1000.jpg 350w",
+          "lazy_srcset": null,
+          "alt": "",
+          "css_background_image": null
+        },
+        "plugin_or_component_container": {
+          "tag": "DIV",
+          "id": null,
+          "class": "work-item style-2",
+          "order": 318
+        },
+        "ancestor_evidence": [
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vert-center",
+            "order": 323
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-info",
+            "order": 321
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-item style-2",
+            "order": 318
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "inner-wrap animated",
+            "order": 317
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "col elastic-portfolio-item tall element amenagement-exterieur ",
+            "order": 316
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "row portfolio-items masonry-items  fullwidth-constrained  ",
+            "order": 315
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "portfolio-wrap ",
+            "order": 313
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "wpb_wrapper",
+            "order": 300
+          }
+        ],
+        "theme_controls": [],
+        "category_or_filter_evidence": [
+          "Amical Omolkoura"
+        ]
+      },
+      {
+        "project_name": "Amical Omolkoura",
+        "occurrence": 2,
+        "raw_html_string_occurrence_count": 2,
+        "node": {
+          "tag": "H4",
+          "id": null,
+          "class": "title",
+          "order": 374
+        },
+        "heading_level": 4,
+        "text": "Amical Omolkoura",
+        "link_destination": "https://batiplusmaroc.com/portfolio/projet-5/",
+        "resolved_link_destination": "https://batiplusmaroc.com/portfolio/projet-5/",
+        "image": {
+          "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-600x403.jpg",
+          "real_lazy_source": null,
+          "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-900x604.jpg 900w, https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-600x403.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL-400x269.jpg 400w",
+          "lazy_srcset": null,
+          "alt": "",
+          "css_background_image": null
+        },
+        "plugin_or_component_container": {
+          "tag": "DIV",
+          "id": null,
+          "class": "col span_3  element amenagement-exterieur ",
+          "order": 364
+        },
+        "ancestor_evidence": [
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-meta",
+            "order": 373
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "inner-wrap animated",
+            "order": 365
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "col span_3  element amenagement-exterieur ",
+            "order": 364
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "row portfolio-items no-masonry  ",
+            "order": 363
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "portfolio-wrap ",
+            "order": 361
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "wpb_wrapper",
+            "order": 275
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vc_column-inner",
+            "order": 274
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vc_col-sm-12 wpb_column column_container vc_column_container col no-extra-padding inherit_tablet inherit_phone ",
+            "order": 273
+          }
+        ],
+        "theme_controls": [
+          {
+            "tag": "A",
+            "text": "View Larger",
+            "title": null,
+            "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/AMICAL.jpg",
+            "class": "pretty_photo default-link"
+          },
+          {
+            "tag": "A",
+            "text": "More Details",
+            "title": null,
+            "href": "https://batiplusmaroc.com/portfolio/projet-5/",
+            "class": "default-link"
+          },
+          {
+            "tag": "A",
+            "text": "Love 0",
+            "title": "Love this",
+            "href": "#",
+            "class": "nectar-love"
+          },
+          {
+            "tag": "SPAN",
+            "text": "Love",
+            "title": null,
+            "href": null,
+            "class": "love-text"
+          },
+          {
+            "tag": "SPAN",
+            "text": "0",
+            "title": null,
+            "href": null,
+            "class": "total_loves"
+          },
+          {
+            "tag": "SPAN",
+            "text": "0",
+            "title": null,
+            "href": null,
+            "class": "nectar-love-count"
+          }
+        ],
+        "category_or_filter_evidence": [
+          "View Larger More Details",
+          "Amical Omolkoura"
+        ]
+      },
+      {
+        "project_name": "Particulier privé",
+        "occurrence": 1,
+        "raw_html_string_occurrence_count": 2,
+        "node": {
+          "tag": "H3",
+          "id": null,
+          "class": null,
+          "order": 333
+        },
+        "heading_level": 3,
+        "text": "Particulier privé",
+        "link_destination": null,
+        "resolved_link_destination": null,
+        "image": {
+          "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-1000x1000.jpg",
+          "real_lazy_source": null,
+          "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-1000x1000.jpg 1000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-500x500.jpg 500w",
+          "lazy_srcset": null,
+          "alt": "",
+          "css_background_image": null
+        },
+        "plugin_or_component_container": {
+          "tag": "DIV",
+          "id": null,
+          "class": "work-item style-2",
+          "order": 327
+        },
+        "ancestor_evidence": [
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vert-center",
+            "order": 332
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-info",
+            "order": 330
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-item style-2",
+            "order": 327
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "inner-wrap animated",
+            "order": 326
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "col elastic-portfolio-item wide_tall element gros-oeuvre ",
+            "order": 325
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "row portfolio-items masonry-items  fullwidth-constrained  ",
+            "order": 315
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "portfolio-wrap ",
+            "order": 313
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "wpb_wrapper",
+            "order": 300
+          }
+        ],
+        "theme_controls": [],
+        "category_or_filter_evidence": [
+          "Particulier privé"
+        ]
+      },
+      {
+        "project_name": "Particulier privé",
+        "occurrence": 2,
+        "raw_html_string_occurrence_count": 2,
+        "node": {
+          "tag": "H4",
+          "id": null,
+          "class": "title",
+          "order": 391
+        },
+        "heading_level": 4,
+        "text": "Particulier privé",
+        "link_destination": "https://batiplusmaroc.com/portfolio/projet-4/",
+        "resolved_link_destination": "https://batiplusmaroc.com/portfolio/projet-4/",
+        "image": {
+          "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-600x403.jpg",
+          "real_lazy_source": null,
+          "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-900x604.jpg 900w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-600x403.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive-400x269.jpg 400w",
+          "lazy_srcset": null,
+          "alt": "",
+          "css_background_image": null
+        },
+        "plugin_or_component_container": {
+          "tag": "DIV",
+          "id": null,
+          "class": "col span_3  element gros-oeuvre ",
+          "order": 381
+        },
+        "ancestor_evidence": [
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-meta",
+            "order": 390
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "inner-wrap animated",
+            "order": 382
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "col span_3  element gros-oeuvre ",
+            "order": 381
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "row portfolio-items no-masonry  ",
+            "order": 363
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "portfolio-wrap ",
+            "order": 361
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "wpb_wrapper",
+            "order": 275
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vc_column-inner",
+            "order": 274
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vc_col-sm-12 wpb_column column_container vc_column_container col no-extra-padding inherit_tablet inherit_phone ",
+            "order": 273
+          }
+        ],
+        "theme_controls": [
+          {
+            "tag": "A",
+            "text": "View Larger",
+            "title": null,
+            "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Particulier-prive.jpg",
+            "class": "pretty_photo default-link"
+          },
+          {
+            "tag": "A",
+            "text": "More Details",
+            "title": null,
+            "href": "https://batiplusmaroc.com/portfolio/projet-4/",
+            "class": "default-link"
+          },
+          {
+            "tag": "A",
+            "text": "Love 0",
+            "title": "Love this",
+            "href": "#",
+            "class": "nectar-love"
+          },
+          {
+            "tag": "SPAN",
+            "text": "Love",
+            "title": null,
+            "href": null,
+            "class": "love-text"
+          },
+          {
+            "tag": "SPAN",
+            "text": "0",
+            "title": null,
+            "href": null,
+            "class": "total_loves"
+          },
+          {
+            "tag": "SPAN",
+            "text": "0",
+            "title": null,
+            "href": null,
+            "class": "nectar-love-count"
+          }
+        ],
+        "category_or_filter_evidence": [
+          "View Larger More Details",
+          "Particulier privé"
+        ]
+      },
+      {
+        "project_name": "Amical Annajah",
+        "occurrence": 1,
+        "raw_html_string_occurrence_count": 2,
+        "node": {
+          "tag": "H3",
+          "id": null,
+          "class": null,
+          "order": 342
+        },
+        "heading_level": 3,
+        "text": "Amical Annajah",
+        "link_destination": null,
+        "resolved_link_destination": null,
+        "image": {
+          "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg",
+          "real_lazy_source": null,
+          "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-500x1000.jpg 350w",
+          "lazy_srcset": null,
+          "alt": "",
+          "css_background_image": null
+        },
+        "plugin_or_component_container": {
+          "tag": "DIV",
+          "id": null,
+          "class": "work-item style-2",
+          "order": 336
+        },
+        "ancestor_evidence": [
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vert-center",
+            "order": 341
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-info",
+            "order": 339
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-item style-2",
+            "order": 336
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "inner-wrap animated",
+            "order": 335
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "col elastic-portfolio-item tall element amenagement-interieur ",
+            "order": 334
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "row portfolio-items masonry-items  fullwidth-constrained  ",
+            "order": 315
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "portfolio-wrap ",
+            "order": 313
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "wpb_wrapper",
+            "order": 300
+          }
+        ],
+        "theme_controls": [],
+        "category_or_filter_evidence": [
+          "Amical Annajah"
+        ]
+      },
+      {
+        "project_name": "Amical Annajah",
+        "occurrence": 2,
+        "raw_html_string_occurrence_count": 2,
+        "node": {
+          "tag": "H4",
+          "id": null,
+          "class": "title",
+          "order": 408
+        },
+        "heading_level": 4,
+        "text": "Amical Annajah",
+        "link_destination": "https://batiplusmaroc.com/portfolio/projet-3/",
+        "resolved_link_destination": "https://batiplusmaroc.com/portfolio/projet-3/",
+        "image": {
+          "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-600x403.jpg",
+          "real_lazy_source": null,
+          "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-900x604.jpg 900w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-600x403.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah-400x269.jpg 400w",
+          "lazy_srcset": null,
+          "alt": "",
+          "css_background_image": null
+        },
+        "plugin_or_component_container": {
+          "tag": "DIV",
+          "id": null,
+          "class": "col span_3  element amenagement-interieur ",
+          "order": 398
+        },
+        "ancestor_evidence": [
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-meta",
+            "order": 407
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "inner-wrap animated",
+            "order": 399
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "col span_3  element amenagement-interieur ",
+            "order": 398
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "row portfolio-items no-masonry  ",
+            "order": 363
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "portfolio-wrap ",
+            "order": 361
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "wpb_wrapper",
+            "order": 275
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vc_column-inner",
+            "order": 274
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vc_col-sm-12 wpb_column column_container vc_column_container col no-extra-padding inherit_tablet inherit_phone ",
+            "order": 273
+          }
+        ],
+        "theme_controls": [
+          {
+            "tag": "A",
+            "text": "View Larger",
+            "title": null,
+            "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/Amical-Annajah.jpg",
+            "class": "pretty_photo default-link"
+          },
+          {
+            "tag": "A",
+            "text": "More Details",
+            "title": null,
+            "href": "https://batiplusmaroc.com/portfolio/projet-3/",
+            "class": "default-link"
+          },
+          {
+            "tag": "A",
+            "text": "Love 0",
+            "title": "Love this",
+            "href": "#",
+            "class": "nectar-love"
+          },
+          {
+            "tag": "SPAN",
+            "text": "Love",
+            "title": null,
+            "href": null,
+            "class": "love-text"
+          },
+          {
+            "tag": "SPAN",
+            "text": "0",
+            "title": null,
+            "href": null,
+            "class": "total_loves"
+          },
+          {
+            "tag": "SPAN",
+            "text": "0",
+            "title": null,
+            "href": null,
+            "class": "nectar-love-count"
+          }
+        ],
+        "category_or_filter_evidence": [
+          "View Larger More Details",
+          "Amical Annajah"
+        ]
+      },
+      {
+        "project_name": "Villa avec sous sol",
+        "occurrence": 1,
+        "raw_html_string_occurrence_count": 2,
+        "node": {
+          "tag": "H3",
+          "id": null,
+          "class": null,
+          "order": 351
+        },
+        "heading_level": 3,
+        "text": "Villa avec sous sol",
+        "link_destination": null,
+        "resolved_link_destination": null,
+        "image": {
+          "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-1000x500.jpg",
+          "real_lazy_source": null,
+          "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-1000x500.jpg 1000w, https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-670x335.jpg 670w",
+          "lazy_srcset": null,
+          "alt": "",
+          "css_background_image": null
+        },
+        "plugin_or_component_container": {
+          "tag": "DIV",
+          "id": null,
+          "class": "work-item style-2",
+          "order": 345
+        },
+        "ancestor_evidence": [
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vert-center",
+            "order": 350
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-info",
+            "order": 348
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-item style-2",
+            "order": 345
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "inner-wrap animated",
+            "order": 344
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "col elastic-portfolio-item wide element amenagement-exterieur ",
+            "order": 343
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "row portfolio-items masonry-items  fullwidth-constrained  ",
+            "order": 315
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "portfolio-wrap ",
+            "order": 313
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "wpb_wrapper",
+            "order": 300
+          }
+        ],
+        "theme_controls": [],
+        "category_or_filter_evidence": [
+          "Villa avec sous sol"
+        ]
+      },
+      {
+        "project_name": "Villa avec sous sol",
+        "occurrence": 2,
+        "raw_html_string_occurrence_count": 2,
+        "node": {
+          "tag": "H4",
+          "id": null,
+          "class": "title",
+          "order": 425
+        },
+        "heading_level": 4,
+        "text": "Villa avec sous sol",
+        "link_destination": "https://batiplusmaroc.com/portfolio/projet-2/",
+        "resolved_link_destination": "https://batiplusmaroc.com/portfolio/projet-2/",
+        "image": {
+          "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-600x403.jpg",
+          "real_lazy_source": null,
+          "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-900x604.jpg 900w, https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-600x403.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-400x269.jpg 400w",
+          "lazy_srcset": null,
+          "alt": "",
+          "css_background_image": null
+        },
+        "plugin_or_component_container": {
+          "tag": "DIV",
+          "id": null,
+          "class": "col span_3  element amenagement-exterieur ",
+          "order": 415
+        },
+        "ancestor_evidence": [
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-meta",
+            "order": 424
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "inner-wrap animated",
+            "order": 416
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "col span_3  element amenagement-exterieur ",
+            "order": 415
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "row portfolio-items no-masonry  ",
+            "order": 363
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "portfolio-wrap ",
+            "order": 361
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "wpb_wrapper",
+            "order": 275
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vc_column-inner",
+            "order": 274
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vc_col-sm-12 wpb_column column_container vc_column_container col no-extra-padding inherit_tablet inherit_phone ",
+            "order": 273
+          }
+        ],
+        "theme_controls": [
+          {
+            "tag": "A",
+            "text": "View Larger",
+            "title": null,
+            "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/haut-founty-scaled.jpg",
+            "class": "pretty_photo default-link"
+          },
+          {
+            "tag": "A",
+            "text": "More Details",
+            "title": null,
+            "href": "https://batiplusmaroc.com/portfolio/projet-2/",
+            "class": "default-link"
+          },
+          {
+            "tag": "A",
+            "text": "Love 0",
+            "title": "Love this",
+            "href": "#",
+            "class": "nectar-love"
+          },
+          {
+            "tag": "SPAN",
+            "text": "Love",
+            "title": null,
+            "href": null,
+            "class": "love-text"
+          },
+          {
+            "tag": "SPAN",
+            "text": "0",
+            "title": null,
+            "href": null,
+            "class": "total_loves"
+          },
+          {
+            "tag": "SPAN",
+            "text": "0",
+            "title": null,
+            "href": null,
+            "class": "nectar-love-count"
+          }
+        ],
+        "category_or_filter_evidence": [
+          "View Larger More Details",
+          "Villa avec sous sol"
+        ]
+      },
+      {
+        "project_name": "Alhouda Doha Iamar",
+        "occurrence": 1,
+        "raw_html_string_occurrence_count": 2,
+        "node": {
+          "tag": "H3",
+          "id": null,
+          "class": null,
+          "order": 360
+        },
+        "heading_level": 3,
+        "text": "Alhouda Doha Iamar",
+        "link_destination": null,
+        "resolved_link_destination": null,
+        "image": {
+          "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-500x500.jpg",
+          "real_lazy_source": null,
+          "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-500x500.jpg 500w, https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-350x350.jpg 350w",
+          "lazy_srcset": null,
+          "alt": "",
+          "css_background_image": null
+        },
+        "plugin_or_component_container": {
+          "tag": "DIV",
+          "id": null,
+          "class": "work-item style-2",
+          "order": 354
+        },
+        "ancestor_evidence": [
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vert-center",
+            "order": 359
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-info",
+            "order": 357
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-item style-2",
+            "order": 354
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "inner-wrap animated",
+            "order": 353
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "col elastic-portfolio-item regular element amenagement-exterieur ",
+            "order": 352
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "row portfolio-items masonry-items  fullwidth-constrained  ",
+            "order": 315
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "portfolio-wrap ",
+            "order": 313
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "wpb_wrapper",
+            "order": 300
+          }
+        ],
+        "theme_controls": [],
+        "category_or_filter_evidence": [
+          "Alhouda Doha Iamar"
+        ]
+      },
+      {
+        "project_name": "Alhouda Doha Iamar",
+        "occurrence": 2,
+        "raw_html_string_occurrence_count": 2,
+        "node": {
+          "tag": "H4",
+          "id": null,
+          "class": "title",
+          "order": 442
+        },
+        "heading_level": 4,
+        "text": "Alhouda Doha Iamar",
+        "link_destination": "https://batiplusmaroc.com/portfolio/projet-1/",
+        "resolved_link_destination": "https://batiplusmaroc.com/portfolio/projet-1/",
+        "image": {
+          "src": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-600x403.jpg",
+          "real_lazy_source": null,
+          "srcset": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-900x604.jpg 900w, https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-600x403.jpg 600w, https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-400x269.jpg 400w",
+          "lazy_srcset": null,
+          "alt": "",
+          "css_background_image": null
+        },
+        "plugin_or_component_container": {
+          "tag": "DIV",
+          "id": null,
+          "class": "col span_3  element amenagement-exterieur ",
+          "order": 432
+        },
+        "ancestor_evidence": [
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "work-meta",
+            "order": 441
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "inner-wrap animated",
+            "order": 433
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "col span_3  element amenagement-exterieur ",
+            "order": 432
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "row portfolio-items no-masonry  ",
+            "order": 363
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "portfolio-wrap ",
+            "order": 361
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "wpb_wrapper",
+            "order": 275
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vc_column-inner",
+            "order": 274
+          },
+          {
+            "tag": "DIV",
+            "id": null,
+            "class": "vc_col-sm-12 wpb_column column_container vc_column_container col no-extra-padding inherit_tablet inherit_phone ",
+            "order": 273
+          }
+        ],
+        "theme_controls": [
+          {
+            "tag": "A",
+            "text": "View Larger",
+            "title": null,
+            "href": "https://batiplusmaroc.com/wp-content/uploads/2025/05/alhouda-scaled.jpg",
+            "class": "pretty_photo default-link"
+          },
+          {
+            "tag": "A",
+            "text": "More Details",
+            "title": null,
+            "href": "https://batiplusmaroc.com/portfolio/projet-1/",
+            "class": "default-link"
+          },
+          {
+            "tag": "A",
+            "text": "Love 0",
+            "title": "Love this",
+            "href": "#",
+            "class": "nectar-love"
+          },
+          {
+            "tag": "SPAN",
+            "text": "Love",
+            "title": null,
+            "href": null,
+            "class": "love-text"
+          },
+          {
+            "tag": "SPAN",
+            "text": "0",
+            "title": null,
+            "href": null,
+            "class": "total_loves"
+          },
+          {
+            "tag": "SPAN",
+            "text": "0",
+            "title": null,
+            "href": null,
+            "class": "nectar-love-count"
+          }
+        ],
+        "category_or_filter_evidence": [
+          "View Larger More Details",
+          "Alhouda Doha Iamar"
+        ]
+      }
+    ],
+    "theme_control_summary": {
+      "view_larger_count": 5,
+      "more_details_count": 5,
+      "love_0_anchor_count": 5
+    },
+    "portfolio_filter_controls": [
+      {
+        "anchor_text": "All",
+        "href": "#",
+        "reason": "empty or hash-only theme control"
+      },
+      {
+        "anchor_text": "aménagement extérieur",
+        "href": "#",
+        "reason": "empty or hash-only theme control"
+      },
+      {
+        "anchor_text": "aménagement intérieur",
+        "href": "#",
+        "reason": "empty or hash-only theme control"
+      },
+      {
+        "anchor_text": "Gros oeuvre",
+        "href": "#",
+        "reason": "empty or hash-only theme control"
+      }
+    ],
+    "any_project_content_duplicated": true,
+    "duplication_source_assessment": "Yes. The returned HTML contains two distinct WordPress portfolio component structures: one `.row.portfolio-items.masonry-items.fullwidth-constrained` / `.elastic-portfolio-item` set and one `.row.portfolio-items.no-masonry` / `.col.span_3.element` set. Each structure renders all five project names once, producing H3 and H4 copies. This is portfolio/theme-component duplication, not five accidental repeated text strings. Preserve the project entities later, but do not reproduce the duplicate component output."
+  },
+  "duplicate_content_components": [
+    {
+      "text": "Amical Omolkoura",
+      "occurrence_count": 2,
+      "occurrences": [
+        {
+          "order": 324,
+          "type": "heading",
+          "tag": "H3",
+          "text": "Amical Omolkoura"
+        },
+        {
+          "order": 374,
+          "type": "heading",
+          "tag": "H4",
+          "text": "Amical Omolkoura"
+        }
+      ]
+    },
+    {
+      "text": "Particulier privé",
+      "occurrence_count": 2,
+      "occurrences": [
+        {
+          "order": 333,
+          "type": "heading",
+          "tag": "H3",
+          "text": "Particulier privé"
+        },
+        {
+          "order": 391,
+          "type": "heading",
+          "tag": "H4",
+          "text": "Particulier privé"
+        }
+      ]
+    },
+    {
+      "text": "Amical Annajah",
+      "occurrence_count": 2,
+      "occurrences": [
+        {
+          "order": 342,
+          "type": "heading",
+          "tag": "H3",
+          "text": "Amical Annajah"
+        },
+        {
+          "order": 408,
+          "type": "heading",
+          "tag": "H4",
+          "text": "Amical Annajah"
+        }
+      ]
+    },
+    {
+      "text": "Villa avec sous sol",
+      "occurrence_count": 2,
+      "occurrences": [
+        {
+          "order": 351,
+          "type": "heading",
+          "tag": "H3",
+          "text": "Villa avec sous sol"
+        },
+        {
+          "order": 425,
+          "type": "heading",
+          "tag": "H4",
+          "text": "Villa avec sous sol"
+        }
+      ]
+    },
+    {
+      "text": "Alhouda Doha Iamar",
+      "occurrence_count": 2,
+      "occurrences": [
+        {
+          "order": 360,
+          "type": "heading",
+          "tag": "H3",
+          "text": "Alhouda Doha Iamar"
+        },
+        {
+          "order": 442,
+          "type": "heading",
+          "tag": "H4",
+          "text": "Alhouda Doha Iamar"
+        }
+      ]
+    }
+  ],
+  "broken_internal_links": [],
+  "theme_or_placeholder_links": [
+    {
+      "anchor_text": "phone",
+      "href": "",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "email",
+      "href": "",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "Close Search",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "All",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "aménagement extérieur",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "aménagement intérieur",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "Gros oeuvre",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "Love 0",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "Love 0",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "Love 0",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "Love 0",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "Love 0",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "Close Menu",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "phone",
+      "href": "",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "email",
+      "href": "",
+      "reason": "empty or hash-only theme control"
+    },
+    {
+      "anchor_text": "",
+      "href": "#",
+      "reason": "empty or hash-only theme control"
+    }
+  ],
+  "future_verified_client_portfolio_note_not_used_as_audit_source": [
+    "Finitions intérieures",
+    "Aménagement intérieur",
+    "Détails de finition",
+    "Revêtements décoratifs",
+    "Faux plafonds & éclairage",
+    "Escaliers & circulations",
+    "Façades & travaux extérieurs",
+    "Extérieur & piscine"
+  ],
+  "comparison_with_SEO_MIGRATION_md": {
+    "matches": [
+      "SEO_MIGRATION.md records the title ‘Second Œuvre à Agadir – rénovation & finitions Pro’; production is compared against that exact value below.",
+      "SEO_MIGRATION.md records the rendered H1 as ‘Second œuvre’; production is compared against that exact value below.",
+      "The protected route remains https://batiplusmaroc.com/second-oeuvre/."
+    ],
+    "discrepancies_and_notes": [
+      "No exact-value conflict was found between SEO_MIGRATION.md and current production for the recorded title, H1, and protected route."
+    ]
+  },
+  "seo_and_accessibility_risks": [
+    {
+      "priority": "P2",
+      "category": "Social metadata",
+      "finding": "Open Graph metadata is missing: og:image."
+    },
+    {
+      "priority": "P2",
+      "category": "Social metadata",
+      "finding": "Twitter metadata is missing: twitter:description, twitter:image, twitter:title."
+    },
+    {
+      "priority": "P2",
+      "category": "Heading structure",
+      "finding": "Heading levels skip hierarchy steps in the production DOM."
+    },
+    {
+      "priority": "P2",
+      "category": "Accessibility / images",
+      "finding": "Images include 1 missing alt attributes and 15 empty alt attributes; decorative intent requires manual validation."
+    },
+    {
+      "priority": "P2",
+      "category": "Structured data / entity consistency",
+      "finding": "Visible content identifies S2MBOU, while Organization schema names the entity batiplusmaroc.com."
+    },
+    {
+      "priority": "P2",
+      "category": "Theme controls / crawlability",
+      "finding": "The production DOM contains 16 empty or hash-only control occurrence(s), including portfolio filters and Love controls that are not crawlable destinations."
+    },
+    {
+      "priority": "P3",
+      "category": "Meta description quality",
+      "finding": "The exact production meta description contains an extra space before its final period; preserve it for the technical migration lock unless an intentional SEO edit is approved."
+    },
+    {
+      "priority": "P2",
+      "category": "Duplicate project content",
+      "finding": "One or more named projects are rendered more than once in the returned WordPress DOM; the migration should preserve the topic/entity but not mechanically reproduce plugin duplication."
+    }
+  ]
+}
