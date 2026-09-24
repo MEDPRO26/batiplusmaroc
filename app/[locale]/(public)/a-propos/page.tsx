@@ -7,14 +7,14 @@ import { CoreActivities } from "@/components/about/core-activities";
 import { ProjectProgression } from "@/components/about/project-progression";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buildWebPageJsonLd } from "@/lib/i18n-seo";
-import { localizedPageMetadata, resolveLocale } from "@/lib/page-meta";
+import { managedPageMetadata, resolveLocale } from "@/lib/page-meta";
 import { routes } from "@/lib/routes";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
-  return localizedPageMetadata(params, routes.about, "about");
+  return managedPageMetadata(params, routes.about, "about", "about");
 }
 
 export default async function AboutPage({ params }: Props) {

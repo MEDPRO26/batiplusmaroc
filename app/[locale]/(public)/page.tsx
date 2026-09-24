@@ -8,14 +8,14 @@ import { Testimonials } from "@/components/home/testimonials";
 import { Articles } from "@/components/home/articles";
 import { FinalCta } from "@/components/home/final-cta";
 import { buildWebPageJsonLd } from "@/lib/i18n-seo";
-import { localizedPageMetadata, resolveLocale } from "@/lib/page-meta";
+import { managedPageMetadata, resolveLocale } from "@/lib/page-meta";
 import { routes } from "@/lib/routes";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
-  return localizedPageMetadata(params, routes.home, "home");
+  return managedPageMetadata(params, routes.home, "home", "homepage");
 }
 
 export default async function Home({ params }: Props) {

@@ -10,14 +10,14 @@ import { ServicesHero } from "@/components/services-page/services-hero";
 import { ServicesIntro } from "@/components/services-page/services-intro";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buildWebPageJsonLd } from "@/lib/i18n-seo";
-import { localizedPageMetadata, resolveLocale } from "@/lib/page-meta";
+import { managedPageMetadata, resolveLocale } from "@/lib/page-meta";
 import { routes } from "@/lib/routes";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
-  return localizedPageMetadata(params, routes.services, "services");
+  return managedPageMetadata(params, routes.services, "services", "services-index");
 }
 
 export default async function ServicesPage({ params }: Props) {

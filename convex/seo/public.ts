@@ -3,7 +3,8 @@ import { query } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { getPublicMediaUrl } from "../storage/publicUrl";
-import { seoLocaleValidator, seoRobotsValidator } from "./validators";
+import { articleMediaReferences, seoLocaleValidator, seoRobotsValidator } from "./validators";
+import { findApprovedPage } from "./pageRegistry";
 
 const publicArticleValidator = v.object({
   title: v.string(), slug: v.string(), excerpt: v.string(),
@@ -32,9 +33,10 @@ async function publicDto(ctx: QueryCtx, article: Doc<"seoArticles">) {
     const other = await ctx.db.query("seoArticles").withIndex("by_translationGroup_and_locale", (q) => q.eq("translationGroup", article.translationGroup).eq("locale", otherLocale)).unique();
     if (other?.status === "published" && other.publishedAt !== undefined) translation = { locale: other.locale, slug: other.slug };
   }
+  const content = await publicArticleContent(ctx, article.content, article.locale);
   return {
     title: article.title, slug: article.slug, excerpt: article.excerpt,
-    content: article.content, locale: article.locale, category: article.category, seoTitle: article.seoTitle,
+    content, locale: article.locale, category: article.category, seoTitle: article.seoTitle,
     metaDescription: article.metaDescription, canonicalUrl: article.canonicalUrl ?? null, robots: article.robots,
     ogTitle: article.ogTitle ?? null, ogDescription: article.ogDescription ?? null,
     featuredImageUrl: featured?.status === "active" ? getPublicMediaUrl(featured.objectKey) : null,
@@ -45,6 +47,23 @@ async function publicDto(ctx: QueryCtx, article: Doc<"seoArticles">) {
     } : null,
     publishedAt: article.publishedAt!, translation,
   };
+}
+
+async function publicArticleContent(ctx: QueryCtx, content: string, locale: "fr" | "en") {
+  const replacements = new Map<string, { url: string; altText: string } | null>();
+  await Promise.all(articleMediaReferences(content).map(async (rawId) => {
+    const mediaId = ctx.db.normalizeId("seoMedia", rawId);
+    if (!mediaId) { replacements.set(rawId, null); return; }
+    const media = await ctx.db.get("seoMedia", mediaId);
+    const metadata = await ctx.db.query("seoMediaMetadata")
+      .withIndex("by_mediaId_and_locale", (q) => q.eq("mediaId", mediaId).eq("locale", locale)).unique();
+    const url = media?.status === "active" && metadata?.altText ? getPublicMediaUrl(media.objectKey) : null;
+    replacements.set(rawId, url ? { url, altText: metadata!.altText.replace(/[\[\]\n]/g, " ") } : null);
+  }));
+  return content.replace(/!\[([^\]\n]{0,300})\]\(media:([^)\s]+)\)/g, (_full, _alt: string, rawId: string) => {
+    const replacement = replacements.get(rawId);
+    return replacement ? `![${replacement.altText}](${replacement.url})` : "";
+  });
 }
 
 export const getPublishedArticleBySlug = query({
@@ -65,8 +84,9 @@ export const getPublicPageMetadata = query({
     ogDescription: v.union(v.string(), v.null()), ogImageUrl: v.union(v.string(), v.null()),
   })),
   handler: async (ctx, args) => {
-    const key = args.pageKey.trim().toLowerCase();
-    if (!/^[a-z0-9]+(?:[a-z0-9:-]*[a-z0-9])?$/.test(key)) return null;
+    const approvedPage = findApprovedPage(args.pageKey);
+    if (!approvedPage) return null;
+    const key = approvedPage.pageKey;
     const metadata = await ctx.db.query("seoPageMetadata").withIndex("by_pageKey_and_locale", (q) => q.eq("pageKey", key).eq("locale", args.locale)).unique();
     if (!metadata) return null;
     const media = metadata.ogMediaId ? await ctx.db.get("seoMedia", metadata.ogMediaId) : null;

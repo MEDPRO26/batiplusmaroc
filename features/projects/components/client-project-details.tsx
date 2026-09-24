@@ -13,6 +13,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 import { ClientReceivedQuotes } from "@/features/quotes/components/client-received-quotes";
+import { ProjectSiteAssessment } from "@/features/site-assessments/components/site-assessment-panel";
 
 export type ProjectDetails = NonNullable<FunctionReturnType<typeof api.projects.index.getMyProject>>;
 
@@ -65,6 +66,7 @@ export function ClientProjectDetailsView({ project, quotesSlot }: { project: Pro
           {project.history.length ? <section className="rounded-2xl border border-brand-border bg-white p-5"><h2 className="m-0 text-base font-semibold text-ink">{t("history.title")}</h2><ol className="mt-4 grid gap-4 pl-5">{project.history.map((item, index) => <li className="text-sm leading-5 text-ink" key={`${item.changedAt}-${index}`}><span className="font-medium">{t("history.transition", { from: t(`status.${item.oldStatus}`), to: t(`status.${item.newStatus}`) })}</span><span className="mt-1 block text-xs text-muted">{t("history.meta", { actor: t(`history.actor.${item.actor}`), date: format.dateTime(item.changedAt, { dateStyle: "medium", timeStyle: "short" }) })}</span>{item.reason ? <span className="mt-2 block rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">{item.reason}</span> : null}</li>)}</ol></section> : null}
         </aside>
       </div>
+      <div className="mt-8 overflow-hidden rounded-2xl"><ProjectSiteAssessment projectId={project.id} /></div>
       {quotesSlot}
     </main>
   );

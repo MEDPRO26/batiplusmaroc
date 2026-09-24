@@ -72,6 +72,8 @@ describe("admin project review authorization", () => {
 
     await expect(t.query(api.admin.projects.listProjects, { status: "pending_review" })).rejects.toThrow("NOT_AUTHENTICATED");
     await expect(asUser(t, clientId).query(api.admin.projects.getProjectReview, { projectId })).rejects.toThrow("ADMIN_REQUIRED");
+    await expect(t.query(api.admin.projects.listProjectActivity, { projectId })).rejects.toThrow("NOT_AUTHENTICATED");
+    await expect(asUser(t, clientId).query(api.admin.projects.listProjectActivity, { projectId })).rejects.toThrow("ADMIN_REQUIRED");
     await expect(asUser(t, companyId).mutation(api.admin.projects.approveProject, { projectId })).rejects.toThrow("ADMIN_REQUIRED");
     await expect(asUser(t, clientId).mutation(api.admin.projects.requestProjectChanges, { projectId, reason: "Add measurements" })).rejects.toThrow("ADMIN_REQUIRED");
     expect((await t.run((ctx) => ctx.db.get(projectId)))?.status).toBe("pending_review");
@@ -192,9 +194,13 @@ describe("admin project decisions", () => {
     const admin = asUser(t, adminId);
 
     await expect(admin.mutation(api.admin.projects.approveProject, { projectId })).resolves.toEqual({ status: "published" });
-    const state = await t.run(async (ctx) => ({ project: await ctx.db.get(projectId), history: await ctx.db.query("projectStatusHistory").withIndex("by_projectId", (q) => q.eq("projectId", projectId)).collect() }));
+    const state = await t.run(async (ctx) => ({ project: await ctx.db.get(projectId), history: await ctx.db.query("projectStatusHistory").withIndex("by_projectId", (q) => q.eq("projectId", projectId)).collect(), activity: await ctx.db.query("marketplaceActivity").withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId)).take(10) }));
     expect(state.project).toMatchObject({ status: "published", publishedAt: expect.any(Number), updatedAt: expect.any(Number), marketplaceSearchText: expect.stringContaining("renovation") });
     expect(state.history).toEqual([expect.objectContaining({ oldStatus: "pending_review", newStatus: "published", changedBy: adminId, changedAt: expect.any(Number) })]);
+    expect(state.activity).toEqual([expect.objectContaining({ eventType: "project_approved", actorUserId: adminId, actorType: "admin", oldStatus: "pending_review", newStatus: "published" })]);
+    await expect(admin.query(api.admin.projects.listProjectActivity, { projectId })).resolves.toEqual([
+      expect.objectContaining({ eventType: "project_approved", actor: { userId: adminId, displayName: "Ada Admin", type: "admin" } }),
+    ]);
     await expect(t.query(api.projects.index.getPublicProject, { projectId })).resolves.toMatchObject({ title: "Renovation appartement Agdal" });
     await expect(admin.mutation(api.admin.projects.approveProject, { projectId })).rejects.toThrow("PROJECT_NOT_PENDING_REVIEW");
   });

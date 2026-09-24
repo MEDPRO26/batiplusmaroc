@@ -8,6 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 import { ProjectFeedSkeleton, resolveCompanyProjectsRedirect } from "./company-project-marketplace";
+import { ProjectSiteAssessment } from "@/features/site-assessments/components/site-assessment-panel";
 
 type Details = NonNullable<FunctionReturnType<typeof api.projects.marketplace.getCompanyMarketplaceProject>>;
 
@@ -52,6 +53,7 @@ export function ProjectDetailsView({ project }: { project: Details }) {
             <section className="mt-8 border-t border-brand-border pt-7"><h2 className="m-0 text-lg font-semibold text-ink">{t("detail.clientTitle")}</h2><p className="mt-3 mb-0 text-sm leading-6 text-ink">{project.client ? project.client.displayName : t("card.clientPrivate")}</p>{project.client ? <p className="mt-1 mb-0 text-xs text-muted">{t("detail.clientSince", { date: format.dateTime(project.client.joinedAt, { month: "long", year: "numeric" }) })}</p> : null}</section>
           </article>
           <aside className="rounded-2xl border border-brand-border bg-white p-5 shadow-[0_8px_28px_rgb(23_61_99/0.06)] lg:sticky lg:top-24 sm:p-6">
+            <div className="-mx-5 -mt-5 mb-5 overflow-hidden rounded-t-2xl sm:-mx-6 sm:-mt-6"><ProjectSiteAssessment projectId={project.id} /></div>
             <h2 className="m-0 text-lg font-semibold text-ink">{t("quote.title")}</h2>
             <p className="mt-2 mb-0 text-sm leading-6 text-muted">{t("quote.lead")}</p>
             {project.myQuoteId ? (

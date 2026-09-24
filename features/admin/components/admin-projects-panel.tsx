@@ -14,6 +14,7 @@ type Review = NonNullable<FunctionReturnType<typeof api.admin.projects.getProjec
 type ProjectStatus = Review["status"];
 type ListStatus = ProjectStatus | "all";
 type HistoryItem = Review["history"][number];
+type ActivityItem = FunctionReturnType<typeof api.admin.projects.listProjectActivity>[number];
 type ProjectCity = NonNullable<ListRow["city"]>;
 
 const TABS: ListStatus[] = ["pending_review", "published", "needs_changes", "cancelled", "all"];
@@ -211,6 +212,7 @@ export function ProjectReviewDrawer({ projectId, onClose, onSuccess, onError }: 
   const locale = useLocale();
   const titleId = useId();
   const review = useQuery(api.admin.projects.getProjectReview, { projectId });
+  const activity = useQuery(api.admin.projects.listProjectActivity, { projectId });
   const approve = useMutation(api.admin.projects.approveProject);
   const requestChanges = useMutation(api.admin.projects.requestProjectChanges);
   const cancelProject = useMutation(api.admin.projects.cancelProject);
@@ -283,6 +285,46 @@ export function ProjectReviewDrawer({ projectId, onClose, onSuccess, onError }: 
                   </ul>
                 )}
               </Section>
+              <Section title={t("sections.timeline")}>
+                {activity === undefined ? (
+                  <div aria-busy="true" className="space-y-3" role="status">
+                    <span className="sr-only">{t("activity.loading")}</span>
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div className="h-16 animate-pulse rounded-[12px] bg-[#f4f6f8]" key={index} />
+                    ))}
+                  </div>
+                ) : activity.length === 0 ? (
+                  <p className="text-sm text-[#8b919a]">{t("activity.empty")}</p>
+                ) : (
+                  <ol className="relative space-y-0 before:absolute before:top-3 before:bottom-3 before:left-[7px] before:w-px before:bg-[#dce3ea]">
+                    {activity.map((item: ActivityItem) => (
+                      <li className="relative grid grid-cols-[16px_1fr] gap-3 pb-5 last:pb-0" key={item.activityId}>
+                        <span className="relative z-10 mt-1.5 size-[15px] rounded-full border-[4px] border-white bg-[#2f6bff] shadow-[0_0_0_1px_#cfd7e2]" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[#17191d]">{t(`activity.events.${item.eventType}` as "activity.events.project_created")}</p>
+                          <p className="mt-1 text-xs leading-5 text-[#8b919a]">
+                            {t("activity.byActor", {
+                              actor: item.actor.displayName,
+                              type: t(`activity.actorType.${item.actor.type}` as "activity.actorType.client"),
+                            })}
+                            {" · "}{new Date(item.createdAt).toLocaleString(locale)}
+                          </p>
+                          {item.company ? <p className="mt-1 text-xs text-[#626970]">{t("activity.company", { company: item.company.name })}</p> : null}
+                          {item.oldStatus && item.newStatus ? (
+                            <p className="mt-1 text-xs text-[#626970]">
+                              {t("activity.statusTransition", {
+                                oldStatus: activityStatusLabel(t, item.oldStatus),
+                                newStatus: activityStatusLabel(t, item.newStatus),
+                              })}
+                            </p>
+                          ) : null}
+                          {item.reason ? <p className="mt-2 rounded-[10px] bg-[#fff7ed] px-3 py-2 text-xs leading-5 text-[#9a6700]">{t("activity.reason", { reason: item.reason })}</p> : null}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </Section>
               {review.status === "pending_review" ? (
                 <Section title={t("sections.actions")}>
                   {confirm === "approve" ? (
@@ -332,4 +374,5 @@ function statusLabel(t: ReturnType<typeof useTranslations<"adminProjects">>, sta
 function tabLabel(t: ReturnType<typeof useTranslations<"adminProjects">>, status: (typeof TABS)[number]) { return t(`tabs.${status}` as "tabs.all"); }
 function categoryLabel(t: ReturnType<typeof useTranslations<"projectWizard">>, category: ListRow["category"], custom: string | null) { if (!category) return "—"; const label = t(`categoryOptions.${category}`); return category === "other" && custom ? `${label} · ${custom}` : label; }
 function formatDate(value: number | null, locale: string) { return value ? new Date(value).toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" }) : "—"; }
+function activityStatusLabel(t: ReturnType<typeof useTranslations<"adminProjects">>, status: string) { return t(`activity.status.${status}` as "activity.status.draft"); }
 function resolveError(error: unknown, tUx: ReturnType<typeof useTranslations<"ux">>) { const message = error instanceof Error ? error.message : ""; const code = findKnownCodeInText(message); if (code && code !== "UNKNOWN" && code !== "NETWORK") { try { return tUx(`error.codes.${code}` as "error.generic"); } catch { return tUx("error.generic"); } } return tUx("error.generic"); }

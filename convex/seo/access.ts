@@ -1,5 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError } from "convex/values";
+import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 
 type SeoTeamContext = QueryCtx | MutationCtx;
@@ -12,6 +13,10 @@ export async function requireSeoTeamUser(ctx: SeoTeamContext) {
   const userId = await getAuthUserId(ctx);
   if (!userId) throw new ConvexError("NOT_AUTHENTICATED");
 
+  return await requireSeoTeamUserById(ctx, userId);
+}
+
+export async function requireSeoTeamUserById(ctx: SeoTeamContext, userId: Id<"users">) {
   const user = await ctx.db.get(userId);
   if (!user || user.accountType !== "seo_team") {
     throw new ConvexError("SEO_TEAM_REQUIRED");

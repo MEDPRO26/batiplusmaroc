@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { CompanyDirectory } from "@/features/companies/components/company-directory";
-import { localizedPageMetadata, resolveLocale } from "@/lib/page-meta";
+import { managedPageMetadata, resolveLocale } from "@/lib/page-meta";
 import { routes } from "@/lib/routes";
 
 type Props = {
@@ -9,7 +9,7 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props) {
-  return localizedPageMetadata(params, routes.companies, "companies");
+  return managedPageMetadata(params, routes.companies, "companies", "companies-directory");
 }
 
 export default async function CompaniesPage({ params, searchParams }: Props) {

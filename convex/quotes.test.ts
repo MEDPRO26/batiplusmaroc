@@ -133,6 +133,10 @@ describe("initial quote submission", () => {
         .query("quoteStatusHistory")
         .withIndex("by_quoteId", (q) => q.eq("quoteId", result.quoteId))
         .take(10),
+      activity: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId))
+        .take(10),
     }));
     expect(state.quote).toMatchObject({
       projectId,
@@ -148,6 +152,15 @@ describe("initial quote submission", () => {
       newStatus: "submitted",
       changedBy: company.userId,
     });
+    expect(state.activity).toEqual([
+      expect.objectContaining({
+        eventType: "initial_quote_submitted",
+        actorUserId: company.userId,
+        actorType: "company",
+        companyId: company.companyId,
+        quoteId: result.quoteId,
+      }),
+    ]);
   });
 
   test("rejects unauthenticated users, clients, incomplete companies, and unverified companies", async () => {
@@ -385,6 +398,20 @@ describe("client reviews initial quotes", () => {
       ["viewed", "shortlisted", clientId],
       ["shortlisted", "discussion_open", clientId],
     ]);
+    const activity = await t.run((ctx) => ctx.db.query("marketplaceActivity").withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId)).order("asc").take(10));
+    expect(activity.map((item) => item.eventType)).toEqual([
+      "initial_quote_submitted",
+      "quote_viewed",
+      "quote_shortlisted",
+      "discussion_opened",
+    ]);
+    expect(activity.at(-1)).toMatchObject({
+      actorUserId: clientId,
+      actorType: "client",
+      companyId: company.companyId,
+      quoteId,
+      conversationId: opened.conversationId,
+    });
     await expect(asUser(t, company.userId).query(api.quotes.index.getMyQuote, { quoteId })).resolves.toMatchObject({ status: "discussion_open" });
     await expect(asUser(t, company.userId).query(api.messages.index.listMyThreads, {})).resolves.toHaveLength(1);
     await expect(owner.query(api.messages.index.listMyThreads, {})).resolves.toHaveLength(1);

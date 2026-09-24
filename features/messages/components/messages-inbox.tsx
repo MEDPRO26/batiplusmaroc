@@ -12,6 +12,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { mapAppError } from "@/lib/errors/map-app-error";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
+import { ConversationSiteAssessment } from "@/features/site-assessments/components/site-assessment-panel";
 
 type DashboardUser = {
   accountType: "client" | "company" | "admin" | "seo_team" | null;
@@ -290,6 +291,7 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
       <div className="flex min-w-0 items-center gap-3"><Link aria-label={t("backToConversations")} className="grid size-11 shrink-0 place-items-center rounded-full border border-brand-border text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:hidden" href={routes.messages}>←</Link><div className="min-w-0"><div className="flex items-center gap-2"><h2 className="m-0 truncate text-lg font-semibold text-ink">{conversation.otherPartyName || t("unknownParty")}</h2><span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-dark">{conversation.status === "active" ? t("statusActive") : t("statusClosed")}</span></div><Link className="mt-1 block truncate text-sm text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={projectHref}>{conversation.projectTitle ?? t("untitledProject")}</Link></div></div>
       {accountType === "client" && conversation.companySlug ? <Link className="text-sm font-semibold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={{ pathname: "/entreprises/[slug]", params: { slug: conversation.companySlug } }}>{t("viewCompanyProfile")}</Link> : null}
     </header>
+    <ConversationSiteAssessment conversationId={conversationId} />
     <div aria-live="polite" aria-relevant="additions text" className="flex flex-1 flex-col overflow-y-auto bg-[#fbfcfd] px-4 py-5 sm:px-8" role="log">
       {status === "CanLoadMore" ? <button className="mx-auto mb-5 min-h-11 rounded-full border border-brand-border bg-white px-4 text-sm font-semibold text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={() => loadMore(30)} type="button">{t("loadOlder")}</button> : null}
       {status === "LoadingMore" ? <p className="mb-5 text-center text-sm text-muted">{t("loadingOlder")}</p> : null}

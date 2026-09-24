@@ -34,7 +34,24 @@ export function requiredText(value: string, min: number, max: number, code = "IN
 export function bodyText(value: string) {
   const normalized = value.replace(/\r\n/g, "\n").trim();
   if (normalized.length < 1 || normalized.length > 500_000) throw new ConvexError("INVALID_SEO_CONTENT");
+  articleMediaReferences(normalized);
   return normalized;
+}
+
+export function articleMediaReferences(content: string) {
+  const references: string[] = [];
+  const imagePattern = /!\[[^\]\n]{0,300}\]\(([^)\s]+)(?:\s+"[^"\n]*")?\)/g;
+  for (const match of content.matchAll(imagePattern)) {
+    const target = match[1];
+    if (!target?.startsWith("media:") || target.length <= "media:".length) {
+      throw new ConvexError("INVALID_SEO_CONTENT_MEDIA");
+    }
+    references.push(target.slice("media:".length));
+  }
+  if ((content.match(/!\[/g) ?? []).length !== references.length) {
+    throw new ConvexError("INVALID_SEO_CONTENT_MEDIA");
+  }
+  return [...new Set(references)];
 }
 
 export function optionalText(value: string | undefined, max: number) {

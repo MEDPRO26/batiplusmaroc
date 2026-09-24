@@ -12,14 +12,14 @@ import { SecondOeuvreServices } from "@/components/second-oeuvre/second-oeuvre-s
 import { TechnicalInstallations } from "@/components/second-oeuvre/technical-installations";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buildWebPageJsonLd } from "@/lib/i18n-seo";
-import { localizedPageMetadata, resolveLocale } from "@/lib/page-meta";
+import { managedPageMetadata, resolveLocale } from "@/lib/page-meta";
 import { routes } from "@/lib/routes";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
-  return localizedPageMetadata(params, routes.finishingWork, "finishingWork");
+  return managedPageMetadata(params, routes.finishingWork, "finishingWork", "service:second-oeuvre");
 }
 
 export default async function SecondOeuvrePage({ params }: Props) {

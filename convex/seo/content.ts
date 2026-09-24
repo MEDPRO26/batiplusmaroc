@@ -3,7 +3,8 @@ import { mutation, query } from "../_generated/server";
 import schema from "../schema";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { requireSeoTeamUser } from "./access";
-import { audit, ensureBriefArticleStrategyCoherent, ensureCanonicalAvailable, requireActiveMedia, requireLocaleReference } from "./model";
+import { audit, ensureBriefArticleStrategyCoherent, ensureCanonicalAvailable, requireActiveArticleContentMedia, requireActiveMedia, requireLocaleReference, syncArticleContentMedia } from "./model";
+import { requireApprovedPage, SEO_PAGE_REGISTRY } from "./pageRegistry";
 import {
   bodyText, canonicalUrl, keywordList, optionalText, pageKey, publicUrl, requiredText, slug,
   seoArticleStatusValidator, seoBriefStatusValidator, seoClusterStatusValidator,
@@ -155,17 +156,6 @@ export const setBriefStatus = mutation({
 
 export const listBriefs = query({ args: { locale: seoLocaleValidator, status: seoBriefStatusValidator, limit: v.optional(v.number()) }, returns: v.array(schema.doc("seoBriefs")), handler: async (ctx, args) => { await requireSeoTeamUser(ctx); return await ctx.db.query("seoBriefs").withIndex("by_locale_and_status", (q) => q.eq("locale", args.locale).eq("status", args.status)).order("desc").take(Math.min(Math.max(Math.trunc(args.limit ?? 50), 1), 100)); } });
 
-export const registerMedia = mutation({
-  args: { objectKey: v.string(), filename: v.string(), mimeType: v.string(), width: v.optional(v.number()), height: v.optional(v.number()), size: v.number(), replacesMediaId: v.optional(v.id("seoMedia")) }, returns: v.id("seoMedia"),
-  handler: async (ctx, args) => {
-    const actor = await requireSeoTeamUser(ctx); const objectKey = args.objectKey.trim(); if (!objectKey.startsWith("seo/") || objectKey.includes("..") || objectKey.length > 500) throw new ConvexError("INVALID_SEO_MEDIA");
-    if (await ctx.db.query("seoMedia").withIndex("by_objectKey", (q) => q.eq("objectKey", objectKey)).unique()) throw new ConvexError("SEO_MEDIA_OBJECT_KEY_CONFLICT");
-    if (!/^image\/(jpeg|png|webp|avif|gif)$/.test(args.mimeType) || !Number.isInteger(args.size) || args.size < 1 || args.size > 25_000_000 || (args.width !== undefined && (!Number.isInteger(args.width) || args.width < 1)) || (args.height !== undefined && (!Number.isInteger(args.height) || args.height < 1))) throw new ConvexError("INVALID_SEO_MEDIA");
-    if (args.replacesMediaId) { const replaced = await requireActiveMedia(ctx, args.replacesMediaId); await ctx.db.patch(replaced!._id, { status: "archived", archivedAt: Date.now(), updatedAt: Date.now() }); await audit(ctx, actor._id, "media", replaced!._id, "media.replaced", ["status", "replacement"], { before: "active", after: "archived" }); }
-    const now = Date.now(); const id = await ctx.db.insert("seoMedia", { objectKey, filename: requiredText(args.filename, 1, 255), mimeType: args.mimeType, width: args.width, height: args.height, size: args.size, uploadedBy: actor._id, status: "active", replacesMediaId: args.replacesMediaId, createdAt: now, updatedAt: now }); await audit(ctx, actor._id, "media", id, "media.created", ["objectKey", "filename", "mimeType"]); return id;
-  },
-});
-
 export const upsertMediaMetadata = mutation({
   args: { mediaId: v.id("seoMedia"), locale: seoLocaleValidator, altText: v.string(), title: v.optional(v.string()), caption: v.optional(v.string()), description: v.optional(v.string()), seoFilename: v.optional(v.string()) }, returns: v.id("seoMediaMetadata"),
   handler: async (ctx, args) => {
@@ -175,20 +165,125 @@ export const upsertMediaMetadata = mutation({
   },
 });
 
-export const archiveMedia = mutation({ args: { mediaId: v.id("seoMedia") }, returns: v.null(), handler: async (ctx, args) => { const actor = await requireSeoTeamUser(ctx); const media = await ctx.db.get(args.mediaId); if (!media) throw new ConvexError("SEO_MEDIA_NOT_FOUND"); if (media.status !== "archived") { await ctx.db.patch(media._id, { status: "archived", archivedAt: Date.now(), updatedAt: Date.now() }); await audit(ctx, actor._id, "media", media._id, "media.archived", ["status"], { before: media.status, after: "archived" }); } return null; } });
+export const archiveMedia = mutation({
+  args: { mediaId: v.id("seoMedia") }, returns: v.null(),
+  handler: async (ctx, args) => {
+    const actor = await requireSeoTeamUser(ctx); const media = await ctx.db.get(args.mediaId);
+    if (!media) throw new ConvexError("SEO_MEDIA_NOT_FOUND");
+    if (media.status === "archived") return null;
+    const references = await Promise.all([
+      ctx.db.query("seoArticles").withIndex("by_featuredMediaId", (q) => q.eq("featuredMediaId", media._id)).take(1),
+      ctx.db.query("seoArticles").withIndex("by_ogMediaId", (q) => q.eq("ogMediaId", media._id)).take(1),
+      ctx.db.query("seoPageMetadata").withIndex("by_ogMediaId", (q) => q.eq("ogMediaId", media._id)).take(1),
+      ctx.db.query("seoArticleMedia").withIndex("by_mediaId", (q) => q.eq("mediaId", media._id)).take(1),
+    ]);
+    if (references.some((rows) => rows.length > 0)) throw new ConvexError("SEO_MEDIA_IN_USE");
+    const now = Date.now();
+    await ctx.db.patch(media._id, { status: "archived", archivedAt: now, updatedAt: now });
+    await audit(ctx, actor._id, "media", media._id, "media.archived", ["status"], { before: media.status, after: "archived" });
+    return null;
+  },
+});
 
-export const listMedia = query({ args: { status: v.union(v.literal("active"), v.literal("archived")), limit: v.optional(v.number()) }, returns: v.array(v.object({ media: schema.doc("seoMedia"), publicUrl: v.union(v.string(), v.null()) })), handler: async (ctx, args) => { await requireSeoTeamUser(ctx); const rows = await ctx.db.query("seoMedia").withIndex("by_status_and_createdAt", (q) => q.eq("status", args.status)).order("desc").take(Math.min(Math.max(Math.trunc(args.limit ?? 50), 1), 100)); return rows.map((media) => ({ media, publicUrl: getPublicMediaUrl(media.objectKey) })); } });
+const mediaListItemValidator = v.object({
+  mediaId: v.id("seoMedia"), filename: v.string(), mimeType: v.string(),
+  width: v.union(v.number(), v.null()), height: v.union(v.number(), v.null()), size: v.number(),
+  status: v.union(v.literal("active"), v.literal("archived")), publicUrl: v.union(v.string(), v.null()),
+  frMetadataReady: v.boolean(), enMetadataReady: v.boolean(),
+  frAltText: v.union(v.string(), v.null()), enAltText: v.union(v.string(), v.null()),
+  createdAt: v.number(), updatedAt: v.number(),
+});
+
+export const listMedia = query({
+  args: {
+    status: v.union(v.literal("active"), v.literal("archived")),
+    search: v.optional(v.string()), limit: v.optional(v.number()),
+  },
+  returns: v.array(mediaListItemValidator),
+  handler: async (ctx, args) => {
+    await requireSeoTeamUser(ctx);
+    const limit = Math.min(Math.max(Math.trunc(args.limit ?? 60), 1), 100);
+    const rows = await ctx.db.query("seoMedia")
+      .withIndex("by_status_and_createdAt", (q) => q.eq("status", args.status))
+      .order("desc").take(limit);
+    const search = args.search?.trim().toLocaleLowerCase();
+    const filtered = rows.filter((media) => !search || media.filename.toLocaleLowerCase().includes(search));
+    return await Promise.all(filtered.map(async (media) => {
+      const [fr, en] = await Promise.all([
+        ctx.db.query("seoMediaMetadata").withIndex("by_mediaId_and_locale", (q) => q.eq("mediaId", media._id).eq("locale", "fr")).unique(),
+        ctx.db.query("seoMediaMetadata").withIndex("by_mediaId_and_locale", (q) => q.eq("mediaId", media._id).eq("locale", "en")).unique(),
+      ]);
+      return {
+        mediaId: media._id, filename: media.filename, mimeType: media.mimeType,
+        width: media.width ?? null, height: media.height ?? null, size: media.size,
+        status: media.status, publicUrl: getPublicMediaUrl(media.objectKey),
+        frMetadataReady: Boolean(fr?.altText), enMetadataReady: Boolean(en?.altText),
+        frAltText: fr?.altText ?? null, enAltText: en?.altText ?? null,
+        createdAt: media.createdAt, updatedAt: media.updatedAt,
+      };
+    }));
+  },
+});
+
+export const getMediaDetails = query({
+  args: { mediaId: v.id("seoMedia") },
+  returns: v.union(v.null(), v.object({
+    media: schema.doc("seoMedia"), publicUrl: v.union(v.string(), v.null()),
+    fr: v.union(schema.doc("seoMediaMetadata"), v.null()),
+    en: v.union(schema.doc("seoMediaMetadata"), v.null()),
+    usage: v.object({ featured: v.number(), openGraph: v.number(), content: v.number(), pages: v.number() }),
+  })),
+  handler: async (ctx, args) => {
+    await requireSeoTeamUser(ctx); const media = await ctx.db.get(args.mediaId);
+    if (!media) return null;
+    const [fr, en, featured, openGraph, content, pages] = await Promise.all([
+      ctx.db.query("seoMediaMetadata").withIndex("by_mediaId_and_locale", (q) => q.eq("mediaId", media._id).eq("locale", "fr")).unique(),
+      ctx.db.query("seoMediaMetadata").withIndex("by_mediaId_and_locale", (q) => q.eq("mediaId", media._id).eq("locale", "en")).unique(),
+      ctx.db.query("seoArticles").withIndex("by_featuredMediaId", (q) => q.eq("featuredMediaId", media._id)).take(101),
+      ctx.db.query("seoArticles").withIndex("by_ogMediaId", (q) => q.eq("ogMediaId", media._id)).take(101),
+      ctx.db.query("seoArticleMedia").withIndex("by_mediaId", (q) => q.eq("mediaId", media._id)).take(101),
+      ctx.db.query("seoPageMetadata").withIndex("by_ogMediaId", (q) => q.eq("ogMediaId", media._id)).take(101),
+    ]);
+    return { media, publicUrl: getPublicMediaUrl(media.objectKey), fr: fr ?? null, en: en ?? null,
+      usage: { featured: featured.length, openGraph: openGraph.length, content: content.length, pages: pages.length } };
+  },
+});
 
 export const upsertPageMetadata = mutation({
-  args: { pageKey: v.string(), locale: seoLocaleValidator, seoTitle: v.string(), metaDescription: v.string(), canonicalUrl: v.union(v.string(), v.null()), robots: seoRobotsValidator, ogTitle: v.optional(v.string()), ogDescription: v.optional(v.string()), ogMediaId: nullableId("seoMedia") }, returns: v.id("seoPageMetadata"),
+  args: { pageKey: v.string(), locale: seoLocaleValidator, seoTitle: v.string(), metaDescription: v.string(), canonicalUrl: v.union(v.string(), v.null()), robots: seoRobotsValidator, ogTitle: v.optional(v.string()), ogDescription: v.optional(v.string()), ogMediaId: nullableId("seoMedia"), confirmCriticalNoindex: v.optional(v.boolean()) }, returns: v.id("seoPageMetadata"),
   handler: async (ctx, args) => {
-    const actor = await requireSeoTeamUser(ctx); const key = pageKey(args.pageKey); const existing = await ctx.db.query("seoPageMetadata").withIndex("by_pageKey_and_locale", (q) => q.eq("pageKey", key).eq("locale", args.locale)).unique(); const canonical = canonicalUrl(args.canonicalUrl ?? undefined); await ensureCanonicalAvailable(ctx, canonical, { pageMetadataId: existing?._id }); await requireActiveMedia(ctx, args.ogMediaId ?? undefined); const now = Date.now();
+    const actor = await requireSeoTeamUser(ctx); const page = requireApprovedPage(args.pageKey); const key = page.pageKey;
+    if (page.critical && args.robots.startsWith("noindex") && args.confirmCriticalNoindex !== true) throw new ConvexError("SEO_CRITICAL_NOINDEX_CONFIRMATION_REQUIRED");
+    const existing = await ctx.db.query("seoPageMetadata").withIndex("by_pageKey_and_locale", (q) => q.eq("pageKey", key).eq("locale", args.locale)).unique(); const canonical = canonicalUrl(args.canonicalUrl ?? undefined); await ensureCanonicalAvailable(ctx, canonical, { pageMetadataId: existing?._id }); await requireActiveMedia(ctx, args.ogMediaId ?? undefined); const now = Date.now();
     const values = { seoTitle: requiredText(args.seoTitle, 2, 70), metaDescription: requiredText(args.metaDescription, 20, 180), canonicalUrl: canonical, robots: args.robots, ogTitle: optionalText(args.ogTitle, 100), ogDescription: optionalText(args.ogDescription, 300), ogMediaId: args.ogMediaId ?? undefined, updatedBy: actor._id, updatedAt: now };
     const id = existing ? (await ctx.db.patch(existing._id, values), existing._id) : await ctx.db.insert("seoPageMetadata", { pageKey: key, locale: args.locale, ...values, createdBy: actor._id, createdAt: now }); await audit(ctx, actor._id, "page_metadata", id, "page_metadata.changed", ["seoTitle", "metaDescription", "canonicalUrl", "robots", "openGraph"]); return id;
   },
 });
 
-export const getPageMetadata = query({ args: { pageKey: v.string(), locale: seoLocaleValidator }, returns: v.union(schema.doc("seoPageMetadata"), v.null()), handler: async (ctx, args) => { await requireSeoTeamUser(ctx); return await ctx.db.query("seoPageMetadata").withIndex("by_pageKey_and_locale", (q) => q.eq("pageKey", pageKey(args.pageKey)).eq("locale", args.locale)).unique(); } });
+export const getPageMetadata = query({ args: { pageKey: v.string(), locale: seoLocaleValidator }, returns: v.union(schema.doc("seoPageMetadata"), v.null()), handler: async (ctx, args) => { await requireSeoTeamUser(ctx); const page = requireApprovedPage(args.pageKey); return await ctx.db.query("seoPageMetadata").withIndex("by_pageKey_and_locale", (q) => q.eq("pageKey", page.pageKey).eq("locale", args.locale)).unique(); } });
+
+export const listPageMetadata = query({
+  args: {},
+  returns: v.array(v.object({
+    pageKey: v.string(), nameKey: v.string(), path: v.string(), locale: seoLocaleValidator,
+    critical: v.boolean(), seoTitleReady: v.boolean(), metaDescriptionReady: v.boolean(),
+    canonicalUrl: v.union(v.string(), v.null()), robots: v.union(seoRobotsValidator, v.null()),
+    updatedAt: v.union(v.number(), v.null()),
+  })),
+  handler: async (ctx) => {
+    await requireSeoTeamUser(ctx);
+    return await Promise.all(SEO_PAGE_REGISTRY.flatMap((page) => (["fr", "en"] as const).map(async (locale) => {
+      const metadata = await ctx.db.query("seoPageMetadata")
+        .withIndex("by_pageKey_and_locale", (q) => q.eq("pageKey", page.pageKey).eq("locale", locale)).unique();
+      return {
+        pageKey: page.pageKey, nameKey: page.nameKey, path: page.paths[locale], locale,
+        critical: page.critical, seoTitleReady: Boolean(metadata?.seoTitle),
+        metaDescriptionReady: Boolean(metadata?.metaDescription), canonicalUrl: metadata?.canonicalUrl ?? null,
+        robots: metadata?.robots ?? null, updatedAt: metadata?.updatedAt ?? null,
+      };
+    })));
+  },
+});
 
 const articleInput = {
   title: v.string(), slug: v.string(), excerpt: v.string(), content: v.string(),
@@ -200,16 +295,138 @@ const articleInput = {
   briefId: v.optional(v.id("seoBriefs")), translationGroup: v.optional(v.string()),
 };
 
+const articleListItemValidator = v.object({
+  articleId: v.id("seoArticles"),
+  title: v.string(),
+  slug: v.string(),
+  locale: seoLocaleValidator,
+  status: seoArticleStatusValidator,
+  primaryKeyword: v.string(),
+  updatedAt: v.number(),
+  publishedAt: v.union(v.number(), v.null()),
+});
+
+export const listArticlesForWorkspace = query({
+  args: {
+    locale: v.optional(seoLocaleValidator),
+    status: v.optional(seoArticleStatusValidator),
+    search: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(articleListItemValidator),
+  handler: async (ctx, args) => {
+    await requireSeoTeamUser(ctx);
+    const limit = Math.min(Math.max(Math.trunc(args.limit ?? 100), 1), 100);
+    const locales = args.locale ? [args.locale] : (["fr", "en"] as const);
+    const statuses = args.status
+      ? [args.status]
+      : (["draft", "review", "published", "archived"] as const);
+    const pages = await Promise.all(
+      locales.flatMap((locale) =>
+        statuses.map((status) =>
+          ctx.db
+            .query("seoArticles")
+            .withIndex("by_locale_and_status", (q) => q.eq("locale", locale).eq("status", status))
+            .order("desc")
+            .take(limit),
+        ),
+      ),
+    );
+    const search = args.search?.trim().toLocaleLowerCase();
+    return pages
+      .flat()
+      .filter(
+        (article) =>
+          !search ||
+          article.title.toLocaleLowerCase().includes(search) ||
+          article.slug.toLocaleLowerCase().includes(search),
+      )
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, limit)
+      .map((article) => ({
+        articleId: article._id,
+        title: article.title,
+        slug: article.slug,
+        locale: article.locale,
+        status: article.status,
+        primaryKeyword: article.primaryKeyword,
+        updatedAt: article.updatedAt,
+        publishedAt: article.publishedAt ?? null,
+      }));
+  },
+});
+
+export const getWorkspaceDashboard = query({
+  args: {},
+  returns: v.object({
+    draftArticles: v.number(),
+    reviewArticles: v.number(),
+    publishedArticles: v.number(),
+    missingMetadata: v.number(),
+    pillars: v.number(),
+    clusters: v.number(),
+  }),
+  handler: async (ctx) => {
+    await requireSeoTeamUser(ctx);
+    const articleStatuses = ["draft", "review", "published", "archived"] as const;
+    const locales = ["fr", "en"] as const;
+    const articlePages = await Promise.all(
+      locales.flatMap((locale) =>
+        articleStatuses.map((status) =>
+          ctx.db
+            .query("seoArticles")
+            .withIndex("by_locale_and_status", (q) => q.eq("locale", locale).eq("status", status))
+            .take(101),
+        ),
+      ),
+    );
+    const articles = articlePages.flat();
+    const pillarPages = await Promise.all(
+      locales.flatMap((locale) =>
+        (["planned", "active", "archived"] as const).map((status) =>
+          ctx.db
+            .query("seoPillars")
+            .withIndex("by_locale_and_status", (q) => q.eq("locale", locale).eq("status", status))
+            .take(101),
+        ),
+      ),
+    );
+    const clusterPages = await Promise.all(
+      locales.flatMap((locale) =>
+        (["planned", "briefed", "writing", "published", "archived"] as const).map((status) =>
+          ctx.db
+            .query("seoClusters")
+            .withIndex("by_locale_and_status_and_priority", (q) =>
+              q.eq("locale", locale).eq("status", status),
+            )
+            .take(101),
+        ),
+      ),
+    );
+    return {
+      draftArticles: articles.filter((article) => article.status === "draft").length,
+      reviewArticles: articles.filter((article) => article.status === "review").length,
+      publishedArticles: articles.filter((article) => article.status === "published").length,
+      missingMetadata: articles.filter(
+        (article) => !article.ogTitle || !article.ogDescription,
+      ).length,
+      pillars: pillarPages.flat().length,
+      clusters: clusterPages.flat().length,
+    };
+  },
+});
+
 export const createArticle = mutation({
   args: articleInput, returns: v.id("seoArticles"),
   handler: async (ctx, args) => {
-    const actor = await requireSeoTeamUser(ctx); const normalizedSlug = slug(args.slug);
+    const actor = await requireSeoTeamUser(ctx); const normalizedSlug = slug(args.slug); const content = bodyText(args.content); const contentMedia = await requireActiveArticleContentMedia(ctx, content);
     if (await ctx.db.query("seoArticles").withIndex("by_locale_and_slug", (q) => q.eq("locale", args.locale).eq("slug", normalizedSlug)).unique()) throw new ConvexError("SEO_ARTICLE_SLUG_CONFLICT");
     await requireActiveMedia(ctx, args.featuredMediaId); await requireActiveMedia(ctx, args.ogMediaId); const pillar = await requireLocaleReference(ctx, "seoPillars", args.pillarId, args.locale); const cluster = await requireLocaleReference(ctx, "seoClusters", args.clusterId, args.locale); const brief = await requireLocaleReference(ctx, "seoBriefs", args.briefId, args.locale);
     if ((cluster && pillar && cluster.pillarId !== pillar._id) || brief?.articleId) throw new ConvexError("INVALID_SEO_REFERENCE");
     if (brief) ensureBriefArticleStrategyCoherent(brief, { pillarId: args.pillarId, clusterId: args.clusterId });
     const group = optionalText(args.translationGroup, 100); if (group && await ctx.db.query("seoArticles").withIndex("by_translationGroup_and_locale", (q) => q.eq("translationGroup", group).eq("locale", args.locale)).unique()) throw new ConvexError("SEO_TRANSLATION_LOCALE_CONFLICT"); const canonical = canonicalUrl(args.canonicalUrl); await ensureCanonicalAvailable(ctx, canonical); const now = Date.now();
-    const id = await ctx.db.insert("seoArticles", { title: requiredText(args.title, 2, 180), slug: normalizedSlug, excerpt: requiredText(args.excerpt, 10, 500), content: bodyText(args.content), featuredMediaId: args.featuredMediaId, authorId: actor._id, locale: args.locale, category: requiredText(args.category, 1, 100), primaryKeyword: requiredText(args.primaryKeyword, 1, 120), secondaryKeywords: keywordList(args.secondaryKeywords), searchIntent: args.searchIntent, seoTitle: requiredText(args.seoTitle, 2, 70), metaDescription: requiredText(args.metaDescription, 20, 180), canonicalUrl: canonical, robots: args.robots, ogTitle: optionalText(args.ogTitle, 100), ogDescription: optionalText(args.ogDescription, 300), ogMediaId: args.ogMediaId, pillarId: args.pillarId, clusterId: args.clusterId, briefId: args.briefId, translationGroup: group, status: "draft", createdBy: actor._id, updatedBy: actor._id, createdAt: now, updatedAt: now });
+    const id = await ctx.db.insert("seoArticles", { title: requiredText(args.title, 2, 180), slug: normalizedSlug, excerpt: requiredText(args.excerpt, 10, 500), content, featuredMediaId: args.featuredMediaId, authorId: actor._id, locale: args.locale, category: requiredText(args.category, 1, 100), primaryKeyword: requiredText(args.primaryKeyword, 1, 120), secondaryKeywords: keywordList(args.secondaryKeywords), searchIntent: args.searchIntent, seoTitle: requiredText(args.seoTitle, 2, 70), metaDescription: requiredText(args.metaDescription, 20, 180), canonicalUrl: canonical, robots: args.robots, ogTitle: optionalText(args.ogTitle, 100), ogDescription: optionalText(args.ogDescription, 300), ogMediaId: args.ogMediaId, pillarId: args.pillarId, clusterId: args.clusterId, briefId: args.briefId, translationGroup: group, status: "draft", createdBy: actor._id, updatedBy: actor._id, createdAt: now, updatedAt: now });
+    await syncArticleContentMedia(ctx, id, contentMedia);
     if (brief && !brief.articleId) await ctx.db.patch(brief._id, { articleId: id, updatedBy: actor._id, updatedAt: now }); await audit(ctx, actor._id, "article", id, "article.created", ["title", "slug", "locale", "references", "status"]); return id;
   },
 });
@@ -217,7 +434,7 @@ export const createArticle = mutation({
 export const updateArticle = mutation({
   args: { articleId: v.id("seoArticles"), ...articleInput, featuredMediaId: nullableId("seoMedia"), canonicalUrl: v.union(v.string(), v.null()), ogMediaId: nullableId("seoMedia"), pillarId: nullableId("seoPillars"), clusterId: nullableId("seoClusters"), briefId: nullableId("seoBriefs"), translationGroup: v.union(v.string(), v.null()) }, returns: v.null(),
   handler: async (ctx, args) => {
-    const actor = await requireSeoTeamUser(ctx); const article = await ctx.db.get(args.articleId); if (!article) throw new ConvexError("SEO_ARTICLE_NOT_FOUND"); if (article.status === "archived") throw new ConvexError("SEO_ARTICLE_ARCHIVED"); if (args.locale !== article.locale) throw new ConvexError("SEO_ARTICLE_LOCALE_IMMUTABLE"); const normalizedSlug = slug(args.slug);
+    const actor = await requireSeoTeamUser(ctx); const article = await ctx.db.get(args.articleId); if (!article) throw new ConvexError("SEO_ARTICLE_NOT_FOUND"); if (article.status === "archived") throw new ConvexError("SEO_ARTICLE_ARCHIVED"); if (args.locale !== article.locale) throw new ConvexError("SEO_ARTICLE_LOCALE_IMMUTABLE"); const normalizedSlug = slug(args.slug); const content = bodyText(args.content); const contentMedia = await requireActiveArticleContentMedia(ctx, content);
     const slugConflict = await ctx.db.query("seoArticles").withIndex("by_locale_and_slug", (q) => q.eq("locale", args.locale).eq("slug", normalizedSlug)).unique(); if (slugConflict && slugConflict._id !== article._id) throw new ConvexError("SEO_ARTICLE_SLUG_CONFLICT");
     await requireActiveMedia(ctx, args.featuredMediaId ?? undefined); await requireActiveMedia(ctx, args.ogMediaId ?? undefined); const pillar = await requireLocaleReference(ctx, "seoPillars", args.pillarId ?? undefined, args.locale); const cluster = await requireLocaleReference(ctx, "seoClusters", args.clusterId ?? undefined, args.locale); const brief = await requireLocaleReference(ctx, "seoBriefs", args.briefId ?? undefined, args.locale); if ((cluster && pillar && cluster.pillarId !== pillar._id) || (brief?.articleId && brief.articleId !== article._id)) throw new ConvexError("INVALID_SEO_REFERENCE");
     if (brief) ensureBriefArticleStrategyCoherent(brief, { pillarId: args.pillarId ?? undefined, clusterId: args.clusterId ?? undefined });
@@ -225,8 +442,13 @@ export const updateArticle = mutation({
     const now = Date.now();
     if (article.briefId && article.briefId !== args.briefId) { const oldBrief = await ctx.db.get(article.briefId); if (oldBrief?.articleId === article._id) await ctx.db.patch(oldBrief._id, { articleId: undefined, updatedBy: actor._id, updatedAt: now }); }
     if (brief && !brief.articleId) await ctx.db.patch(brief._id, { articleId: article._id, updatedBy: actor._id, updatedAt: now });
-    await ctx.db.patch(article._id, { title: requiredText(args.title, 2, 180), slug: normalizedSlug, excerpt: requiredText(args.excerpt, 10, 500), content: bodyText(args.content), featuredMediaId: args.featuredMediaId ?? undefined, category: requiredText(args.category, 1, 100), primaryKeyword: requiredText(args.primaryKeyword, 1, 120), secondaryKeywords: keywordList(args.secondaryKeywords), searchIntent: args.searchIntent, seoTitle: requiredText(args.seoTitle, 2, 70), metaDescription: requiredText(args.metaDescription, 20, 180), canonicalUrl: canonical, robots: args.robots, ogTitle: optionalText(args.ogTitle, 100), ogDescription: optionalText(args.ogDescription, 300), ogMediaId: args.ogMediaId ?? undefined, pillarId: args.pillarId ?? undefined, clusterId: args.clusterId ?? undefined, briefId: args.briefId ?? undefined, translationGroup: group, updatedBy: actor._id, updatedAt: now });
-    await audit(ctx, actor._id, "article", article._id, "article.metadata_changed", ["title", "slug", "excerpt", "content", "media", "keywords", "metadata", "references"]); return null;
+    await ctx.db.patch(article._id, { title: requiredText(args.title, 2, 180), slug: normalizedSlug, excerpt: requiredText(args.excerpt, 10, 500), content, featuredMediaId: args.featuredMediaId ?? undefined, category: requiredText(args.category, 1, 100), primaryKeyword: requiredText(args.primaryKeyword, 1, 120), secondaryKeywords: keywordList(args.secondaryKeywords), searchIntent: args.searchIntent, seoTitle: requiredText(args.seoTitle, 2, 70), metaDescription: requiredText(args.metaDescription, 20, 180), canonicalUrl: canonical, robots: args.robots, ogTitle: optionalText(args.ogTitle, 100), ogDescription: optionalText(args.ogDescription, 300), ogMediaId: args.ogMediaId ?? undefined, pillarId: args.pillarId ?? undefined, clusterId: args.clusterId ?? undefined, briefId: args.briefId ?? undefined, translationGroup: group, updatedBy: actor._id, updatedAt: now });
+    await syncArticleContentMedia(ctx, article._id, contentMedia);
+    await audit(ctx, actor._id, "article", article._id, "article.metadata_changed", ["title", "slug", "excerpt", "content", "media", "keywords", "metadata", "references"]);
+    if ((article.featuredMediaId ?? null) !== args.featuredMediaId) {
+      await audit(ctx, actor._id, "article", article._id, "article.featured_image_changed", ["featuredMediaId"]);
+    }
+    return null;
   },
 });
 

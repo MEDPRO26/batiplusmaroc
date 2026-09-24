@@ -2,6 +2,7 @@ import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { fetchQuery } from "convex/nextjs";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { api } from "@/convex/_generated/api";
+import { SeoWorkspaceShell } from "@/features/seo/components/seo-workspace-shell";
 import { seoAccessRedirect } from "@/features/seo/lib/access";
 import { redirect } from "@/i18n/navigation";
 import { resolveLocale } from "@/lib/page-meta";
@@ -32,13 +33,15 @@ export default async function SeoLayout({ children, params }: Props) {
 
   // Authoritative backend boundary. Future SEO functions must each enforce the
   // same requireSeoTeamUser guard independently.
-  await fetchQuery(api.seo.index.getSeoSession, {}, { token });
+  const seoUser = await fetchQuery(api.seo.index.getSeoSession, {}, { token });
 
   return (
-    <div className="flex min-h-dvh flex-1 flex-col bg-[#f4f6f8]">
-      <main className="flex min-h-dvh flex-1 flex-col" id="contenu">
-        {children}
-      </main>
-    </div>
+    <SeoWorkspaceShell
+      email={seoUser.email}
+      firstName={seoUser.firstName}
+      lastName={seoUser.lastName}
+    >
+      {children}
+    </SeoWorkspaceShell>
   );
 }

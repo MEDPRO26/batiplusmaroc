@@ -1,13 +1,13 @@
 import { ContactHero } from "@/components/contact/contact-hero";
 import { ContactPanel } from "@/components/contact/contact-panel";
-import { localizedPageMetadata, resolveLocale } from "@/lib/page-meta";
+import { managedPageMetadata, resolveLocale } from "@/lib/page-meta";
 import { routes } from "@/lib/routes";
 import { setRequestLocale } from "next-intl/server";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
-  return localizedPageMetadata(params, routes.contact, "contact");
+  return managedPageMetadata(params, routes.contact, "contact", "contact");
 }
 
 export default async function ContactPage({ params }: Props) {

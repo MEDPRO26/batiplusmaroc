@@ -24,6 +24,13 @@ async function user(t: TestBackend, accountType: "client" | "company" | "admin" 
   }));
 }
 function as(t: TestBackend, id: Id<"users">) { return t.withIdentity({ subject: `${id}|test-session` }); }
+async function media(t: TestBackend, uploadedBy: Id<"users">, name = "image.webp") {
+  return await t.run((ctx) => ctx.db.insert("seoMedia", {
+    objectKey: `seo/media/${crypto.randomUUID()}.webp`, filename: name,
+    mimeType: "image/webp", width: 1200, height: 630, size: 5000,
+    uploadedBy, status: "active", createdAt: Date.now(), updatedAt: Date.now(),
+  }));
+}
 
 const pillarInput = { title: "Construction maison", slug: "construction-maison", description: "Guide de construction", primaryKeyword: "construction maison", searchIntent: "informational" as const, locale: "fr" as const };
 const articleInput = (overrides: Record<string, unknown> = {}) => ({
@@ -66,6 +73,8 @@ describe("SEO CMS authorization", () => {
       const id = await user(t, role);
       await expect(as(t, id).mutation(api.seo.content.createPillar, pillarInput)).rejects.toThrow("SEO_TEAM_REQUIRED");
       await expect(as(t, id).query(api.seo.content.listPillars, { locale: "fr" })).rejects.toThrow("SEO_TEAM_REQUIRED");
+      await expect(as(t, id).query(api.seo.content.getWorkspaceDashboard, {})).rejects.toThrow("SEO_TEAM_REQUIRED");
+      await expect(as(t, id).query(api.seo.content.listArticlesForWorkspace, {})).rejects.toThrow("SEO_TEAM_REQUIRED");
     }
   });
 });
@@ -79,6 +88,47 @@ describe("SEO CMS domain model", () => {
     await c.mutation(api.seo.content.createArticle, articleInput());
     await expect(c.mutation(api.seo.content.createArticle, articleInput())).rejects.toThrow("SEO_ARTICLE_SLUG_CONFLICT");
     await expect(c.mutation(api.seo.content.createArticle, articleInput({ locale: "en" }))).resolves.toEqual(expect.any(String));
+  });
+
+  test("creates, edits, searches, and summarizes articles for the protected workspace", async () => {
+    const t = convexTest(schema, modules); const c = as(t, await user(t, "seo_team"));
+    const draftId = await c.mutation(api.seo.content.createArticle, articleInput());
+    await c.mutation(api.seo.content.updateArticle, articleUpdateInput(draftId, {
+      title: "Guide prix construction Maroc",
+      primaryKeyword: "coût construction maroc",
+    }));
+    const reviewId = await c.mutation(api.seo.content.createArticle, articleInput({ slug: "article-en-relecture", title: "Article en relecture" }));
+    await c.mutation(api.seo.content.setArticleStatus, { articleId: reviewId, status: "review" });
+    const publishedId = await c.mutation(api.seo.content.createArticle, articleInput({ slug: "article-publie", title: "Article publié", ogTitle: "Article publié", ogDescription: "Description sociale" }));
+    await c.mutation(api.seo.content.setArticleStatus, { articleId: publishedId, status: "review" });
+    await c.mutation(api.seo.content.setArticleStatus, { articleId: publishedId, status: "published" });
+
+    await expect(c.query(api.seo.content.listArticlesForWorkspace, { search: "GUIDE PRIX" })).resolves.toMatchObject([
+      { articleId: draftId, title: "Guide prix construction Maroc", status: "draft", primaryKeyword: "coût construction maroc" },
+    ]);
+    await expect(c.query(api.seo.content.listArticlesForWorkspace, { locale: "fr", status: "review" })).resolves.toMatchObject([
+      { articleId: reviewId, status: "review" },
+    ]);
+    await expect(c.query(api.seo.content.getWorkspaceDashboard, {})).resolves.toMatchObject({
+      draftArticles: 1,
+      reviewArticles: 1,
+      publishedArticles: 1,
+      missingMetadata: 2,
+      pillars: 0,
+      clusters: 0,
+    });
+  });
+
+  test("keeps draft preview private while allowing the SEO team to preview it", async () => {
+    const t = convexTest(schema, modules); const c = as(t, await user(t, "seo_team"));
+    const articleId = await c.mutation(api.seo.content.createArticle, articleInput());
+    await expect(c.query(api.seo.content.getArticle, { articleId })).resolves.toMatchObject({
+      _id: articleId,
+      status: "draft",
+      content: "Premier paragraphe.\n\nDeuxième paragraphe.",
+    });
+    await expect(t.query(api.seo.content.getArticle, { articleId })).rejects.toThrow("NOT_AUTHENTICATED");
+    await expect(t.query(api.seo.public.getPublishedArticleBySlug, { locale: "fr", slug: "prix-construction-maison" })).resolves.toBeNull();
   });
 
   test("enforces locale-consistent strategy references", async () => {
@@ -96,14 +146,46 @@ describe("SEO CMS domain model", () => {
     await expect(c.mutation(api.seo.content.createArticle, articleInput({ slug: "autre", translationGroup: "house-price-guide" }))).rejects.toThrow("SEO_TRANSLATION_LOCALE_CONFLICT");
   });
 
-  test("normalizes image metadata per locale and archives replaced media", async () => {
-    const t = convexTest(schema, modules); const c = as(t, await user(t, "seo_team"));
-    const first = await c.mutation(api.seo.content.registerMedia, { objectKey: "seo/images/first.webp", filename: "first.webp", mimeType: "image/webp", width: 1200, height: 630, size: 5000 });
+  test("keeps FR and EN media metadata independent and archives unused media", async () => {
+    const t = convexTest(schema, modules); const seoId = await user(t, "seo_team"); const c = as(t, seoId);
+    const first = await media(t, seoId, "first.webp");
     const fr = await c.mutation(api.seo.content.upsertMediaMetadata, { mediaId: first, locale: "fr", altText: "Maison en construction" });
     const en = await c.mutation(api.seo.content.upsertMediaMetadata, { mediaId: first, locale: "en", altText: "House under construction" });
     expect(fr).not.toBe(en);
-    await c.mutation(api.seo.content.registerMedia, { objectKey: "seo/images/replacement.webp", filename: "replacement.webp", mimeType: "image/webp", size: 6000, replacesMediaId: first });
+    const details = await c.query(api.seo.content.getMediaDetails, { mediaId: first });
+    expect(details?.fr?.altText).toBe("Maison en construction");
+    expect(details?.en?.altText).toBe("House under construction");
+    await c.mutation(api.seo.content.archiveMedia, { mediaId: first });
     expect((await t.run((ctx) => ctx.db.get(first)))?.status).toBe("archived");
+  });
+
+  test("persists formatted content and protected Media Library references", async () => {
+    const t = convexTest(schema, modules); const seoId = await user(t, "seo_team"); const c = as(t, seoId);
+    const mediaId = await media(t, seoId);
+    await c.mutation(api.seo.content.upsertMediaMetadata, {
+      mediaId, locale: "fr", altText: "Maison en chantier",
+    });
+    const content = `## Budget\n\nUn texte **important**.\n\n![Maison](media:${mediaId})`;
+    const articleId = await c.mutation(api.seo.content.createArticle, articleInput({ content, featuredMediaId: mediaId, ogMediaId: mediaId }));
+    expect((await c.query(api.seo.content.getArticle, { articleId }))?.content).toBe(content);
+    expect(await t.run((ctx) => ctx.db.query("seoArticleMedia").withIndex("by_articleId", (q) => q.eq("articleId", articleId)).collect())).toHaveLength(1);
+    await expect(c.mutation(api.seo.content.archiveMedia, { mediaId })).rejects.toThrow("SEO_MEDIA_IN_USE");
+    const replacementFeatured = await media(t, seoId, "featured-v2.webp");
+    await c.mutation(api.seo.content.updateArticle, articleUpdateInput(articleId, {
+      content, featuredMediaId: replacementFeatured, ogMediaId: mediaId,
+    }));
+    const imageEvents = await c.query(api.seo.content.listAuditEvents, {
+      entityType: "article", entityId: articleId,
+    });
+    expect(imageEvents.some((event) => event.action === "article.featured_image_changed")).toBe(true);
+    await expect(c.mutation(api.seo.content.updateArticle, articleUpdateInput(articleId, { content: "![External](https://evil.example/image.jpg)" }))).rejects.toThrow("INVALID_SEO_CONTENT_MEDIA");
+    await c.mutation(api.seo.content.setArticleStatus, { articleId, status: "review" });
+    await c.mutation(api.seo.content.setArticleStatus, { articleId, status: "published" });
+    const publicArticle = await t.query(api.seo.public.getPublishedArticleBySlug, {
+      locale: "fr", slug: "prix-construction-maison",
+    });
+    expect(publicArticle?.content).toContain("![Maison en chantier](https://media.batiplusmaroc.com/seo/media/");
+    expect(publicArticle?.content).not.toContain(`media:${mediaId}`);
   });
 
   test("validates and uniquely owns Batiplus canonical URLs across articles and pages", async () => {
@@ -112,6 +194,57 @@ describe("SEO CMS domain model", () => {
     await expect(c.mutation(api.seo.content.createPillar, { ...pillarInput, targetUrl: "https://user:secret@example.com/page" })).rejects.toThrow("INVALID_SEO_URL");
     await c.mutation(api.seo.content.createArticle, articleInput({ canonicalUrl: "https://batiplusmaroc.com/fr/blog/prix-construction" }));
     await expect(c.mutation(api.seo.content.upsertPageMetadata, { pageKey: "homepage", locale: "fr", seoTitle: "Batiplus Maroc accueil", metaDescription: "Trouvez les meilleurs professionnels de construction au Maroc.", canonicalUrl: "https://batiplusmaroc.com/fr/blog/prix-construction", robots: "index,follow", ogMediaId: null })).rejects.toThrow("SEO_CANONICAL_CONFLICT");
+  });
+
+  test("only accepts approved page keys and requires confirmation for homepage noindex", async () => {
+    const t = convexTest(schema, modules); const c = as(t, await user(t, "seo_team"));
+    const input = { pageKey: "homepage", locale: "fr" as const, seoTitle: "Batiplus Maroc accueil", metaDescription: "Trouvez des professionnels qualifiés pour vos travaux de construction.", canonicalUrl: null, robots: "noindex,follow" as const, ogMediaId: null };
+    await expect(c.mutation(api.seo.content.upsertPageMetadata, input)).rejects.toThrow("SEO_CRITICAL_NOINDEX_CONFIRMATION_REQUIRED");
+    await expect(c.mutation(api.seo.content.upsertPageMetadata, { ...input, confirmCriticalNoindex: true })).resolves.toEqual(expect.any(String));
+    await expect(c.mutation(api.seo.content.upsertPageMetadata, { ...input, pageKey: "unknown-route", robots: "index,follow" })).rejects.toThrow("SEO_PAGE_NOT_APPROVED");
+    await expect(c.query(api.seo.content.getPageMetadata, { pageKey: "unknown-route", locale: "fr" })).rejects.toThrow("SEO_PAGE_NOT_APPROVED");
+  });
+
+  test("keeps page metadata independent by locale and validates OG media, canonicals, and robots", async () => {
+    const t = convexTest(schema, modules); const seoId = await user(t, "seo_team"); const c = as(t, seoId);
+    const ogMediaId = await media(t, seoId, "homepage-og.webp");
+    const base = {
+      pageKey: "homepage", seoTitle: "Batiplus Maroc",
+      metaDescription: "Trouvez les meilleurs professionnels de construction pour votre projet au Maroc.",
+      robots: "index,follow" as const, ogMediaId,
+    };
+    const frId = await c.mutation(api.seo.content.upsertPageMetadata, {
+      ...base, locale: "fr", canonicalUrl: "https://batiplusmaroc.com/fr",
+      ogTitle: "Construire au Maroc", ogDescription: "Trouvez une entreprise qualifiée.",
+    });
+    const enId = await c.mutation(api.seo.content.upsertPageMetadata, {
+      ...base, locale: "en", seoTitle: "Batiplus Morocco",
+      metaDescription: "Find qualified construction companies for your project in Morocco.",
+      canonicalUrl: "https://batiplusmaroc.com/en", ogTitle: "Build in Morocco",
+    });
+    expect(frId).not.toBe(enId);
+    await expect(c.query(api.seo.content.getPageMetadata, { pageKey: "homepage", locale: "fr" }))
+      .resolves.toMatchObject({ seoTitle: "Batiplus Maroc", ogMediaId });
+    await expect(c.query(api.seo.content.getPageMetadata, { pageKey: "homepage", locale: "en" }))
+      .resolves.toMatchObject({ seoTitle: "Batiplus Morocco", ogMediaId });
+
+    await expect(c.mutation(api.seo.content.upsertPageMetadata, {
+      ...base, pageKey: "about", locale: "fr",
+      canonicalUrl: "https://batiplusmaroc.com/fr",
+    })).rejects.toThrow("SEO_CANONICAL_CONFLICT");
+    await expect(c.mutation(api.seo.content.upsertPageMetadata, {
+      ...base, pageKey: "about", locale: "fr",
+      canonicalUrl: "https://evil.example/fr/a-propos",
+    })).rejects.toThrow("INVALID_SEO_CANONICAL");
+    await expect(c.mutation(api.seo.content.upsertPageMetadata, {
+      ...base, pageKey: "about", locale: "fr", canonicalUrl: null,
+      robots: "allow-everything" as never,
+    })).rejects.toThrow();
+
+    const events = await c.query(api.seo.content.listAuditEvents, {
+      entityType: "page_metadata", entityId: frId,
+    });
+    expect(events[0]?.action).toBe("page_metadata.changed");
   });
 
   test("enforces explicit article lifecycle and public published-only DTO isolation", async () => {

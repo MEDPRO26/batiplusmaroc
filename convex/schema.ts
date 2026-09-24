@@ -1,6 +1,11 @@
 import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+  marketplaceActivityActorTypeValidator,
+  marketplaceActivityEventTypeValidator,
+  marketplaceActivityMetadataValidator,
+} from "./marketplaceActivity/constants";
 
 const accountType = v.union(
   v.literal("client"),
@@ -175,6 +180,59 @@ export default defineSchema({
     projectId: v.id("projects"), oldStatus: projectStatus, newStatus: projectStatus,
     changedBy: v.id("users"), changedAt: v.number(), reason: v.optional(v.string()),
   }).index("by_projectId", ["projectId"]).index("by_projectId_and_changedAt", ["projectId", "changedAt"]),
+
+  marketplaceActivity: defineTable({
+    projectId: v.id("projects"),
+    eventType: marketplaceActivityEventTypeValidator,
+    actorUserId: v.id("users"),
+    actorType: marketplaceActivityActorTypeValidator,
+    companyId: v.optional(v.id("companies")),
+    quoteId: v.optional(v.id("projectQuotes")),
+    conversationId: v.optional(v.id("conversations")),
+    siteAssessmentId: v.optional(v.id("siteAssessments")),
+    /** Future deal module IDs are stored as opaque IDs until that table exists. */
+    dealId: v.optional(v.string()),
+    oldStatus: v.optional(v.string()),
+    newStatus: v.optional(v.string()),
+    reason: v.optional(v.string()),
+    metadata: v.optional(marketplaceActivityMetadataValidator),
+    createdAt: v.number(),
+  })
+    .index("by_projectId_and_createdAt", ["projectId", "createdAt"])
+    .index("by_eventType_and_createdAt", ["eventType", "createdAt"]),
+
+  siteAssessments: defineTable({
+    projectId: v.id("projects"),
+    clientId: v.id("users"),
+    companyId: v.id("companies"),
+    initialQuoteId: v.id("projectQuotes"),
+    conversationId: v.id("conversations"),
+    status: v.union(
+      v.literal("invited"),
+      v.literal("accepted"),
+      v.literal("scheduled"),
+      v.literal("completed"),
+      v.literal("declined"),
+      v.literal("cancelled"),
+    ),
+    active: v.boolean(),
+    invitedByUserId: v.id("users"),
+    invitedAt: v.number(),
+    acceptedAt: v.optional(v.number()),
+    acceptedMarketplaceTermsAt: v.optional(v.number()),
+    declinedAt: v.optional(v.number()),
+    cancelledAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    scheduledAt: v.optional(v.number()),
+    siteAddress: v.optional(v.string()),
+    clientNote: v.optional(v.string()),
+    companyNote: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_projectId_and_active", ["projectId", "active"])
+    .index("by_conversationId", ["conversationId"])
+    .index("by_projectId_and_companyId", ["projectId", "companyId"]),
 
   projectMedia: defineTable({
     projectId: v.id("projects"), clientId: v.id("users"), storageProvider: v.literal("r2"),
@@ -502,12 +560,24 @@ export default defineSchema({
   seoMedia: defineTable({
     objectKey: v.string(), filename: v.string(), mimeType: v.string(),
     width: v.optional(v.number()), height: v.optional(v.number()), size: v.number(),
+    etag: v.optional(v.string()),
     uploadedBy: v.id("users"), status: v.union(v.literal("active"), v.literal("archived")),
-    replacesMediaId: v.optional(v.id("seoMedia")), archivedAt: v.optional(v.number()),
+    replacesMediaId: v.optional(v.id("seoMedia")), replacedByMediaId: v.optional(v.id("seoMedia")),
+    archivedAt: v.optional(v.number()),
     createdAt: v.number(), updatedAt: v.number(),
   })
     .index("by_objectKey", ["objectKey"])
     .index("by_status_and_createdAt", ["status", "createdAt"]),
+
+  seoMediaUploadIntents: defineTable({
+    userId: v.id("users"), objectKey: v.string(), fileName: v.string(),
+    expectedContentType: v.string(), expectedSize: v.number(), token: v.string(),
+    replacesMediaId: v.optional(v.id("seoMedia")), expiresAt: v.number(),
+    verifiedAt: v.optional(v.number()), claimedAt: v.optional(v.number()),
+    etag: v.optional(v.string()), createdAt: v.number(),
+  })
+    .index("by_token", ["token"])
+    .index("by_objectKey", ["objectKey"]),
 
   seoMediaMetadata: defineTable({
     mediaId: v.id("seoMedia"), locale: seoLocale, altText: v.string(),
@@ -571,8 +641,17 @@ export default defineSchema({
     .index("by_locale_and_status", ["locale", "status"])
     .index("by_pillarId", ["pillarId"])
     .index("by_clusterId", ["clusterId"])
+    .index("by_featuredMediaId", ["featuredMediaId"])
+    .index("by_ogMediaId", ["ogMediaId"])
     .index("by_translationGroup_and_locale", ["translationGroup", "locale"])
     .index("by_canonicalUrl", ["canonicalUrl"]),
+
+  seoArticleMedia: defineTable({
+    articleId: v.id("seoArticles"), mediaId: v.id("seoMedia"), createdAt: v.number(),
+  })
+    .index("by_articleId", ["articleId"])
+    .index("by_mediaId", ["mediaId"])
+    .index("by_articleId_and_mediaId", ["articleId", "mediaId"]),
 
   seoPageMetadata: defineTable({
     pageKey: v.string(), locale: seoLocale, seoTitle: v.string(), metaDescription: v.string(),
@@ -582,7 +661,8 @@ export default defineSchema({
     createdAt: v.number(), updatedAt: v.number(),
   })
     .index("by_pageKey_and_locale", ["pageKey", "locale"])
-    .index("by_canonicalUrl", ["canonicalUrl"]),
+    .index("by_canonicalUrl", ["canonicalUrl"])
+    .index("by_ogMediaId", ["ogMediaId"]),
 
   seoArticleLinks: defineTable({
     sourceArticleId: v.id("seoArticles"),

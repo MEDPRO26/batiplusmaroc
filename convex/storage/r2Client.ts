@@ -69,6 +69,17 @@ export async function readPublicMediaSignature(objectKey: string) {
   return await result.Body.transformToByteArray();
 }
 
+export async function readPublicMediaBytes(objectKey: string, maximumBytes: number) {
+  const { bucket, s3 } = client();
+  const result = await s3.send(new GetObjectCommand({
+    Bucket: bucket,
+    Key: objectKey,
+    Range: `bytes=0-${Math.max(0, Math.trunc(maximumBytes) - 1)}`,
+  }));
+  if (!result.Body) return new Uint8Array();
+  return await result.Body.transformToByteArray();
+}
+
 export async function deletePublicMediaObject(objectKey: string) {
   const { bucket, s3 } = client();
   await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: objectKey }));

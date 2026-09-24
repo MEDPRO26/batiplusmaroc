@@ -11,14 +11,14 @@ import { ProjectDirectory } from "@/components/portfolio/project-directory";
 import { VillaFountyProject } from "@/components/portfolio/villa-founty-project";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buildWebPageJsonLd } from "@/lib/i18n-seo";
-import { localizedPageMetadata, resolveLocale } from "@/lib/page-meta";
+import { managedPageMetadata, resolveLocale } from "@/lib/page-meta";
 import { routes } from "@/lib/routes";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
-  return localizedPageMetadata(params, routes.projects, "projects");
+  return managedPageMetadata(params, routes.projects, "projects", "realisations-index");
 }
 
 export default async function PortfolioPage({ params }: Props) {

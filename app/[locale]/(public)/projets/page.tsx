@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { PublicProjectBrowse } from "@/features/projects/components/public-project-browse";
-import { localizedPageMetadata, resolveLocale } from "@/lib/page-meta";
+import { managedPageMetadata, resolveLocale } from "@/lib/page-meta";
 import { routes } from "@/lib/routes";
 
 type Props = {
@@ -9,7 +9,7 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props) {
-  return localizedPageMetadata(params, routes.browseProjects, "browseProjects");
+  return managedPageMetadata(params, routes.browseProjects, "browseProjects", "projects-directory");
 }
 
 export default async function BrowseProjectsPage({ params, searchParams }: Props) {

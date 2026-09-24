@@ -2,6 +2,12 @@ import { ConvexError, v } from "convex/values";
 import { internal } from "../_generated/api";
 import { mutation, query } from "../_generated/server";
 import {
+  marketplaceActivityActorTypeValidator,
+  marketplaceActivityEventTypeValidator,
+  marketplaceActivityMetadataValidator,
+} from "../marketplaceActivity/constants";
+import { appendMarketplaceActivity } from "../marketplaceActivity/model";
+import {
   marketplaceBudgetRank,
   projectBudgetRangeValidator,
   projectCategoryValidator,
@@ -50,6 +56,29 @@ const historyItemValidator = v.object({
   changedAt: v.number(),
   reason: nullableString,
   changedBy: actorValidator,
+});
+
+const activityItemValidator = v.object({
+  activityId: v.id("marketplaceActivity"),
+  eventType: marketplaceActivityEventTypeValidator,
+  actor: v.object({
+    userId: v.id("users"),
+    displayName: v.string(),
+    type: marketplaceActivityActorTypeValidator,
+  }),
+  company: v.union(
+    v.null(),
+    v.object({ id: v.id("companies"), name: v.string() }),
+  ),
+  quoteId: v.union(v.id("projectQuotes"), v.null()),
+  conversationId: v.union(v.id("conversations"), v.null()),
+  siteAssessmentId: v.union(v.id("siteAssessments"), v.null()),
+  dealId: nullableString,
+  oldStatus: nullableString,
+  newStatus: nullableString,
+  reason: nullableString,
+  metadata: v.union(marketplaceActivityMetadataValidator, v.null()),
+  createdAt: v.number(),
 });
 
 const reviewValidator = v.object({
@@ -215,6 +244,58 @@ export const getProjectReview = query({
   },
 });
 
+/** Admin-only cross-domain funnel. Convex subscriptions keep the open timeline live. */
+export const listProjectActivity = query({
+  args: { projectId: v.id("projects") },
+  returns: v.array(activityItemValidator),
+  handler: async (ctx, args) => {
+    await requireAdminUser(ctx);
+    const project = await ctx.db.get(args.projectId);
+    if (!project) return [];
+
+    const rows = await ctx.db
+      .query("marketplaceActivity")
+      .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", project._id))
+      .order("desc")
+      .take(250);
+
+    const actorIds = [...new Set(rows.map((row) => row.actorUserId))];
+    const companyIds = [...new Set(rows.flatMap((row) => row.companyId ? [row.companyId] : []))];
+    const [actors, companies] = await Promise.all([
+      Promise.all(actorIds.map((userId) => ctx.db.get(userId))),
+      Promise.all(companyIds.map((companyId) => ctx.db.get(companyId))),
+    ]);
+    const actorById = new Map(actorIds.map((id, index) => [id, actors[index]]));
+    const companyById = new Map(companyIds.map((id, index) => [id, companies[index]]));
+
+    return rows.reverse().map((row) => {
+      const actor = actorById.get(row.actorUserId) ?? null;
+      const company = row.companyId ? companyById.get(row.companyId) ?? null : null;
+      return {
+        activityId: row._id,
+        eventType: row.eventType,
+        actor: {
+          userId: row.actorUserId,
+          displayName: displayName(actor),
+          type: row.actorType,
+        },
+        company: row.companyId
+          ? { id: row.companyId, name: company?.name ?? "—" }
+          : null,
+        quoteId: row.quoteId ?? null,
+        conversationId: row.conversationId ?? null,
+        siteAssessmentId: row.siteAssessmentId ?? null,
+        dealId: row.dealId ?? null,
+        oldStatus: row.oldStatus ?? null,
+        newStatus: row.newStatus ?? null,
+        reason: row.reason ?? null,
+        metadata: row.metadata ?? null,
+        createdAt: row.createdAt,
+      };
+    });
+  },
+});
+
 export const approveProject = mutation({
   args: { projectId: v.id("projects") },
   returns: v.object({ status: v.literal("published") }),
@@ -240,6 +321,15 @@ export const approveProject = mutation({
       changedBy: admin._id,
       changedAt: now,
     });
+    await appendMarketplaceActivity(ctx, {
+      projectId: project._id,
+      eventType: "project_approved",
+      actorUserId: admin._id,
+      actorType: "admin",
+      oldStatus: "pending_review",
+      newStatus: "published",
+      createdAt: now,
+    });
     return { status: "published" as const };
   },
 });
@@ -264,6 +354,16 @@ export const requestProjectChanges = mutation({
       changedBy: admin._id,
       changedAt: now,
       reason,
+    });
+    await appendMarketplaceActivity(ctx, {
+      projectId: project._id,
+      eventType: "project_needs_changes",
+      actorUserId: admin._id,
+      actorType: "admin",
+      oldStatus: "pending_review",
+      newStatus: "needs_changes",
+      reason,
+      createdAt: now,
     });
     return { status: "needs_changes" as const };
   },

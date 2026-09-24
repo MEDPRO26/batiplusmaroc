@@ -41,6 +41,14 @@ export const routes = {
   adminVerification: "/admin/verification",
   seoRoot: "/seo",
   seoDashboard: "/seo/dashboard",
+  seoArticles: "/seo/articles",
+  seoArticleNew: "/seo/articles/new",
+  seoArticle: "/seo/articles/[articleId]",
+  seoMedia: "/seo/media",
+  seoPages: "/seo/pages",
+  seoPillars: "/seo/pillars",
+  seoClusters: "/seo/clusters",
+  seoBriefs: "/seo/briefs",
   messages: "/messages",
   messagesConversation: "/messages/[conversationId]",
   notifications: "/notifications",
@@ -48,11 +56,12 @@ export const routes = {
 
 export type AppRoute = Exclude<
   (typeof routes)[keyof typeof routes],
-  typeof routes.clientProject | typeof routes.companyProject | typeof routes.companyInitialQuote | typeof routes.messagesConversation
+  typeof routes.clientProject | typeof routes.companyProject | typeof routes.companyInitialQuote | typeof routes.messagesConversation | typeof routes.seoArticle
 >;
 export type DynamicAppRoute =
   | typeof routes.clientProject
   | typeof routes.companyProject
   | typeof routes.companyInitialQuote
-  | typeof routes.messagesConversation;
+  | typeof routes.messagesConversation
+  | typeof routes.seoArticle;
 export type ProtectedRoute = AppRoute;

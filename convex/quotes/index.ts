@@ -12,6 +12,7 @@ import {
 } from "../projects/constants";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { ensureConversationForQuote } from "../messages/index";
+import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { assertQuoteTransition, isActiveQuoteStatus, type QuoteStatus } from "./state";
 
 const MAX_ESTIMATED_PRICE_MAD = 100_000_000;
@@ -255,6 +256,27 @@ async function appendStatusHistory(
     changedAt: now,
     reason,
   });
+  const activityEvent = nextStatus === "viewed"
+    ? "quote_viewed" as const
+    : nextStatus === "shortlisted"
+      ? "quote_shortlisted" as const
+      : nextStatus === "declined"
+        ? "quote_declined" as const
+        : null;
+  if (activityEvent) {
+    await appendMarketplaceActivity(ctx, {
+      projectId: quote.projectId,
+      eventType: activityEvent,
+      actorUserId: changedBy,
+      actorType: "client",
+      companyId: quote.companyId,
+      quoteId: quote._id,
+      oldStatus: quote.status,
+      newStatus: nextStatus,
+      reason,
+      createdAt: now,
+    });
+  }
   return nextStatus;
 }
 
@@ -381,6 +403,17 @@ export const submitInitialQuote = mutation({
       changedBy: userId,
       changedAt: now,
     });
+    await appendMarketplaceActivity(ctx, {
+      projectId: project._id,
+      eventType: "initial_quote_submitted",
+      actorUserId: userId,
+      actorType: "company",
+      companyId: company._id,
+      quoteId,
+      oldStatus: "draft",
+      newStatus: "submitted",
+      createdAt: now,
+    });
     return { quoteId, status: "submitted" as const };
   },
 });
@@ -494,14 +527,28 @@ export const reviewInitialQuote = mutation({
         };
       }
       const status = await appendStatusHistory(ctx, quote, nextStatus, userId, reason || undefined);
+      const conversationId = await ensureConversationForQuote(
+        ctx,
+        { ...quote, status, updatedAt: Date.now() },
+        project,
+        userId,
+      );
+      await appendMarketplaceActivity(ctx, {
+        projectId: quote.projectId,
+        eventType: "discussion_opened",
+        actorUserId: userId,
+        actorType: "client",
+        companyId: quote.companyId,
+        quoteId: quote._id,
+        conversationId,
+        oldStatus: quote.status,
+        newStatus: status,
+        reason: reason || undefined,
+        createdAt: Date.now(),
+      });
       return {
         status,
-        conversationId: await ensureConversationForQuote(
-          ctx,
-          { ...quote, status, updatedAt: Date.now() },
-          project,
-          userId,
-        ),
+        conversationId,
       };
     }
     return {

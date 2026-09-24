@@ -10,14 +10,14 @@ import { ProjectTypes } from "@/components/gros-oeuvre/project-types";
 import { StructuralExpertise } from "@/components/gros-oeuvre/structural-expertise";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buildWebPageJsonLd } from "@/lib/i18n-seo";
-import { localizedPageMetadata, resolveLocale } from "@/lib/page-meta";
+import { managedPageMetadata, resolveLocale } from "@/lib/page-meta";
 import { routes } from "@/lib/routes";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
-  return localizedPageMetadata(params, routes.structuralWork, "structuralWork");
+  return managedPageMetadata(params, routes.structuralWork, "structuralWork", "service:gros-oeuvre");
 }
 
 export default async function GrosOeuvrePage({ params }: Props) {
