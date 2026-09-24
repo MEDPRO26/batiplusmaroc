@@ -276,3 +276,6 @@ npm test
 npm run typecheck
 npm run lint
 npm run build
+```
+
+Every PR into `main` must pass the same gates via GitHub Actions. See `docs/ci.md`.
