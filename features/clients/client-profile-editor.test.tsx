@@ -8,6 +8,7 @@ vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
   useFormatter: () => ({ dateTime: () => "Jan 1, 2024" }),
+  useLocale: () => "en",
 }));
 vi.mock("convex/react", () => ({
   useAction: vi.fn(),

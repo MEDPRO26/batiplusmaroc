@@ -2,13 +2,14 @@
 
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useFormatter, useNow, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import { projectBudgetRanges, projectCategories, projectCities } from "@/convex/projects/constants";
 import { DashboardCardsSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
 
@@ -305,6 +306,7 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
   const tProjects = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
+  const locale = useLocale();
   const category =
     project.primaryCategory === "other" && project.customCategoryText
       ? project.customCategoryText
@@ -357,7 +359,7 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
         {project.client
           ? tProjects("card.client", {
               name: project.client.displayName,
-              date: format.dateTime(project.client.joinedAt, { month: "short", year: "numeric" }),
+              date: formatMarketplaceDateTime(project.client.joinedAt, locale, { month: "short", year: "numeric" }),
             })
           : tProjects("card.clientPrivate")}
         <span aria-hidden> · </span>

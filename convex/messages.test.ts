@@ -16,12 +16,30 @@ beforeAll(async () => {
   process.env.CONVEX_SITE_URL = "https://example.convex.site";
 });
 
-async function seedUser(t: Backend, accountType: "client" | "company" | "admin") {
+async function seedUser(t: Backend, accountType: "client" | "company" | "admin" | "seo_team") {
   return await t.run((ctx) => ctx.db.insert("users", {
     email: `${crypto.randomUUID()}@messages.test`, firstName: accountType === "client" ? "Khadija" : "Youssef",
     lastName: "Test", accountType, countryCode: "MA", acceptedTerms: true, termsAcceptedAt: 1,
     marketingOptIn: false, onboardingStatus: "completed", createdAt: 1, updatedAt: 1,
   }));
+}
+
+async function preparePdfUpload(
+  state: Awaited<ReturnType<typeof setup>>,
+  conversationId: Id<"conversations">,
+  contents = "%PDF-1.7 test attachment",
+  fileName = "plans.pdf",
+) {
+  const blob = new Blob([contents], { type: "application/pdf" });
+  const company = asUser(state.t, state.company.userId);
+  const intent = await company.mutation(api.messages.attachments.generateAttachmentUploadUrl, {
+    conversationId,
+    fileName,
+    contentType: "application/pdf",
+    size: blob.size,
+  });
+  const storageId = await state.t.run((ctx) => ctx.storage.store(blob));
+  return { ...intent, storageId, size: blob.size };
 }
 
 async function seedCompany(t: Backend) {
@@ -336,5 +354,121 @@ describe("message sending, ordering, pagination, and read state", () => {
     expect((await client.query(api.messages.index.listMyThreads, {}))[0].unread).toBe(true);
     await client.mutation(api.messages.index.markConversationRead, { conversationId: conversationId! });
     expect((await client.query(api.messages.index.listMyThreads, {}))[0].unread).toBe(false);
+  });
+});
+
+describe("private company PDF message attachments", () => {
+  test("a verified company sends text with a PDF and a PDF-only message without changing marketplace state", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    const activityBefore = await state.t.run((ctx) => ctx.db.query("marketplaceActivity").collect());
+    const firstUpload = await preparePdfUpload(state, conversationId!, "%PDF-1.7 construction plan", "../Plan chantier.pdf");
+    const company = asUser(state.t, state.company.userId);
+    const sent = await company.action(api.messages.attachments.sendMessageWithAttachment, {
+      conversationId: conversationId!, body: "Voici le plan.", clientMessageId: "pdf-message-one",
+      uploadToken: firstUpload.uploadToken, storageId: firstUpload.storageId,
+    });
+    const duplicate = await company.action(api.messages.attachments.sendMessageWithAttachment, {
+      conversationId: conversationId!, body: "Voici le plan.", clientMessageId: "pdf-message-one",
+      uploadToken: firstUpload.uploadToken, storageId: firstUpload.storageId,
+    });
+    expect(duplicate).toMatchObject({ messageId: sent.messageId, attachmentId: sent.attachmentId, duplicate: true });
+
+    await state.t.run((ctx) => ctx.db.patch(conversationId!, { companyLastSentAt: 0 }));
+    const secondUpload = await preparePdfUpload(state, conversationId!, "%PDF-1.4 supporting document", "document.pdf");
+    await company.action(api.messages.attachments.sendMessageWithAttachment, {
+      conversationId: conversationId!, body: "", clientMessageId: "pdf-message-two",
+      uploadToken: secondUpload.uploadToken, storageId: secondUpload.storageId,
+    });
+
+    const clientPage = await asUser(state.t, state.clientId).query(api.messages.index.listMessages, { conversationId: conversationId!, paginationOpts: { numItems: 10, cursor: null } });
+    const companyPage = await company.query(api.messages.index.listMessages, { conversationId: conversationId!, paginationOpts: { numItems: 10, cursor: null } });
+    expect(clientPage.page).toHaveLength(2);
+    expect(companyPage.page).toHaveLength(2);
+    expect(clientPage.page.map((message) => message.attachment?.fileName).sort()).toEqual(["Plan chantier.pdf", "document.pdf"]);
+    expect(clientPage.page.find((message) => message.body === "")?.attachment?.downloadUrl).toContain("/api/messages/attachments/");
+
+    const invariants = await state.t.run(async (ctx) => ({
+      quote: await ctx.db.get(state.quoteId),
+      finalQuotes: await ctx.db.query("finalQuotes").collect(),
+      activity: await ctx.db.query("marketplaceActivity").collect(),
+      attachments: await ctx.db.query("messageAttachments").withIndex("by_conversationId_and_createdAt", (q) => q.eq("conversationId", conversationId!)).collect(),
+    }));
+    expect(invariants.quote?.status).toBe("discussion_open");
+    expect(invariants.finalQuotes).toEqual([]);
+    expect(invariants.activity).toEqual(activityBefore);
+    expect(invariants.attachments).toHaveLength(2);
+  });
+
+  test("only the verified company participant can create upload intents", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    const args = { conversationId: conversationId!, fileName: "document.pdf", contentType: "application/pdf", size: 128 };
+    await expect(state.t.mutation(api.messages.attachments.generateAttachmentUploadUrl, args)).rejects.toThrow("NOT_AUTHENTICATED");
+    await expect(asUser(state.t, state.clientId).mutation(api.messages.attachments.generateAttachmentUploadUrl, args)).rejects.toThrow("CONVERSATION_NOT_FOUND");
+    await expect(asUser(state.t, state.otherClientId).mutation(api.messages.attachments.generateAttachmentUploadUrl, args)).rejects.toThrow("CONVERSATION_NOT_FOUND");
+    await expect(asUser(state.t, state.otherCompany.userId).mutation(api.messages.attachments.generateAttachmentUploadUrl, args)).rejects.toThrow("CONVERSATION_NOT_FOUND");
+    const adminId = await seedUser(state.t, "admin");
+    const seoId = await seedUser(state.t, "seo_team");
+    await expect(asUser(state.t, adminId).mutation(api.messages.attachments.generateAttachmentUploadUrl, args)).rejects.toThrow("CONVERSATION_NOT_FOUND");
+    await expect(asUser(state.t, seoId).mutation(api.messages.attachments.generateAttachmentUploadUrl, args)).rejects.toThrow("CONVERSATION_NOT_FOUND");
+    await expect(asUser(state.t, state.company.userId).mutation(api.messages.attachments.generateAttachmentUploadUrl, { ...args, contentType: "text/plain" })).rejects.toThrow("INVALID_MESSAGE_PDF");
+    await expect(asUser(state.t, state.company.userId).mutation(api.messages.attachments.generateAttachmentUploadUrl, { ...args, size: 10 * 1024 * 1024 + 1 })).rejects.toThrow("MESSAGE_PDF_TOO_LARGE");
+  });
+
+  test("rejects spoofed PDF bytes and removes the rejected upload", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    const upload = await preparePdfUpload(state, conversationId!, "this is not a PDF", "fake.pdf");
+    await expect(asUser(state.t, state.company.userId).action(api.messages.attachments.sendMessageWithAttachment, {
+      conversationId: conversationId!, body: "Keep this text", clientMessageId: "fake-pdf",
+      uploadToken: upload.uploadToken, storageId: upload.storageId,
+    })).rejects.toThrow("INVALID_MESSAGE_PDF");
+    const cleanup = await state.t.run(async (ctx) => ({
+      blobExists: Boolean(await ctx.storage.get(upload.storageId)),
+      intent: await ctx.db.query("messageAttachmentUploadIntents").withIndex("by_token", (q) => q.eq("token", upload.uploadToken)).unique(),
+      messages: await ctx.db.query("messages").withIndex("by_conversationId_and_createdAt", (q) => q.eq("conversationId", conversationId!)).collect(),
+    }));
+    expect(cleanup.blobExists).toBe(false);
+    expect(cleanup.intent).toBeNull();
+    expect(cleanup.messages).toEqual([]);
+  });
+
+  test("binds each upload token to its conversation and current messaging permission", async () => {
+    const state = await setup();
+    const first = await openDiscussion(state);
+    const secondProjectId = await seedProject(state.t, state.otherClientId);
+    const secondQuoteId = await seedQuote(state.t, secondProjectId, state.company.companyId, state.company.userId);
+    const second = await asUser(state.t, state.otherClientId).mutation(api.quotes.index.reviewInitialQuote, { quoteId: secondQuoteId, action: "open_discussion" });
+    const upload = await preparePdfUpload(state, first.conversationId!);
+    const company = asUser(state.t, state.company.userId);
+    await expect(company.action(api.messages.attachments.sendMessageWithAttachment, {
+      conversationId: second.conversationId!, body: "Wrong conversation", clientMessageId: "wrong-conversation",
+      uploadToken: upload.uploadToken, storageId: upload.storageId,
+    })).rejects.toThrow("INVALID_MESSAGE_PDF");
+    await state.t.run((ctx) => ctx.db.patch(first.conversationId!, { status: "closed" }));
+    await expect(company.action(api.messages.attachments.sendMessageWithAttachment, {
+      conversationId: first.conversationId!, body: "Closed", clientMessageId: "closed-conversation",
+      uploadToken: upload.uploadToken, storageId: upload.storageId,
+    })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+  });
+
+  test("attachment metadata and download authorization are participant-only", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    const upload = await preparePdfUpload(state, conversationId!);
+    const result = await asUser(state.t, state.company.userId).action(api.messages.attachments.sendMessageWithAttachment, {
+      conversationId: conversationId!, body: "Private PDF", clientMessageId: "private-pdf",
+      uploadToken: upload.uploadToken, storageId: upload.storageId,
+    });
+    await expect(asUser(state.t, state.clientId).query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).resolves.toMatchObject({ storageId: upload.storageId, fileName: "plans.pdf" });
+    await expect(asUser(state.t, state.company.userId).query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).resolves.toMatchObject({ storageId: upload.storageId });
+    await expect(asUser(state.t, state.otherClientId).query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+    await expect(asUser(state.t, state.otherCompany.userId).query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+    const adminId = await seedUser(state.t, "admin");
+    const seoId = await seedUser(state.t, "seo_team");
+    await expect(asUser(state.t, adminId).query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+    await expect(asUser(state.t, seoId).query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+    await expect(state.t.query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).rejects.toThrow("NOT_AUTHENTICATED");
   });
 });

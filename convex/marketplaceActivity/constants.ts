@@ -16,10 +16,18 @@ export const marketplaceActivityEventTypeValidator = v.union(
   v.literal("site_assessment_cancelled"),
   v.literal("site_visit_scheduled"),
   v.literal("site_visit_proposed"),
+  v.literal("site_visit_rescheduled"),
   v.literal("site_visit_confirmed"),
+  v.literal("site_visit_declined"),
   v.literal("site_visit_completed"),
   v.literal("site_visit_cancelled"),
+  v.literal("final_quote_requested"),
   v.literal("final_quote_submitted"),
+  v.literal("final_quote_changes_requested"),
+  v.literal("final_quote_revised"),
+  v.literal("final_quote_declined"),
+  v.literal("final_quote_withdrawn"),
+  v.literal("final_quote_accepted"),
   v.literal("company_selected"),
   v.literal("deal_created"),
   v.literal("deal_completed"),
@@ -54,10 +62,18 @@ export type MarketplaceActivityEventType =
   | "site_assessment_cancelled"
   | "site_visit_scheduled"
   | "site_visit_proposed"
+  | "site_visit_rescheduled"
   | "site_visit_confirmed"
+  | "site_visit_declined"
   | "site_visit_completed"
   | "site_visit_cancelled"
+  | "final_quote_requested"
   | "final_quote_submitted"
+  | "final_quote_changes_requested"
+  | "final_quote_revised"
+  | "final_quote_declined"
+  | "final_quote_withdrawn"
+  | "final_quote_accepted"
   | "company_selected"
   | "deal_created"
   | "deal_completed"

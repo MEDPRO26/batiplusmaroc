@@ -2,33 +2,34 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { LanguageSwitcher } from "@/components/layout/language-switcher";
-import { NavbarLogo } from "@/components/layout/navbar-logo";
-import { Link } from "@/i18n/navigation";
-import { routes } from "@/lib/routes";
+import { AdminPage } from "@/features/admin/components/admin-shell";
 
 type RangeId = "30d" | "year";
 type SpendPeriodId = "7d" | "30d" | "90d";
 type ChannelId = "googleAds" | "meta" | "xAds" | "linkedin" | "email";
 type PanelId = "channels" | "campaigns" | "landingPages";
-type NavId =
-  | "home"
-  | "projects"
-  | "companies"
-  | "verification"
-  | "messages"
-  | "deals"
-  | "reviews"
-  | "profile"
-  | "support"
-  | "settings";
 
 type Snapshot = {
-  kpis: { spend: number; impressions: number; conversions: number; cpc: number; deltas: [number, number, number, number] };
-  funnel: { total: number; delta: number; stages: [number, number, number, number] };
+  kpis: {
+    spend: number;
+    impressions: number;
+    conversions: number;
+    cpc: number;
+    deltas: [number, number, number, number];
+  };
+  funnel: {
+    total: number;
+    delta: number;
+    stages: [number, number, number, number];
+  };
   spendTotal: number;
   spendDelta: number;
-  spendMix: { paidSearch: number; paidSocial: number; email: number; affiliates: number };
+  spendMix: {
+    paidSearch: number;
+    paidSocial: number;
+    email: number;
+    affiliates: number;
+  };
   channels: Record<ChannelId, { spend: number; sessions: number }>;
   adSpendTotal: number;
   adSpendDelta: number;
@@ -40,27 +41,31 @@ type Snapshot = {
   seriesTotals: { organic: number; paid: number; social: number };
 };
 
-const CHANNELS: ChannelId[] = ["googleAds", "meta", "xAds", "linkedin", "email"];
-const NAV: NavId[] = [
-  "home",
-  "projects",
-  "companies",
-  "verification",
-  "messages",
-  "deals",
-  "reviews",
-  "profile",
-  "support",
-  "settings",
+const CHANNELS: ChannelId[] = [
+  "googleAds",
+  "meta",
+  "xAds",
+  "linkedin",
+  "email",
 ];
-
 const SNAPSHOTS: Record<RangeId, Snapshot> = {
   "30d": {
-    kpis: { spend: 24380, impressions: 1_940_000, conversions: 1286, cpc: 1.24, deltas: [8.4, 10, 5.2, -31] },
+    kpis: {
+      spend: 24380,
+      impressions: 1_940_000,
+      conversions: 1286,
+      cpc: 1.24,
+      deltas: [8.4, 10, 5.2, -31],
+    },
     funnel: { total: 96400, delta: 5.1, stages: [96400, 38500, 14300, 5200] },
     spendTotal: 24880,
     spendDelta: 8.4,
-    spendMix: { paidSearch: 11400, paidSocial: 7620, email: 3180, affiliates: 2680 },
+    spendMix: {
+      paidSearch: 11400,
+      paidSocial: 7620,
+      email: 3180,
+      affiliates: 2680,
+    },
     channels: {
       googleAds: { spend: 11400, sessions: 26 },
       meta: { spend: 7620, sessions: 23 },
@@ -75,18 +80,39 @@ const SNAPSHOTS: Record<RangeId, Snapshot> = {
     visitorsTotal: 134400,
     visitorsDelta: 16.8,
     series: {
-      organic: [0.22, 0.24, 0.26, 0.28, 0.3, 0.33, 0.36, 0.4, 0.44, 0.5, 0.58, 0.66],
-      paid: [0.12, 0.14, 0.15, 0.16, 0.18, 0.2, 0.22, 0.24, 0.28, 0.32, 0.36, 0.4],
-      social: [0.06, 0.07, 0.08, 0.08, 0.09, 0.1, 0.11, 0.12, 0.14, 0.16, 0.18, 0.2],
+      organic: [
+        0.22, 0.24, 0.26, 0.28, 0.3, 0.33, 0.36, 0.4, 0.44, 0.5, 0.58, 0.66,
+      ],
+      paid: [
+        0.12, 0.14, 0.15, 0.16, 0.18, 0.2, 0.22, 0.24, 0.28, 0.32, 0.36, 0.4,
+      ],
+      social: [
+        0.06, 0.07, 0.08, 0.08, 0.09, 0.1, 0.11, 0.12, 0.14, 0.16, 0.18, 0.2,
+      ],
     },
     seriesTotals: { organic: 74500, paid: 38500, social: 21400 },
   },
   year: {
-    kpis: { spend: 217700, impressions: 18_400_000, conversions: 12480, cpc: 1.41, deltas: [9.4, 16.8, 11, -12] },
-    funnel: { total: 812000, delta: 12.4, stages: [812000, 246000, 91000, 28400] },
+    kpis: {
+      spend: 217700,
+      impressions: 18_400_000,
+      conversions: 12480,
+      cpc: 1.41,
+      deltas: [9.4, 16.8, 11, -12],
+    },
+    funnel: {
+      total: 812000,
+      delta: 12.4,
+      stages: [812000, 246000, 91000, 28400],
+    },
     spendTotal: 217700,
     spendDelta: 9.4,
-    spendMix: { paidSearch: 100100, paidSocial: 65400, email: 28400, affiliates: 23800 },
+    spendMix: {
+      paidSearch: 100100,
+      paidSocial: 65400,
+      email: 28400,
+      affiliates: 23800,
+    },
     channels: {
       googleAds: { spend: 86400, sessions: 29 },
       meta: { spend: 61200, sessions: 22 },
@@ -101,9 +127,15 @@ const SNAPSHOTS: Record<RangeId, Snapshot> = {
     visitorsTotal: 1_284_000,
     visitorsDelta: 18.2,
     series: {
-      organic: [0.2, 0.22, 0.24, 0.27, 0.3, 0.34, 0.38, 0.43, 0.48, 0.54, 0.61, 0.7],
-      paid: [0.1, 0.12, 0.13, 0.15, 0.17, 0.19, 0.21, 0.24, 0.27, 0.31, 0.35, 0.39],
-      social: [0.05, 0.06, 0.06, 0.07, 0.08, 0.09, 0.1, 0.11, 0.13, 0.15, 0.17, 0.19],
+      organic: [
+        0.2, 0.22, 0.24, 0.27, 0.3, 0.34, 0.38, 0.43, 0.48, 0.54, 0.61, 0.7,
+      ],
+      paid: [
+        0.1, 0.12, 0.13, 0.15, 0.17, 0.19, 0.21, 0.24, 0.27, 0.31, 0.35, 0.39,
+      ],
+      social: [
+        0.05, 0.06, 0.06, 0.07, 0.08, 0.09, 0.1, 0.11, 0.13, 0.15, 0.17, 0.19,
+      ],
     },
     seriesTotals: { organic: 742000, paid: 356000, social: 186000 },
   },
@@ -111,7 +143,16 @@ const SNAPSHOTS: Record<RangeId, Snapshot> = {
 
 const SPEND_PERIODS: Record<
   SpendPeriodId,
-  { total: number; delta: number; mix: { paidSearch: number; paidSocial: number; email: number; affiliates: number } }
+  {
+    total: number;
+    delta: number;
+    mix: {
+      paidSearch: number;
+      paidSocial: number;
+      email: number;
+      affiliates: number;
+    };
+  }
 > = {
   "7d": {
     total: 6120,
@@ -126,27 +167,21 @@ const SPEND_PERIODS: Record<
   "90d": {
     total: 71240,
     delta: 11.2,
-    mix: { paidSearch: 32800, paidSocial: 21400, email: 9600, affiliates: 7440 },
+    mix: {
+      paidSearch: 32800,
+      paidSocial: 21400,
+      email: 9600,
+      affiliates: 7440,
+    },
   },
 };
 
 const PRESS =
   "cursor-pointer transition-[scale,background-color,color,border-color,opacity] duration-150 ease-[cubic-bezier(0.2,0,0,1)] active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6bff]";
 
-export function AdminDashboard({
-  email,
-  firstName,
-  lastName,
-}: {
-  email: string | null;
-  firstName: string | null;
-  lastName: string | null;
-}) {
+export function AdminDashboard() {
   const t = useTranslations("adminDashboard");
-  const tBrand = useTranslations("brand");
   const locale = useLocale();
-  const [query, setQuery] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [notice, setNotice] = useState("");
@@ -166,7 +201,9 @@ export function AdminDashboard({
     linkedin: true,
     email: true,
   });
-  const [campaigns, setCampaigns] = useState<{ id: string; name: string; sessions: number }[]>([]);
+  const [campaigns, setCampaigns] = useState<
+    { id: string; name: string; sessions: number }[]
+  >([]);
 
   const overview = SNAPSHOTS[overviewRange];
   const spend = SNAPSHOTS[spendRange];
@@ -179,64 +216,23 @@ export function AdminDashboard({
       minimumFractionDigits: digits,
     }).format(value);
   const compact = (value: number) =>
-    new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(value);
+    new Intl.NumberFormat(locale, {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(value);
   const months = Array.from({ length: 12 }, (_, index) =>
-    new Date(2026, index, 1).toLocaleDateString(locale, { month: "short" }).replace(".", ""),
+    new Date(2026, index, 1)
+      .toLocaleDateString(locale, { month: "short" })
+      .replace(".", ""),
   );
-  const displayName = [firstName, lastName].filter(Boolean).join(" ") || email || t("accountFallback");
   const visibleChannels = CHANNELS.filter((id) => visible[id]);
 
   return (
-    <div className="flex min-h-dvh w-full bg-[#f4f6f8] text-[#17191d]">
-      {notice ? (
-        <p
-          className="fixed bottom-6 left-1/2 z-50 max-w-sm -translate-x-1/2 rounded-full bg-[#17191d] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(16,24,40,0.24)]"
-          role="status"
-        >
-          {notice}
-        </p>
-      ) : null}
-      {sidebarOpen ? (
-        <button
-          aria-label={t("closeSidebar")}
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-          type="button"
-        />
-      ) : null}
-      <AdminSidebar
-        displayName={displayName}
-        email={email}
-        onNavigate={() => setSidebarOpen(false)}
-        onUnavailable={() => {
-          setNotice(t("soon"));
-          setSidebarOpen(false);
-        }}
-        open={sidebarOpen}
-        query={query}
-        setQuery={setQuery}
-      />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex flex-wrap items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
-          <button
-            aria-label={t("openSidebar")}
-            className={`inline-flex size-11 items-center justify-center rounded-full border border-[#e6e9ee] bg-white text-[#17191d] lg:hidden ${PRESS}`}
-            onClick={() => setSidebarOpen(true)}
-            type="button"
-          >
-            <MenuIcon />
-          </button>
-          <nav aria-label={t("breadcrumbLabel")} className="flex min-w-0 flex-1 items-center gap-2 text-sm text-[#8b919a]">
-            <NavbarLogo homeAria={tBrand("homeAria")} name={tBrand("name")} />
-            <Crumb />
-            <span className="truncate">{t("team")}</span>
-            <Crumb />
-            <span className="truncate">{t("area")}</span>
-            <Crumb />
-            <span className="truncate font-medium text-[#17191d]">{t("title")}</span>
-          </nav>
-          <div className="ml-auto flex items-center gap-2">
-            <LanguageSwitcher />
+    <>
+      <AdminPage
+        breadcrumb={t("title")}
+        headerActions={
+          <>
             <div className="relative">
               <button
                 aria-expanded={filtersOpen}
@@ -265,52 +261,100 @@ export function AdminDashboard({
               <PlusIcon />
               {t("newCampaign")}
             </button>
-          </div>
-        </header>
+          </>
+        }
+        notice={notice}
+        title={t("title")}
+      >
+        <p className="max-w-2xl text-sm leading-6 text-[#626970]">
+          {t("sampleNote")}
+        </p>
 
-        <div className="flex flex-1 flex-col gap-4 px-4 pb-8 sm:px-6 lg:px-8">
-          <div>
-            <h1 className="text-[1.7rem] font-semibold tracking-[-0.03em]">{t("title")}</h1>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-[#626970]">{t("sampleNote")}</p>
-          </div>
+        <section
+          aria-label={t("title")}
+          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+        >
+          <KpiCard
+            delta={overview.kpis.deltas[0]}
+            icon={<SpendIcon />}
+            label={t("spend")}
+            value={money(overview.kpis.spend)}
+          />
+          <KpiCard
+            delta={overview.kpis.deltas[1]}
+            icon={<EyeIcon />}
+            label={t("impressions")}
+            value={compact(overview.kpis.impressions)}
+          />
+          <KpiCard
+            delta={overview.kpis.deltas[2]}
+            icon={<CheckIcon />}
+            label={t("conversions")}
+            value={overview.kpis.conversions.toLocaleString(locale)}
+          />
+          <KpiCard
+            delta={overview.kpis.deltas[3]}
+            icon={<ClickIcon />}
+            label={t("cpc")}
+            value={money(overview.kpis.cpc, 2)}
+          />
+        </section>
 
-          <section aria-label={t("title")} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <KpiCard delta={overview.kpis.deltas[0]} icon={<SpendIcon />} label={t("spend")} value={money(overview.kpis.spend)} />
-            <KpiCard delta={overview.kpis.deltas[1]} icon={<EyeIcon />} label={t("impressions")} value={compact(overview.kpis.impressions)} />
-            <KpiCard delta={overview.kpis.deltas[2]} icon={<CheckIcon />} label={t("conversions")} value={overview.kpis.conversions.toLocaleString(locale)} />
-            <KpiCard delta={overview.kpis.deltas[3]} icon={<ClickIcon />} label={t("cpc")} value={money(overview.kpis.cpc, 2)} />
-          </section>
+        <section className="grid gap-4 xl:grid-cols-[1.15fr_0.9fr_0.95fr]">
+          <Card>
+            <CardHeader
+              delta={overview.funnel.delta}
+              range={overviewRange}
+              setRange={setOverviewRange}
+              title={t("funnelTitle")}
+            />
+            <p className="mt-3 text-[1.7rem] font-semibold tracking-[-0.03em] tabular-nums">
+              {compact(overview.funnel.total)}
+            </p>
+            <Funnel stages={overview.funnel.stages} />
+            <Legend
+              items={[
+                {
+                  color: "#c6f04a",
+                  label: t("visits"),
+                  value: compact(overview.funnel.stages[0]),
+                },
+                {
+                  color: "#3d6bff",
+                  label: t("signups"),
+                  value: compact(overview.funnel.stages[1]),
+                },
+                {
+                  color: "#7a6cf0",
+                  label: t("trials"),
+                  value: compact(overview.funnel.stages[2]),
+                },
+                {
+                  color: "#9d2458",
+                  label: t("customers"),
+                  value: compact(overview.funnel.stages[3]),
+                },
+              ]}
+            />
+          </Card>
 
-          <section className="grid gap-4 xl:grid-cols-[1.15fr_0.9fr_0.95fr]">
-            <Card>
-              <CardHeader
-                delta={overview.funnel.delta}
-                range={overviewRange}
-                setRange={setOverviewRange}
-                title={t("funnelTitle")}
-              />
-              <p className="mt-3 text-[1.7rem] font-semibold tracking-[-0.03em] tabular-nums">{compact(overview.funnel.total)}</p>
-              <Funnel stages={overview.funnel.stages} />
-              <Legend
-                items={[
-                  { color: "#c6f04a", label: t("visits"), value: compact(overview.funnel.stages[0]) },
-                  { color: "#3d6bff", label: t("signups"), value: compact(overview.funnel.stages[1]) },
-                  { color: "#7a6cf0", label: t("trials"), value: compact(overview.funnel.stages[2]) },
-                  { color: "#9d2458", label: t("customers"), value: compact(overview.funnel.stages[3]) },
-                ]}
-              />
-            </Card>
+          <SpendByChannelCard />
 
-            <SpendByChannelCard />
-
-            <Card className="flex flex-col">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex flex-wrap gap-1" role="tablist" aria-label={t("sessions")}>
-                  {(["channels", "campaigns", "landingPages"] as PanelId[]).map((id) => (
+          <Card className="flex flex-col">
+            <div className="flex items-start justify-between gap-3">
+              <div
+                className="flex flex-wrap gap-1"
+                role="tablist"
+                aria-label={t("sessions")}
+              >
+                {(["channels", "campaigns", "landingPages"] as PanelId[]).map(
+                  (id) => (
                     <button
                       aria-selected={panel === id}
                       className={`min-h-11 rounded-full px-3 text-sm font-semibold ${PRESS} ${
-                        panel === id ? "bg-[#f3f5f7] text-[#17191d]" : "text-[#8b919a]"
+                        panel === id
+                          ? "bg-[#f3f5f7] text-[#17191d]"
+                          : "text-[#8b919a]"
                       }`}
                       key={id}
                       onClick={() => setPanel(id)}
@@ -319,197 +363,142 @@ export function AdminDashboard({
                     >
                       {t(id)}
                     </button>
-                  ))}
-                </div>
-                <span className="pt-3 text-[0.68rem] font-semibold tracking-[0.08em] text-[#a0a6ae] uppercase">{t("sessions")}</span>
+                  ),
+                )}
               </div>
-              <div className="mt-4 flex flex-1 flex-col gap-3" role="tabpanel">
-                <SessionList
-                  campaigns={campaigns}
-                  channels={visibleChannels.map((id) => ({
-                    id,
-                    label: t(id === "email" ? "email" : id),
-                    sessions: overview.channels[id].sessions,
-                  }))}
-                  panel={panel}
-                />
-              </div>
-            </Card>
-          </section>
+              <span className="pt-3 text-[0.68rem] font-semibold tracking-[0.08em] text-[#a0a6ae] uppercase">
+                {t("sessions")}
+              </span>
+            </div>
+            <div className="mt-4 flex flex-1 flex-col gap-3" role="tabpanel">
+              <SessionList
+                campaigns={campaigns}
+                channels={visibleChannels.map((id) => ({
+                  id,
+                  label: t(id === "email" ? "email" : id),
+                  sessions: overview.channels[id].sessions,
+                }))}
+                panel={panel}
+              />
+            </div>
+          </Card>
+        </section>
 
-          <section className="grid gap-4 xl:grid-cols-2">
-            <Card>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm text-[#8b919a]">{t("adSpend")}</p>
-                  <p className="mt-1 text-sm font-medium text-[#626970]">{t("roas", { value: `${spend.roas.toLocaleString(locale)}×` })}</p>
-                </div>
-                <RangeSelect range={spendRange} setRange={setSpendRange} />
+        <section className="grid gap-4 xl:grid-cols-2">
+          <Card>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm text-[#8b919a]">{t("adSpend")}</p>
+                <p className="mt-1 text-sm font-medium text-[#626970]">
+                  {t("roas", {
+                    value: `${spend.roas.toLocaleString(locale)}×`,
+                  })}
+                </p>
               </div>
-              <p className="mt-3 flex items-center gap-2 text-[1.7rem] font-semibold tracking-[-0.03em] tabular-nums">
-                {money(spend.adSpendTotal)}
-                <Delta value={spend.adSpendDelta} />
-              </p>
-              <BarChart
-                label={t("chartSummarySpend", { total: money(spend.adSpendTotal) })}
-                months={months}
-                values={spend.bars.map((share) => Math.round(share * spend.adSpendTotal * 0.16))}
-              />
-              <FooterStats
-                items={[
-                  { swatch: "#c6f04a", label: t("adSpendTotal"), value: money(spend.adSpendTotal) },
-                  { swatch: "#17191d", label: t("roasAverage"), value: `${spend.roas.toLocaleString(locale)}×` },
-                ]}
-              />
-            </Card>
+              <RangeSelect range={spendRange} setRange={setSpendRange} />
+            </div>
+            <p className="mt-3 flex items-center gap-2 text-[1.7rem] font-semibold tracking-[-0.03em] tabular-nums">
+              {money(spend.adSpendTotal)}
+              <Delta value={spend.adSpendDelta} />
+            </p>
+            <BarChart
+              label={t("chartSummarySpend", {
+                total: money(spend.adSpendTotal),
+              })}
+              months={months}
+              values={spend.bars.map((share) =>
+                Math.round(share * spend.adSpendTotal * 0.16),
+              )}
+            />
+            <FooterStats
+              items={[
+                {
+                  swatch: "#c6f04a",
+                  label: t("adSpendTotal"),
+                  value: money(spend.adSpendTotal),
+                },
+                {
+                  swatch: "#17191d",
+                  label: t("roasAverage"),
+                  value: `${spend.roas.toLocaleString(locale)}×`,
+                },
+              ]}
+            />
+          </Card>
 
-            <Card>
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-sm text-[#8b919a]">{t("visitors")}</p>
-                <RangeSelect range={visitorRange} setRange={setVisitorRange} />
-              </div>
-              <p className="mt-3 flex items-center gap-2 text-[1.7rem] font-semibold tracking-[-0.03em] tabular-nums">
-                {visitors.visitorsTotal.toLocaleString(locale)}
-                <Delta value={visitors.visitorsDelta} />
-              </p>
-              <AreaChart
-                label={t("chartSummaryVisitors", { total: visitors.visitorsTotal.toLocaleString(locale) })}
-                months={months}
-                series={visitors.series}
-              />
-              <FooterStats
-                items={[
-                  { swatch: "#b6e86a", label: t("organic"), value: visitors.seriesTotals.organic.toLocaleString(locale) },
-                  { swatch: "#7eb6ff", label: t("paid"), value: visitors.seriesTotals.paid.toLocaleString(locale) },
-                  { swatch: "#b9a6ff", label: t("social"), value: visitors.seriesTotals.social.toLocaleString(locale) },
-                ]}
-              />
-            </Card>
-          </section>
-        </div>
-      </div>
+          <Card>
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-sm text-[#8b919a]">{t("visitors")}</p>
+              <RangeSelect range={visitorRange} setRange={setVisitorRange} />
+            </div>
+            <p className="mt-3 flex items-center gap-2 text-[1.7rem] font-semibold tracking-[-0.03em] tabular-nums">
+              {visitors.visitorsTotal.toLocaleString(locale)}
+              <Delta value={visitors.visitorsDelta} />
+            </p>
+            <AreaChart
+              label={t("chartSummaryVisitors", {
+                total: visitors.visitorsTotal.toLocaleString(locale),
+              })}
+              months={months}
+              series={visitors.series}
+            />
+            <FooterStats
+              items={[
+                {
+                  swatch: "#b6e86a",
+                  label: t("organic"),
+                  value: visitors.seriesTotals.organic.toLocaleString(locale),
+                },
+                {
+                  swatch: "#7eb6ff",
+                  label: t("paid"),
+                  value: visitors.seriesTotals.paid.toLocaleString(locale),
+                },
+                {
+                  swatch: "#b9a6ff",
+                  label: t("social"),
+                  value: visitors.seriesTotals.social.toLocaleString(locale),
+                },
+              ]}
+            />
+          </Card>
+        </section>
+      </AdminPage>
       {campaignOpen ? (
         <CampaignDialog
           onClose={() => setCampaignOpen(false)}
           onCreate={(name) => {
-            setCampaigns((current) => [{ id: `${name}-${current.length}`, name, sessions: 4 }, ...current]);
+            setCampaigns((current) => [
+              { id: `${name}-${current.length}`, name, sessions: 4 },
+              ...current,
+            ]);
             setPanel("campaigns");
             setNotice(t("campaignCreated"));
             setCampaignOpen(false);
           }}
         />
       ) : null}
-    </div>
+    </>
   );
 }
 
-function AdminSidebar({
-  open,
-  query,
-  setQuery,
-  displayName,
-  email,
-  onNavigate,
-  onUnavailable,
+function KpiCard({
+  icon,
+  label,
+  value,
+  delta,
 }: {
-  open: boolean;
-  query: string;
-  setQuery: (value: string) => void;
-  displayName: string;
-  email: string | null;
-  onNavigate: () => void;
-  onUnavailable: () => void;
+  icon: ReactNode;
+  label: string;
+  value: string;
+  delta: number;
 }) {
-  const t = useTranslations("adminDashboard");
-  const tBrand = useTranslations("brand");
-  const needle = query.trim().toLocaleLowerCase();
-  const items = NAV.filter((id) => t(navKey(id)).toLocaleLowerCase().includes(needle));
-
-  return (
-    <aside
-      aria-label={t("sidebarLabel")}
-      className={`fixed inset-y-0 left-0 z-40 flex w-[272px] flex-col border-r border-[#eceef2] bg-white px-4 py-4 transition-transform duration-200 ease-[cubic-bezier(0.2,0,0,1)] lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0 lg:self-start ${
-        open ? "translate-x-0" : "-translate-x-full"
-      }`}
-    >
-      <div className="flex items-center justify-between gap-3 px-2">
-        <NavbarLogo homeAria={tBrand("homeAria")} name={tBrand("name")} />
-        <button
-          aria-label={t("closeSidebar")}
-          className={`inline-flex size-11 items-center justify-center rounded-full text-[#626970] lg:hidden ${PRESS}`}
-          onClick={onNavigate}
-          type="button"
-        >
-          <CloseIcon />
-        </button>
-      </div>
-      <label className="mt-4 flex min-h-11 items-center gap-2 rounded-full bg-[#f4f6f8] px-3 text-sm text-[#8b919a]">
-        <SearchIcon />
-        <span className="sr-only">{t("searchLabel")}</span>
-        <input
-          className="h-11 w-full bg-transparent text-[#17191d] outline-none placeholder:text-[#8b919a]"
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={t("searchPlaceholder")}
-          value={query}
-        />
-      </label>
-      <nav className="mt-4 flex flex-1 flex-col gap-1 overflow-y-auto">
-        {items.length === 0 ? <p className="px-3 py-4 text-sm text-[#8b919a]">{t("noNavResults")}</p> : null}
-        {items.map((id) => {
-          const active = id === "home";
-          const href = id === "home" ? routes.admin : id === "projects" ? routes.adminProjects : id === "verification" ? routes.adminVerification : null;
-          const className = active
-            ? "flex min-h-11 items-center gap-3 rounded-[14px] bg-[#2f6bff] px-3 text-sm font-semibold text-white shadow-[0_8px_16px_rgba(47,107,255,0.24)]"
-            : `flex min-h-11 items-center gap-3 rounded-[14px] px-3 text-left text-sm font-medium text-[#626970] hover:bg-[#f4f6f8] hover:text-[#17191d] ${PRESS}`;
-
-          if (href && active) {
-            return (
-              <span aria-current="page" className={className} key={id}>
-                <NavIcon id={id} />
-                {t(navKey(id))}
-              </span>
-            );
-          }
-          if (href) {
-            return (
-              <Link className={className} href={href} key={id} onClick={onNavigate}>
-                <NavIcon id={id} />
-                <span className="min-w-0 flex-1 truncate">{t(navKey(id))}</span>
-              </Link>
-            );
-          }
-          return (
-            <button
-              aria-label={`${t(navKey(id))}. ${t("soon")}`}
-              className={className}
-              key={id}
-              onClick={onUnavailable}
-              type="button"
-            >
-              <NavIcon id={id} />
-              <span className="min-w-0 flex-1 truncate">{t(navKey(id))}</span>
-            </button>
-          );
-        })}
-      </nav>
-      <div className="mt-4 flex items-center gap-3 rounded-[16px] border border-[#eceef2] px-3 py-2">
-        <span aria-hidden className="grid size-9 place-items-center rounded-full bg-[#2f6bff] text-sm font-semibold text-white">
-          {displayName.slice(0, 1).toLocaleUpperCase()}
-        </span>
-        <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold">{t("footerTeam")}</span>
-          <span className="block truncate text-xs text-[#8b919a]">{email ?? displayName}</span>
-        </span>
-      </div>
-    </aside>
-  );
-}
-
-function KpiCard({ icon, label, value, delta }: { icon: ReactNode; label: string; value: string; delta: number }) {
   return (
     <article className="rounded-[20px] border border-[#e7eaee] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
       <div className="flex items-center gap-3">
-        <span className="grid size-9 place-items-center rounded-[12px] bg-[#f4f6f8] text-[#626970]">{icon}</span>
+        <span className="grid size-9 place-items-center rounded-[12px] bg-[#f4f6f8] text-[#626970]">
+          {icon}
+        </span>
         <h2 className="text-sm font-medium text-[#8b919a]">{label}</h2>
       </div>
       <p className="mt-4 flex flex-wrap items-center gap-2 text-[1.65rem] font-semibold tracking-[-0.03em] tabular-nums">
@@ -520,9 +509,17 @@ function KpiCard({ icon, label, value, delta }: { icon: ReactNode; label: string
   );
 }
 
-function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+function Card({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <section className={`rounded-[20px] border border-[#e7eaee] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:p-5 ${className}`}>
+    <section
+      className={`rounded-[20px] border border-[#e7eaee] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:p-5 ${className}`}
+    >
       {children}
     </section>
   );
@@ -562,8 +559,13 @@ function Delta({ value }: { value: number }) {
       }`}
     >
       {up ? <ArrowUp /> : <ArrowDown />}
-      <span className="sr-only">{t(up ? "deltaUp" : "deltaDown", { value: amount })}</span>
-      <span aria-hidden="true">{up ? "+" : "−"}{amount}</span>
+      <span className="sr-only">
+        {t(up ? "deltaUp" : "deltaDown", { value: amount })}
+      </span>
+      <span aria-hidden="true">
+        {up ? "+" : "−"}
+        {amount}
+      </span>
     </span>
   );
 }
@@ -606,7 +608,11 @@ function Funnel({ stages }: { stages: [number, number, number, number] }) {
           <div
             className="flex h-14 min-w-11 items-center justify-center rounded-full text-xs font-semibold tabular-nums"
             key={labels[index]}
-            style={{ flexGrow: weights[index], background: colors[index], color: text[index] }}
+            style={{
+              flexGrow: weights[index],
+              background: colors[index],
+              color: text[index],
+            }}
             title={`${labels[index]} ${share}%`}
           >
             <span className="sr-only">{labels[index]} </span>
@@ -625,13 +631,37 @@ function SpendByChannelCard() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const snapshot = SPEND_PERIODS[period];
   const money = (value: number) =>
-    new Intl.NumberFormat(locale, { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(value);
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: "MAD",
+      maximumFractionDigits: 0,
+    }).format(value);
 
   const segments = [
-    { id: "paidSearch", color: "#c6f04a", label: t("paidSearch"), spend: snapshot.mix.paidSearch },
-    { id: "paidSocial", color: "#3b82f6", label: t("paidSocial"), spend: snapshot.mix.paidSocial },
-    { id: "email", color: "#a78bfa", label: t("emailChannel"), spend: snapshot.mix.email },
-    { id: "affiliates", color: "#f472b6", label: t("affiliates"), spend: snapshot.mix.affiliates },
+    {
+      id: "paidSearch",
+      color: "#c6f04a",
+      label: t("paidSearch"),
+      spend: snapshot.mix.paidSearch,
+    },
+    {
+      id: "paidSocial",
+      color: "#3b82f6",
+      label: t("paidSocial"),
+      spend: snapshot.mix.paidSocial,
+    },
+    {
+      id: "email",
+      color: "#a78bfa",
+      label: t("emailChannel"),
+      spend: snapshot.mix.email,
+    },
+    {
+      id: "affiliates",
+      color: "#f472b6",
+      label: t("affiliates"),
+      spend: snapshot.mix.affiliates,
+    },
   ];
   const active = segments.find((segment) => segment.id === activeId) ?? null;
   const title = active?.label ?? t("spendByChannel");
@@ -672,7 +702,8 @@ function SpendPeriodMenu({
     { id: "30d", label: t("range30") },
     { id: "90d", label: t("range90") },
   ];
-  const current = options.find((option) => option.id === period)?.label ?? t("range30");
+  const current =
+    options.find((option) => option.id === period)?.label ?? t("range30");
 
   useDismiss(rootRef, () => setOpen(false));
 
@@ -701,7 +732,9 @@ function SpendPeriodMenu({
               <li key={option.id} role="option" aria-selected={selected}>
                 <button
                   className={`flex min-h-10 w-full items-center justify-between gap-3 rounded-[10px] px-3 text-left text-sm ${PRESS} ${
-                    selected ? "bg-[#f4f6f8] font-semibold text-[#17191d]" : "font-medium text-[#626970] hover:bg-[#f7f8fa]"
+                    selected
+                      ? "bg-[#f4f6f8] font-semibold text-[#17191d]"
+                      : "font-medium text-[#626970] hover:bg-[#f7f8fa]"
                   }`}
                   onClick={() => {
                     setPeriod(option.id);
@@ -710,7 +743,11 @@ function SpendPeriodMenu({
                   type="button"
                 >
                   <span>{option.label}</span>
-                  {selected ? <CheckMarkIcon /> : <span className="size-4" aria-hidden />}
+                  {selected ? (
+                    <CheckMarkIcon />
+                  ) : (
+                    <span className="size-4" aria-hidden />
+                  )}
                 </button>
               </li>
             );
@@ -735,11 +772,17 @@ function SpendGauge({
   const t = useTranslations("adminDashboard");
   const locale = useLocale();
   const money = (value: number) =>
-    new Intl.NumberFormat(locale, { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(value);
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: "MAD",
+      maximumFractionDigits: 0,
+    }).format(value);
 
   const defaultSegment = segments[0] ?? null;
-  const active = segments.find((segment) => segment.id === activeId) ?? defaultSegment;
-  const share = total > 0 && active ? Math.round((active.spend / total) * 100) : 0;
+  const active =
+    segments.find((segment) => segment.id === activeId) ?? defaultSegment;
+  const share =
+    total > 0 && active ? Math.round((active.spend / total) * 100) : 0;
   const cx = 120;
   const cy = 118;
   const radius = 78;
@@ -758,7 +801,8 @@ function SpendGauge({
     const priorSpend = positive
       .slice(0, index)
       .reduce((sum, item) => sum + item.spend, 0);
-    const from = startAngle - (priorSpend / Math.max(total, 1)) * usable - gap * index;
+    const from =
+      startAngle - (priorSpend / Math.max(total, 1)) * usable - gap * index;
     const to = from - portion;
     return { ...segment, from, to };
   });
@@ -767,14 +811,17 @@ function SpendGauge({
   const hovering = activeId !== null;
 
   return (
-    <div
-      className="mt-4"
-      onMouseLeave={() => onActiveChange(null)}
-    >
+    <div className="mt-4" onMouseLeave={() => onActiveChange(null)}>
       <div className="relative mx-auto w-full max-w-[280px]">
         <svg className="h-auto w-full" role="img" viewBox="0 0 240 140">
           <title>{t("spendByChannel")}</title>
-          <path d={track} fill="none" stroke="#eef1f4" strokeLinecap="round" strokeWidth={baseStroke} />
+          <path
+            d={track}
+            fill="none"
+            stroke="#eef1f4"
+            strokeLinecap="round"
+            strokeWidth={baseStroke}
+          />
           {arcs.map((arc) => {
             const isActive = activeId === arc.id;
             const dimmed = hovering && !isActive;
@@ -788,8 +835,11 @@ function SpendGauge({
                   strokeLinecap="round"
                   strokeWidth={isActive ? activeStroke : baseStroke}
                   style={{
-                    transition: "stroke-width 150ms cubic-bezier(0.2, 0, 0, 1), opacity 150ms cubic-bezier(0.2, 0, 0, 1)",
-                    filter: isActive ? "drop-shadow(0 6px 10px rgba(23, 25, 29, 0.18))" : undefined,
+                    transition:
+                      "stroke-width 150ms cubic-bezier(0.2, 0, 0, 1), opacity 150ms cubic-bezier(0.2, 0, 0, 1)",
+                    filter: isActive
+                      ? "drop-shadow(0 6px 10px rgba(23, 25, 29, 0.18))"
+                      : undefined,
                   }}
                 />
                 <path
@@ -811,8 +861,12 @@ function SpendGauge({
           })}
         </svg>
         <div className="pointer-events-none absolute inset-x-0 bottom-2 text-center">
-          <p className="text-[1.85rem] font-semibold tracking-[-0.03em] tabular-nums">{share}%</p>
-          <p className="text-xs text-[#8b919a]">{active?.label ?? t("paidSearchShare")}</p>
+          <p className="text-[1.85rem] font-semibold tracking-[-0.03em] tabular-nums">
+            {share}%
+          </p>
+          <p className="text-xs text-[#8b919a]">
+            {active?.label ?? t("paidSearchShare")}
+          </p>
         </div>
       </div>
       <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
@@ -829,13 +883,25 @@ function SpendGauge({
                 onMouseEnter={() => onActiveChange(segment.id)}
                 type="button"
               >
-                <span className={`flex items-center gap-2 ${isActive || !hovering ? "text-[#626970]" : "text-[#8b919a]"}`}>
-                  <span aria-hidden className="size-2.5 shrink-0 rounded-[4px]" style={{ background: segment.color }} />
-                  <span className={`truncate ${isActive ? "font-semibold text-[#17191d]" : ""}`}>{segment.label}</span>
+                <span
+                  className={`flex items-center gap-2 ${isActive || !hovering ? "text-[#626970]" : "text-[#8b919a]"}`}
+                >
+                  <span
+                    aria-hidden
+                    className="size-2.5 shrink-0 rounded-[4px]"
+                    style={{ background: segment.color }}
+                  />
+                  <span
+                    className={`truncate ${isActive ? "font-semibold text-[#17191d]" : ""}`}
+                  >
+                    {segment.label}
+                  </span>
                 </span>
                 <span
                   className={`mt-1 block pl-[18px] tabular-nums ${
-                    isActive || !hovering ? "font-semibold text-[#17191d]" : "font-medium text-[#8b919a]"
+                    isActive || !hovering
+                      ? "font-semibold text-[#17191d]"
+                      : "font-medium text-[#8b919a]"
                   }`}
                 >
                   {money(segment.spend)}
@@ -849,7 +915,13 @@ function SpendGauge({
   );
 }
 
-function describeArc(cx: number, cy: number, radius: number, from: number, to: number) {
+function describeArc(
+  cx: number,
+  cy: number,
+  radius: number,
+  from: number,
+  to: number,
+) {
   const start = polar(cx, cy, radius, from);
   const end = polar(cx, cy, radius, to);
   const largeArc = from - to > Math.PI ? 1 : 0;
@@ -875,11 +947,25 @@ function SessionList({
   const t = useTranslations("adminDashboard");
   const rows =
     panel === "channels"
-      ? channels.map((channel) => ({ id: channel.id, label: channel.label, sessions: channel.sessions }))
+      ? channels.map((channel) => ({
+          id: channel.id,
+          label: channel.label,
+          sessions: channel.sessions,
+        }))
       : panel === "campaigns"
         ? [
-            ...campaigns.map((campaign) => ({ id: campaign.id, label: campaign.name, sessions: campaign.sessions })),
-            ...channels.slice(0, 4).map((channel) => ({ id: `base-${channel.id}`, label: channel.label, sessions: Math.max(channel.sessions - 4, 3) })),
+            ...campaigns.map((campaign) => ({
+              id: campaign.id,
+              label: campaign.name,
+              sessions: campaign.sessions,
+            })),
+            ...channels
+              .slice(0, 4)
+              .map((channel) => ({
+                id: `base-${channel.id}`,
+                label: channel.label,
+                sessions: Math.max(channel.sessions - 4, 3),
+              })),
           ]
         : [
             { id: "home", label: t("landingHome"), sessions: 41 },
@@ -905,7 +991,10 @@ function SessionList({
             <span className="tabular-nums text-[#626970]">{row.sessions}%</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-[#f0f2f5]">
-            <div className="h-full rounded-full bg-[#d7dee8]" style={{ width: `${Math.min(row.sessions, 100)}%` }} />
+            <div
+              className="h-full rounded-full bg-[#d7dee8]"
+              style={{ width: `${Math.min(row.sessions, 100)}%` }}
+            />
           </div>
         </li>
       ))}
@@ -913,12 +1002,25 @@ function SessionList({
   );
 }
 
-function BarChart({ values, months, label }: { values: number[]; months: string[]; label: string }) {
+function BarChart({
+  values,
+  months,
+  label,
+}: {
+  values: number[];
+  months: string[];
+  label: string;
+}) {
   const t = useTranslations("adminDashboard");
   const locale = useLocale();
   const max = Math.max(...values, 1);
   const money = (value: number) =>
-    new Intl.NumberFormat(locale, { style: "currency", currency: "MAD", notation: "compact", maximumFractionDigits: 1 }).format(value);
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: "MAD",
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(value);
   return (
     <figure className="mt-4">
       <figcaption className="sr-only">{label}</figcaption>
@@ -931,9 +1033,15 @@ function BarChart({ values, months, label }: { values: number[]; months: string[
         <div className="min-w-0 flex-1">
           <div className="flex h-48 items-end gap-1.5 border-b border-[#eef1f4] pt-6 sm:gap-2">
             {values.map((value, index) => (
-              <div className="flex h-full min-w-0 flex-1 items-end" key={months[index]}>
+              <div
+                className="flex h-full min-w-0 flex-1 items-end"
+                key={months[index]}
+              >
                 <button
-                  aria-label={t("barLabel", { month: months[index] ?? "", value: money(value) })}
+                  aria-label={t("barLabel", {
+                    month: months[index] ?? "",
+                    value: money(value),
+                  })}
                   className={`relative w-full rounded-t-[8px] bg-[#c6f04a] hover:bg-[#b4e22d] ${PRESS}`}
                   style={{ height: `${Math.max((value / max) * 100, 8)}%` }}
                   type="button"
@@ -949,7 +1057,10 @@ function BarChart({ values, months, label }: { values: number[]; months: string[
           </div>
           <div className="mt-2 flex gap-1.5 sm:gap-2">
             {months.map((month) => (
-              <span className="min-w-0 flex-1 truncate text-center text-[0.65rem] text-[#a0a6ae]" key={month}>
+              <span
+                className="min-w-0 flex-1 truncate text-center text-[0.65rem] text-[#a0a6ae]"
+                key={month}
+              >
                 {month}
               </span>
             ))}
@@ -984,11 +1095,18 @@ function AreaChart({
       const control = (previous.x + current.x) / 2;
       line += ` C ${control} ${previous.y}, ${control} ${current.y}, ${current.x} ${current.y}`;
     }
-    return { stroke: color, line, d: `${line} L ${width},${height} L 0,${height} Z` };
+    return {
+      stroke: color,
+      line,
+      d: `${line} L ${width},${height} L 0,${height} Z`,
+    };
   };
   const layers = [
     build(
-      series.organic.map((value, index) => value + (series.paid[index] ?? 0) + (series.social[index] ?? 0)),
+      series.organic.map(
+        (value, index) =>
+          value + (series.paid[index] ?? 0) + (series.social[index] ?? 0),
+      ),
       "#b9a6ff",
     ),
     build(
@@ -1000,17 +1118,30 @@ function AreaChart({
   return (
     <figure className="mt-4">
       <figcaption className="sr-only">{label}</figcaption>
-      <svg aria-hidden="true" className="h-52 w-full" preserveAspectRatio="none" viewBox={`0 0 ${width} ${height}`}>
+      <svg
+        aria-hidden="true"
+        className="h-52 w-full"
+        preserveAspectRatio="none"
+        viewBox={`0 0 ${width} ${height}`}
+      >
         {layers.map((layer) => (
           <g key={layer.stroke}>
             <path d={layer.d} fill={layer.stroke} opacity="0.35" />
-            <path d={layer.line} fill="none" stroke={layer.stroke} strokeWidth="3" />
+            <path
+              d={layer.line}
+              fill="none"
+              stroke={layer.stroke}
+              strokeWidth="3"
+            />
           </g>
         ))}
       </svg>
       <div className="mt-2 flex gap-1.5">
         {months.map((month, index) => (
-          <span className={`min-w-0 flex-1 truncate text-center text-[0.65rem] text-[#a0a6ae] ${index % 2 === 1 ? "hidden sm:block" : ""}`} key={month}>
+          <span
+            className={`min-w-0 flex-1 truncate text-center text-[0.65rem] text-[#a0a6ae] ${index % 2 === 1 ? "hidden sm:block" : ""}`}
+            key={month}
+          >
             {month}
           </span>
         ))}
@@ -1019,28 +1150,46 @@ function AreaChart({
   );
 }
 
-function Legend({ items }: { items: { color: string; label: string; value: string }[] }) {
+function Legend({
+  items,
+}: {
+  items: { color: string; label: string; value: string }[];
+}) {
   return (
     <ul className="mt-5 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
       {items.map((item) => (
         <li key={item.label}>
           <span className="flex items-center gap-2 text-[#8b919a]">
-            <span aria-hidden className="size-2 rounded-full" style={{ background: item.color }} />
+            <span
+              aria-hidden
+              className="size-2 rounded-full"
+              style={{ background: item.color }}
+            />
             {item.label}
           </span>
-          <span className="mt-1 block font-semibold tabular-nums">{item.value}</span>
+          <span className="mt-1 block font-semibold tabular-nums">
+            {item.value}
+          </span>
         </li>
       ))}
     </ul>
   );
 }
 
-function FooterStats({ items }: { items: { swatch: string; label: string; value: string }[] }) {
+function FooterStats({
+  items,
+}: {
+  items: { swatch: string; label: string; value: string }[];
+}) {
   return (
     <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-[#f0f2f5] pt-4 text-sm">
       {items.map((item) => (
         <li className="flex items-center gap-2" key={item.label}>
-          <span aria-hidden className="size-2.5 rounded-full" style={{ background: item.swatch }} />
+          <span
+            aria-hidden
+            className="size-2.5 rounded-full"
+            style={{ background: item.swatch }}
+          />
           <span className="text-[#8b919a]">{item.label}</span>
           <span className="font-semibold tabular-nums">{item.value}</span>
         </li>
@@ -1081,7 +1230,9 @@ function FilterPanel({
               <input
                 checked={visible[id]}
                 className="size-4 accent-[#2f6bff]"
-                onChange={(event) => setVisible({ ...visible, [id]: event.target.checked })}
+                onChange={(event) =>
+                  setVisible({ ...visible, [id]: event.target.checked })
+                }
                 type="checkbox"
               />
               {t(id === "email" ? "email" : id)}
@@ -1124,7 +1275,12 @@ function CampaignDialog({
           <h2 className="text-lg font-semibold" id={titleId}>
             {t("dialogTitle")}
           </h2>
-          <button aria-label={t("close")} className={`inline-flex size-11 items-center justify-center rounded-full ${PRESS}`} onClick={onClose} type="button">
+          <button
+            aria-label={t("close")}
+            className={`inline-flex size-11 items-center justify-center rounded-full ${PRESS}`}
+            onClick={onClose}
+            type="button"
+          >
             <CloseIcon />
           </button>
         </div>
@@ -1141,7 +1297,10 @@ function CampaignDialog({
             onCreate(`${next} · ${t(channel === "email" ? "email" : channel)}`);
           }}
         >
-          <label className="block text-sm font-medium" htmlFor={`${titleId}-name`}>
+          <label
+            className="block text-sm font-medium"
+            htmlFor={`${titleId}-name`}
+          >
             {t("campaignName")}
           </label>
           <input
@@ -1158,7 +1317,10 @@ function CampaignDialog({
               {error}
             </p>
           ) : null}
-          <label className="block text-sm font-medium" htmlFor={`${titleId}-channel`}>
+          <label
+            className="block text-sm font-medium"
+            htmlFor={`${titleId}-channel`}
+          >
             {t("campaignChannel")}
           </label>
           <select
@@ -1174,10 +1336,17 @@ function CampaignDialog({
             ))}
           </select>
           <div className="flex justify-end gap-2 pt-2">
-            <button className={`min-h-11 rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold ${PRESS}`} onClick={onClose} type="button">
+            <button
+              className={`min-h-11 rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold ${PRESS}`}
+              onClick={onClose}
+              type="button"
+            >
               {t("cancel")}
             </button>
-            <button className={`min-h-11 rounded-full bg-[#2f6bff] px-4 text-sm font-semibold text-white ${PRESS}`} type="submit">
+            <button
+              className={`min-h-11 rounded-full bg-[#2f6bff] px-4 text-sm font-semibold text-white ${PRESS}`}
+              type="submit"
+            >
               {t("createCampaign")}
             </button>
           </div>
@@ -1204,47 +1373,24 @@ function useDismiss(ref: { current: HTMLElement | null }, onClose: () => void) {
   }, [onClose, ref]);
 }
 
-function navKey(id: NavId) {
-  const keys: Record<
-    NavId,
-    | "navHome"
-    | "navProjects"
-    | "navCompanies"
-    | "navVerification"
-    | "navMessages"
-    | "navDeals"
-    | "navReviews"
-    | "navProfile"
-    | "navSupport"
-    | "navSettings"
-  > = {
-    home: "navHome",
-    projects: "navProjects",
-    companies: "navCompanies",
-    verification: "navVerification",
-    messages: "navMessages",
-    deals: "navDeals",
-    reviews: "navReviews",
-    profile: "navProfile",
-    support: "navSupport",
-    settings: "navSettings",
-  };
-  return keys[id];
-}
-
 function ChannelMark({ label }: { label: string }) {
   return (
-    <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-[8px] bg-[#f4f6f8] text-[0.68rem] font-semibold text-[#626970]">
+    <span
+      aria-hidden
+      className="grid size-6 shrink-0 place-items-center rounded-[8px] bg-[#f4f6f8] text-[0.68rem] font-semibold text-[#626970]"
+    >
       {label.slice(0, 1).toLocaleUpperCase()}
     </span>
   );
 }
 
-function Crumb() {
-  return <span aria-hidden className="text-[#c5cad1]">/</span>;
-}
-
-function Glyph({ children, className = "size-[18px]" }: { children: ReactNode; className?: string }) {
+function Glyph({
+  children,
+  className = "size-[18px]",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <svg aria-hidden className={className} fill="none" viewBox="0 0 24 24">
       {children}
@@ -1253,26 +1399,41 @@ function Glyph({ children, className = "size-[18px]" }: { children: ReactNode; c
 }
 
 function stroke() {
-  return { stroke: "currentColor", strokeLinecap: "round" as const, strokeLinejoin: "round" as const, strokeWidth: 1.75 };
+  return {
+    stroke: "currentColor",
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    strokeWidth: 1.75,
+  };
 }
 
-function SearchIcon() {
-  return <Glyph><circle {...stroke()} cx="11" cy="11" r="6" /><path {...stroke()} d="m16 16 3 3" /></Glyph>;
-}
-function MenuIcon() {
-  return <Glyph><path {...stroke()} d="M5 7h14M5 12h14M5 17h14" /></Glyph>;
-}
 function CloseIcon() {
-  return <Glyph><path {...stroke()} d="m7 7 10 10M17 7 7 17" /></Glyph>;
+  return (
+    <Glyph>
+      <path {...stroke()} d="m7 7 10 10M17 7 7 17" />
+    </Glyph>
+  );
 }
 function FilterIcon() {
-  return <Glyph><path {...stroke()} d="M4 6h16l-6 7v5l-4-2v-3L4 6Z" /></Glyph>;
+  return (
+    <Glyph>
+      <path {...stroke()} d="M4 6h16l-6 7v5l-4-2v-3L4 6Z" />
+    </Glyph>
+  );
 }
 function PlusIcon() {
-  return <Glyph className="size-4"><path {...stroke()} d="M12 6v12M6 12h12" /></Glyph>;
+  return (
+    <Glyph className="size-4">
+      <path {...stroke()} d="M12 6v12M6 12h12" />
+    </Glyph>
+  );
 }
 function Chevron({ className }: { className?: string }) {
-  return <Glyph className={`size-4 ${className ?? ""}`}><path {...stroke()} d="m8 10 4 4 4-4" /></Glyph>;
+  return (
+    <Glyph className={`size-4 ${className ?? ""}`}>
+      <path {...stroke()} d="m8 10 4 4 4-4" />
+    </Glyph>
+  );
 }
 function CheckMarkIcon() {
   return (
@@ -1284,38 +1445,53 @@ function CheckMarkIcon() {
 function CalendarIcon() {
   return (
     <Glyph className="size-3.5">
-      <path {...stroke()} d="M7 4v2M17 4v2M5 9h14M6 6h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z" />
+      <path
+        {...stroke()}
+        d="M7 4v2M17 4v2M5 9h14M6 6h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"
+      />
     </Glyph>
   );
 }
 function ArrowUp() {
-  return <Glyph className="size-3"><path {...stroke()} d="M6 14 12 8l6 6" /></Glyph>;
+  return (
+    <Glyph className="size-3">
+      <path {...stroke()} d="M6 14 12 8l6 6" />
+    </Glyph>
+  );
 }
 function ArrowDown() {
-  return <Glyph className="size-3"><path {...stroke()} d="m6 10 6 6 6-6" /></Glyph>;
+  return (
+    <Glyph className="size-3">
+      <path {...stroke()} d="m6 10 6 6 6-6" />
+    </Glyph>
+  );
 }
 function SpendIcon() {
-  return <Glyph><path {...stroke()} d="M5 17V7M10 17V11M15 17V9M20 17V5" /></Glyph>;
+  return (
+    <Glyph>
+      <path {...stroke()} d="M5 17V7M10 17V11M15 17V9M20 17V5" />
+    </Glyph>
+  );
 }
 function EyeIcon() {
-  return <Glyph><path {...stroke()} d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z" /><circle {...stroke()} cx="12" cy="12" r="2.5" /></Glyph>;
+  return (
+    <Glyph>
+      <path {...stroke()} d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z" />
+      <circle {...stroke()} cx="12" cy="12" r="2.5" />
+    </Glyph>
+  );
 }
 function CheckIcon() {
-  return <Glyph><path {...stroke()} d="m6 12 4 4 8-8" /></Glyph>;
+  return (
+    <Glyph>
+      <path {...stroke()} d="m6 12 4 4 8-8" />
+    </Glyph>
+  );
 }
 function ClickIcon() {
-  return <Glyph><path {...stroke()} d="m8 16 2.5-6.5L17 12l-4.5 1.2L11 17.5 8 16Z" /></Glyph>;
-}
-
-function NavIcon({ id }: { id: NavId }) {
-  if (id === "home") return <Glyph><path {...stroke()} d="m4 11 8-7 8 7v8a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-8Z" /></Glyph>;
-  if (id === "projects") return <Glyph><path {...stroke()} d="M4 5h7v7H4V5Zm9 0h7v4h-7V5ZM13 11h7v8h-7v-8ZM4 14h7v5H4v-5Z" /></Glyph>;
-  if (id === "companies") return <Glyph><path {...stroke()} d="M5 20V6l7-2 7 2v14M9 20v-4h6v4M9 9h.01M12 9h.01M15 9h.01M9 12h.01M12 12h.01M15 12h.01" /></Glyph>;
-  if (id === "verification") return <Glyph><path {...stroke()} d="M12 3 5 6v6c0 4 3 6.5 7 8 4-1.5 7-4 7-8V6l-7-3Z" /><path {...stroke()} d="m9 12 2 2 4-4" /></Glyph>;
-  if (id === "messages") return <Glyph><path {...stroke()} d="M5 6h14v9H8l-3 3V6Z" /></Glyph>;
-  if (id === "deals") return <Glyph><path {...stroke()} d="M6 7h12v12H6V7Zm3-3h6v3H9V4Z" /></Glyph>;
-  if (id === "reviews") return <Glyph><path {...stroke()} d="m12 4 2.2 4.6L19 9.2l-3.5 3.4.8 4.8L12 15.2 7.7 17.4l.8-4.8L5 9.2l4.8-.6L12 4Z" /></Glyph>;
-  if (id === "profile") return <Glyph><circle {...stroke()} cx="12" cy="9" r="3" /><path {...stroke()} d="M6 19c1.4-2.4 3.4-3.5 6-3.5S16.6 16.6 18 19" /></Glyph>;
-  if (id === "support") return <Glyph><circle {...stroke()} cx="12" cy="12" r="8" /><path {...stroke()} d="M12 16h.01M12 8a2.5 2.5 0 0 1 1 4.8c-.6.3-1 .8-1 1.5" /></Glyph>;
-  return <Glyph><circle {...stroke()} cx="12" cy="12" r="3" /><path {...stroke()} d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" /></Glyph>;
+  return (
+    <Glyph>
+      <path {...stroke()} d="m8 16 2.5-6.5L17 12l-4.5 1.2L11 17.5 8 16Z" />
+    </Glyph>
+  );
 }

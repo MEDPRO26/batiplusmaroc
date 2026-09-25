@@ -3,7 +3,7 @@
 import { useAction, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import Image from "next/image";
-import { useFormatter, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import { useToast } from "@/features/shared/components/app-feedback";
@@ -11,6 +11,7 @@ import { FriendlyAlert } from "@/features/shared/components/error-state";
 import { ProfileSectionSkeleton } from "@/features/shared/components/skeletons";
 import { useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { mapConvexFailure } from "@/lib/errors";
 import { createSubmitLock, focusFirstInvalidField } from "@/lib/forms/submit";
 import { joinClassNames } from "@/lib/utils";
@@ -23,7 +24,7 @@ type ClientProfile = NonNullable<FunctionReturnType<typeof api.clients.getMyProf
 export function ClientProfileEditor() {
   const t = useTranslations("clientProfileManager");
   const tUx = useTranslations("ux");
-  const format = useFormatter();
+  const locale = useLocale();
   const user = useQuery(api.users.currentUser);
   const canLoad = user?.accountType === "client" && user.onboardingStatus === "completed";
   const profile = useQuery(api.clients.getMyProfile, canLoad ? {} : "skip");
@@ -388,7 +389,7 @@ export function ClientProfileEditor() {
             <dl className="m-0 grid gap-4 sm:grid-cols-3">
               <Stat
                 label={t("activity.joined")}
-                value={format.dateTime(profile.joinedAt, { dateStyle: "medium" })}
+                value={formatMarketplaceDateTime(profile.joinedAt, locale, { dateStyle: "medium" })}
               />
               <Stat label={t("activity.projectsPosted")} value={String(profile.projectsPostedCount)} />
               <Stat

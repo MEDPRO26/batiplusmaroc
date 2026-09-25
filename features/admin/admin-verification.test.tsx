@@ -14,7 +14,11 @@ vi.mock("convex/react", () => ({
 }));
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
+  Link: ({
+    children,
+    href,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -28,19 +32,33 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { AdminVerificationPanel } from "./components/admin-verification-panel";
+import { AdminShell } from "./components/admin-shell";
 
 describe("admin verification panel", () => {
   test.each([
     ["en", "Verification", "Pending"],
     ["fr", "Vérification", "En attente"],
-  ] as const)("renders %s copy for the verification area", (locale, title, pending) => {
-    const html = renderToStaticMarkup(
-      <NextIntlClientProvider locale={locale} messages={locale === "en" ? en : fr} timeZone="Africa/Casablanca">
-        <AdminVerificationPanel email="admin@example.test" firstName="Ada" lastName="Admin" />
-      </NextIntlClientProvider>,
-    );
-    expect(html).toContain(title);
-    expect(html).toContain(pending);
-    expect(html).toContain("admin@example.test");
-  });
+  ] as const)(
+    "renders %s copy for the verification area",
+    (locale, title, pending) => {
+      const html = renderToStaticMarkup(
+        <NextIntlClientProvider
+          locale={locale}
+          messages={locale === "en" ? en : fr}
+          timeZone="Africa/Casablanca"
+        >
+          <AdminShell
+            email="admin@example.test"
+            firstName="Ada"
+            lastName="Admin"
+          >
+            <AdminVerificationPanel />
+          </AdminShell>
+        </NextIntlClientProvider>,
+      );
+      expect(html).toContain(title);
+      expect(html).toContain(pending);
+      expect(html).toContain("admin@example.test");
+    },
+  );
 });

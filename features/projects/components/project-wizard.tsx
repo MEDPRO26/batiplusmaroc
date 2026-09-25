@@ -29,6 +29,22 @@ export function resumeWizardStep(lastCompletedStep: number): Step {
   return Math.max(1, lastCompletedStep + 1) as Step;
 }
 
+export function shouldInitializeDraft({
+  submitted,
+  canLoad,
+  hasInitialProject,
+  draftMissing,
+  started,
+}: {
+  submitted: boolean;
+  canLoad: boolean;
+  hasInitialProject: boolean;
+  draftMissing: boolean;
+  started: boolean;
+}) {
+  return !submitted && canLoad && !hasInitialProject && draftMissing && !started;
+}
+
 export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"projects"> }) {
   const typedT = useTranslations("projectWizard");
   const t: Translate = (key, values) => typedT(key as never, values as never);
@@ -68,14 +84,20 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
   }, [router, user]);
 
   useEffect(() => {
-    if (canLoad && !initialProjectId && wizard?.draft === null && !started.current) {
+    if (shouldInitializeDraft({
+      submitted,
+      canLoad,
+      hasInitialProject: Boolean(initialProjectId),
+      draftMissing: wizard?.draft === null,
+      started: started.current,
+    })) {
       started.current = true;
       void initialize({}).catch((caught) => {
         started.current = false;
         setError(mapConvexFailure(caught, tUx).message);
       });
     }
-  }, [canLoad, initialProjectId, initialize, tUx, wizard?.draft]);
+  }, [canLoad, initialProjectId, initialize, submitted, tUx, wizard?.draft]);
 
   useEffect(() => {
     if (wizard?.draft && loadedDraft.current !== wizard.draft.id) {
@@ -222,11 +244,13 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
     if (!lock.current.tryAcquire()) return;
     setSaving(true);
     setError(null);
+    started.current = true;
     try {
       await publish({ projectId: draft.id });
       setSubmitted(true);
       showToast(t("success.toast"));
     } catch (caught) {
+      started.current = false;
       setError(mapConvexFailure(caught, tUx).message);
     } finally {
       setSaving(false);

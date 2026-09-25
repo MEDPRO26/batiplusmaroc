@@ -3,13 +3,14 @@
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { MapPin, Search, SlidersHorizontal, X } from "lucide-react";
-import { useFormatter, useNow, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { api } from "@/convex/_generated/api";
 import { projectCategories, projectCities } from "@/convex/projects/constants";
 import { Link } from "@/i18n/navigation";
 import { routes, type AppRoute } from "@/lib/routes";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { joinClassNames } from "@/lib/utils";
 
 type PublicProject = FunctionReturnType<typeof api.projects.index.listPublicProjects>[number];
@@ -424,7 +425,7 @@ function ProjectPreviewSheet({
 }) {
   const t = useTranslations("browseProjectsPage");
   const tWizard = useTranslations("projectWizard");
-  const format = useFormatter();
+  const locale = useLocale();
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -476,7 +477,7 @@ function ProjectPreviewSheet({
               <>
                 <span aria-hidden>·</span>
                 <time dateTime={new Date(project.publishedAt).toISOString()}>
-                  {format.dateTime(project.publishedAt, { dateStyle: "medium" })}
+                  {formatMarketplaceDateTime(project.publishedAt, locale, { dateStyle: "medium" })}
                 </time>
               </>
             ) : null}

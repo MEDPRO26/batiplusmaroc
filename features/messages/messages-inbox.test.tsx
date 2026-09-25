@@ -6,7 +6,12 @@ import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 import { routes } from "@/lib/routes";
 
-vi.mock("convex/react", () => ({ useQuery: () => undefined }));
+vi.mock("convex/react", () => ({
+  useAction: () => vi.fn(),
+  useMutation: () => vi.fn(),
+  usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }),
+  useQuery: () => undefined,
+}));
 vi.mock("next/image", () => ({ default: ({ alt }: { alt: string }) => <span data-image-alt={alt} /> }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({
@@ -22,7 +27,14 @@ vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
 }));
 
-import { MessagesInboxView, resolveMessagesRedirect, type MessageThread } from "./components/messages-inbox";
+import {
+  formatMessageFileSize,
+  MessagePdfCard,
+  MessagesInboxView,
+  resolveMessagesRedirect,
+  validateMessagePdfSelection,
+  type MessageThread,
+} from "./components/messages-inbox";
 
 function render(locale: "en" | "fr", node: React.ReactNode) {
   return renderToStaticMarkup(
@@ -37,6 +49,29 @@ describe("messages inbox", () => {
     expect(Object.keys(en.messages).sort()).toEqual(Object.keys(fr.messages).sort());
     expect(en.messages.welcomeTitle).toBe("Welcome to Messages");
     expect(fr.messages.welcomeTitle).toBe("Bienvenue dans Messages");
+    expect(en.messages.attachPdf).toBe("Attach PDF");
+    expect(fr.messages.attachPdf).toBe("Joindre un PDF");
+    expect(en.messages.finalQuoteNotice).toContain("does not submit the official final quote");
+    expect(fr.messages.finalQuoteNotice).toContain("devis final");
+  });
+
+  test("validates PDF selections and formats bounded file sizes", () => {
+    expect(validateMessagePdfSelection({ type: "text/plain", size: 100 })).toBe("onlyPdf");
+    expect(validateMessagePdfSelection({ type: "application/pdf", size: 10 * 1024 * 1024 + 1 })).toBe("fileTooLarge");
+    expect(validateMessagePdfSelection({ type: "application/pdf", size: 4096 })).toBeNull();
+    expect(formatMessageFileSize(4096)).toBe("4 KB");
+    expect(formatMessageFileSize(1.5 * 1024 * 1024)).toBe("1.5 MB");
+  });
+
+  test("renders ready/uploading previews and private download cards accessibly", () => {
+    const preview = render("en", <MessagePdfCard actionLabel="Remove attachment" fileName="plans.pdf" label="PDF attachment" onRemove={() => undefined} pendingLabel="Ready to send" sizeBytes={4096} />);
+    expect(preview).toContain("plans.pdf");
+    expect(preview).toContain("Ready to send");
+    expect(preview).toContain('aria-label="Remove attachment"');
+    const download = render("fr", <MessagePdfCard actionLabel="Ouvrir le PDF" fileName="devis-support.pdf" href="/api/messages/attachments/id" label="Pièce jointe PDF" sizeBytes={2048} />);
+    expect(download).toContain('/api/messages/attachments/id');
+    expect(download).toContain('target="_blank"');
+    expect(download).toContain("devis-support.pdf");
   });
 
   test("redirects guests and unfinished accounts away from messages", () => {

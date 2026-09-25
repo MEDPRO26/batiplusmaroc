@@ -3,12 +3,14 @@
 import type { FunctionReturnType } from "convex/server";
 import { useMutation, useQuery } from "convex/react";
 import { ArrowRight, CalendarDays, Check, Clock3, LockKeyhole, RefreshCw, WalletCards } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Link, useRouter } from "@/i18n/navigation";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { mapAppError } from "@/lib/errors";
+import { parseMadInput } from "@/lib/money/mad";
 import { routes } from "@/lib/routes";
 import { resolveCompanyProjectsRedirect } from "@/features/projects/components/company-project-marketplace";
 
@@ -91,14 +93,14 @@ function InitialQuoteForm({ projectId, onSubmitted }: { projectId: Id<"projects"
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    const price = Number(estimatedPrice);
+    const price = parseMadInput(estimatedPrice);
     const duration = Number(estimatedDuration);
     if (!message || !estimatedPrice || !estimatedDuration || !availableStartDate || !scope) {
       setError(t("validation.required"));
       return;
     }
     if (message.trim().length < 20) return setError(t("validation.message"));
-    if (!Number.isFinite(price) || price <= 0) return setError(t("validation.price"));
+    if (price === null) return setError(t("validation.price"));
     if (!Number.isInteger(duration) || duration <= 0) return setError(t("validation.duration"));
     if (scope.trim().length < 20) return setError(t("validation.scope"));
 
@@ -131,7 +133,17 @@ function InitialQuoteForm({ projectId, onSubmitted }: { projectId: Id<"projects"
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label={t("form.estimatedPrice")} htmlFor="quote-price">
             <div className="relative">
-              <input className={`${inputClass} pr-16`} id="quote-price" inputMode="decimal" min="1" onChange={(event) => setEstimatedPrice(event.target.value)} required step="0.01" type="number" value={estimatedPrice} />
+              <input
+                autoComplete="off"
+                className={`${inputClass} pr-16`}
+                id="quote-price"
+                inputMode="decimal"
+                onChange={(event) => setEstimatedPrice(event.target.value)}
+                placeholder="300000"
+                required
+                type="text"
+                value={estimatedPrice}
+              />
               <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-xs font-semibold text-muted">{t("form.currency")}</span>
             </div>
           </Field>
@@ -163,6 +175,7 @@ function QuoteDetail({ quote }: { quote: Quote }) {
   const t = useTranslations("initialQuote");
   const tUx = useTranslations("ux");
   const format = useFormatter();
+  const locale = useLocale();
   const withdraw = useMutation(api.quotes.index.withdrawInitialQuote);
   const [withdrawing, setWithdrawing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -185,14 +198,14 @@ function QuoteDetail({ quote }: { quote: Quote }) {
       <div className="border-b border-brand-border bg-[#fbfcfc] px-5 py-5 sm:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${quote.status === "withdrawn" ? "bg-[#f1f2f3] text-muted" : "bg-[#e9f6ee] text-[#21633d]"}`}>{t(`detail.${quote.status}`)}</span>
-          <time className="text-xs text-muted" dateTime={new Date(quote.submittedAt).toISOString()}>{t("detail.submittedAt", { date: format.dateTime(quote.submittedAt, { dateStyle: "medium" }) })}</time>
+          <time className="text-xs text-muted" dateTime={new Date(quote.submittedAt).toISOString()}>{t("detail.submittedAt", { date: formatMarketplaceDateTime(quote.submittedAt, locale, { dateStyle: "medium" }) })}</time>
         </div>
       </div>
       <div className="p-5 sm:p-8">
         {quote.status === "withdrawn" ? <p className="mb-6 rounded-xl border border-brand-border bg-[#f5f7f8] px-4 py-3 text-sm text-muted">{t("detail.withdrawnNotice")}</p> : null}
         {error ? <p className="mb-6 rounded-xl border border-[#edc7c2] bg-[#fff4f2] px-4 py-3 text-sm text-[#8a2f28]" role="alert">{error}</p> : null}
         <dl className="grid gap-4 sm:grid-cols-3">
-          <QuoteMetric icon={<WalletCards aria-hidden className="size-5" />} label={t("detail.estimatedPrice")} value={format.number(quote.estimatedPrice, { style: "currency", currency: "MAD", maximumFractionDigits: 2 })} />
+          <QuoteMetric icon={<WalletCards aria-hidden className="size-5" />} label={t("detail.estimatedPrice")} value={format.number(quote.estimatedPrice, { style: "currency", currency: "MAD", maximumFractionDigits: 0 })} />
           <QuoteMetric icon={<Clock3 aria-hidden className="size-5" />} label={t("detail.estimatedDuration")} value={t("detail.durationValue", { count: quote.estimatedDuration })} />
           <QuoteMetric icon={<CalendarDays aria-hidden className="size-5" />} label={t("detail.availability")} value={format.dateTime(startDate, { dateStyle: "medium", timeZone: "UTC" })} />
         </dl>

@@ -58,6 +58,14 @@ const initialQuoteStatus = v.union(
   v.literal("declined"),
   v.literal("withdrawn"),
 );
+const finalQuoteStatus = v.union(
+  v.literal("draft"),
+  v.literal("submitted"),
+  v.literal("changes_requested"),
+  v.literal("accepted"),
+  v.literal("declined"),
+  v.literal("withdrawn"),
+);
 const seoLocale = v.union(v.literal("fr"), v.literal("en"));
 const seoSearchIntent = v.union(
   v.literal("informational"),
@@ -151,6 +159,9 @@ export default defineSchema({
     /** Denormalized budget rank for marketplace sorting (0=unknown … 6=1M+). */
     marketplaceBudgetRank: v.optional(v.number()),
     status: projectStatus, lastCompletedStep: v.number(), createdAt: v.number(), updatedAt: v.number(),
+    selectedCompanyId: v.optional(v.id("companies")),
+    selectedFinalQuoteId: v.optional(v.id("finalQuotes")),
+    selectedAt: v.optional(v.number()),
     submittedAt: v.optional(v.number()), publishedAt: v.optional(v.number()),
   })
     .index("by_clientId", ["clientId"])
@@ -190,6 +201,9 @@ export default defineSchema({
     quoteId: v.optional(v.id("projectQuotes")),
     conversationId: v.optional(v.id("conversations")),
     siteAssessmentId: v.optional(v.id("siteAssessments")),
+    siteVisitId: v.optional(v.id("siteVisits")),
+    finalQuoteId: v.optional(v.id("finalQuotes")),
+    finalQuoteRevisionId: v.optional(v.id("finalQuoteRevisions")),
     /** Future deal module IDs are stored as opaque IDs until that table exists. */
     dealId: v.optional(v.string()),
     oldStatus: v.optional(v.string()),
@@ -199,7 +213,9 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_projectId_and_createdAt", ["projectId", "createdAt"])
-    .index("by_eventType_and_createdAt", ["eventType", "createdAt"]),
+    .index("by_eventType_and_createdAt", ["eventType", "createdAt"])
+    .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"])
+    .index("by_finalQuoteId_and_createdAt", ["finalQuoteId", "createdAt"]),
 
   siteAssessments: defineTable({
     projectId: v.id("projects"),
@@ -233,6 +249,61 @@ export default defineSchema({
     .index("by_projectId_and_active", ["projectId", "active"])
     .index("by_conversationId", ["conversationId"])
     .index("by_projectId_and_companyId", ["projectId", "companyId"]),
+
+  siteVisits: defineTable({
+    assessmentId: v.id("siteAssessments"),
+    projectId: v.id("projects"),
+    clientId: v.id("users"),
+    companyId: v.id("companies"),
+    conversationId: v.id("conversations"),
+    initialQuoteId: v.id("projectQuotes"),
+    proposedByUserId: v.id("users"),
+    currentProposalId: v.optional(v.id("siteVisitProposals")),
+    proposedDate: v.string(),
+    proposedTime: v.string(),
+    timezone: v.literal("Africa/Casablanca"),
+    siteAddress: v.string(),
+    note: v.optional(v.string()),
+    status: v.union(
+      v.literal("proposed"),
+      v.literal("confirmed"),
+      v.literal("completed"),
+      v.literal("declined"),
+      v.literal("cancelled"),
+    ),
+    active: v.boolean(),
+    proposedAt: v.number(),
+    confirmedByUserId: v.optional(v.id("users")),
+    confirmedAt: v.optional(v.number()),
+    declinedByUserId: v.optional(v.id("users")),
+    declinedAt: v.optional(v.number()),
+    cancelledByUserId: v.optional(v.id("users")),
+    cancelledAt: v.optional(v.number()),
+    cancellationReason: v.optional(v.string()),
+    completedByUserId: v.optional(v.id("users")),
+    completedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_assessmentId_and_active", ["assessmentId", "active"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_projectId_and_createdAt", ["projectId", "createdAt"])
+    .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"]),
+
+  siteVisitProposals: defineTable({
+    visitId: v.id("siteVisits"),
+    assessmentId: v.id("siteAssessments"),
+    sequence: v.number(),
+    proposedByUserId: v.id("users"),
+    proposedDate: v.string(),
+    proposedTime: v.string(),
+    timezone: v.literal("Africa/Casablanca"),
+    siteAddress: v.string(),
+    note: v.optional(v.string()),
+    proposedAt: v.number(),
+  })
+    .index("by_visitId_and_sequence", ["visitId", "sequence"])
+    .index("by_assessmentId_and_proposedAt", ["assessmentId", "proposedAt"]),
 
   projectMedia: defineTable({
     projectId: v.id("projects"), clientId: v.id("users"), storageProvider: v.literal("r2"),
@@ -279,6 +350,75 @@ export default defineSchema({
     .index("by_projectId_and_status", ["projectId", "status"])
     .index("by_companyId_and_status", ["companyId", "status"]),
 
+  finalQuotes: defineTable({
+    projectId: v.id("projects"),
+    clientId: v.id("users"),
+    companyId: v.id("companies"),
+    initialQuoteId: v.id("projectQuotes"),
+    conversationId: v.id("conversations"),
+    siteAssessmentId: v.optional(v.id("siteAssessments")),
+    siteVisitId: v.optional(v.id("siteVisits")),
+    status: finalQuoteStatus,
+    currentRevisionId: v.optional(v.id("finalQuoteRevisions")),
+    acceptedRevisionId: v.optional(v.id("finalQuoteRevisions")),
+    requestedAt: v.number(),
+    requestedByUserId: v.id("users"),
+    requestTrigger: v.union(v.literal("client_request"), v.literal("completed_site_visit")),
+    changesRequestedAt: v.optional(v.number()),
+    changesRequestedByUserId: v.optional(v.id("users")),
+    changesRequestReason: v.optional(v.string()),
+    acceptedAt: v.optional(v.number()),
+    acceptedByUserId: v.optional(v.id("users")),
+    declinedAt: v.optional(v.number()),
+    declinedByUserId: v.optional(v.id("users")),
+    declineReason: v.optional(v.string()),
+    withdrawnAt: v.optional(v.number()),
+    withdrawnByUserId: v.optional(v.id("users")),
+    withdrawalReason: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_projectId_and_companyId", ["projectId", "companyId"])
+    .index("by_projectId", ["projectId"])
+    .index("by_projectId_and_status", ["projectId", "status"])
+    .index("by_companyId", ["companyId"])
+    .index("by_status", ["status"])
+    .index("by_conversationId", ["conversationId"]),
+
+  finalQuoteRevisions: defineTable({
+    finalQuoteId: v.id("finalQuotes"),
+    revisionNumber: v.number(),
+    price: v.number(),
+    currency: v.literal("MAD"),
+    duration: v.number(),
+    plannedStartDate: v.string(),
+    validUntil: v.string(),
+    scope: v.string(),
+    inclusions: v.string(),
+    exclusions: v.string(),
+    paymentTerms: v.string(),
+    companyNote: v.optional(v.string()),
+    pdfStorageId: v.optional(v.id("_storage")),
+    pdfFileName: v.optional(v.string()),
+    pdfSize: v.optional(v.number()),
+    submittedByUserId: v.id("users"),
+    submittedAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_finalQuoteId_and_revisionNumber", ["finalQuoteId", "revisionNumber"])
+    .index("by_finalQuoteId_and_createdAt", ["finalQuoteId", "createdAt"]),
+
+  finalQuoteUploadIntents: defineTable({
+    finalQuoteId: v.id("finalQuotes"),
+    userId: v.id("users"),
+    token: v.string(),
+    expiresAt: v.number(),
+    claimedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_token", ["token"])
+    .index("by_finalQuoteId", ["finalQuoteId"]),
+
   quoteStatusHistory: defineTable({
     quoteId: v.id("projectQuotes"),
     oldStatus: initialQuoteStatus,
@@ -324,6 +464,32 @@ export default defineSchema({
       "senderUserId",
       "clientMessageId",
     ]),
+
+  messageAttachments: defineTable({
+    conversationId: v.id("conversations"),
+    messageId: v.id("messages"),
+    storageId: v.id("_storage"),
+    uploadedByUserId: v.id("users"),
+    kind: v.literal("pdf"),
+    originalFileName: v.string(),
+    mimeType: v.literal("application/pdf"),
+    sizeBytes: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_messageId", ["messageId"])
+    .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"]),
+
+  messageAttachmentUploadIntents: defineTable({
+    conversationId: v.id("conversations"),
+    userId: v.id("users"),
+    token: v.string(),
+    originalFileName: v.string(),
+    expectedContentType: v.literal("application/pdf"),
+    expectedSize: v.number(),
+    expiresAt: v.number(),
+    claimedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_token", ["token"]),
 
   companies: defineTable({
     name: v.optional(v.string()),
@@ -374,6 +540,7 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_companyId", ["companyId"])
+    .index("by_companyId_and_status", ["companyId", "status"])
     .index("by_companyId_and_userId", ["companyId", "userId"]),
 
   companyServices: defineTable({

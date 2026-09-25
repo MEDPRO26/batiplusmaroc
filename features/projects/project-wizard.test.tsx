@@ -14,7 +14,11 @@ vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
-import { ProjectWizardSkeleton, resumeWizardStep } from "./components/project-wizard";
+import {
+  ProjectWizardSkeleton,
+  resumeWizardStep,
+  shouldInitializeDraft,
+} from "./components/project-wizard";
 
 describe("project wizard contract", () => {
   test("FR and EN contain the same six progressive steps without an upload step", () => {
@@ -59,6 +63,20 @@ describe("project wizard contract", () => {
     expect(resumeWizardStep(5)).toBe(6);
     expect(resumeWizardStep(6)).toBe(6);
     expect(resumeWizardStep(7)).toBe(6);
+  });
+
+  test("does not initialize another draft after project submission", () => {
+    const ready = {
+      canLoad: true,
+      hasInitialProject: false,
+      draftMissing: true,
+      started: false,
+    };
+    expect(shouldInitializeDraft({ ...ready, submitted: false })).toBe(true);
+    expect(shouldInitializeDraft({ ...ready, submitted: true })).toBe(false);
+    expect(
+      shouldInitializeDraft({ ...ready, submitted: false, started: true }),
+    ).toBe(false);
   });
 
   test("loading skeleton is announced", () => {

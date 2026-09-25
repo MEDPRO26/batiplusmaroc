@@ -6,26 +6,26 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { AdminShell, ADMIN_PRESS } from "@/features/admin/components/admin-shell";
+import {
+  AdminPage,
+  ADMIN_PRESS,
+} from "@/features/admin/components/admin-shell";
 import { findKnownCodeInText } from "@/lib/errors/codes";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 
 type TabStatus = "pending" | "verified" | "rejected";
 type HistoryStatus = "draft" | TabStatus;
-type ListRow = FunctionReturnType<typeof api.admin.verification.listCompanyVerifications>[number];
-type Review = NonNullable<FunctionReturnType<typeof api.admin.verification.getCompanyVerificationReview>>;
+type ListRow = FunctionReturnType<
+  typeof api.admin.verification.listCompanyVerifications
+>[number];
+type Review = NonNullable<
+  FunctionReturnType<typeof api.admin.verification.getCompanyVerificationReview>
+>;
 type ReviewDocument = Review["documents"][number];
 type HistoryItem = Review["history"][number];
 type DocumentType = ReviewDocument["documentType"];
 
-export function AdminVerificationPanel({
-  email,
-  firstName,
-  lastName,
-}: {
-  email: string | null;
-  firstName: string | null;
-  lastName: string | null;
-}) {
+export function AdminVerificationPanel() {
   const t = useTranslations("adminVerification");
   const tDash = useTranslations("adminDashboard");
   const tUx = useTranslations("ux");
@@ -50,38 +50,38 @@ export function AdminVerificationPanel({
   }, [notice]);
 
   return (
-    <AdminShell
-      activeNav="verification"
-      breadcrumb={t("title")}
-      email={email}
-      firstName={firstName}
-      lastName={lastName}
-      notice={notice}
-      title={t("title")}
-    >
+    <AdminPage breadcrumb={t("title")} notice={notice} title={t("title")}>
       <p className="max-w-2xl text-sm leading-6 text-[#626970]">{t("lead")}</p>
 
       <section className="rounded-[20px] border border-[#e7eaee] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-1" role="tablist" aria-label={t("tabsLabel")}>
-            {(["pending", "verified", "rejected"] as TabStatus[]).map((status) => (
-              <button
-                aria-selected={tab === status}
-                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${ADMIN_PRESS} ${
-                  tab === status ? "bg-[#2f6bff] text-white" : "bg-[#f4f6f8] text-[#626970]"
-                }`}
-                key={status}
-                onClick={() => {
-                  setTab(status);
-                  setSelectedId(null);
-                  setError("");
-                }}
-                role="tab"
-                type="button"
-              >
-                {t(`tabs.${status}`)}
-              </button>
-            ))}
+          <div
+            className="flex flex-wrap gap-1"
+            role="tablist"
+            aria-label={t("tabsLabel")}
+          >
+            {(["pending", "verified", "rejected"] as TabStatus[]).map(
+              (status) => (
+                <button
+                  aria-selected={tab === status}
+                  className={`min-h-11 rounded-full px-4 text-sm font-semibold ${ADMIN_PRESS} ${
+                    tab === status
+                      ? "bg-[#2f6bff] text-white"
+                      : "bg-[#f4f6f8] text-[#626970]"
+                  }`}
+                  key={status}
+                  onClick={() => {
+                    setTab(status);
+                    setSelectedId(null);
+                    setError("");
+                  }}
+                  role="tab"
+                  type="button"
+                >
+                  {t(`tabs.${status}`)}
+                </button>
+              ),
+            )}
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <label className="flex min-h-11 flex-1 items-center gap-2 rounded-full bg-[#f4f6f8] px-3 text-sm text-[#8b919a]">
@@ -106,7 +106,10 @@ export function AdminVerificationPanel({
         </div>
 
         {error ? (
-          <p className="mt-4 rounded-[14px] bg-[#fdecec] px-4 py-3 text-sm text-[#b42318]" role="alert">
+          <p
+            className="mt-4 rounded-[14px] bg-[#fdecec] px-4 py-3 text-sm text-[#b42318]"
+            role="alert"
+          >
             {error}
           </p>
         ) : null}
@@ -115,45 +118,79 @@ export function AdminVerificationPanel({
           <div aria-busy="true" className="mt-5 space-y-3" role="status">
             <span className="sr-only">{tUx("loading.dashboard")}</span>
             {Array.from({ length: 4 }).map((_, index) => (
-              <div className="h-14 animate-pulse rounded-[14px] bg-[#f4f6f8]" key={index} />
+              <div
+                className="h-14 animate-pulse rounded-[14px] bg-[#f4f6f8]"
+                key={index}
+              />
             ))}
           </div>
         ) : list.length === 0 ? (
-          <p className="mt-8 py-10 text-center text-sm text-[#8b919a]">{t("empty")}</p>
+          <p className="mt-8 py-10 text-center text-sm text-[#8b919a]">
+            {t("empty")}
+          </p>
         ) : (
           <div className="mt-5 overflow-x-auto">
             <table className="min-w-full border-separate border-spacing-y-2 text-left text-sm">
               <thead>
                 <tr className="text-[0.72rem] font-semibold tracking-[0.06em] text-[#a0a6ae] uppercase">
-                  <th className="px-3 py-2 font-semibold">{t("columns.company")}</th>
-                  <th className="px-3 py-2 font-semibold">{t("columns.city")}</th>
-                  <th className="px-3 py-2 font-semibold">{t("columns.ice")}</th>
+                  <th className="px-3 py-2 font-semibold">
+                    {t("columns.company")}
+                  </th>
+                  <th className="px-3 py-2 font-semibold">
+                    {t("columns.city")}
+                  </th>
+                  <th className="px-3 py-2 font-semibold">
+                    {t("columns.ice")}
+                  </th>
                   <th className="px-3 py-2 font-semibold">{t("columns.rc")}</th>
-                  <th className="hidden px-3 py-2 font-semibold xl:table-cell">{t("columns.representative")}</th>
-                  <th className="px-3 py-2 font-semibold">{t("columns.submitted")}</th>
-                  <th className="px-3 py-2 font-semibold">{t("columns.documents")}</th>
-                  <th className="px-3 py-2 font-semibold">{t("columns.status")}</th>
-                  <th className="px-3 py-2 font-semibold">{t("columns.action")}</th>
+                  <th className="hidden px-3 py-2 font-semibold xl:table-cell">
+                    {t("columns.representative")}
+                  </th>
+                  <th className="px-3 py-2 font-semibold">
+                    {t("columns.submitted")}
+                  </th>
+                  <th className="px-3 py-2 font-semibold">
+                    {t("columns.documents")}
+                  </th>
+                  <th className="px-3 py-2 font-semibold">
+                    {t("columns.status")}
+                  </th>
+                  <th className="px-3 py-2 font-semibold">
+                    {t("columns.action")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {list.map((row: ListRow) => (
-                  <tr className="rounded-[14px] bg-[#f8fafb]" key={row.companyId}>
-                    <td className="rounded-l-[14px] px-3 py-3 font-semibold text-[#17191d]">{row.companyName}</td>
+                  <tr
+                    className="rounded-[14px] bg-[#f8fafb]"
+                    key={row.companyId}
+                  >
+                    <td className="rounded-l-[14px] px-3 py-3 font-semibold text-[#17191d]">
+                      {row.companyName}
+                    </td>
                     <td className="px-3 py-3 text-[#626970]">{row.city}</td>
-                    <td className="px-3 py-3 tabular-nums text-[#626970]">{row.ice || "—"}</td>
-                    <td className="px-3 py-3 text-[#626970]">{row.rcNumber || "—"}</td>
-                    <td className="hidden px-3 py-3 text-[#626970] xl:table-cell">{row.legalRepresentative || "—"}</td>
+                    <td className="px-3 py-3 tabular-nums text-[#626970]">
+                      {row.ice || "—"}
+                    </td>
+                    <td className="px-3 py-3 text-[#626970]">
+                      {row.rcNumber || "—"}
+                    </td>
+                    <td className="hidden px-3 py-3 text-[#626970] xl:table-cell">
+                      {row.legalRepresentative || "—"}
+                    </td>
                     <td className="px-3 py-3 text-[#626970]">
                       {row.submittedAt
-                        ? new Date(row.submittedAt).toLocaleDateString(locale, {
+                        ? formatMarketplaceDateTime(row.submittedAt, locale, {
                             day: "2-digit",
                             month: "short",
                             year: "numeric",
                           })
                         : "—"}
                     </td>
-                    <td className="px-3 py-3 tabular-nums text-[#626970]">{row.documentCount}</td>
+                    <td className="px-3 py-3 tabular-nums text-[#626970]">
+                      {row.documentCount}
+                    </td>
                     <td className="px-3 py-3">
                       <StatusPill status={row.status} />
                     </td>
@@ -189,7 +226,7 @@ export function AdminVerificationPanel({
         />
       ) : null}
       <span className="sr-only">{tDash("navVerification")}</span>
-    </AdminShell>
+    </AdminPage>
   );
 }
 
@@ -202,7 +239,9 @@ function StatusPill({ status }: { status: TabStatus }) {
         ? "bg-[#e7f8ee] text-[#157a3e]"
         : "bg-[#fdecec] text-[#b42318]";
   return (
-    <span className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-semibold ${styles}`}>
+    <span
+      className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-semibold ${styles}`}
+    >
       {t(`tabs.${status}`)}
     </span>
   );
@@ -223,8 +262,12 @@ function ReviewDrawer({
   const tUx = useTranslations("ux");
   const locale = useLocale();
   const titleId = useId();
-  const review = useQuery(api.admin.verification.getCompanyVerificationReview, { companyId });
-  const approve = useMutation(api.admin.verification.approveCompanyVerification);
+  const review = useQuery(api.admin.verification.getCompanyVerificationReview, {
+    companyId,
+  });
+  const approve = useMutation(
+    api.admin.verification.approveCompanyVerification,
+  );
   const reject = useMutation(api.admin.verification.rejectCompanyVerification);
   const [reason, setReason] = useState("");
   const [confirm, setConfirm] = useState<"approve" | "reject" | null>(null);
@@ -266,7 +309,12 @@ function ReviewDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/45">
-      <button aria-label={t("close")} className="absolute inset-0" onClick={onClose} type="button" />
+      <button
+        aria-label={t("close")}
+        className="absolute inset-0"
+        onClick={onClose}
+        type="button"
+      />
       <aside
         aria-labelledby={titleId}
         aria-modal="true"
@@ -275,8 +323,13 @@ function ReviewDrawer({
       >
         <div className="flex items-start justify-between gap-3 border-b border-[#eef1f4] px-5 py-4">
           <div>
-            <p className="text-xs font-semibold tracking-[0.08em] text-[#8b919a] uppercase">{t("reviewTitle")}</p>
-            <h2 className="mt-1 text-xl font-semibold tracking-[-0.02em]" id={titleId}>
+            <p className="text-xs font-semibold tracking-[0.08em] text-[#8b919a] uppercase">
+              {t("reviewTitle")}
+            </p>
+            <h2
+              className="mt-1 text-xl font-semibold tracking-[-0.02em]"
+              id={titleId}
+            >
               {review?.companyName ?? t("loadingReview")}
             </h2>
           </div>
@@ -306,7 +359,7 @@ function ReviewDrawer({
                 {review.submittedAt ? (
                   <span className="text-sm text-[#8b919a]">
                     {t("submittedAt", {
-                      date: new Date(review.submittedAt).toLocaleString(locale),
+                      date: formatMarketplaceDateTime(review.submittedAt, locale),
                     })}
                   </span>
                 ) : null}
@@ -315,17 +368,32 @@ function ReviewDrawer({
               <Section title={t("sections.public")}>
                 <Field label={t("fields.company")} value={review.companyName} />
                 <Field label={t("fields.city")} value={review.city} />
-                <Field label={t("fields.description")} value={review.description || "—"} />
-                <Field label={t("fields.publicPhone")} value={review.publicPhone || "—"} />
+                <Field
+                  label={t("fields.description")}
+                  value={review.description || "—"}
+                />
+                <Field
+                  label={t("fields.publicPhone")}
+                  value={review.publicPhone || "—"}
+                />
               </Section>
 
               <Section title={t("sections.legal")}>
-                <Field label={t("fields.legalName")} value={review.legalName || "—"} />
+                <Field
+                  label={t("fields.legalName")}
+                  value={review.legalName || "—"}
+                />
                 <Field label={t("fields.ice")} value={review.ice || "—"} />
                 <Field label={t("fields.rc")} value={review.rcNumber || "—"} />
-                <Field label={t("fields.representative")} value={review.legalRepresentative || "—"} />
+                <Field
+                  label={t("fields.representative")}
+                  value={review.legalRepresentative || "—"}
+                />
                 <Field label={t("fields.phone")} value={review.phone || "—"} />
-                <Field label={t("fields.address")} value={review.address || "—"} />
+                <Field
+                  label={t("fields.address")}
+                  value={review.address || "—"}
+                />
               </Section>
 
               <Section title={t("sections.documents")}>
@@ -339,8 +407,12 @@ function ReviewDrawer({
                         key={document.documentId}
                       >
                         <span className="min-w-0">
-                          <span className="block text-sm font-semibold">{documentTypeLabel(t, document.documentType)}</span>
-                          <span className="block truncate text-xs text-[#8b919a]">{document.fileName}</span>
+                          <span className="block text-sm font-semibold">
+                            {documentTypeLabel(t, document.documentType)}
+                          </span>
+                          <span className="block truncate text-xs text-[#8b919a]">
+                            {document.fileName}
+                          </span>
                         </span>
                         {document.downloadUrl ? (
                           <a
@@ -352,7 +424,9 @@ function ReviewDrawer({
                             {t("openDocument")}
                           </a>
                         ) : (
-                          <span className="text-xs text-[#8b919a]">{t("documentUnavailable")}</span>
+                          <span className="text-xs text-[#8b919a]">
+                            {t("documentUnavailable")}
+                          </span>
                         )}
                       </li>
                     ))}
@@ -362,7 +436,9 @@ function ReviewDrawer({
 
               {review.latestRejectionReason ? (
                 <Section title={t("sections.rejection")}>
-                  <p className="text-sm text-[#b42318]">{review.latestRejectionReason}</p>
+                  <p className="text-sm text-[#b42318]">
+                    {review.latestRejectionReason}
+                  </p>
                 </Section>
               ) : null}
 
@@ -372,15 +448,22 @@ function ReviewDrawer({
                 ) : (
                   <ul className="space-y-3">
                     {review.history.map((item: HistoryItem) => (
-                      <li className="rounded-[12px] border border-[#eef1f4] px-3 py-3 text-sm" key={item.historyId}>
+                      <li
+                        className="rounded-[12px] border border-[#eef1f4] px-3 py-3 text-sm"
+                        key={item.historyId}
+                      >
                         <p className="font-semibold text-[#17191d]">
-                          {statusLabel(t, item.oldStatus)} → {statusLabel(t, item.newStatus)}
+                          {statusLabel(t, item.oldStatus)} →{" "}
+                          {statusLabel(t, item.newStatus)}
                         </p>
                         <p className="mt-1 text-[#8b919a]">
-                          {formatActor(item.changedBy)} · {new Date(item.changedAt).toLocaleString(locale)}
+                          {formatActor(item.changedBy)} ·{" "}
+                          {formatMarketplaceDateTime(item.changedAt, locale)}
                         </p>
                         {item.rejectionReason ? (
-                          <p className="mt-2 text-[#b42318]">{item.rejectionReason}</p>
+                          <p className="mt-2 text-[#b42318]">
+                            {item.rejectionReason}
+                          </p>
                         ) : null}
                       </li>
                     ))}
@@ -392,7 +475,10 @@ function ReviewDrawer({
                 <Section title={t("sections.actions")}>
                   {confirm === "reject" ? (
                     <div className="space-y-3">
-                      <label className="block text-sm font-medium" htmlFor={`${titleId}-reason`}>
+                      <label
+                        className="block text-sm font-medium"
+                        htmlFor={`${titleId}-reason`}
+                      >
                         {t("rejectReason")}
                       </label>
                       <textarea
@@ -422,7 +508,9 @@ function ReviewDrawer({
                     </div>
                   ) : confirm === "approve" ? (
                     <div className="space-y-3">
-                      <p className="text-sm text-[#626970]">{t("confirmApproveLead")}</p>
+                      <p className="text-sm text-[#626970]">
+                        {t("confirmApproveLead")}
+                      </p>
                       <div className="flex flex-wrap gap-2">
                         <button
                           className={`min-h-11 rounded-full bg-[#157a3e] px-4 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`}
@@ -470,7 +558,13 @@ function ReviewDrawer({
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="rounded-[16px] border border-[#eef1f4] p-4">
       <h3 className="text-sm font-semibold text-[#17191d]">{title}</h3>
@@ -482,7 +576,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs font-semibold tracking-[0.04em] text-[#a0a6ae] uppercase">{label}</p>
+      <p className="text-xs font-semibold tracking-[0.04em] text-[#a0a6ae] uppercase">
+        {label}
+      </p>
       <p className="mt-1 text-sm text-[#17191d]">{value}</p>
     </div>
   );
@@ -517,7 +613,10 @@ function statusLabel(
   return t("status.rejected");
 }
 
-function resolveError(error: unknown, tUx: ReturnType<typeof useTranslations<"ux">>) {
+function resolveError(
+  error: unknown,
+  tUx: ReturnType<typeof useTranslations<"ux">>,
+) {
   const message = error instanceof Error ? error.message : "";
   const code = findKnownCodeInText(message);
   if (code && code !== "UNKNOWN" && code !== "NETWORK") {

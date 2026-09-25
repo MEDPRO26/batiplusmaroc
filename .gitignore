@@ -80,3 +80,5 @@ test
 .turbo/
 Thumbs.db
 Desktop.ini
+
+design-qa-artifacts/

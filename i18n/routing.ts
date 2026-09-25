@@ -161,6 +161,10 @@ export const routing = defineRouting({
       fr: "/admin/projets",
       en: "/admin/projects",
     },
+    "/admin/site-visits": {
+      fr: "/admin/visites-techniques",
+      en: "/admin/site-visits",
+    },
     "/admin/verification": {
       fr: "/admin/verification",
       en: "/admin/verification",

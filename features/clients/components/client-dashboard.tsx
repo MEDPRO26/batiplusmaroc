@@ -8,6 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { DashboardCardsSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { routes } from "@/lib/routes";
 
 export type Project = FunctionReturnType<typeof api.projects.index.getMyProjects>[number];
@@ -340,7 +341,7 @@ export function greetingPeriod(hour: number): "morning" | "afternoon" | "evening
 }
 
 function casablancaHour(locale: string) {
-  const value = new Intl.DateTimeFormat(locale, { hour: "2-digit", hourCycle: "h23", timeZone: "Africa/Casablanca" }).format(new Date());
+  const value = formatMarketplaceDateTime(new Date(), locale, { hour: "2-digit", hourCycle: "h23" });
   return Number.parseInt(value, 10);
 }
 

@@ -38,6 +38,7 @@ export const routes = {
   companyPortfolio: "/espace-entreprise/portfolio",
   admin: "/admin",
   adminProjects: "/admin/projects",
+  adminSiteVisits: "/admin/site-visits",
   adminVerification: "/admin/verification",
   seoRoot: "/seo",
   seoDashboard: "/seo/dashboard",

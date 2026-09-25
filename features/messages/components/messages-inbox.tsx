@@ -1,18 +1,19 @@
 "use client";
 
-import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useAction, useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import Image from "next/image";
-import { useFormatter, useTranslations } from "next-intl";
-import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
+import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { PageSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
-import { mapAppError } from "@/lib/errors/map-app-error";
+import { mapAppError, mapConvexFailure } from "@/lib/errors/map-app-error";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
-import { ConversationSiteAssessment } from "@/features/site-assessments/components/site-assessment-panel";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
+import { ConversationMarketplaceWorkflow } from "@/features/marketplace/components/conversation-marketplace-workflow";
 
 type DashboardUser = {
   accountType: "client" | "company" | "admin" | "seo_team" | null;
@@ -21,6 +22,40 @@ type DashboardUser = {
 
 export type MessageThread = FunctionReturnType<typeof api.messages.index.listMyThreads>[number];
 type OwnedProject = FunctionReturnType<typeof api.projects.index.getMyProjects>[number];
+
+const MESSAGE_PDF_MAX_BYTES = 10 * 1024 * 1024;
+
+type PendingMessageAttachment = {
+  fileName: string;
+  sizeBytes: number;
+  status: "uploading" | "ready";
+  uploadToken?: string;
+  storageId?: Id<"_storage">;
+};
+
+export function validateMessagePdfSelection(file: Pick<File, "type" | "size">) {
+  if (file.type.toLowerCase() !== "application/pdf") return "onlyPdf" as const;
+  if (file.size < 1 || file.size > MESSAGE_PDF_MAX_BYTES) return "fileTooLarge" as const;
+  return null;
+}
+
+export function formatMessageFileSize(sizeBytes: number) {
+  if (sizeBytes < 1024 * 1024) return `${Math.max(1, Math.round(sizeBytes / 1024))} KB`;
+  return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function MessagePdfCard({ fileName, sizeBytes, href, label, actionLabel, onRemove, pendingLabel }: {
+  fileName: string;
+  sizeBytes: number;
+  href?: string;
+  label: string;
+  actionLabel: string;
+  onRemove?: () => void;
+  pendingLabel?: string;
+}) {
+  const content = <><span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-lg bg-red-50 text-xs font-bold text-red-700">PDF</span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold" title={fileName}>{fileName}</span><span className="block text-xs opacity-75">{formatMessageFileSize(sizeBytes)}{pendingLabel ? ` · ${pendingLabel}` : ""}</span></span></>;
+  return <div aria-label={label} className="mt-2 flex min-w-0 items-center gap-2 rounded-xl border border-current/20 bg-white/10 p-2.5">{href ? <a className="flex min-w-0 flex-1 items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current" href={href} rel="noreferrer" target="_blank" title={fileName}>{content}<span className="shrink-0 text-xs font-semibold underline-offset-2 hover:underline">{actionLabel} →</span></a> : <div className="flex min-w-0 flex-1 items-center gap-2">{content}</div>}{onRemove ? <button aria-label={actionLabel} className="grid size-9 shrink-0 place-items-center rounded-full border border-current/20 text-lg hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current" onClick={onRemove} type="button">×</button> : null}</div>;
+}
 
 export function resolveMessagesRedirect(user: DashboardUser) {
   if (user === undefined) return null;
@@ -242,14 +277,20 @@ export function MessagesInboxView({
 function ActiveConversation({ accountType, conversationId }: { accountType: "client" | "company"; conversationId: Id<"conversations"> }) {
   const t = useTranslations("messages");
   const tUx = useTranslations("ux");
-  const format = useFormatter();
+  const locale = useLocale();
   const conversation = useQuery(api.messages.index.getConversation, { conversationId });
   const { results, status, loadMore } = usePaginatedQuery(api.messages.index.listMessages, { conversationId }, { initialNumItems: 30 });
   const sendMessage = useMutation(api.messages.index.sendMessage);
+  const generateAttachmentUploadUrl = useMutation(api.messages.attachments.generateAttachmentUploadUrl);
+  const discardAttachmentUpload = useMutation(api.messages.attachments.discardAttachmentUpload);
+  const sendMessageWithAttachment = useAction(api.messages.attachments.sendMessageWithAttachment);
   const markRead = useMutation(api.messages.index.markConversationRead);
   const [body, setBody] = useState("");
+  const [attachment, setAttachment] = useState<PendingMessageAttachment | null>(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const attachmentOperationRef = useRef(0);
   const endRef = useRef<HTMLDivElement>(null);
   const newestMessageRef = useRef<string | null>(null);
   const ordered = useMemo(() => [...results].reverse(), [results]);
@@ -265,17 +306,99 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
     }
   }, [newestMessageId]);
 
+  async function removeAttachment() {
+    attachmentOperationRef.current += 1;
+    const current = attachment;
+    setAttachment(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (current?.uploadToken) {
+      try {
+        await discardAttachmentUpload({
+          conversationId,
+          uploadToken: current.uploadToken,
+          ...(current.storageId ? { storageId: current.storageId } : {}),
+        });
+      } catch {
+        // The intent may already be expired or claimed; removal remains safe locally.
+      }
+    }
+  }
+
+  async function onAttachmentChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    const validationKey = validateMessagePdfSelection(file);
+    if (validationKey) {
+      setError(t(validationKey));
+      return;
+    }
+    if (attachment) await removeAttachment();
+    const operationId = attachmentOperationRef.current + 1;
+    attachmentOperationRef.current = operationId;
+    setError(null);
+    setAttachment({ fileName: file.name, sizeBytes: file.size, status: "uploading" });
+    let uploadToken: string | undefined;
+    let storageId: Id<"_storage"> | undefined;
+    try {
+      const upload = await generateAttachmentUploadUrl({
+        conversationId,
+        fileName: file.name,
+        contentType: file.type,
+        size: file.size,
+      });
+      uploadToken = upload.uploadToken;
+      const response = await fetch(upload.uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/pdf" },
+        body: file,
+      });
+      if (!response.ok) throw new Error("MESSAGE_ATTACHMENT_UPLOAD_FAILED");
+      const uploaded = await response.json() as { storageId?: Id<"_storage"> };
+      if (!uploaded.storageId) throw new Error("MESSAGE_ATTACHMENT_UPLOAD_FAILED");
+      storageId = uploaded.storageId;
+      if (operationId !== attachmentOperationRef.current) {
+        await discardAttachmentUpload({ conversationId, uploadToken, storageId });
+        return;
+      }
+      setAttachment({ fileName: upload.fileName, sizeBytes: file.size, status: "ready", uploadToken, storageId });
+    } catch (cause) {
+      if (operationId === attachmentOperationRef.current) {
+        setAttachment(null);
+        setError(cause instanceof Error && cause.message === "MESSAGE_ATTACHMENT_UPLOAD_FAILED" ? t("uploadFailed") : mapAppError(cause, (key) => tUx(key)));
+      }
+      if (uploadToken) {
+        try {
+          await discardAttachmentUpload({ conversationId, uploadToken, ...(storageId ? { storageId } : {}) });
+        } catch {
+          // A failed upload may not have produced storage to discard.
+        }
+      }
+    }
+  }
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     const normalized = body.trim();
-    if (!normalized || sending) return;
+    if ((!normalized && attachment?.status !== "ready") || sending || attachment?.status === "uploading") return;
     setSending(true);
     setError(null);
     try {
-      await sendMessage({ conversationId, body: normalized, clientMessageId: crypto.randomUUID() });
+      const clientMessageId = crypto.randomUUID();
+      if (attachment?.status === "ready" && attachment.uploadToken && attachment.storageId) {
+        await sendMessageWithAttachment({ conversationId, body: normalized, clientMessageId, uploadToken: attachment.uploadToken, storageId: attachment.storageId });
+        setAttachment(null);
+      } else {
+        await sendMessage({ conversationId, body: normalized, clientMessageId });
+      }
       setBody("");
     } catch (cause) {
-      setError(mapAppError(cause, (key) => tUx(key)));
+      const failure = mapConvexFailure(cause, (key) => tUx(key));
+      setError(failure.message);
+      if (failure.code === "INVALID_MESSAGE_PDF" || failure.code === "MESSAGE_ATTACHMENT_NOT_FOUND") {
+        setAttachment(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
     } finally {
       setSending(false);
     }
@@ -291,18 +414,19 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
       <div className="flex min-w-0 items-center gap-3"><Link aria-label={t("backToConversations")} className="grid size-11 shrink-0 place-items-center rounded-full border border-brand-border text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:hidden" href={routes.messages}>←</Link><div className="min-w-0"><div className="flex items-center gap-2"><h2 className="m-0 truncate text-lg font-semibold text-ink">{conversation.otherPartyName || t("unknownParty")}</h2><span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-dark">{conversation.status === "active" ? t("statusActive") : t("statusClosed")}</span></div><Link className="mt-1 block truncate text-sm text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={projectHref}>{conversation.projectTitle ?? t("untitledProject")}</Link></div></div>
       {accountType === "client" && conversation.companySlug ? <Link className="text-sm font-semibold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={{ pathname: "/entreprises/[slug]", params: { slug: conversation.companySlug } }}>{t("viewCompanyProfile")}</Link> : null}
     </header>
-    <ConversationSiteAssessment conversationId={conversationId} />
+    <ConversationMarketplaceWorkflow conversationId={conversationId} />
     <div aria-live="polite" aria-relevant="additions text" className="flex flex-1 flex-col overflow-y-auto bg-[#fbfcfd] px-4 py-5 sm:px-8" role="log">
       {status === "CanLoadMore" ? <button className="mx-auto mb-5 min-h-11 rounded-full border border-brand-border bg-white px-4 text-sm font-semibold text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={() => loadMore(30)} type="button">{t("loadOlder")}</button> : null}
       {status === "LoadingMore" ? <p className="mb-5 text-center text-sm text-muted">{t("loadingOlder")}</p> : null}
-      {ordered.length === 0 ? <div className="my-auto text-center"><h3 className="m-0 text-lg font-semibold text-ink">{t("startConversation")}</h3><p className="mt-2 mb-0 text-sm text-muted">{t("startConversationDescription")}</p></div> : <ol className="m-0 mt-auto list-none space-y-3 p-0">{ordered.map((message) => <li className={`flex ${message.isMine ? "justify-end" : "justify-start"}`} key={message.id}><div className={`max-w-[min(82%,38rem)] rounded-2xl px-4 py-3 ${message.isMine ? "rounded-br-md bg-brand text-white" : "rounded-bl-md border border-brand-border bg-white text-ink"}`}><p className="m-0 whitespace-pre-wrap break-words text-sm leading-6">{message.body}</p><time className={`mt-1 block text-end text-[11px] ${message.isMine ? "text-white/75" : "text-muted"}`} dateTime={new Date(message.createdAt).toISOString()}>{format.dateTime(new Date(message.createdAt), { hour: "2-digit", minute: "2-digit" })}</time></div></li>)}</ol>}
+      {ordered.length === 0 ? <div className="my-auto text-center"><h3 className="m-0 text-lg font-semibold text-ink">{t("startConversation")}</h3><p className="mt-2 mb-0 text-sm text-muted">{t("startConversationDescription")}</p></div> : <ol className="m-0 mt-auto list-none space-y-3 p-0">{ordered.map((message) => <li className={`flex ${message.isMine ? "justify-end" : "justify-start"}`} key={message.id}><div className={`max-w-[min(88%,38rem)] overflow-hidden rounded-2xl px-4 py-3 ${message.isMine ? "rounded-br-md bg-brand text-white" : "rounded-bl-md border border-brand-border bg-white text-ink"}`}>{message.body ? <p className="m-0 whitespace-pre-wrap break-words text-sm leading-6">{message.body}</p> : null}{message.attachment ? <MessagePdfCard actionLabel={t("openPdf")} fileName={message.attachment.fileName} href={message.attachment.downloadUrl} label={t("pdfAttachment")} sizeBytes={message.attachment.sizeBytes} /> : null}<time className={`mt-1 block text-end text-[11px] ${message.isMine ? "text-white/75" : "text-muted"}`} dateTime={new Date(message.createdAt).toISOString()}>{formatMarketplaceDateTime(message.createdAt, locale, { hour: "2-digit", minute: "2-digit" })}</time></div></li>)}</ol>}
       <div ref={endRef} />
     </div>
     {conversation.status === "active" ? <form className="border-t border-brand-border bg-white p-4 sm:p-5" onSubmit={onSubmit}>
       {error ? <p className="mb-3 rounded-xl bg-[#fff4f2] px-4 py-3 text-sm text-[#8a2f28]" role="alert">{error}</p> : null}
+      {attachment ? <div className="mb-3 max-w-lg text-ink"><MessagePdfCard actionLabel={t("removeAttachment")} fileName={attachment.fileName} label={t("pdfAttachment")} onRemove={() => void removeAttachment()} pendingLabel={attachment.status === "uploading" ? t("uploadingAttachment") : t("attachmentReady")} sizeBytes={attachment.sizeBytes} /></div> : null}
       <label className="sr-only" htmlFor="message-composer">{t("composerLabel")}</label>
-      <div className="flex items-end gap-3"><textarea className="max-h-40 min-h-12 flex-1 resize-y rounded-2xl border border-brand-border px-4 py-3 text-sm text-ink outline-none focus:border-brand focus-visible:shadow-[0_0_0_3px_rgb(5_79_132/0.14)]" id="message-composer" maxLength={4000} onChange={(event) => setBody(event.target.value)} placeholder={t("composerPlaceholder")} rows={1} value={body} /><button className="min-h-12 shrink-0 rounded-full bg-brand px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50" disabled={sending || !body.trim()} type="submit">{sending ? t("sending") : t("send")}</button></div>
-      <p className="mt-2 mb-0 text-end text-xs text-muted">{t("characterCount", { count: body.length, max: 4000 })}</p>
+      <div className="flex items-end gap-2 sm:gap-3"><textarea className="max-h-40 min-h-12 min-w-0 flex-1 resize-y rounded-2xl border border-brand-border px-4 py-3 text-sm text-ink outline-none focus:border-brand focus-visible:shadow-[0_0_0_3px_rgb(5_79_132/0.14)]" id="message-composer" maxLength={4000} onChange={(event) => setBody(event.target.value)} placeholder={t("composerPlaceholder")} rows={1} value={body} />{accountType === "company" ? <><input accept="application/pdf,.pdf" className="sr-only" onChange={(event) => void onAttachmentChange(event)} ref={fileInputRef} type="file" /><button aria-label={t("attachPdf")} className="grid size-12 shrink-0 place-items-center rounded-full border border-brand-border text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50" disabled={sending || attachment?.status === "uploading"} onClick={() => fileInputRef.current?.click()} title={t("attachPdf")} type="button"><PaperclipIcon /></button></> : null}<button className="min-h-12 shrink-0 rounded-full bg-brand px-4 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 sm:px-5" disabled={sending || attachment?.status === "uploading" || (!body.trim() && attachment?.status !== "ready")} type="submit">{sending ? t("sending") : t("send")}</button></div>
+      <div className="mt-2 flex flex-wrap items-start justify-between gap-2"><div>{accountType === "company" ? <p className="m-0 text-xs text-muted">{t("finalQuoteNotice")}</p> : null}</div><p className="m-0 text-end text-xs text-muted">{t("characterCount", { count: body.length, max: 4000 })}</p></div>
     </form> : <p className="m-0 border-t border-brand-border bg-surface-muted px-5 py-4 text-sm text-muted">{t("closedNotice")}</p>}
   </section>;
 }
@@ -496,4 +620,5 @@ function InboxMenu({ onReset }: { onReset: () => void }) {
 function SearchIcon() { return <svg aria-hidden className="size-[18px]" fill="none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.7" /><path d="m16 16 4 4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" /></svg>; }
 function ChevronIcon() { return <svg aria-hidden className="size-3.5" fill="none" viewBox="0 0 12 12"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg>; }
 function MoreIcon() { return <svg aria-hidden className="size-5" fill="currentColor" viewBox="0 0 20 20"><circle cx="4.5" cy="10" r="1.4" /><circle cx="10" cy="10" r="1.4" /><circle cx="15.5" cy="10" r="1.4" /></svg>; }
+function PaperclipIcon() { return <svg aria-hidden className="size-5" fill="none" viewBox="0 0 24 24"><path d="m8.5 12.5 6.2-6.2a3 3 0 0 1 4.3 4.2l-8.1 8.1a5 5 0 0 1-7.1-7.1l7.6-7.6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" /></svg>; }
 function ChatIcon() { return <svg aria-hidden className="size-8" fill="none" viewBox="0 0 32 32"><path d="M8 9.5h16A3.5 3.5 0 0 1 27.5 13v7A3.5 3.5 0 0 1 24 23.5H16l-5.5 4v-4H8A3.5 3.5 0 0 1 4.5 20v-7A3.5 3.5 0 0 1 8 9.5Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.7" /></svg>; }
