@@ -4,11 +4,12 @@ import type { FunctionReturnType } from "convex/server";
 import { useMutation, useQuery } from "convex/react";
 import { ArrowRight, BadgeCheck, CalendarDays, Check, Clock3, ExternalLink, LockKeyhole, MessageSquareText, RefreshCw, Star, WalletCards, X } from "lucide-react";
 import Image from "next/image";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Link } from "@/i18n/navigation";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { mapAppError } from "@/lib/errors";
 import { routes } from "@/lib/routes";
 
@@ -64,6 +65,7 @@ export function ClientReceivedQuotes({ projectId }: { projectId: Id<"projects"> 
 export function ReceivedQuoteCard({ quote, onOpen }: { quote: ReceivedQuote; onOpen: () => void }) {
   const t = useTranslations("receivedQuotes");
   const format = useFormatter();
+  const locale = useLocale();
   const initials = quote.company.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("");
   return (
     <article className="flex h-full flex-col rounded-2xl border border-brand-border bg-white p-5 shadow-[0_8px_28px_rgb(23_61_99/0.045)] sm:p-6">
@@ -85,7 +87,7 @@ export function ReceivedQuoteCard({ quote, onOpen }: { quote: ReceivedQuote; onO
       </dl>
       <p className="mt-4 mb-0 line-clamp-2 text-sm leading-6 text-ink/80">{quote.scope}</p>
       <p className="mt-2 mb-0 line-clamp-2 text-sm leading-6 text-muted">{quote.message}</p>
-      <p className="mt-4 mb-0 text-xs text-muted">{t("submittedAt", { date: format.dateTime(quote.submittedAt, { dateStyle: "medium" }) })}</p>
+      <p className="mt-4 mb-0 text-xs text-muted">{t("submittedAt", { date: formatMarketplaceDateTime(quote.submittedAt, locale, { dateStyle: "medium" }) })}</p>
       <div className="mt-auto flex flex-wrap items-center gap-3 pt-5">
         <button className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90" onClick={onOpen} type="button">{t("openQuote")}</button>
         {quote.company.slug ? <Link className="inline-flex min-h-11 items-center gap-1.5 px-2 text-sm font-semibold text-brand hover:underline" href={{ pathname: "/entreprises/[slug]", params: { slug: quote.company.slug } }} target="_blank">{t("viewProfile")}<ExternalLink aria-hidden className="size-4" /></Link> : null}
@@ -189,12 +191,13 @@ function QuoteReviewDialog({ quoteId, onClose }: { quoteId: Id<"projectQuotes">;
 export function QuoteReviewContent({ quote, conversationId = null, conversationLookupPending = false, conversationRecoveryPending = false, onReview, onRecoverConversation, pendingAction, confirmDecline, onCancelDecline, onConfirmDecline, error, success }: { quote: ReceivedQuoteDetail; conversationId?: Id<"conversations"> | null; conversationLookupPending?: boolean; conversationRecoveryPending?: boolean; onReview: (action: ReviewAction) => void; onRecoverConversation?: () => void; pendingAction: ReviewAction | null; confirmDecline: boolean; onCancelDecline: () => void; onConfirmDecline: () => void; error: string | null; success: string | null }) {
   const t = useTranslations("receivedQuotes");
   const format = useFormatter();
+  const locale = useLocale();
   const canShortlist = quote.status === "submitted" || quote.status === "viewed";
   const canAct = canShortlist || quote.status === "shortlisted";
   const startDate = new Date(`${quote.availableStartDate}T12:00:00Z`);
   return (
     <div className="p-5 sm:p-8">
-      <div className="flex flex-wrap items-center justify-between gap-3"><QuoteStatus status={quote.status} /><time className="text-xs text-muted">{t("submittedAt", { date: format.dateTime(quote.submittedAt, { dateStyle: "medium" }) })}</time></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><QuoteStatus status={quote.status} /><time className="text-xs text-muted">{t("submittedAt", { date: formatMarketplaceDateTime(quote.submittedAt, locale, { dateStyle: "medium" }) })}</time></div>
       <section className="mt-6 rounded-2xl border border-brand-border bg-[#fbfcfc] p-5">
         <div className="flex items-start gap-3">
           <CompanyLogo alt={quote.company.name} initials={quote.company.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("")} url={quote.company.logoUrl} />
@@ -206,7 +209,7 @@ export function QuoteReviewContent({ quote, conversationId = null, conversationL
       {success ? <p aria-live="polite" className="mt-5 rounded-xl border border-[#b9dac7] bg-[#eff8f2] px-4 py-3 text-sm font-semibold text-[#21633d]">{success}</p> : null}
       {error ? <p className="mt-5 rounded-xl border border-[#edc7c2] bg-[#fff4f2] px-4 py-3 text-sm text-[#8a2f28]" role="alert">{error}</p> : null}
       <dl className="mt-6 grid gap-3 sm:grid-cols-3">
-        <DetailMetric icon={<WalletCards aria-hidden className="size-5" />} label={t("price")} value={format.number(quote.estimatedPrice, { style: "currency", currency: "MAD", maximumFractionDigits: 2 })} />
+        <DetailMetric icon={<WalletCards aria-hidden className="size-5" />} label={t("price")} value={format.number(quote.estimatedPrice, { style: "currency", currency: "MAD", maximumFractionDigits: 0 })} />
         <DetailMetric icon={<Clock3 aria-hidden className="size-5" />} label={t("duration")} value={t("durationValue", { count: quote.estimatedDuration })} />
         <DetailMetric icon={<CalendarDays aria-hidden className="size-5" />} label={t("availableStart")} value={format.dateTime(startDate, { dateStyle: "medium", timeZone: "UTC" })} />
       </dl>

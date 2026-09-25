@@ -3,7 +3,7 @@
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { ChevronDown, Check as CheckIcon, ExternalLink, Search as SearchIconLucide } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { api } from "@/convex/_generated/api";
@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
 
@@ -250,6 +251,7 @@ function ProjectCard({ project, selected, onOpen }: { project: Project; selected
   const t = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
+  const locale = useLocale();
   const category = project.primaryCategory === "other" && project.customCategoryText
     ? project.customCategoryText
     : tWizard(`categoryOptions.${project.primaryCategory}`);
@@ -268,7 +270,7 @@ function ProjectCard({ project, selected, onOpen }: { project: Project; selected
       <div className="pointer-events-none relative z-0">
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted">
           <span>{tWizard(`cityOptions.${project.city}`)}</span><span aria-hidden>·</span><span>{category}</span>
-          {project.publishedAt ? <><span aria-hidden>·</span><time dateTime={new Date(project.publishedAt).toISOString()}>{t("card.published", { date: format.dateTime(project.publishedAt, { dateStyle: "medium" }) })}</time></> : null}
+          {project.publishedAt ? <><span aria-hidden>·</span><time dateTime={new Date(project.publishedAt).toISOString()}>{t("card.published", { date: formatMarketplaceDateTime(project.publishedAt, locale, { dateStyle: "medium" }) })}</time></> : null}
         </div>
         <h2 className="mt-2 mb-0 text-[1.18rem] leading-7 font-semibold tracking-[-0.025em] text-ink transition-colors duration-150 group-hover:text-brand">
           {project.title}
@@ -282,7 +284,7 @@ function ProjectCard({ project, selected, onOpen }: { project: Project; selected
         <p className="mt-3 mb-0 line-clamp-2 text-sm leading-6 text-ink/90">{project.description}</p>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <p className="m-0 text-xs leading-5 text-muted">
-            {project.client ? t("card.client", { name: project.client.displayName, date: format.dateTime(project.client.joinedAt, { month: "short", year: "numeric" }) }) : t("card.clientPrivate")}
+            {project.client ? t("card.client", { name: project.client.displayName, date: formatMarketplaceDateTime(project.client.joinedAt, locale, { month: "short", year: "numeric" }) }) : t("card.clientPrivate")}
           </p>
           <span className="text-sm font-semibold text-brand">{t("viewProject")}</span>
         </div>
@@ -407,6 +409,7 @@ function ProjectSheetContent({ project }: { project: Details }) {
   const t = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
+  const locale = useLocale();
   const category = project.primaryCategory === "other" && project.customCategoryText
     ? project.customCategoryText
     : tWizard(`categoryOptions.${project.primaryCategory}`);
@@ -431,7 +434,7 @@ function ProjectSheetContent({ project }: { project: Details }) {
               <>
                 <span aria-hidden>·</span>
                 <time dateTime={new Date(project.publishedAt).toISOString()}>
-                  {t("card.published", { date: format.dateTime(project.publishedAt, { dateStyle: "medium" }) })}
+                  {t("card.published", { date: formatMarketplaceDateTime(project.publishedAt, locale, { dateStyle: "medium" }) })}
                 </time>
               </>
             ) : null}
@@ -511,7 +514,7 @@ function QuoteActionRail({ project }: { project: Details }) {
 
 function ClientInfoBlock({ project }: { project: Details }) {
   const t = useTranslations("companyProjects");
-  const format = useFormatter();
+  const locale = useLocale();
   const client = project.client;
   return (
     <section className="mt-8 border-t border-[#e4e8eb] pt-7 lg:mt-8">
@@ -522,7 +525,7 @@ function ClientInfoBlock({ project }: { project: Details }) {
           {client.city ? <p className="m-0 text-sm text-muted">{client.city}</p> : null}
           <p className="m-0 text-sm text-muted">
             {t("detail.clientSince", {
-              date: format.dateTime(client.joinedAt, { month: "long", year: "numeric" }),
+              date: formatMarketplaceDateTime(client.joinedAt, locale, { month: "long", year: "numeric" }),
             })}
           </p>
           <p className="m-0 text-sm text-muted">

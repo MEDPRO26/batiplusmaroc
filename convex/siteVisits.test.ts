@@ -303,4 +303,18 @@ describe("site visit scheduling", () => {
     const companyProjection = await asUser(state.t, state.company.userId).query(api.siteVisits.index.getForConversation, { conversationId: state.conversationId });
     expect(companyProjection.assessment?.visit).toMatchObject({ id: proposed.visitId, status: "confirmed", canCancel: true, canComplete: true });
   });
+
+  test("rejects site assessment invite after the final quote path starts", async () => {
+    const t = convexTest(schema, modules);
+    const clientId = await seedUser(t, "client");
+    const company = await seedCompany(t, "Atlas Build");
+    const projectId = await seedProject(t, clientId);
+    const quoteId = await seedQuote(t, projectId, company);
+    const opened = await asUser(t, clientId).mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "open_discussion" });
+    const conversationId = opened.conversationId!;
+    await asUser(t, clientId).mutation(api.finalQuotes.index.request, { conversationId });
+    const projection = await asUser(t, clientId).query(api.siteVisits.index.getForConversation, { conversationId });
+    expect(projection.canInvite).toBe(false);
+    await expect(asUser(t, clientId).mutation(api.siteVisits.index.invite, { conversationId })).rejects.toThrow("SITE_ASSESSMENT_FINAL_QUOTE_PATH_LOCKED");
+  });
 });

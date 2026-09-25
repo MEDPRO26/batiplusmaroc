@@ -465,6 +465,32 @@ export default defineSchema({
       "clientMessageId",
     ]),
 
+  messageAttachments: defineTable({
+    conversationId: v.id("conversations"),
+    messageId: v.id("messages"),
+    storageId: v.id("_storage"),
+    uploadedByUserId: v.id("users"),
+    kind: v.literal("pdf"),
+    originalFileName: v.string(),
+    mimeType: v.literal("application/pdf"),
+    sizeBytes: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_messageId", ["messageId"])
+    .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"]),
+
+  messageAttachmentUploadIntents: defineTable({
+    conversationId: v.id("conversations"),
+    userId: v.id("users"),
+    token: v.string(),
+    originalFileName: v.string(),
+    expectedContentType: v.literal("application/pdf"),
+    expectedSize: v.number(),
+    expiresAt: v.number(),
+    claimedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_token", ["token"]),
+
   companies: defineTable({
     name: v.optional(v.string()),
     legalName: v.optional(v.string()),

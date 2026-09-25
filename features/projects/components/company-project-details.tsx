@@ -2,11 +2,12 @@
 
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { api } from "@/convex/_generated/api";
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { ProjectFeedSkeleton, resolveCompanyProjectsRedirect } from "./company-project-marketplace";
 import { ProjectSiteAssessment } from "@/features/site-assessments/components/site-assessment-panel";
 
@@ -33,6 +34,7 @@ export function ProjectDetailsView({ project }: { project: Details }) {
   const t = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
+  const locale = useLocale();
   const category = project.primaryCategory === "other" && project.customCategoryText ? project.customCategoryText : tWizard(`categoryOptions.${project.primaryCategory}`);
   return (
     <main className="min-h-[calc(100dvh-4.5rem)] bg-[#f7f9fb]">
@@ -42,7 +44,7 @@ export function ProjectDetailsView({ project }: { project: Details }) {
           <article className="rounded-2xl border border-brand-border bg-white p-5 shadow-[0_1px_2px_rgb(23_61_99/0.04)] sm:p-8">
             <p className="m-0 text-xs font-semibold tracking-[0.08em] text-brand uppercase">{category}</p>
             <h1 className="mt-3 mb-0 text-[1.8rem] leading-9 font-semibold tracking-[-0.04em] text-ink sm:text-[2.25rem] sm:leading-[2.8rem]">{project.title}</h1>
-            <div className="mt-4 flex flex-wrap gap-x-3 gap-y-2 text-sm text-muted"><span>{tWizard(`cityOptions.${project.city}`)}</span>{project.neighborhood ? <><span aria-hidden>·</span><span>{project.neighborhood}</span></> : null}{project.publishedAt ? <><span aria-hidden>·</span><time dateTime={new Date(project.publishedAt).toISOString()}>{t("card.published", { date: format.dateTime(project.publishedAt, { dateStyle: "medium" }) })}</time></> : null}</div>
+            <div className="mt-4 flex flex-wrap gap-x-3 gap-y-2 text-sm text-muted"><span>{tWizard(`cityOptions.${project.city}`)}</span>{project.neighborhood ? <><span aria-hidden>·</span><span>{project.neighborhood}</span></> : null}{project.publishedAt ? <><span aria-hidden>·</span><time dateTime={new Date(project.publishedAt).toISOString()}>{t("card.published", { date: formatMarketplaceDateTime(project.publishedAt, locale, { dateStyle: "medium" }) })}</time></> : null}</div>
             <dl className="mt-7 grid gap-3 sm:grid-cols-2">
               <DetailField label={t("detail.budget")} value={tWizard(`budgetOptions.${project.budgetRange}`)} />
               <DetailField label={t("detail.timeline")} value={tWizard(`timelineOptions.${project.timeline}`)} />
@@ -50,7 +52,7 @@ export function ProjectDetailsView({ project }: { project: Details }) {
               <DetailField label={t("detail.surface")} value={project.surface !== null && !project.surfaceUnknown ? t("card.surface", { value: format.number(project.surface) }) : t("notSpecified")} />
             </dl>
             <section className="mt-8 border-t border-brand-border pt-7"><h2 className="m-0 text-lg font-semibold text-ink">{t("detail.description")}</h2><p className="mt-3 mb-0 whitespace-pre-wrap text-[0.95rem] leading-7 text-ink/80">{project.description}</p></section>
-            <section className="mt-8 border-t border-brand-border pt-7"><h2 className="m-0 text-lg font-semibold text-ink">{t("detail.clientTitle")}</h2><p className="mt-3 mb-0 text-sm leading-6 text-ink">{project.client ? project.client.displayName : t("card.clientPrivate")}</p>{project.client ? <p className="mt-1 mb-0 text-xs text-muted">{t("detail.clientSince", { date: format.dateTime(project.client.joinedAt, { month: "long", year: "numeric" }) })}</p> : null}</section>
+            <section className="mt-8 border-t border-brand-border pt-7"><h2 className="m-0 text-lg font-semibold text-ink">{t("detail.clientTitle")}</h2><p className="mt-3 mb-0 text-sm leading-6 text-ink">{project.client ? project.client.displayName : t("card.clientPrivate")}</p>{project.client ? <p className="mt-1 mb-0 text-xs text-muted">{t("detail.clientSince", { date: formatMarketplaceDateTime(project.client.joinedAt, locale, { month: "long", year: "numeric" }) })}</p> : null}</section>
           </article>
           <aside className="rounded-2xl border border-brand-border bg-white p-5 shadow-[0_8px_28px_rgb(23_61_99/0.06)] lg:sticky lg:top-24 sm:p-6">
             <div className="-mx-5 -mt-5 mb-5 overflow-hidden rounded-t-2xl sm:-mx-6 sm:-mt-6"><ProjectSiteAssessment projectId={project.id} /></div>

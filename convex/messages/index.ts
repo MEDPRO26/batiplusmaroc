@@ -33,12 +33,22 @@ const conversationDetailValidator = v.object({
   viewerType: senderTypeValidator,
 });
 
+const messageAttachmentValidator = v.object({
+  id: v.id("messageAttachments"),
+  kind: v.literal("pdf"),
+  fileName: v.string(),
+  mimeType: v.literal("application/pdf"),
+  sizeBytes: v.number(),
+  downloadUrl: v.string(),
+});
+
 const messageValidator = v.object({
   id: v.id("messages"),
   senderType: senderTypeValidator,
   body: v.string(),
   createdAt: v.number(),
   isMine: v.boolean(),
+  attachment: v.union(messageAttachmentValidator, v.null()),
 });
 
 type MessageCtx = QueryCtx | MutationCtx;
@@ -49,12 +59,11 @@ function isMessagingQuoteStatus(status: Doc<"projectQuotes">["status"]) {
   return status === "discussion_open";
 }
 
-async function requireConversationAccess(
+export async function requireConversationAccessForUser(
   ctx: MessageCtx,
+  userId: Id<"users">,
   conversationId: Id<"conversations">,
 ): Promise<{ conversation: Doc<"conversations">; viewer: Viewer }> {
-  const userId = await getAuthUserId(ctx);
-  if (!userId) throw new ConvexError("NOT_AUTHENTICATED");
   const user = await ctx.db.get(userId);
   if (!user) throw new ConvexError("USER_NOT_FOUND");
   const conversation = await ctx.db.get(conversationId);
@@ -83,6 +92,63 @@ async function requireConversationAccess(
   }
   if (!project || project.clientId !== conversation.clientId) throw new ConvexError("CONVERSATION_NOT_FOUND");
   return { conversation, viewer: { userId, viewerType } };
+}
+
+export async function requireConversationAccess(
+  ctx: MessageCtx,
+  conversationId: Id<"conversations">,
+) {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) throw new ConvexError("NOT_AUTHENTICATED");
+  return await requireConversationAccessForUser(ctx, userId, conversationId);
+}
+
+type PendingMessageAttachment = {
+  storageId: Id<"_storage">;
+  originalFileName: string;
+  sizeBytes: number;
+  uploadIntentId: Id<"messageAttachmentUploadIntents">;
+};
+
+export async function sendAuthorizedMessage(
+  ctx: MutationCtx,
+  conversation: Doc<"conversations">,
+  viewer: Viewer,
+  args: { body: string; clientMessageId?: string; attachment?: PendingMessageAttachment },
+) {
+  if (conversation.status !== "active") throw new ConvexError("CONVERSATION_CLOSED");
+  const body = args.body.trim();
+  if ((!body && !args.attachment) || body.length > MAX_MESSAGE_LENGTH) throw new ConvexError("INVALID_MESSAGE_BODY");
+  const clientMessageId = args.clientMessageId?.trim();
+  if (clientMessageId && (clientMessageId.length > 100 || !/^[A-Za-z0-9_-]+$/.test(clientMessageId))) throw new ConvexError("INVALID_MESSAGE_ID");
+  if (clientMessageId) {
+    const existing = await ctx.db.query("messages").withIndex("by_conversationId_and_senderUserId_and_clientMessageId", (q) => q.eq("conversationId", conversation._id).eq("senderUserId", viewer.userId).eq("clientMessageId", clientMessageId)).unique();
+    if (existing) {
+      const attachment = await ctx.db.query("messageAttachments").withIndex("by_messageId", (q) => q.eq("messageId", existing._id)).unique();
+      return { messageId: existing._id, attachmentId: attachment?._id ?? null, createdAt: existing.createdAt, duplicate: true };
+    }
+  }
+  const now = Date.now();
+  const lastSentAt = viewer.viewerType === "client" ? conversation.clientLastSentAt : conversation.companyLastSentAt;
+  if (lastSentAt !== undefined && now - lastSentAt < MIN_SEND_INTERVAL_MS) throw new ConvexError("MESSAGE_RATE_LIMITED");
+  const messageId = await ctx.db.insert("messages", { conversationId: conversation._id, senderUserId: viewer.userId, senderType: viewer.viewerType, body, clientMessageId: clientMessageId || undefined, createdAt: now });
+  const attachmentId = args.attachment
+    ? await ctx.db.insert("messageAttachments", {
+        conversationId: conversation._id,
+        messageId,
+        storageId: args.attachment.storageId,
+        uploadedByUserId: viewer.userId,
+        kind: "pdf",
+        originalFileName: args.attachment.originalFileName,
+        mimeType: "application/pdf",
+        sizeBytes: args.attachment.sizeBytes,
+        createdAt: now,
+      })
+    : null;
+  if (args.attachment) await ctx.db.patch(args.attachment.uploadIntentId, { claimedAt: now });
+  const preview = body || args.attachment?.originalFileName || "";
+  await ctx.db.patch(conversation._id, { updatedAt: now, lastMessageAt: now, lastMessagePreview: preview.slice(0, MESSAGE_PREVIEW_LENGTH), ...(viewer.viewerType === "client" ? { clientLastReadAt: now, clientLastSentAt: now } : { companyLastReadAt: now, companyLastSentAt: now }) });
+  return { messageId, attachmentId, createdAt: now, duplicate: false };
 }
 
 async function logoUrlFor(ctx: MessageCtx, company: Doc<"companies">) {
@@ -247,7 +313,25 @@ export const listMessages = query({
     }
     const { viewer } = await requireConversationAccess(ctx, args.conversationId);
     const page = await ctx.db.query("messages").withIndex("by_conversationId_and_createdAt", (q) => q.eq("conversationId", args.conversationId)).order("desc").paginate(args.paginationOpts);
-    return { ...page, page: page.page.map((message) => ({ id: message._id, senderType: message.senderType, body: message.body, createdAt: message.createdAt, isMine: message.senderUserId === viewer.userId })) };
+    const messages = await Promise.all(page.page.map(async (message) => {
+      const attachment = await ctx.db.query("messageAttachments").withIndex("by_messageId", (q) => q.eq("messageId", message._id)).unique();
+      return {
+        id: message._id,
+        senderType: message.senderType,
+        body: message.body,
+        createdAt: message.createdAt,
+        isMine: message.senderUserId === viewer.userId,
+        attachment: attachment ? {
+          id: attachment._id,
+          kind: attachment.kind,
+          fileName: attachment.originalFileName,
+          mimeType: attachment.mimeType,
+          sizeBytes: attachment.sizeBytes,
+          downloadUrl: `/api/messages/attachments/${attachment._id}`,
+        } : null,
+      };
+    }));
+    return { ...page, page: messages };
   },
 });
 
@@ -256,21 +340,8 @@ export const sendMessage = mutation({
   returns: v.object({ messageId: v.id("messages"), createdAt: v.number(), duplicate: v.boolean() }),
   handler: async (ctx, args) => {
     const { conversation, viewer } = await requireConversationAccess(ctx, args.conversationId);
-    if (conversation.status !== "active") throw new ConvexError("CONVERSATION_CLOSED");
-    const body = args.body.trim();
-    if (body.length < 1 || body.length > MAX_MESSAGE_LENGTH) throw new ConvexError("INVALID_MESSAGE_BODY");
-    const clientMessageId = args.clientMessageId?.trim();
-    if (clientMessageId && (clientMessageId.length > 100 || !/^[A-Za-z0-9_-]+$/.test(clientMessageId))) throw new ConvexError("INVALID_MESSAGE_ID");
-    if (clientMessageId) {
-      const existing = await ctx.db.query("messages").withIndex("by_conversationId_and_senderUserId_and_clientMessageId", (q) => q.eq("conversationId", conversation._id).eq("senderUserId", viewer.userId).eq("clientMessageId", clientMessageId)).unique();
-      if (existing) return { messageId: existing._id, createdAt: existing.createdAt, duplicate: true };
-    }
-    const now = Date.now();
-    const lastSentAt = viewer.viewerType === "client" ? conversation.clientLastSentAt : conversation.companyLastSentAt;
-    if (lastSentAt !== undefined && now - lastSentAt < MIN_SEND_INTERVAL_MS) throw new ConvexError("MESSAGE_RATE_LIMITED");
-    const messageId = await ctx.db.insert("messages", { conversationId: conversation._id, senderUserId: viewer.userId, senderType: viewer.viewerType, body, clientMessageId: clientMessageId || undefined, createdAt: now });
-    await ctx.db.patch(conversation._id, { updatedAt: now, lastMessageAt: now, lastMessagePreview: body.slice(0, MESSAGE_PREVIEW_LENGTH), ...(viewer.viewerType === "client" ? { clientLastReadAt: now, clientLastSentAt: now } : { companyLastReadAt: now, companyLastSentAt: now }) });
-    return { messageId, createdAt: now, duplicate: false };
+    const result = await sendAuthorizedMessage(ctx, conversation, viewer, args);
+    return { messageId: result.messageId, createdAt: result.createdAt, duplicate: result.duplicate };
   },
 });
 

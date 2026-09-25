@@ -2,11 +2,13 @@
 
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { mapAppError } from "@/lib/errors/map-app-error";
+import { parseMadInput } from "@/lib/money/mad";
 
 type ConversationFinalQuoteResult = FunctionReturnType<
   typeof api.finalQuotes.index.getForConversation
@@ -124,7 +126,7 @@ export function ConversationFinalQuotePanel({ conversationId }: { conversationId
   </section>;
 }
 
-function FinalQuoteSheet({
+export function FinalQuoteSheet({
   conversationId,
   onClose,
   quote,
@@ -136,8 +138,10 @@ function FinalQuoteSheet({
   viewerType: ConversationFinalQuoteResult["viewerType"];
 }) {
   const t = useTranslations("finalQuote");
+  const tWorkflow = useTranslations("marketplaceWorkflow");
   const tUx = useTranslations("ux");
   const format = useFormatter();
+  const locale = useLocale();
   const submitRevision = useMutation(api.finalQuotes.index.submitRevision);
   const review = useMutation(api.finalQuotes.index.review);
   const withdraw = useMutation(api.finalQuotes.index.withdraw);
@@ -197,14 +201,14 @@ function FinalQuoteSheet({
       <aside
         aria-labelledby="final-quote-sheet-title"
         aria-modal="true"
-        className="relative z-10 flex h-full w-full max-w-2xl flex-col bg-white shadow-[-12px_0_40px_rgb(16_24_40/0.18)]"
+        className="relative z-10 flex h-full w-full max-w-none flex-col bg-white shadow-[-12px_0_40px_rgb(16_24_40/0.18)] sm:max-w-2xl"
         role="dialog"
       >
-        <header className="flex items-start justify-between gap-3 border-b border-brand-border px-5 py-4 sm:px-7">
+        <header className="flex items-start justify-between gap-3 border-b border-[#e6eaee] px-5 py-3 sm:px-6">
           <div>
-            <p className="m-0 text-xs font-bold tracking-[0.12em] text-brand uppercase">{t("eyebrow")}</p>
-            <h2 className="mt-1 mb-0 text-xl font-semibold text-ink" id="final-quote-sheet-title">
-              {t("title")}
+            <p className="m-0 text-[11px] font-medium tracking-[0.08em] text-[#6b7785] uppercase">{t("title")}</p>
+            <h2 className="mt-1 mb-0 text-[18px] font-semibold text-ink" id="final-quote-sheet-title">
+              {quote.companyName || t("title")}
             </h2>
           </div>
           <button
@@ -217,7 +221,7 @@ function FinalQuoteSheet({
             ×
           </button>
         </header>
-        <div className="min-w-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
+        <div className="min-w-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
           {error ? (
             <p className="mb-4 rounded-xl bg-[#fff4f2] px-4 py-3 text-sm text-[#8a2f28]" role="alert">
               {error}
@@ -235,32 +239,26 @@ function FinalQuoteSheet({
             />
           ) : latest ? (
             <>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="m-0 text-sm font-semibold text-brand">
-                    {t("revision", { number: latest.revisionNumber })}
-                  </p>
-                  <p className="mt-1 mb-0 text-xs text-muted">
-                    {format.dateTime(latest.submittedAt, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
-                  </p>
-                </div>
-                <p className="m-0 text-2xl font-semibold tracking-[-0.03em] text-ink">
-                  {format.number(latest.price, {
-                    style: "currency",
-                    currency: "MAD",
-                    maximumFractionDigits: 0,
-                  })}
-                </p>
-              </div>
-              <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-                <Field label={t("duration")} value={String(latest.duration)} />
+              <p className="m-0 text-[24px] font-semibold tracking-[-0.03em] text-ink">
+                {format.number(latest.price, {
+                  style: "currency",
+                  currency: "MAD",
+                  maximumFractionDigits: 0,
+                })}
+              </p>
+              <p className="mt-1 mb-0 text-[12px] text-[#6b7785]">
+                {t("revision", { number: latest.revisionNumber })} ·{" "}
+                {formatMarketplaceDateTime(latest.submittedAt, locale, {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </p>
+              <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Field label={t("duration")} value={tWorkflow("days", { count: latest.duration })} />
                 <Field label={t("plannedStartDate")} value={latest.plannedStartDate} />
                 <Field label={t("validUntil")} value={latest.validUntil} />
               </dl>
-              <div className="mt-6 grid gap-5">
+              <div className="mt-5 grid gap-4">
                 <TextField label={t("scope")} value={latest.scope} />
                 <TextField label={t("inclusions")} value={latest.inclusions} />
                 <TextField label={t("exclusions")} value={latest.exclusions} />
@@ -289,39 +287,13 @@ function FinalQuoteSheet({
                   </ol>
                 </details>
               ) : null}
-              {viewerType === "client" && quote.canReview ? (
-                mode === "details" ? (
-                  <div className="mt-7 grid gap-2 sm:grid-cols-3">
-                    <button
-                      className="min-h-12 rounded-full bg-brand px-4 text-sm font-semibold text-white"
-                      disabled={busy}
-                      onClick={() => setConfirmAccept(true)}
-                      type="button"
-                    >
-                      {t("accept")}
-                    </button>
-                    <button
-                      className="min-h-12 rounded-full border border-brand-border px-4 text-sm font-semibold text-brand"
-                      onClick={() => setMode("changes")}
-                      type="button"
-                    >
-                      {t("requestChanges")}
-                    </button>
-                    <button
-                      className="min-h-12 rounded-full px-4 text-sm font-semibold text-[#8a2f28]"
-                      onClick={() => setMode("decline")}
-                      type="button"
-                    >
-                      {t("decline")}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="mt-7 rounded-2xl bg-surface-muted p-4">
-                    <label className="text-sm font-semibold text-ink" htmlFor="final-quote-reason">
+              {viewerType === "client" && quote.canReview && mode !== "details" ? (
+                  <div className="mt-5 rounded-lg bg-[#f7f8f9] p-4">
+                    <label className="text-[13px] font-medium text-ink" htmlFor="final-quote-reason">
                       {t("reason")}
                     </label>
                     <textarea
-                      className="mt-2 min-h-28 w-full rounded-xl border border-brand-border bg-white px-3 py-2 text-sm"
+                      className="mt-2 min-h-24 w-full rounded-lg border border-[#d7dde3] bg-white px-3 py-2 text-[14px]"
                       id="final-quote-reason"
                       onChange={(event) => setReason(event.target.value)}
                       placeholder={t("reasonPlaceholder")}
@@ -330,14 +302,14 @@ function FinalQuoteSheet({
                     />
                     <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                       <button
-                        className="min-h-11 px-4 text-sm font-semibold text-muted"
+                        className="min-h-10 px-4 text-[14px] font-medium text-[#6b7785]"
                         onClick={() => setMode("details")}
                         type="button"
                       >
                         {t("close")}
                       </button>
                       <button
-                        className="min-h-11 rounded-full bg-brand px-5 text-sm font-semibold text-white disabled:opacity-50"
+                        className="min-h-10 rounded-full bg-brand px-5 text-[14px] font-medium text-white disabled:opacity-50"
                         disabled={busy || (mode === "changes" && reason.trim().length < 3)}
                         onClick={() => void act(mode === "changes" ? "request_changes" : "decline")}
                         type="button"
@@ -346,7 +318,6 @@ function FinalQuoteSheet({
                       </button>
                     </div>
                   </div>
-                )
               ) : null}
               {viewerType === "company" && quote.canWithdraw ? (
                 <button
@@ -369,6 +340,32 @@ function FinalQuoteSheet({
             </p>
           )}
         </div>
+        {viewerType === "client" && quote.canReview && mode === "details" ? (
+          <div className="flex flex-col gap-2 border-t border-[#e6eaee] bg-white px-5 py-3 sm:flex-row sm:items-center sm:px-6">
+            <button
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-full bg-brand px-4 text-[14px] font-medium text-white sm:w-auto"
+              disabled={busy}
+              onClick={() => setConfirmAccept(true)}
+              type="button"
+            >
+              {t("accept")}
+            </button>
+            <button
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-full border border-[#d7dde3] px-4 text-[14px] font-medium text-ink sm:w-auto"
+              onClick={() => setMode("changes")}
+              type="button"
+            >
+              {t("requestChanges")}
+            </button>
+            <button
+              className="inline-flex min-h-10 w-full items-center justify-center px-2 text-[14px] font-medium text-[#8a2f28] sm:w-auto"
+              onClick={() => setMode("decline")}
+              type="button"
+            >
+              {t("decline")}
+            </button>
+          </div>
+        ) : null}
       </aside>
       {confirmAccept ? (
         <AcceptFinalQuoteDialog
@@ -482,9 +479,11 @@ function CompanyQuoteForm({
   async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (busy) return; setBusy(true); onError(""); const data = new FormData(event.currentTarget);
     try { let pdf: { storageId: Id<"_storage">; uploadToken: string; fileName: string } | undefined;
       if (file) { if (file.type !== "application/pdf" || file.size < 1 || file.size > 15 * 1024 * 1024) throw new Error("INVALID_FINAL_QUOTE_PDF"); const intent = await generateUpload({ finalQuoteId }); const response = await fetch(intent.uploadUrl, { method: "POST", headers: { "Content-Type": file.type }, body: file }); if (!response.ok) throw new Error("INVALID_FINAL_QUOTE_PDF"); const uploaded = await response.json() as { storageId: Id<"_storage"> }; pdf = { storageId: uploaded.storageId, uploadToken: intent.uploadToken, fileName: file.name }; }
-      await submitRevision({ conversationId, price: Number(data.get("price")), duration: Number(data.get("duration")), plannedStartDate: String(data.get("plannedStartDate")), validUntil: String(data.get("validUntil")), scope: String(data.get("scope")), inclusions: String(data.get("inclusions")), exclusions: String(data.get("exclusions")), paymentTerms: String(data.get("paymentTerms")), companyNote: String(data.get("companyNote") || "") || undefined, pdf }); onSubmitted();
+      const price = parseMadInput(String(data.get("price") ?? ""));
+      if (price === null) throw new Error("INVALID_FINAL_QUOTE_PRICE");
+      await submitRevision({ conversationId, price, duration: Number(data.get("duration")), plannedStartDate: String(data.get("plannedStartDate")), validUntil: String(data.get("validUntil")), scope: String(data.get("scope")), inclusions: String(data.get("inclusions")), exclusions: String(data.get("exclusions")), paymentTerms: String(data.get("paymentTerms")), companyNote: String(data.get("companyNote") || "") || undefined, pdf }); onSubmitted();
     } catch (cause) { onError(mapAppError(cause, (key) => tUx(key))); } finally { setBusy(false); } }
-  return <form className="grid gap-4" onSubmit={submit}><div className="grid gap-4 sm:grid-cols-2"><Input defaultValue={latest?.price} label={t("price")} min="1" name="price" required type="number" /><Input defaultValue={latest?.duration} label={t("duration")} min="1" name="duration" required type="number" /><Input defaultValue={latest?.plannedStartDate} label={t("plannedStartDate")} name="plannedStartDate" required type="date" /><Input defaultValue={latest?.validUntil} label={t("validUntil")} name="validUntil" required type="date" /></div><Area defaultValue={latest?.scope} label={t("scope")} name="scope" /><Area defaultValue={latest?.inclusions} label={t("inclusions")} name="inclusions" /><Area defaultValue={latest?.exclusions} label={t("exclusions")} name="exclusions" /><Area defaultValue={latest?.paymentTerms} label={t("paymentTerms")} name="paymentTerms" /><Area defaultValue={latest?.companyNote ?? ""} label={t("companyNote")} name="companyNote" required={false} /><label className="grid gap-1.5 text-sm font-semibold text-ink">{t("pdf")}<input accept="application/pdf" className="min-h-11 rounded-xl border border-brand-border px-3 py-2 font-normal" onChange={(event) => setFile(event.target.files?.[0] ?? null)} type="file" /></label><button className="mt-2 min-h-12 rounded-full bg-brand px-5 text-sm font-semibold text-white disabled:opacity-55" disabled={busy} type="submit">{busy ? t("submitting") : latest ? t("submitRevision") : t("submit")}</button></form>;
+  return <form className="grid gap-4" onSubmit={submit}><div className="grid gap-4 sm:grid-cols-2"><Input autoComplete="off" defaultValue={latest?.price} inputMode="decimal" label={t("price")} name="price" placeholder="300000" required type="text" /><Input defaultValue={latest?.duration} label={t("duration")} min="1" name="duration" required type="number" /><Input defaultValue={latest?.plannedStartDate} label={t("plannedStartDate")} name="plannedStartDate" required type="date" /><Input defaultValue={latest?.validUntil} label={t("validUntil")} name="validUntil" required type="date" /></div><Area defaultValue={latest?.scope} label={t("scope")} name="scope" /><Area defaultValue={latest?.inclusions} label={t("inclusions")} name="inclusions" /><Area defaultValue={latest?.exclusions} label={t("exclusions")} name="exclusions" /><Area defaultValue={latest?.paymentTerms} label={t("paymentTerms")} name="paymentTerms" /><Area defaultValue={latest?.companyNote ?? ""} label={t("companyNote")} name="companyNote" required={false} /><label className="grid gap-1.5 text-sm font-semibold text-ink">{t("pdf")}<input accept="application/pdf" className="min-h-11 rounded-xl border border-brand-border px-3 py-2 font-normal" onChange={(event) => setFile(event.target.files?.[0] ?? null)} type="file" /></label><button className="mt-2 min-h-12 rounded-full bg-brand px-5 text-sm font-semibold text-white disabled:opacity-55" disabled={busy} type="submit">{busy ? t("submitting") : latest ? t("submitRevision") : t("submit")}</button></form>;
 }
 
 function PdfLink({ revisionId }: { revisionId: Id<"finalQuoteRevisions"> }) {
@@ -501,7 +500,7 @@ function PdfLink({ revisionId }: { revisionId: Id<"finalQuoteRevisions"> }) {
     </a>
   ) : null;
 }
-function Field({ label, value }: { label: string; value: string }) { return <div><dt className="text-xs font-semibold tracking-[0.05em] text-muted uppercase">{label}</dt><dd className="mt-1 text-sm font-semibold text-ink">{value}</dd></div>; }
-function TextField({ label, value }: { label: string; value: string }) { return <section><h3 className="m-0 text-sm font-semibold text-ink">{label}</h3><p className="mt-1 mb-0 whitespace-pre-wrap break-words text-sm leading-6 text-ink/80">{value}</p></section>; }
+function Field({ label, value }: { label: string; value: string }) { return <div><dt className="text-[11px] font-medium tracking-[0.06em] text-[#6b7785] uppercase">{label}</dt><dd className="mt-1 text-[14px] font-medium text-ink">{value}</dd></div>; }
+function TextField({ label, value }: { label: string; value: string }) { return <section><h3 className="m-0 text-[13px] font-semibold text-ink">{label}</h3><p className="mt-1 mb-0 whitespace-pre-wrap break-words text-[14px] leading-6 text-[#3d4a59]">{value}</p></section>; }
 function Input({ defaultValue, label, ...props }: { defaultValue?: string | number; label: string } & React.InputHTMLAttributes<HTMLInputElement>) { return <label className="grid gap-1.5 text-sm font-semibold text-ink">{label}<input className="min-h-11 rounded-xl border border-brand-border px-3 font-normal" defaultValue={defaultValue} {...props} /></label>; }
 function Area({ defaultValue, label, name, required = true }: { defaultValue?: string; label: string; name: string; required?: boolean }) { return <label className="grid gap-1.5 text-sm font-semibold text-ink">{label}<textarea className="min-h-24 rounded-xl border border-brand-border px-3 py-2 font-normal" defaultValue={defaultValue} name={name} required={required} /></label>; }

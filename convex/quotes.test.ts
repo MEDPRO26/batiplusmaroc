@@ -138,6 +138,7 @@ describe("initial quote submission", () => {
         .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId))
         .take(10),
     }));
+    expect(state.quote?.estimatedPrice).toBe(185_000);
     expect(state.quote).toMatchObject({
       projectId,
       companyId: company.companyId,
@@ -255,6 +256,17 @@ describe("initial quote submission", () => {
       projectId,
     });
     expect(after).toMatchObject({ canSubmitQuote: false, myQuoteId: quoteId });
+  });
+
+  test("persists whole MAD amounts such as 300000 without truncating", async () => {
+    const { t, projectId, company } = await setup();
+    const result = await asUser(t, company.userId).mutation(
+      api.quotes.index.submitInitialQuote,
+      { projectId, ...validQuote, estimatedPrice: 300_000 },
+    );
+    const quote = await t.run((ctx) => ctx.db.get(result.quoteId));
+    expect(quote?.estimatedPrice).toBe(300_000);
+    expect(quote?.estimatedPrice).not.toBe(300);
   });
 
   test("rechecks project state inside the submit transaction", async () => {

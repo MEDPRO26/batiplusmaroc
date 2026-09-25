@@ -75,8 +75,8 @@ function render(locale: "en" | "fr", node: React.ReactNode) {
 describe("site assessment panel", () => {
   test("renders the client invite CTA in English without exposing contact information", () => {
     const html = render("en", <SiteAssessmentPanel conversationId={assessment.conversationId} result={{ viewerType: "client", canInvite: true, assessment: null }} />);
-    expect(html).toContain("Invite to site assessment");
-    expect(html).toContain("Only one company can have an active assessment");
+    expect(html).toContain("Schedule a site visit");
+    expect(html).toContain("Only one company can have an active site visit");
     expect(html).not.toContain("phone");
     expect(html).not.toContain("email");
   });
@@ -84,7 +84,7 @@ describe("site assessment panel", () => {
   test("renders the company acceptance acknowledgement and actions in French", () => {
     const html = render("fr", <SiteAssessmentPanel result={{ viewerType: "company", canInvite: false, assessment }} />);
     expect(html).toContain("Atlas Construction");
-    expect(html).toContain("Accepter l’évaluation");
+    expect(html).toContain("Accepter l’invitation");
     expect(html).toContain("conditions commerciales");
     expect(html).toContain("Refuser");
     expect(html).not.toContain("Adresse du chantier");

@@ -3,11 +3,12 @@
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { CalendarDays, Check, Clock3, History, MapPin, RotateCcw, X } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useEffect, useState, type FormEvent } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Link } from "@/i18n/navigation";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { mapAppError } from "@/lib/errors/map-app-error";
 import { routes } from "@/lib/routes";
 
@@ -27,10 +28,21 @@ export function ProjectSiteAssessment({ projectId }: { projectId: Id<"projects">
   return <SiteAssessmentPanel result={result} />;
 }
 
-export function SiteAssessmentPanel({ conversationId, result }: { conversationId?: Id<"conversations">; result: Result }) {
+export function SiteAssessmentPanel({
+  chrome = "card",
+  conversationId,
+  hideHeader = false,
+  result,
+}: {
+  chrome?: "card" | "plain";
+  conversationId?: Id<"conversations">;
+  hideHeader?: boolean;
+  result: Result;
+}) {
   const t = useTranslations("siteAssessment");
   const tUx = useTranslations("ux");
   const format = useFormatter();
+  const locale = useLocale();
   const invite = useMutation(api.siteVisits.index.invite);
   const respond = useMutation(api.siteVisits.index.respond);
   const proposeVisit = useMutation(api.siteVisits.index.proposeVisit);
@@ -101,16 +113,23 @@ export function SiteAssessmentPanel({ conversationId, result }: { conversationId
       ? "scheduled"
       : (visit?.status ?? assessment?.status);
 
+  const isPlain = chrome === "plain";
   return (
-    <section aria-labelledby="site-assessment-title" aria-live="polite" className="border-b border-brand-border bg-[#f6fafc] px-4 py-4 sm:px-7">
-      <div className="mx-auto max-w-[760px] rounded-2xl border border-brand-border bg-white p-4 shadow-[0_1px_2px_rgb(23_61_99/0.04)] sm:p-5">
+    <section
+      aria-labelledby={hideHeader ? undefined : "site-assessment-title"}
+      aria-live="polite"
+      className={isPlain ? "bg-white" : "border-b border-brand-border bg-[#f6fafc] px-4 py-4 sm:px-7"}
+    >
+      <div className={isPlain ? "w-full" : "mx-auto max-w-[760px] rounded-2xl border border-brand-border bg-white p-4 shadow-[0_1px_2px_rgb(23_61_99/0.04)] sm:p-5"}>
+        {hideHeader ? null : (
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="m-0 text-[11px] font-bold tracking-[0.12em] text-brand uppercase">{t("eyebrow")}</p>
+            <p className="m-0 text-[11px] font-medium tracking-[0.08em] text-[#6b7785] uppercase">{t("eyebrow")}</p>
             <h3 className="mt-1 mb-0 text-base font-semibold text-ink" id="site-assessment-title">{t("title")}</h3>
           </div>
-          {badgeStatus ? <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-dark">{t(`status.${badgeStatus}`)}</span> : null}
+          {badgeStatus ? <span className="rounded-full bg-[#f3f5f7] px-2 py-0.5 text-[12px] font-medium text-[#3d4a59]">{t(`status.${badgeStatus}`)}</span> : null}
         </div>
+        )}
 
         {!assessment ? (
           confirmingInvite ? (
@@ -134,7 +153,7 @@ export function SiteAssessmentPanel({ conversationId, result }: { conversationId
             ) : (
               <>
                 <p className="m-0 text-sm leading-6 text-ink">{t("company", { name: assessment.companyName })}</p>
-                <p className="mt-1 mb-0 text-xs text-muted">{t("invitedAt", { date: format.dateTime(assessment.invitedAt, { dateStyle: "medium", timeStyle: "short" }) })}</p>
+                <p className="mt-1 mb-0 text-xs text-muted">{t("invitedAt", { date: formatMarketplaceDateTime(assessment.invitedAt, locale, { dateStyle: "medium", timeStyle: "short" }) })}</p>
               </>
             )}
             {assessment.clientNote && !visit ? <p className="mt-3 mb-0 rounded-xl bg-surface-muted px-3 py-2 text-sm text-ink">{assessment.clientNote}</p> : null}

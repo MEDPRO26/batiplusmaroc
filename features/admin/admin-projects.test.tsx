@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { Id } from "@/convex/_generated/dataModel";
 import { routing } from "@/i18n/routing";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { routes } from "@/lib/routes";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
@@ -192,7 +193,165 @@ describe("admin projects interface", () => {
     expect(html).toContain("Project submitted for review");
     expect(html).toContain("Site visit confirmed");
     expect(html).toContain("Visit: 2026-09-28 at 10:00 (Africa/Casablanca)");
+    expect(html).toContain(
+      formatMarketplaceDateTime(1790000000000, "en", {
+        dateStyle: "medium",
+        timeStyle: "medium",
+      }),
+    );
     expect(html).not.toContain("private-client@example.test");
+  });
+
+  test("labels project_created as draft creation and formats Africa/Casablanca", () => {
+    convex.queryResults = [
+      {
+        projectId: "project-1",
+        title: "Villa draft timing",
+        client: { displayName: "hamza ifg" },
+        category: "renovation",
+        customCategoryText: null,
+        city: "casablanca",
+        neighborhood: null,
+        propertyType: "house",
+        surface: 220,
+        surfaceUnknown: false,
+        description: "Fresh disposable project for timeline QA.",
+        budgetRange: "250000_500000",
+        budgetMin: 250000,
+        budgetMax: 500000,
+        budgetUnknown: false,
+        timeline: "one_to_three_months",
+        submittedAt: 1_700_000_100_000,
+        publishedAt: 1_700_000_200_000,
+        status: "published",
+        history: [],
+      },
+      [
+        {
+          activityId: "activity-created",
+          eventType: "project_created",
+          actor: {
+            userId: "client-1",
+            displayName: "hamza ifg",
+            type: "client",
+          },
+          company: null,
+          quoteId: null,
+          conversationId: null,
+          siteAssessmentId: null,
+          siteVisitId: null,
+          dealId: null,
+          oldStatus: null,
+          newStatus: "draft",
+          reason: null,
+          metadata: null,
+          createdAt: 1_700_000_000_000,
+        },
+        {
+          activityId: "activity-submitted",
+          eventType: "project_submitted",
+          actor: {
+            userId: "client-1",
+            displayName: "hamza ifg",
+            type: "client",
+          },
+          company: null,
+          quoteId: null,
+          conversationId: null,
+          siteAssessmentId: null,
+          siteVisitId: null,
+          dealId: null,
+          oldStatus: "draft",
+          newStatus: "pending_review",
+          reason: null,
+          metadata: null,
+          createdAt: 1_700_000_100_000,
+        },
+      ],
+    ];
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider
+        locale="en"
+        messages={en}
+        timeZone="Africa/Casablanca"
+      >
+        <ProjectReviewDrawer
+          projectId={"project-1" as Id<"projects">}
+          onClose={() => {}}
+          onError={() => {}}
+          onSuccess={() => {}}
+        />
+      </NextIntlClientProvider>,
+    );
+    expect(html).toContain("Project draft created");
+    expect(html).not.toContain(">Project created<");
+    expect(html).toContain(
+      formatMarketplaceDateTime(1_700_000_000_000, "en", {
+        dateStyle: "medium",
+        timeStyle: "medium",
+      }),
+    );
+    convex.queryResults = [
+      {
+        projectId: "project-1",
+        title: "Villa draft timing",
+        client: { displayName: "hamza ifg" },
+        category: "renovation",
+        customCategoryText: null,
+        city: "casablanca",
+        neighborhood: null,
+        propertyType: "house",
+        surface: 220,
+        surfaceUnknown: false,
+        description: "Fresh disposable project for timeline QA.",
+        budgetRange: "250000_500000",
+        budgetMin: 250000,
+        budgetMax: 500000,
+        budgetUnknown: false,
+        timeline: "one_to_three_months",
+        submittedAt: 1_700_000_100_000,
+        publishedAt: 1_700_000_200_000,
+        status: "published",
+        history: [],
+      },
+      [
+        {
+          activityId: "activity-created",
+          eventType: "project_created",
+          actor: {
+            userId: "client-1",
+            displayName: "hamza ifg",
+            type: "client",
+          },
+          company: null,
+          quoteId: null,
+          conversationId: null,
+          siteAssessmentId: null,
+          siteVisitId: null,
+          dealId: null,
+          oldStatus: null,
+          newStatus: "draft",
+          reason: null,
+          metadata: null,
+          createdAt: 1_700_000_000_000,
+        },
+      ],
+    ];
+    const frHtml = renderToStaticMarkup(
+      <NextIntlClientProvider
+        locale="fr"
+        messages={fr}
+        timeZone="Africa/Casablanca"
+      >
+        <ProjectReviewDrawer
+          projectId={"project-1" as Id<"projects">}
+          onClose={() => {}}
+          onError={() => {}}
+          onSuccess={() => {}}
+        />
+      </NextIntlClientProvider>,
+    );
+    expect(frHtml).toContain("Brouillon du projet créé");
   });
 
   test("renders a mobile card list alongside the desktop table", () => {

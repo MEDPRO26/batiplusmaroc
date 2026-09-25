@@ -11,6 +11,7 @@ import {
   ADMIN_PRESS,
 } from "@/features/admin/components/admin-shell";
 import { ProjectSiteAssessment } from "@/features/site-assessments/components/site-assessment-panel";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { findKnownCodeInText } from "@/lib/errors/codes";
 
 type ListRow = FunctionReturnType<
@@ -438,7 +439,7 @@ export function ProjectReviewDrawer({
                 {review.submittedAt ? (
                   <span className="text-sm text-[#8b919a]">
                     {t("submittedAt", {
-                      date: new Date(review.submittedAt).toLocaleString(locale),
+                      date: formatMarketplaceDateTime(review.submittedAt, locale),
                     })}
                   </span>
                 ) : null}
@@ -530,7 +531,7 @@ export function ProjectReviewDrawer({
                         </p>
                         <p className="mt-1 text-[#8b919a]">
                           {item.changedBy.displayName} ·{" "}
-                          {new Date(item.changedAt).toLocaleString(locale)}
+                          {formatMarketplaceDateTime(item.changedAt, locale)}
                         </p>
                         {item.reason ? (
                           <p className="mt-2 text-[#b42318]">{item.reason}</p>
@@ -577,7 +578,7 @@ export function ProjectReviewDrawer({
                               ),
                             })}
                             {" · "}
-                            {new Date(item.createdAt).toLocaleString(locale)}
+                            {formatMarketplaceDateTime(item.createdAt, locale)}
                           </p>
                           {item.company ? (
                             <p className="mt-1 text-xs text-[#626970]">
@@ -867,7 +868,7 @@ function categoryLabel(
 }
 function formatDate(value: number | null, locale: string) {
   return value
-    ? new Date(value).toLocaleDateString(locale, {
+    ? formatMarketplaceDateTime(value, locale, {
         day: "2-digit",
         month: "short",
         year: "numeric",

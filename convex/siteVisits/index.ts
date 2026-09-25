@@ -101,6 +101,14 @@ async function getConversationContext(ctx: Ctx, conversationId: Id<"conversation
   return { conversation, project, quote, company };
 }
 
+async function finalQuotePathStarted(ctx: Ctx, conversationId: Id<"conversations">) {
+  const rows = await ctx.db
+    .query("finalQuotes")
+    .withIndex("by_conversationId", (q) => q.eq("conversationId", conversationId))
+    .take(1);
+  return rows.length > 0;
+}
+
 async function activeAssessmentForProject(ctx: Ctx, projectId: Id<"projects">) {
   const rows = await ctx.db.query("siteAssessments").withIndex("by_projectId_and_active", (q) => q.eq("projectId", projectId).eq("active", true)).take(2);
   if (rows.length > 1) throw new ConvexError("SITE_ASSESSMENT_INTEGRITY_ERROR");
@@ -203,6 +211,7 @@ export const invite = mutation({
     await requireOwnedProject(ctx, client.userId, project._id);
     if (quote.status !== "discussion_open") throw new ConvexError("SITE_ASSESSMENT_REQUIRES_DISCUSSION");
     if (project.status !== "published" && project.status !== "in_discussion") throw new ConvexError("PROJECT_NOT_ELIGIBLE_FOR_SITE_ASSESSMENT");
+    if (await finalQuotePathStarted(ctx, conversation._id)) throw new ConvexError("SITE_ASSESSMENT_FINAL_QUOTE_PATH_LOCKED");
     const existing = await activeAssessmentForProject(ctx, project._id);
     if (existing) {
       if (existing.conversationId === conversation._id && existing.companyId === conversation.companyId && existing.status === "invited") return { assessmentId: existing._id, status: "invited" as const, duplicate: true };
@@ -344,8 +353,13 @@ export const getForConversation = query({
     if (context.quote.status !== "discussion_open") throw new ConvexError("CONVERSATION_LOCKED");
     const rows = await ctx.db.query("siteAssessments").withIndex("by_conversationId", (q) => q.eq("conversationId", args.conversationId)).order("desc").take(1);
     const active = await activeAssessmentForProject(ctx, context.project._id);
+    const quotePathStarted = await finalQuotePathStarted(ctx, args.conversationId);
     const viewer = { userId, actorType: viewerType } satisfies Participant;
-    return { viewerType, canInvite: viewerType === "client" && !active, assessment: rows[0] ? await assessmentDto(ctx, rows[0], viewer) : null };
+    return {
+      viewerType,
+      canInvite: viewerType === "client" && !active && !quotePathStarted,
+      assessment: rows[0] ? await assessmentDto(ctx, rows[0], viewer) : null,
+    };
   },
 });
 

@@ -11,6 +11,7 @@ import {
   ADMIN_PRESS,
 } from "@/features/admin/components/admin-shell";
 import { findKnownCodeInText } from "@/lib/errors/codes";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 
 type TabStatus = "pending" | "verified" | "rejected";
 type HistoryStatus = "draft" | TabStatus;
@@ -180,7 +181,7 @@ export function AdminVerificationPanel() {
                     </td>
                     <td className="px-3 py-3 text-[#626970]">
                       {row.submittedAt
-                        ? new Date(row.submittedAt).toLocaleDateString(locale, {
+                        ? formatMarketplaceDateTime(row.submittedAt, locale, {
                             day: "2-digit",
                             month: "short",
                             year: "numeric",
@@ -358,7 +359,7 @@ function ReviewDrawer({
                 {review.submittedAt ? (
                   <span className="text-sm text-[#8b919a]">
                     {t("submittedAt", {
-                      date: new Date(review.submittedAt).toLocaleString(locale),
+                      date: formatMarketplaceDateTime(review.submittedAt, locale),
                     })}
                   </span>
                 ) : null}
@@ -457,7 +458,7 @@ function ReviewDrawer({
                         </p>
                         <p className="mt-1 text-[#8b919a]">
                           {formatActor(item.changedBy)} ·{" "}
-                          {new Date(item.changedAt).toLocaleString(locale)}
+                          {formatMarketplaceDateTime(item.changedAt, locale)}
                         </p>
                         {item.rejectionReason ? (
                           <p className="mt-2 text-[#b42318]">

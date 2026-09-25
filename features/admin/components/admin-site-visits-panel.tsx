@@ -11,6 +11,7 @@ import {
   ADMIN_PRESS,
 } from "@/features/admin/components/admin-shell";
 import { Link } from "@/i18n/navigation";
+import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 
 const TABS = [
   "all",
@@ -607,7 +608,7 @@ function SiteVisitDrawer({
               <DetailSection title={t("sections.discussion")}>
                 <Field
                   label={t("fields.openedAt")}
-                  value={formatDateTime(detail.discussion.openedAt, locale)}
+                  value={formatSiteVisitDateTime(detail.discussion.openedAt, locale)}
                 />
                 <Field
                   label={t("fields.conversationReference")}
@@ -625,7 +626,7 @@ function SiteVisitDrawer({
                 />
                 <Field
                   label={t("fields.invitedAt")}
-                  value={formatDateTime(detail.assessment.invitedAt, locale)}
+                  value={formatSiteVisitDateTime(detail.assessment.invitedAt, locale)}
                 />
                 <Field
                   label={t("fields.assessmentStatus")}
@@ -783,7 +784,7 @@ function ActivityTimeline({
               actor: item.actor.displayName,
               type: t(`actor.${item.actor.type}`),
             })}{" "}
-            · {formatDateTime(item.createdAt, locale)}
+            · {formatSiteVisitDateTime(item.createdAt, locale)}
           </p>
           {item.oldStatus && item.newStatus ? (
             <p className="mt-1 text-xs text-[#626970]">
@@ -836,7 +837,7 @@ function VisitFields({ detail, locale }: { detail: Detail; locale: string }) {
       />
       <Field
         label={t("fields.proposedAt")}
-        value={formatDateTime(detail.visit.proposedAt, locale)}
+        value={formatSiteVisitDateTime(detail.visit.proposedAt, locale)}
       />
       <Field
         label={t("fields.proposedDateTime")}
@@ -958,16 +959,15 @@ function formatVisitDate(row: Row, locale: string) {
   return `${date.toLocaleDateString(locale, { day: "2-digit", month: "short" })} · ${row.visitTime}`;
 }
 
-function formatDateTime(value: number, locale: string) {
-  return new Date(value).toLocaleString(locale, {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Africa/Casablanca",
-  });
+function formatOptionalDate(value: number | null, locale: string) {
+  return value === null ? "—" : formatSiteVisitDateTime(value, locale);
 }
 
-function formatOptionalDate(value: number | null, locale: string) {
-  return value === null ? "—" : formatDateTime(value, locale);
+function formatSiteVisitDateTime(value: number, locale: string) {
+  return formatMarketplaceDateTime(value, locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
 
 function actorLabel(
