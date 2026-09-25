@@ -21,3 +21,19 @@ export function assertSiteAssessmentTransition(current: SiteAssessmentStatus, ne
     throw new ConvexError("INVALID_SITE_ASSESSMENT_TRANSITION");
   }
 }
+
+export type SiteVisitStatus = "proposed" | "confirmed" | "completed" | "declined" | "cancelled";
+
+const visitTransitions: Record<SiteVisitStatus, readonly SiteVisitStatus[]> = {
+  proposed: ["confirmed", "declined"],
+  confirmed: ["completed", "cancelled"],
+  completed: [],
+  declined: [],
+  cancelled: [],
+};
+
+export function assertSiteVisitTransition(current: SiteVisitStatus, next: SiteVisitStatus) {
+  if (!visitTransitions[current].includes(next)) {
+    throw new ConvexError("INVALID_SITE_VISIT_TRANSITION");
+  }
+}

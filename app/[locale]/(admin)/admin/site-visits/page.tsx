@@ -1,12 +1,12 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { AdminDashboard } from "@/features/admin/components/admin-dashboard";
+import { AdminSiteVisitsPanel } from "@/features/admin/components/admin-site-visits-panel";
 import { resolveLocale } from "@/lib/page-meta";
 
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const locale = await resolveLocale(params);
-  const t = await getTranslations({ locale, namespace: "adminAccess" });
+  const t = await getTranslations({ locale, namespace: "adminSiteVisits" });
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
@@ -14,9 +14,9 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-export default async function AdminPage({ params }: Props) {
+export default async function AdminSiteVisitsPage({ params }: Props) {
   const locale = await resolveLocale(params);
   setRequestLocale(locale);
 
-  return <AdminDashboard />;
+  return <AdminSiteVisitsPanel />;
 }

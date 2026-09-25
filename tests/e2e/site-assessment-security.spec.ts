@@ -5,6 +5,7 @@ test.describe("site assessment protected surfaces", () => {
     test(`keeps ${locale.toUpperCase()} assessment entry points behind authentication`, async ({ page }) => {
       for (const viewport of [
         { width: 390, height: 844 },
+        { width: 768, height: 1024 },
         { width: 1440, height: 900 },
       ]) {
         await page.setViewportSize(viewport);
@@ -18,6 +19,10 @@ test.describe("site assessment protected surfaces", () => {
         await expect(page).toHaveURL(new RegExp(`/${locale}/${signInPath}/?$`));
 
         await page.goto(`/${locale}/espace-entreprise/projets/not-a-project`);
+        await expect(page).toHaveURL(new RegExp(`/${locale}/${signInPath}/?$`));
+
+        const adminVisitPath = locale === "fr" ? "admin/visites-techniques" : "admin/site-visits";
+        await page.goto(`/${locale}/${adminVisitPath}`);
         await expect(page).toHaveURL(new RegExp(`/${locale}/${signInPath}/?$`));
       }
     });

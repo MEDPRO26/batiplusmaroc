@@ -13,6 +13,7 @@ import { mapAppError } from "@/lib/errors/map-app-error";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 import { ConversationSiteAssessment } from "@/features/site-assessments/components/site-assessment-panel";
+import { ConversationFinalQuotePanel } from "@/features/final-quotes/components/conversation-final-quote-panel";
 
 type DashboardUser = {
   accountType: "client" | "company" | "admin" | "seo_team" | null;
@@ -292,6 +293,7 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
       {accountType === "client" && conversation.companySlug ? <Link className="text-sm font-semibold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={{ pathname: "/entreprises/[slug]", params: { slug: conversation.companySlug } }}>{t("viewCompanyProfile")}</Link> : null}
     </header>
     <ConversationSiteAssessment conversationId={conversationId} />
+    <ConversationFinalQuotePanel conversationId={conversationId} />
     <div aria-live="polite" aria-relevant="additions text" className="flex flex-1 flex-col overflow-y-auto bg-[#fbfcfd] px-4 py-5 sm:px-8" role="log">
       {status === "CanLoadMore" ? <button className="mx-auto mb-5 min-h-11 rounded-full border border-brand-border bg-white px-4 text-sm font-semibold text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={() => loadMore(30)} type="button">{t("loadOlder")}</button> : null}
       {status === "LoadingMore" ? <p className="mb-5 text-center text-sm text-muted">{t("loadingOlder")}</p> : null}

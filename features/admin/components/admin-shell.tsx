@@ -1,15 +1,16 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { NavbarLogo } from "@/components/layout/navbar-logo";
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import { routes, type AppRoute } from "@/lib/routes";
 
 export type AdminNavId =
   | "home"
   | "projects"
+  | "siteVisits"
   | "companies"
   | "verification"
   | "messages"
@@ -19,65 +20,72 @@ export type AdminNavId =
   | "support"
   | "settings";
 
-const NAV: AdminNavId[] = [
-  "home",
-  "projects",
-  "companies",
-  "verification",
-  "messages",
-  "deals",
-  "reviews",
-  "profile",
-  "support",
-  "settings",
+type AdminNavLabel =
+  | "navHome"
+  | "navProjects"
+  | "navSiteVisits"
+  | "navCompanies"
+  | "navVerification"
+  | "navMessages"
+  | "navDeals"
+  | "navReviews"
+  | "navProfile"
+  | "navSupport"
+  | "navSettings";
+
+const ADMIN_NAVIGATION: { id: AdminNavId; label: AdminNavLabel; href?: AppRoute }[] = [
+  { id: "home", label: "navHome", href: routes.admin },
+  { id: "projects", label: "navProjects", href: routes.adminProjects },
+  { id: "siteVisits", label: "navSiteVisits", href: routes.adminSiteVisits },
+  { id: "companies", label: "navCompanies" },
+  { id: "verification", label: "navVerification", href: routes.adminVerification },
+  { id: "messages", label: "navMessages" },
+  { id: "deals", label: "navDeals" },
+  { id: "reviews", label: "navReviews" },
+  { id: "profile", label: "navProfile" },
+  { id: "support", label: "navSupport" },
+  { id: "settings", label: "navSettings" },
 ];
 
 export const ADMIN_PRESS =
   "cursor-pointer transition-[scale,background-color,color,border-color,opacity] duration-150 ease-[cubic-bezier(0.2,0,0,1)] active:scale-[0.96] motion-reduce:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6bff]";
 
-const NAV_HREF: Partial<Record<AdminNavId, AppRoute>> = {
-  home: routes.admin,
-  projects: routes.adminProjects,
-  verification: routes.adminVerification,
-};
+const AdminShellContext = createContext<(() => void) | null>(null);
 
 export function AdminShell({
-  activeNav,
   email,
   firstName,
   lastName,
-  breadcrumb,
-  title,
-  headerActions,
-  notice,
   children,
 }: {
-  activeNav: AdminNavId;
   email: string | null;
   firstName: string | null;
   lastName: string | null;
-  breadcrumb: string;
-  title: string;
-  headerActions?: ReactNode;
-  notice?: string;
   children: ReactNode;
 }) {
   const t = useTranslations("adminDashboard");
-  const tBrand = useTranslations("brand");
+  const pathname = usePathname();
   const [query, setQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [localNotice, setLocalNotice] = useState("");
   const displayName = [firstName, lastName].filter(Boolean).join(" ") || email || t("accountFallback");
-  const shownNotice = notice || localNotice;
+  const activeNav =
+    ADMIN_NAVIGATION.find(({ id, href }) =>
+      href
+        ? id === "home"
+          ? pathname === href
+          : pathname === href || pathname.startsWith(`${href}/`)
+        : false,
+    )?.id ?? "home";
 
   return (
     <div className="flex min-h-dvh w-full bg-[#f4f6f8] text-[#17191d]">
-      {shownNotice ? (
+      {localNotice ? (
         <p
           className="fixed bottom-6 left-1/2 z-50 max-w-sm -translate-x-1/2 rounded-full bg-[#17191d] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(16,24,40,0.24)]"
           role="status"
         >
-          {shownNotice}
+          {localNotice}
         </p>
       ) : null}
       {sidebarOpen ? (
@@ -102,38 +110,72 @@ export function AdminShell({
         query={query}
         setQuery={setQuery}
       />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex flex-wrap items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
-          <button
-            aria-label={t("openSidebar")}
-            className={`inline-flex size-11 items-center justify-center rounded-full border border-[#e6e9ee] bg-white text-[#17191d] lg:hidden ${ADMIN_PRESS}`}
-            onClick={() => setSidebarOpen(true)}
-            type="button"
-          >
-            <MenuIcon />
-          </button>
-          <nav aria-label={t("breadcrumbLabel")} className="flex min-w-0 flex-1 items-center gap-2 text-sm text-[#8b919a]">
-            <NavbarLogo homeAria={tBrand("homeAria")} name={tBrand("name")} />
-            <span aria-hidden className="text-[#c5cad1]">/</span>
-            <span className="truncate">{t("team")}</span>
-            <span aria-hidden className="text-[#c5cad1]">/</span>
-            <span className="truncate">{t("area")}</span>
-            <span aria-hidden className="text-[#c5cad1]">/</span>
-            <span className="truncate font-medium text-[#17191d]">{breadcrumb}</span>
-          </nav>
-          <div className="ml-auto flex items-center gap-2">
-            <LanguageSwitcher />
-            {headerActions}
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 px-4 pb-8 sm:px-6 lg:px-8">
-          <div>
-            <h1 className="text-[1.7rem] font-semibold tracking-[-0.03em]">{title}</h1>
-          </div>
-          {children}
-        </div>
-      </div>
+      <AdminShellContext.Provider value={() => setSidebarOpen(true)}>
+        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+      </AdminShellContext.Provider>
     </div>
+  );
+}
+
+export function AdminPage({
+  breadcrumb,
+  title,
+  headerActions,
+  notice,
+  children,
+}: {
+  breadcrumb: string;
+  title: string;
+  headerActions?: ReactNode;
+  notice?: string;
+  children: ReactNode;
+}) {
+  const t = useTranslations("adminDashboard");
+  const tBrand = useTranslations("brand");
+  const openSidebar = useContext(AdminShellContext);
+
+  if (!openSidebar) throw new Error("AdminPage must be rendered inside AdminShell");
+
+  return (
+    <>
+      {notice ? (
+        <p
+          className="fixed bottom-6 left-1/2 z-50 max-w-sm -translate-x-1/2 rounded-full bg-[#17191d] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(16,24,40,0.24)]"
+          role="status"
+        >
+          {notice}
+        </p>
+      ) : null}
+      <header className="flex flex-wrap items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
+        <button
+          aria-label={t("openSidebar")}
+          className={`inline-flex size-11 items-center justify-center rounded-full border border-[#e6e9ee] bg-white text-[#17191d] lg:hidden ${ADMIN_PRESS}`}
+          onClick={openSidebar}
+          type="button"
+        >
+          <MenuIcon />
+        </button>
+        <nav aria-label={t("breadcrumbLabel")} className="flex min-w-0 flex-1 items-center gap-2 text-sm text-[#8b919a]">
+          <NavbarLogo homeAria={tBrand("homeAria")} name={tBrand("name")} />
+          <span aria-hidden className="text-[#c5cad1]">/</span>
+          <span className="truncate">{t("team")}</span>
+          <span aria-hidden className="text-[#c5cad1]">/</span>
+          <span className="truncate">{t("area")}</span>
+          <span aria-hidden className="text-[#c5cad1]">/</span>
+          <span className="truncate font-medium text-[#17191d]">{breadcrumb}</span>
+        </nav>
+        <div className="ml-auto flex items-center gap-2">
+          <LanguageSwitcher />
+          {headerActions}
+        </div>
+      </header>
+      <div className="flex flex-1 flex-col gap-4 px-4 pb-8 sm:px-6 lg:px-8">
+        <div>
+          <h1 className="text-[1.7rem] font-semibold tracking-[-0.03em]">{title}</h1>
+        </div>
+        {children}
+      </div>
+    </>
   );
 }
 
@@ -159,7 +201,7 @@ function AdminSidebar({
   const t = useTranslations("adminDashboard");
   const tBrand = useTranslations("brand");
   const needle = query.trim().toLocaleLowerCase();
-  const items = NAV.filter((id) => t(navKey(id)).toLocaleLowerCase().includes(needle));
+  const items = ADMIN_NAVIGATION.filter(({ label }) => t(label).toLocaleLowerCase().includes(needle));
 
   return (
     <aside
@@ -191,8 +233,7 @@ function AdminSidebar({
       </label>
       <nav className="mt-4 flex flex-1 flex-col gap-1 overflow-y-auto">
         {items.length === 0 ? <p className="px-3 py-4 text-sm text-[#8b919a]">{t("noNavResults")}</p> : null}
-        {items.map((id) => {
-          const href = NAV_HREF[id];
+        {items.map(({ id, label, href }) => {
           const active = id === activeNav;
           const className = active
             ? "flex min-h-11 items-center gap-3 rounded-[14px] bg-[#2f6bff] px-3 text-sm font-semibold text-white shadow-[0_8px_16px_rgba(47,107,255,0.24)]"
@@ -202,7 +243,7 @@ function AdminSidebar({
             return (
               <span aria-current="page" className={className} key={id}>
                 <NavIcon id={id} />
-                {t(navKey(id))}
+                {t(label)}
               </span>
             );
           }
@@ -210,20 +251,20 @@ function AdminSidebar({
             return (
               <Link className={className} href={href} key={id} onClick={onClose}>
                 <NavIcon id={id} />
-                <span className="min-w-0 flex-1 truncate">{t(navKey(id))}</span>
+                <span className="min-w-0 flex-1 truncate">{t(label)}</span>
               </Link>
             );
           }
           return (
             <button
-              aria-label={`${t(navKey(id))}. ${t("soon")}`}
+              aria-label={`${t(label)}. ${t("soon")}`}
               className={className}
               key={id}
               onClick={onUnavailable}
               type="button"
             >
               <NavIcon id={id} />
-              <span className="min-w-0 flex-1 truncate">{t(navKey(id))}</span>
+              <span className="min-w-0 flex-1 truncate">{t(label)}</span>
             </button>
           );
         })}
@@ -239,34 +280,6 @@ function AdminSidebar({
       </div>
     </aside>
   );
-}
-
-function navKey(id: AdminNavId) {
-  const keys: Record<
-    AdminNavId,
-    | "navHome"
-    | "navProjects"
-    | "navCompanies"
-    | "navVerification"
-    | "navMessages"
-    | "navDeals"
-    | "navReviews"
-    | "navProfile"
-    | "navSupport"
-    | "navSettings"
-  > = {
-    home: "navHome",
-    projects: "navProjects",
-    companies: "navCompanies",
-    verification: "navVerification",
-    messages: "navMessages",
-    deals: "navDeals",
-    reviews: "navReviews",
-    profile: "navProfile",
-    support: "navSupport",
-    settings: "navSettings",
-  };
-  return keys[id];
 }
 
 function Glyph({ children, className = "size-[18px]" }: { children: ReactNode; className?: string }) {
@@ -315,6 +328,13 @@ function NavIcon({ id }: { id: AdminNavId }) {
     return (
       <Glyph>
         <path {...stroke()} d="M4 5h7v7H4V5Zm9 0h7v4h-7V5ZM13 11h7v8h-7v-8ZM4 14h7v5H4v-5Z" />
+      </Glyph>
+    );
+  if (id === "siteVisits")
+    return (
+      <Glyph>
+        <path {...stroke()} d="M7 3v3M17 3v3M5 9h14M6 5h12a2 2 0 0 1 2 2v12H4V7a2 2 0 0 1 2-2Z" />
+        <path {...stroke()} d="m9 14 2 2 4-4" />
       </Glyph>
     );
   if (id === "companies")
