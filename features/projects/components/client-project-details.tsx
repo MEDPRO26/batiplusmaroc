@@ -4,8 +4,9 @@ import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import Image from "next/image";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { StatusBadge } from "@/features/clients/components/client-dashboard";
 import { ErrorState } from "@/features/shared/components/error-state";
 import { PageSkeleton } from "@/features/shared/components/skeletons";
@@ -15,6 +16,9 @@ import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { routes } from "@/lib/routes";
 import { ClientReceivedQuotes } from "@/features/quotes/components/client-received-quotes";
 import { ClientProjectCurrentStep } from "@/features/projects/components/client-project-current-step";
+import { ReviewDialog, type ReviewDraft } from "@/features/projects/components/review-dialog";
+
+export { ReviewDialog } from "@/features/projects/components/review-dialog";
 
 export type ProjectDetails = NonNullable<FunctionReturnType<typeof api.projects.index.getMyProject>>;
 
@@ -125,7 +129,65 @@ export function ClientDealCompletion({ project }: { project: ProjectDetails }) {
       </div>
       {error && !confirming ? <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}
       {confirming ? <DealCompletionDialog busy={busy} error={error} onCancel={() => setConfirming(false)} onConfirm={() => void confirm()} /> : null}
+      {completed && deal.reviewEligible ? <ClientReviewPanel dealId={dealId} /> : null}
     </section>
+  );
+}
+
+export function ClientReviewPanel({ dealId }: { dealId: Id<"deals"> }) {
+  const t = useTranslations("clientProjects.review");
+  const locale = useLocale();
+  const review = useQuery(api.reviews.index.getMyReviewForDeal, { dealId });
+  const createReview = useMutation(api.reviews.index.createReview);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const closeReviewDialog = useCallback(() => setOpen(false), []);
+
+  async function submit({ rating, comment }: ReviewDraft) {
+    setBusy(true);
+    setError("");
+    try {
+      await createReview({ dealId, rating, comment });
+      setOpen(false);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "";
+      setError(
+        message.includes("REVIEW_ALREADY_EXISTS") ? t("errors.alreadyExists")
+          : message.includes("INVALID_REVIEW_RATING") ? t("errors.rating")
+            : message.includes("INVALID_REVIEW_COMMENT") ? t("errors.comment")
+              : message.includes("REVIEW_NOT_ELIGIBLE") ? t("errors.notEligible")
+                : t("errors.generic"),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (review === undefined) return <p className="mt-5 text-sm text-muted" role="status">{t("loading")}</p>;
+  if (review) {
+    return (
+      <div className="mt-5 border-t border-brand-border pt-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="m-0 text-base font-semibold text-ink">{t("submittedTitle")}</h3>
+          <span className="text-sm font-semibold text-amber-600" aria-label={t("ratingOutOfFive", { rating: review.rating })}>{"★".repeat(review.rating)}<span className="text-slate-300">{"★".repeat(5 - review.rating)}</span></span>
+        </div>
+        <p className="mt-2 mb-0 whitespace-pre-wrap text-sm leading-6 text-ink/85">{review.comment}</p>
+        <p className="mt-2 mb-0 text-xs text-muted">
+          {t("submittedMeta", { date: new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "Africa/Casablanca" }).format(review.createdAt) })}
+          {review.moderationStatus === "hidden" ? ` · ${t("hiddenStatus")}` : ""}
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-5 border-t border-brand-border pt-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div><h3 className="m-0 text-base font-semibold text-ink">{t("title")}</h3><p className="mt-1 mb-0 text-sm text-muted">{t("lead")}</p></div>
+        <button className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-brand bg-white px-5 text-sm font-semibold text-brand hover:bg-brand-soft" onClick={() => { setError(""); setOpen(true); }} type="button">{t("action")}</button>
+      </div>
+      {open ? <ReviewDialog busy={busy} error={error} onCancel={closeReviewDialog} onSubmit={(draft) => void submit(draft)} /> : null}
+    </div>
   );
 }
 

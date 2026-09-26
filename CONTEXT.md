@@ -40,6 +40,13 @@ agreed work. It completes both the Deal and Project and makes the Deal eligible
 for a review, independently of commission payment.
 _Avoid_: Commission settlement, Company self-completion
 
+**Client Review**:
+The completed Deal owner's one immutable rating and comment about the selected
+Company. It is public by default, and an Admin may hide or restore its public
+visibility without editing its content. Hidden reviews do not contribute to the
+Company's public rating or review count.
+_Avoid_: Company-to-Client review, testimonial, editable Admin content
+
 **Marketplace Commission**:
 The flat-bracket fee owed to Batiplus for a Deal, calculated from the full
 accepted Deal amount using the schedule in effect at Company Selection.

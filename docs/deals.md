@@ -1,4 +1,4 @@
-# Deal domain (V1 Steps 8.2–9)
+# Deal domain (V1 Steps 8.2–10)
 
 A Deal is Batiplus's authoritative commercial record after the project-owning
 Client accepts the current revision of a Company's Final Quote. The accepted
@@ -99,6 +99,21 @@ The command does not gate on or change the commission lifecycle. A `due` or
 without rewriting timestamps or duplicating audit rows. Company members,
 Admins, SEO users, other Clients, and anonymous callers have no completion
 override.
+
+## Completed Deal reviews
+
+Exactly one review may be created for a Deal after the owning Client completes
+it. The mutation accepts only `dealId`, an integer `rating` from 1–5, and a
+plain-text `comment` from 10–2,000 characters. It re-derives and validates the
+Client, Project, selected Company, initial quote, conversation, accepted Final
+Quote, and accepted revision before writing. Review creation, the Company's
+rating aggregate, and `review_created` activity are one atomic transaction.
+
+Review content is immutable in V1. A Company can read public feedback but has no
+review mutation. An Admin can hide or restore public visibility only; Admins
+cannot edit the rating or comment. Hidden reviews are excluded from the public
+profile and the exact Company rating/count aggregate. See `docs/reviews.md` for
+the complete authorization, moderation, and public-data contract.
 
 ## Company commission visibility
 

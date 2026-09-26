@@ -19,6 +19,7 @@ type AppendMarketplaceActivityArgs = {
   finalQuoteId?: Id<"finalQuotes">;
   finalQuoteRevisionId?: Id<"finalQuoteRevisions">;
   dealId?: Id<"deals">;
+  reviewId?: Id<"reviews">;
   oldStatus?: string;
   newStatus?: string;
   reason?: string;
@@ -34,7 +35,7 @@ export async function appendMarketplaceActivity(
   ctx: MutationCtx,
   args: AppendMarketplaceActivityArgs,
 ) {
-  const [project, actor, company, quote, conversation, siteAssessment, siteVisit, finalQuote, finalQuoteRevision, deal] = await Promise.all([
+  const [project, actor, company, quote, conversation, siteAssessment, siteVisit, finalQuote, finalQuoteRevision, deal, review] = await Promise.all([
     ctx.db.get(args.projectId),
     ctx.db.get(args.actorUserId),
     args.companyId ? ctx.db.get(args.companyId) : null,
@@ -45,6 +46,7 @@ export async function appendMarketplaceActivity(
     args.finalQuoteId ? ctx.db.get(args.finalQuoteId) : null,
     args.finalQuoteRevisionId ? ctx.db.get(args.finalQuoteRevisionId) : null,
     args.dealId ? ctx.db.get(args.dealId) : null,
+    args.reviewId ? ctx.db.get(args.reviewId) : null,
   ]);
 
   if (!project) throw new ConvexError("PROJECT_NOT_FOUND");
@@ -74,6 +76,13 @@ export async function appendMarketplaceActivity(
       (args.finalQuoteRevisionId !== undefined &&
         deal.acceptedFinalQuoteRevisionId !== args.finalQuoteRevisionId))
   ) throw new ConvexError("INVALID_ACTIVITY_DEAL");
+  if (
+    args.reviewId &&
+    (!review ||
+      review.projectId !== args.projectId ||
+      (args.companyId !== undefined && review.companyId !== args.companyId) ||
+      (args.dealId !== undefined && review.dealId !== args.dealId))
+  ) throw new ConvexError("INVALID_ACTIVITY_REVIEW");
   if (
     args.siteVisitId &&
     (!siteVisit ||

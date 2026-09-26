@@ -31,6 +31,9 @@ export const marketplaceActivityEventTypeValidator = v.union(
   v.literal("company_selected"),
   v.literal("deal_created"),
   v.literal("deal_completed"),
+  v.literal("review_created"),
+  v.literal("review_hidden"),
+  v.literal("review_restored"),
   v.literal("commission_due"),
   v.literal("commission_paid"),
 );
@@ -77,6 +80,9 @@ export type MarketplaceActivityEventType =
   | "company_selected"
   | "deal_created"
   | "deal_completed"
+  | "review_created"
+  | "review_hidden"
+  | "review_restored"
   | "commission_due"
   | "commission_paid";
 

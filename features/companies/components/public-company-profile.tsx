@@ -1,7 +1,7 @@
 import type { FunctionReturnType } from "convex/server";
 import { Check, ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import type { api } from "@/convex/_generated/api";
 
@@ -9,6 +9,7 @@ type PublicCompany = NonNullable<FunctionReturnType<typeof api.portfolio.index.g
 
 export async function PublicCompanyProfile({ company }: { company: PublicCompany }) {
   const t = await getTranslations("publicCompany");
+  const format = await getFormatter();
   const initials = company.name
     .split(/\s+/)
     .slice(0, 2)
@@ -69,6 +70,9 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                   <p className="mt-2 mb-0 flex flex-wrap items-center gap-2 text-sm text-muted">
                     <MapPin aria-hidden className="size-3.5 shrink-0" strokeWidth={1.8} />
                     <span>{company.city}</span>
+                  </p>
+                  <p className="mt-2 mb-0 text-sm font-semibold text-ink">
+                    {company.rating === null ? t("reviewsNone") : <><span className="text-amber-600">★ {format.number(company.rating, { maximumFractionDigits: 1 })}</span> <span className="font-normal text-muted">{t("reviewCount", { count: company.reviewCount })}</span></>}
                   </p>
                 </div>
               </div>
@@ -207,6 +211,20 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                   </div>
                 ) : (
                   <p className="m-0 text-sm text-muted">{t("notSpecified")}</p>
+                )}
+              </MainSection>
+
+              <MainSection title={t("reviewsTitle", { count: company.reviewCount })}>
+                {company.reviews.length === 0 ? <p className="m-0 text-sm text-muted">{t("reviewsEmpty")}</p> : (
+                  <ul className="m-0 grid list-none gap-4 p-0">
+                    {company.reviews.map((review, index) => (
+                      <li className="rounded-xl border border-[#e4e8eb] p-4" key={`${review.createdAt}-${index}`}>
+                        <div className="flex flex-wrap items-center justify-between gap-2"><span aria-label={t("ratingOutOfFive", { rating: review.rating })} className="font-semibold text-amber-600">{"★".repeat(review.rating)}<span className="text-slate-300">{"★".repeat(5 - review.rating)}</span></span><time className="text-xs text-muted" dateTime={new Date(review.createdAt).toISOString()}>{format.dateTime(review.createdAt, { dateStyle: "medium", timeZone: "Africa/Casablanca" })}</time></div>
+                        <p className="mt-3 mb-0 whitespace-pre-wrap text-sm leading-6 text-ink/90">{review.comment}</p>
+                        <p className="mt-3 mb-0 text-xs font-medium text-muted">{t("reviewBy", { name: [review.reviewerFirstName, review.reviewerLastInitial ? `${review.reviewerLastInitial}.` : null].filter(Boolean).join(" ") || t("reviewerAnonymous") })}{review.projectTitle ? ` · ${review.projectTitle}` : ""}</p>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </MainSection>
 

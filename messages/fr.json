@@ -1556,7 +1556,8 @@
     "portfolioPreview": "Réalisations publiées",
     "portfolioAlt": "Réalisation publiée : {title}",
     "portfolioFallback": "Aucune réalisation publiée pour le moment.",
-    "portfolioCount": "{count, plural, =0 {Aucune réalisation publiée} one {# réalisation publiée} other {# réalisations publiées affichées}}"
+    "portfolioCount": "{count, plural, =0 {Aucune réalisation publiée} one {# réalisation publiée} other {# réalisations publiées affichées}}",
+    "reviewCount": "{count, plural, one {# avis} other {# avis}}"
   },
   "companyProfileManager": {
     "eyebrow": "Espace entreprise",
@@ -1777,6 +1778,13 @@
     "portfolioTitleCount": "Portfolio ({count})",
     "portfolioEmpty": "Cette entreprise n’a pas encore publié de réalisation.",
     "projectImageAlt": "Réalisation : {title}",
+    "reviewsNone": "Aucun avis pour le moment",
+    "reviewCount": "{count, plural, one {# avis} other {# avis}}",
+    "reviewsTitle": "Avis clients ({count})",
+    "reviewsEmpty": "Cette entreprise n’a pas encore d’avis public.",
+    "ratingOutOfFive": "{rating} étoiles sur 5",
+    "reviewBy": "Avis de {name}",
+    "reviewerAnonymous": "Client",
     "service": {
       "houseConstruction": "Construction de maisons",
       "renovation": "Rénovation",
@@ -2114,6 +2122,33 @@
         "generic": "Impossible de terminer l’accord. Veuillez réessayer."
       }
     },
+    "review": {
+      "loading": "Chargement de votre avis…",
+      "title": "Partagez votre expérience",
+      "lead": "Votre avis aide les futurs clients à évaluer cette entreprise.",
+      "action": "Laisser un avis",
+      "dialogTitle": "Évaluer l’entreprise",
+      "dialogLead": "Évaluez le travail de l’entreprise pour cette transaction terminée. Votre avis apparaîtra sur son profil public.",
+      "ratingLabel": "Note",
+      "starRating": "{rating} étoiles",
+      "ratingOutOfFive": "{rating} étoiles sur 5",
+      "commentLabel": "Votre avis",
+      "commentPlaceholder": "Décrivez la qualité, la communication et la réalisation des travaux.",
+      "commentHelp": "10 à 2 000 caractères · {count} saisis",
+      "cancel": "Annuler",
+      "submit": "Publier l’avis",
+      "saving": "Publication…",
+      "submittedTitle": "Avis publié",
+      "submittedMeta": "Publié le {date}",
+      "hiddenStatus": "Non visible publiquement pour le moment",
+      "errors": {
+        "rating": "Choisissez une note de 1 à 5 étoiles.",
+        "comment": "Rédigez un avis de 10 à 2 000 caractères.",
+        "alreadyExists": "Vous avez déjà publié un avis pour cette transaction.",
+        "notEligible": "Cette transaction ne peut pas recevoir d’avis.",
+        "generic": "L’avis n’a pas pu être publié. Veuillez réessayer."
+      }
+    },
     "history": {
       "title": "Historique du statut",
       "transition": "{from} → {to}",
@@ -2418,6 +2453,25 @@
     "saving": "Enregistrement…",
     "paidSuccess": "Commission marquée comme payée.",
     "errors": { "alreadyPaid": "Cette commission est déjà marquée comme payée.", "invalidInput": "Vérifiez la référence ou la note de paiement.", "generic": "Le statut de la commission n’a pas pu être mis à jour. Réessayez." }
+  },
+  "adminReviews": {
+    "metaTitle": "Modération des avis | Batiplus",
+    "metaDescription": "Modérez les avis clients sur Batiplus.",
+    "title": "Avis",
+    "lead": "Consultez les retours clients et contrôlez leur visibilité publique. Le contenu des avis est immuable et ne peut pas être modifié ici.",
+    "filtersLabel": "Visibilité des avis",
+    "status": { "all": "Tous", "visible": "Visibles", "hidden": "Masqués" },
+    "searchLabel": "Rechercher des avis",
+    "searchPlaceholder": "Entreprise, projet, client ou commentaire",
+    "loading": "Chargement des avis…",
+    "empty": "Aucun avis ne correspond à ces filtres.",
+    "ratingOutOfFive": "{rating} étoiles sur 5",
+    "hide": "Masquer l’avis",
+    "restore": "Restaurer l’avis",
+    "saving": "Enregistrement…",
+    "hiddenSuccess": "L’avis est masqué des profils publics.",
+    "restoredSuccess": "L’avis est de nouveau visible sur les profils publics.",
+    "error": "La visibilité de l’avis n’a pas pu être modifiée. Réessayez."
   },
   "adminSettings": {
     "metaTitle": "Paramètres admin | Batiplus",
@@ -3863,6 +3917,14 @@
         "DEAL_ALREADY_COMPLETED": "Cet accord est déjà terminé.",
         "DEAL_NOT_COMPLETABLE": "Cet accord ne peut pas être terminé depuis son état actuel.",
         "DEAL_COMPLETION_INTEGRITY_ERROR": "Cet accord ne peut pas être terminé car sa relation avec le projet est incohérente.",
+        "REVIEW_NOT_FOUND": "Cet avis ou cette transaction est indisponible.",
+        "REVIEW_NOT_ELIGIBLE": "Seule une transaction terminée peut recevoir un avis.",
+        "REVIEW_DEAL_INTEGRITY_ERROR": "Cet avis ne peut pas être créé car la relation de la transaction est incohérente.",
+        "REVIEW_ALREADY_EXISTS": "Cette transaction possède déjà un avis.",
+        "INVALID_REVIEW_RATING": "Choisissez une note entière de 1 à 5.",
+        "INVALID_REVIEW_COMMENT": "Rédigez un avis de 10 à 2 000 caractères.",
+        "REVIEW_AGGREGATE_INTEGRITY_ERROR": "La note globale de l’entreprise n’a pas pu être mise à jour de façon sûre.",
+        "INVALID_ACTIVITY_REVIEW": "L’activité de l’avis n’a pas pu être enregistrée.",
         "INVALID_COMMISSION_RATE": "Saisissez un taux de commission compris entre 0,00 % et 30,00 %.",
         "INVALID_COMMISSION_TIER_BOUNDARY": "Saisissez des limites de tranche valides en MAD entiers.",
         "COMMISSION_TIERS_REQUIRED": "Ajoutez au moins une tranche de commission.",

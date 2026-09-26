@@ -358,6 +358,7 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
                       {profile.isVerified ? <span className="inline-flex items-center rounded-full bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand">{tProfile("verified")}</span> : null}
                     </div>
                     <p className="mt-1.5 mb-0 text-sm leading-5 text-muted">{profile.city}</p>
+                    <p className="mt-1 mb-0 text-sm font-semibold text-ink">{profile.rating === null ? tProfile("reviewsNone") : <><span className="text-amber-600">★ {profile.rating.toFixed(1)}</span> <span className="font-normal text-muted">{tProfile("reviewCount", { count: profile.reviewCount })}</span></>}</p>
                     {profile.yearsExperience !== null ? <p className="mt-1 mb-0 text-sm leading-5 text-ink">{tProfile("years", { count: profile.yearsExperience })}</p> : null}
                   </div>
                 </div>
@@ -370,6 +371,11 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
               </div>
 
               <div className="grid gap-8 px-5 py-6 sm:px-6">
+                <section>
+                  <h3 className="m-0 text-base font-semibold text-ink">{tProfile("reviewsTitle", { count: profile.reviewCount })}</h3>
+                  {profile.reviews.length === 0 ? <p className="mt-2 mb-0 text-sm text-muted">{tProfile("reviewsEmpty")}</p> : <ul className="mt-3 grid list-none gap-3 p-0">{profile.reviews.map((review, index) => <li className="rounded-xl border border-brand-border p-4" key={`${review.createdAt}-${index}`}><span className="font-semibold text-amber-600">{"★".repeat(review.rating)}<span className="text-slate-300">{"★".repeat(5 - review.rating)}</span></span><p className="mt-2 mb-0 text-sm leading-6 text-ink/85">{review.comment}</p></li>)}</ul>}
+                </section>
+
                 <section>
                   <h3 className="m-0 text-base font-semibold text-ink">{tProfile("services")}</h3>
                   <div className="mt-3 flex flex-wrap gap-1.5">
@@ -478,6 +484,7 @@ function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onVie
               ) : null}
             </div>
             {meta.length > 0 ? <p className="mt-1 mb-0 text-sm leading-5 text-muted">{meta.join(" · ")}</p> : null}
+            {company.rating !== null ? <p className="mt-1 mb-0 text-xs font-semibold text-amber-700">★ {company.rating.toFixed(1)} <span className="font-normal text-muted">{t("reviewCount", { count: company.reviewCount })}</span></p> : null}
           </div>
           <button
             className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-brand/80 bg-white px-3.5 text-sm font-semibold text-brand shadow-[0_0_0_0_transparent] transition-[background-color,border-color,color,box-shadow,transform] duration-150 hover:border-brand hover:bg-brand hover:text-white hover:shadow-[0_6px_16px_rgb(5_79_132/0.18)] active:scale-[0.96]"

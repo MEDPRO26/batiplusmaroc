@@ -1556,7 +1556,8 @@
     "portfolioPreview": "Published work",
     "portfolioAlt": "Published work: {title}",
     "portfolioFallback": "No published work yet.",
-    "portfolioCount": "{count, plural, =0 {No published work} one {# published project} other {# published projects shown}}"
+    "portfolioCount": "{count, plural, =0 {No published work} one {# published project} other {# published projects shown}}",
+    "reviewCount": "{count, plural, one {# review} other {# reviews}}"
   },
   "companyProfileManager": {
     "eyebrow": "Company workspace",
@@ -1777,6 +1778,13 @@
     "portfolioTitleCount": "Portfolio ({count})",
     "portfolioEmpty": "This company has not published completed work yet.",
     "projectImageAlt": "Completed work: {title}",
+    "reviewsNone": "No reviews yet",
+    "reviewCount": "{count, plural, one {# review} other {# reviews}}",
+    "reviewsTitle": "Client reviews ({count})",
+    "reviewsEmpty": "This company has no public reviews yet.",
+    "ratingOutOfFive": "{rating} out of 5 stars",
+    "reviewBy": "Review by {name}",
+    "reviewerAnonymous": "Client",
     "service": {
       "houseConstruction": "House construction",
       "renovation": "Renovation",
@@ -2114,6 +2122,33 @@
         "generic": "The Deal could not be completed. Please try again."
       }
     },
+    "review": {
+      "loading": "Loading your review…",
+      "title": "Share your experience",
+      "lead": "Your review helps future clients evaluate this company.",
+      "action": "Leave a review",
+      "dialogTitle": "Review the company",
+      "dialogLead": "Rate the company’s work on this completed Deal. Your review will appear on its public profile.",
+      "ratingLabel": "Rating",
+      "starRating": "{rating} stars",
+      "ratingOutOfFive": "{rating} out of 5 stars",
+      "commentLabel": "Your review",
+      "commentPlaceholder": "Describe the quality, communication, and delivery of the work.",
+      "commentHelp": "10–2,000 characters · {count} entered",
+      "cancel": "Cancel",
+      "submit": "Publish review",
+      "saving": "Publishing…",
+      "submittedTitle": "Review submitted",
+      "submittedMeta": "Published on {date}",
+      "hiddenStatus": "Not currently visible publicly",
+      "errors": {
+        "rating": "Choose a rating from 1 to 5 stars.",
+        "comment": "Write a review between 10 and 2,000 characters.",
+        "alreadyExists": "You have already reviewed this Deal.",
+        "notEligible": "This Deal is not eligible for a review.",
+        "generic": "The review could not be published. Please try again."
+      }
+    },
     "history": {
       "title": "Status history",
       "transition": "{from} → {to}",
@@ -2418,6 +2453,25 @@
     "saving": "Saving…",
     "paidSuccess": "Commission marked as paid.",
     "errors": { "alreadyPaid": "This commission has already been marked as paid.", "invalidInput": "Check the payment reference or note.", "generic": "The commission status could not be updated. Try again." }
+  },
+  "adminReviews": {
+    "metaTitle": "Review moderation | Batiplus",
+    "metaDescription": "Moderate client reviews on Batiplus.",
+    "title": "Reviews",
+    "lead": "Review client feedback and control public visibility. Review content is immutable and cannot be edited here.",
+    "filtersLabel": "Review visibility",
+    "status": { "all": "All", "visible": "Visible", "hidden": "Hidden" },
+    "searchLabel": "Search reviews",
+    "searchPlaceholder": "Search company, project, client, or comment",
+    "loading": "Loading reviews…",
+    "empty": "No reviews match these filters.",
+    "ratingOutOfFive": "{rating} out of 5 stars",
+    "hide": "Hide review",
+    "restore": "Restore review",
+    "saving": "Saving…",
+    "hiddenSuccess": "Review hidden from public profiles.",
+    "restoredSuccess": "Review restored to public profiles.",
+    "error": "The review visibility could not be updated. Try again."
   },
   "adminSettings": {
     "metaTitle": "Admin settings | Batiplus",
@@ -3863,6 +3917,14 @@
         "DEAL_ALREADY_COMPLETED": "This Deal has already been completed.",
         "DEAL_NOT_COMPLETABLE": "This Deal cannot be completed from its current state.",
         "DEAL_COMPLETION_INTEGRITY_ERROR": "This Deal cannot be completed because its project relationship is inconsistent.",
+        "REVIEW_NOT_FOUND": "This review or Deal is unavailable.",
+        "REVIEW_NOT_ELIGIBLE": "Only a completed Deal can be reviewed.",
+        "REVIEW_DEAL_INTEGRITY_ERROR": "This review cannot be created because the Deal relationship is inconsistent.",
+        "REVIEW_ALREADY_EXISTS": "This Deal already has a review.",
+        "INVALID_REVIEW_RATING": "Choose a whole-number rating from 1 to 5.",
+        "INVALID_REVIEW_COMMENT": "Write a review between 10 and 2,000 characters.",
+        "REVIEW_AGGREGATE_INTEGRITY_ERROR": "The company review rating could not be updated safely.",
+        "INVALID_ACTIVITY_REVIEW": "The review activity could not be recorded.",
         "INVALID_COMMISSION_RATE": "Enter a commission rate between 0.00% and 30.00%.",
         "INVALID_COMMISSION_TIER_BOUNDARY": "Enter valid whole-MAD commission tier boundaries.",
         "COMMISSION_TIERS_REQUIRED": "Add at least one commission tier.",

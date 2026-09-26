@@ -9,7 +9,8 @@ vi.mock("next/image", () => ({
   ),
 }));
 vi.mock("next-intl/server", () => ({
-  getTranslations: async () => (key: string) => key,
+  getTranslations: async () => (key: string, values?: Record<string, unknown>) => key === "reviewBy" ? `reviewBy ${String(values?.name ?? "")}` : key,
+  getFormatter: async () => ({ number: (value: number) => String(value), dateTime: () => "Sep 26, 2026" }),
 }));
 
 import { PublicCompanyProfile } from "./components/public-company-profile";
@@ -41,6 +42,9 @@ const company = {
   companySize: "11to50",
   languages: ["arabic", "french"],
   website: "https://atlas.example/",
+  rating: 4.5,
+  reviewCount: 2,
+  reviews: [{ rating: 5, comment: "Excellent construction work and communication.", createdAt: 1_790_000_000_000, reviewerFirstName: "Samira", reviewerLastInitial: "B", projectTitle: "Villa Atlas" }],
   portfolio: [
     {
       id: "project-1" as never,
@@ -79,6 +83,10 @@ describe("public company profile UX contract", () => {
     expect(html).toContain("xl:grid-cols-3");
     expect(html).toContain("Atlas Build");
     expect(html).toContain("Villa Atlas");
+    expect(html).toContain("reviewsTitle");
+    expect(html).toContain("Excellent construction work and communication.");
+    expect(html).toContain("Samira B.");
     expect(html).not.toMatch(/tel:|mailto:|publicPhone|@|0612|0522/i);
+    expect(html).not.toMatch(/dealId|clientUserId|moderationStatus/i);
   });
 });

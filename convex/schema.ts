@@ -8,6 +8,7 @@ import {
 } from "./marketplaceActivity/constants";
 import { commissionStatusValidator, dealStatusValidator } from "./deals/constants";
 import { commissionTierValidator } from "./marketplaceSettings/constants";
+import { reviewModerationStatusValidator } from "./reviews/constants";
 
 const accountType = v.union(
   v.literal("client"),
@@ -207,6 +208,7 @@ export default defineSchema({
     finalQuoteId: v.optional(v.id("finalQuotes")),
     finalQuoteRevisionId: v.optional(v.id("finalQuoteRevisions")),
     dealId: v.optional(v.id("deals")),
+    reviewId: v.optional(v.id("reviews")),
     oldStatus: v.optional(v.string()),
     newStatus: v.optional(v.string()),
     reason: v.optional(v.string()),
@@ -463,6 +465,27 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_acceptedFinalQuoteId", ["acceptedFinalQuoteId"]),
 
+  reviews: defineTable({
+    dealId: v.id("deals"),
+    projectId: v.id("projects"),
+    companyId: v.id("companies"),
+    clientUserId: v.id("users"),
+    rating: v.number(),
+    comment: v.string(),
+    moderationStatus: reviewModerationStatusValidator,
+    moderatedAt: v.optional(v.number()),
+    moderatedByAdminUserId: v.optional(v.id("users")),
+    createdAt: v.number(),
+  })
+    .index("by_dealId", ["dealId"])
+    .index("by_companyId_and_moderationStatus_and_createdAt", [
+      "companyId",
+      "moderationStatus",
+      "createdAt",
+    ])
+    .index("by_moderationStatus_and_createdAt", ["moderationStatus", "createdAt"])
+    .index("by_createdAt", ["createdAt"]),
+
   dealStatusHistory: defineTable({
     dealId: v.id("deals"),
     fromStatus: v.optional(dealStatusValidator),
@@ -592,6 +615,9 @@ export default defineSchema({
     coverMediaId: v.optional(v.id("publicMedia")),
     /** Denormalized public-only text used by the company directory search index. */
     directorySearchText: v.optional(v.string()),
+    /** Visible-review aggregates, maintained transactionally with review moderation. */
+    reviewCount: v.optional(v.number()),
+    reviewRatingTotal: v.optional(v.number()),
     onboardingStatus,
     verificationStatus: v.union(
       v.literal("draft"),

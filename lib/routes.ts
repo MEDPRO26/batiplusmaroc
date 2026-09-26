@@ -40,6 +40,7 @@ export const routes = {
   admin: "/admin",
   adminProjects: "/admin/projects",
   adminDeals: "/admin/deals",
+  adminReviews: "/admin/reviews",
   adminSiteVisits: "/admin/site-visits",
   adminVerification: "/admin/verification",
   adminSettings: "/admin/settings",

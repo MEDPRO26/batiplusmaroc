@@ -39,6 +39,14 @@ const projectOutputValidator = v.object({
   media: v.array(imageOutputValidator),
   updatedAt: v.number(),
 });
+const publicReviewValidator = v.object({
+  rating: v.number(),
+  comment: v.string(),
+  createdAt: v.number(),
+  reviewerFirstName: v.union(v.string(), v.null()),
+  reviewerLastInitial: v.union(v.string(), v.null()),
+  projectTitle: v.union(v.string(), v.null()),
+});
 
 const MAX_EXTRA_IMAGES = 8;
 
@@ -146,15 +154,24 @@ export const getPublicCompanyProfile = query({
     languages: v.array(v.string()),
     website: v.union(v.string(), v.null()),
     portfolio: v.array(projectOutputValidator),
+    rating: v.union(v.number(), v.null()),
+    reviewCount: v.number(),
+    reviews: v.array(publicReviewValidator),
   })),
   handler: async (ctx, args) => {
     const company = await ctx.db.query("companies").withIndex("by_slug", (q) => q.eq("slug", args.slug)).unique();
     if (!company || company.onboardingStatus !== "completed" || !company.slug || !company.name || !company.city || !company.description) return null;
-    const [services, projects, logoMedia, coverMedia] = await Promise.all([
+    const [services, projects, logoMedia, coverMedia, reviewRows] = await Promise.all([
       ctx.db.query("companyServices").withIndex("by_companyId", (q) => q.eq("companyId", company._id)).take(11),
       ctx.db.query("portfolioProjects").withIndex("by_companyId_and_status", (q) => q.eq("companyId", company._id).eq("status", "published")).order("desc").take(24),
       company.logoMediaId ? ctx.db.get(company.logoMediaId) : Promise.resolve(null),
       company.coverMediaId ? ctx.db.get(company.coverMediaId) : Promise.resolve(null),
+      ctx.db.query("reviews")
+        .withIndex("by_companyId_and_moderationStatus_and_createdAt", (q) =>
+          q.eq("companyId", company._id).eq("moderationStatus", "visible"),
+        )
+        .order("desc")
+        .take(20),
     ]);
     const logoUrl = logoMedia && logoMedia.companyId === company._id && logoMedia.purpose === "companyLogo"
       ? getPublicMediaUrl(logoMedia.objectKey)
@@ -166,6 +183,23 @@ export const getPublicCompanyProfile = query({
       : null;
     const portfolio = (await Promise.all(projects.map((project) => resolveProject(ctx, project))))
       .filter((project): project is NonNullable<typeof project> => project !== null);
+    const reviews = (await Promise.all(reviewRows.map(async (review) => {
+      const [client, project] = await Promise.all([
+        ctx.db.get(review.clientUserId),
+        ctx.db.get(review.projectId),
+      ]);
+      if (!client || !project || project.clientId !== review.clientUserId || project.selectedCompanyId !== company._id) return null;
+      const firstName = client.firstName?.trim() || null;
+      const lastInitial = client.lastName?.trim().charAt(0).toUpperCase() || null;
+      return {
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: review.createdAt,
+        reviewerFirstName: firstName,
+        reviewerLastInitial: lastInitial,
+        projectTitle: project.title ?? null,
+      };
+    }))).filter((review): review is NonNullable<typeof review> => review !== null);
     return {
       slug: company.slug,
       name: company.name,
@@ -182,6 +216,11 @@ export const getPublicCompanyProfile = query({
       languages: company.languages ?? [],
       website: company.website ?? null,
       portfolio,
+      rating: company.reviewCount && company.reviewRatingTotal !== undefined
+        ? company.reviewRatingTotal / company.reviewCount
+        : null,
+      reviewCount: company.reviewCount ?? 0,
+      reviews,
     };
   },
 });

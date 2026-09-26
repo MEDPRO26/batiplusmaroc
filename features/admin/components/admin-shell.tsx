@@ -41,7 +41,7 @@ const ADMIN_NAVIGATION: { id: AdminNavId; label: AdminNavLabel; href?: AppRoute 
   { id: "verification", label: "navVerification", href: routes.adminVerification },
   { id: "messages", label: "navMessages" },
   { id: "deals", label: "navDeals", href: routes.adminDeals },
-  { id: "reviews", label: "navReviews" },
+  { id: "reviews", label: "navReviews", href: routes.adminReviews },
   { id: "profile", label: "navProfile" },
   { id: "support", label: "navSupport" },
   { id: "settings", label: "navSettings", href: routes.adminSettings },

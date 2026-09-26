@@ -80,8 +80,8 @@ const publicCompanyResultValidator = v.object({
   logoUrl: v.union(v.string(), v.null()),
   coverImageUrl: v.union(v.string(), v.null()),
   portfolio: v.array(portfolioPreviewValidator),
-  rating: v.null(),
-  reviewCount: v.literal(0),
+  rating: v.union(v.number(), v.null()),
+  reviewCount: v.number(),
 });
 
 export function buildCompanyDirectorySearchText(args: {
@@ -178,8 +178,10 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">) {
     logoUrl,
     coverImageUrl: companyCoverUrl ?? portfolio[0]?.url ?? null,
     portfolio,
-    rating: null,
-    reviewCount: 0 as const,
+    rating: company.reviewCount && company.reviewRatingTotal !== undefined
+      ? company.reviewRatingTotal / company.reviewCount
+      : null,
+    reviewCount: company.reviewCount ?? 0,
   };
 }
 
