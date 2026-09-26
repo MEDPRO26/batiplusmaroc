@@ -452,6 +452,10 @@ export default defineSchema({
     .index("by_projectId", ["projectId"])
     .index("by_clientUserId", ["clientUserId"])
     .index("by_companyId", ["companyId"])
+    .index("by_commissionDebtorCompanyId_and_createdAt", [
+      "commissionDebtorCompanyId",
+      "createdAt",
+    ])
     .index("by_commissionStatus_and_createdAt", ["commissionStatus", "createdAt"])
     .index("by_companyId_and_commissionStatus", ["companyId", "commissionStatus"])
     .index("by_status", ["status"])

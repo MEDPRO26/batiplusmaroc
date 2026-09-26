@@ -478,6 +478,7 @@ function CompanySidebar({ profile, verification }: { profile: Profile; verificat
 
       <nav aria-label={t("sidebar.reachMore")} className="overflow-hidden rounded-2xl border border-[#e4ebe6] bg-white">
         <SidebarLink href={routes.messages} label={t("sidebar.messages")} />
+        <SidebarLink href={routes.companyCommissions} label={t("sidebar.commissions")} />
         <SidebarLink href={routes.companyProjects} label={t("findWorkTitle")} />
         <SidebarLink href={routes.contact} label={t("sidebar.contact")} />
       </nav>
@@ -489,7 +490,11 @@ function SidebarLink({
   href,
   label,
 }: {
-  href: typeof routes.messages | typeof routes.companyProjects | typeof routes.contact;
+  href:
+    | typeof routes.messages
+    | typeof routes.companyCommissions
+    | typeof routes.companyProjects
+    | typeof routes.contact;
   label: string;
 }) {
   return (

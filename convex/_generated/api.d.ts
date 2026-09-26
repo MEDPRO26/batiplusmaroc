@@ -24,6 +24,7 @@ import type * as companies_access from "../companies/access.js";
 import type * as companies_directory from "../companies/directory.js";
 import type * as companies_index from "../companies/index.js";
 import type * as companyVerification_index from "../companyVerification/index.js";
+import type * as deals_company from "../deals/company.js";
 import type * as deals_constants from "../deals/constants.js";
 import type * as deals_index from "../deals/index.js";
 import type * as dev_conversationRecovery from "../dev/conversationRecovery.js";
@@ -104,6 +105,7 @@ declare const fullApi: ApiFromModules<{
   "companies/directory": typeof companies_directory;
   "companies/index": typeof companies_index;
   "companyVerification/index": typeof companyVerification_index;
+  "deals/company": typeof deals_company;
   "deals/constants": typeof deals_constants;
   "deals/index": typeof deals_index;
   "dev/conversationRecovery": typeof dev_conversationRecovery;

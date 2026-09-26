@@ -38,6 +38,7 @@ export type MetaNamespace =
   | "clientOnboarding"
   | "companyDashboard"
   | "companyProjects"
+  | "companyCommissions"
   | "companyProfileManagement"
   | "companyOnboarding"
   | "companyVerification"

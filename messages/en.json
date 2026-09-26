@@ -59,6 +59,7 @@
     "postProject": "Post a project",
     "myProjects": "My projects",
     "messages": "Messages",
+    "commissions": "Commissions",
     "searchLabel": "Search companies and services",
     "searchPlaceholder": "Search companies or services",
     "companySearchLabel": "Search projects",
@@ -920,6 +921,10 @@
       "title": "Find projects — Batiplus",
       "description": "Browse approved construction projects available to companies on Batiplus."
     },
+    "companyCommissions": {
+      "title": "Company commissions — Batiplus",
+      "description": "Review your Company’s Batiplus commission obligations and payment status."
+    },
     "signUpClient": {
       "title": "Client sign-up — Batiplus",
       "description": "Create a client account to post projects and receive proposals from companies."
@@ -1186,6 +1191,7 @@
         "verificationBadge": "Verification badge",
         "portfolio": "Portfolio",
         "messages": "Messages",
+        "commissions": "Commissions",
         "contact": "Help center"
       }
     },
@@ -2870,6 +2876,47 @@
     "foundationTitle": "Foundation only",
     "foundationDescription": "No Projects, Companies, or Deals administration tools have been added yet.",
     "home": "Back to Batiplus"
+  },
+  "companyCommissions": {
+    "eyebrow": "Company workspace",
+    "title": "Commissions",
+    "lead": "Review the commission your Company owes Batiplus for each accepted Deal. Payment status is recorded by Batiplus Admins.",
+    "beneficiary": "Batiplus",
+    "unavailable": "Unavailable",
+    "loading": "Loading commission obligations…",
+    "summary": {
+      "label": "Commission summary",
+      "due": "Total commission due",
+      "paid": "Total commission paid",
+      "count": "Due obligations"
+    },
+    "status": { "due": "Due", "paid": "Paid" },
+    "columns": {
+      "project": "Project",
+      "dealAmount": "Deal amount",
+      "commission": "Commission amount",
+      "status": "Status",
+      "dealDate": "Deal date",
+      "paidAt": "Paid at",
+      "details": "Details"
+    },
+    "details": {
+      "open": "View details",
+      "rate": "Commission rate",
+      "beneficiary": "Beneficiary",
+      "configVersion": "Configuration version",
+      "snapshot": "Commission snapshot",
+      "incomplete": "Incomplete — contact Batiplus support"
+    },
+    "empty": {
+      "title": "No commission obligations yet",
+      "lead": "Your Company’s Deal commissions will appear here after a Final Quote is accepted."
+    },
+    "error": {
+      "title": "Commissions unavailable",
+      "lead": "We could not load your commission obligations. Please try again.",
+      "retry": "Try again"
+    }
   },
   "companyProjects": {
     "eyebrow": "Project marketplace",

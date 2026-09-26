@@ -29,6 +29,7 @@ export const routes = {
   clientProject: "/espace-client/projets/[projectId]",
   companyDashboard: "/espace-entreprise",
   companyProjects: "/espace-entreprise/projets",
+  companyCommissions: "/espace-entreprise/commissions",
   companyProject: "/espace-entreprise/projets/[projectId]",
   companyInitialQuote: "/espace-entreprise/projets/[projectId]/devis",
   companyProfileManagement: "/espace-entreprise/profil",

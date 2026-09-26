@@ -59,6 +59,7 @@
     "postProject": "Publier un projet",
     "myProjects": "Mes projets",
     "messages": "Messages",
+    "commissions": "Commissions",
     "searchLabel": "Rechercher des entreprises et des services",
     "searchPlaceholder": "Rechercher une entreprise ou un service",
     "companySearchLabel": "Rechercher des projets",
@@ -920,6 +921,10 @@
       "title": "Trouver des projets — Batiplus",
       "description": "Parcourez les projets de construction validés et accessibles aux entreprises sur Batiplus."
     },
+    "companyCommissions": {
+      "title": "Commissions de l’entreprise — Batiplus",
+      "description": "Consultez les commissions dues à Batiplus par votre entreprise et leur statut de paiement."
+    },
     "signUpClient": {
       "title": "Inscription client — Batiplus",
       "description": "Créez un compte client pour publier vos projets et recevoir des propositions d’entreprises."
@@ -1186,6 +1191,7 @@
         "verificationBadge": "Badge de vérification",
         "portfolio": "Réalisations",
         "messages": "Messages",
+        "commissions": "Commissions",
         "contact": "Centre d’aide"
       }
     },
@@ -2870,6 +2876,47 @@
     "foundationTitle": "Fondation uniquement",
     "foundationDescription": "Aucun outil d’administration des projets, entreprises ou transactions n’a encore été ajouté.",
     "home": "Retour à Batiplus"
+  },
+  "companyCommissions": {
+    "eyebrow": "Espace entreprise",
+    "title": "Commissions",
+    "lead": "Consultez la commission due à Batiplus par votre entreprise pour chaque transaction acceptée. Le statut du paiement est enregistré par les administrateurs Batiplus.",
+    "beneficiary": "Batiplus",
+    "unavailable": "Indisponible",
+    "loading": "Chargement des obligations de commission…",
+    "summary": {
+      "label": "Résumé des commissions",
+      "due": "Total des commissions dues",
+      "paid": "Total des commissions payées",
+      "count": "Obligations dues"
+    },
+    "status": { "due": "Due", "paid": "Payée" },
+    "columns": {
+      "project": "Projet",
+      "dealAmount": "Montant du contrat",
+      "commission": "Montant de la commission",
+      "status": "Statut",
+      "dealDate": "Date du contrat",
+      "paidAt": "Payée le",
+      "details": "Détails"
+    },
+    "details": {
+      "open": "Voir les détails",
+      "rate": "Taux de commission",
+      "beneficiary": "Bénéficiaire",
+      "configVersion": "Version de configuration",
+      "snapshot": "Instantané de commission",
+      "incomplete": "Incomplet — contactez le support Batiplus"
+    },
+    "empty": {
+      "title": "Aucune commission à payer pour le moment",
+      "lead": "Les commissions de votre entreprise apparaîtront ici après l’acceptation d’un devis final."
+    },
+    "error": {
+      "title": "Commissions indisponibles",
+      "lead": "Impossible de charger vos obligations de commission. Veuillez réessayer.",
+      "retry": "Réessayer"
+    }
   },
   "companyProjects": {
     "eyebrow": "Marché des projets",

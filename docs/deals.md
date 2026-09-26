@@ -84,6 +84,24 @@ and optional reference/note. The same transaction appends one immutable
 `commissionStatusHistory` row and a `commission_paid` marketplace activity.
 Repeated confirmation is rejected, and the commercial snapshots are unchanged.
 
+## Company commission visibility
+
+An authenticated, active Company member can read only the commission
+obligations where that member's Company is the snapshotted debtor. The query
+derives the Company from Convex Auth and membership; it accepts no Company ID,
+so another tenant cannot be probed.
+
+The Company projection exposes only the Deal ID, project title, agreed amount,
+commission rate and amount, commission configuration version, `due | paid`
+status, Batiplus beneficiary, Deal date, and paid date. It does not expose the
+Admin actor, payment reference, internal payment note, client identity, audit
+history, or unrelated backend identifiers. The surface has no Company mutation:
+only an Admin can record `due -> paid`.
+
+The current schema requires Deal commission snapshots. As defense in depth, a
+semantically incomplete or corrupt snapshot is displayed as unavailable and is
+never recalculated from current commission settings or fabricated.
+
 The initial `projectQuotes` participation record remains `discussion_open`
 because the current state model has no `won` status. Competing proposals are not
 automatically rejected. No separate Invitation state is invented.

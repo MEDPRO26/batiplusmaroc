@@ -196,6 +196,7 @@ describe("role navbar content", () => {
     expect(html).toContain(routes.companyPortfolio);
     expect(html).toContain(routes.companyDashboard);
     expect(html).toContain(routes.messages);
+    expect(html).toContain(routes.companyCommissions);
     expect(html).toContain(routes.companyProfileManagement);
     expect(html).toContain("nav.companySearchLabel");
     expect(html).toContain("nav.companySearchPlaceholder");

@@ -39,12 +39,14 @@ export function CompanyNavbar({ user }: { user: CompanyUser }) {
     { href: routes.companyProjects, label: t("findProjects") },
     { href: portfolioHref, label: t("portfolio") },
     { href: routes.messages, label: t("messages") },
+    { href: routes.companyCommissions, label: t("commissions") },
     { href: workspaceHref, label: t("myWorkspace") },
   ];
 
   const accountLinks = [
     { href: profileHref, label: tMenu("company.companyProfile") },
     { href: portfolioHref, label: tMenu("company.portfolio") },
+    { href: routes.companyCommissions, label: t("commissions") },
     { href: workspaceHref, label: tMenu("company.workspace") },
   ];
 
@@ -68,6 +70,7 @@ export function CompanyNavbar({ user }: { user: CompanyUser }) {
             items={[
               { href: profileHref, label: tMenu("company.companyProfile") },
               { href: portfolioHref, label: tMenu("company.portfolio") },
+              { href: routes.companyCommissions, label: t("commissions") },
               { href: workspaceHref, label: tMenu("company.workspace") },
             ]}
             lastName={user.lastName}
