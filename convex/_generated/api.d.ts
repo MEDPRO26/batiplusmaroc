@@ -39,6 +39,7 @@ import type * as lib_clientPublicShape from "../lib/clientPublicShape.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as marketplaceActivity_constants from "../marketplaceActivity/constants.js";
 import type * as marketplaceActivity_model from "../marketplaceActivity/model.js";
+import type * as marketplaceSettings_constants from "../marketplaceSettings/constants.js";
 import type * as marketplaceSettings_index from "../marketplaceSettings/index.js";
 import type * as messages_attachmentRules from "../messages/attachmentRules.js";
 import type * as messages_attachments from "../messages/attachments.js";
@@ -117,6 +118,7 @@ declare const fullApi: ApiFromModules<{
   "lib/constants": typeof lib_constants;
   "marketplaceActivity/constants": typeof marketplaceActivity_constants;
   "marketplaceActivity/model": typeof marketplaceActivity_model;
+  "marketplaceSettings/constants": typeof marketplaceSettings_constants;
   "marketplaceSettings/index": typeof marketplaceSettings_index;
   "messages/attachmentRules": typeof messages_attachmentRules;
   "messages/attachments": typeof messages_attachments;

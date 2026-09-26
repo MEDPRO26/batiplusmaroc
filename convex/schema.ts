@@ -7,6 +7,7 @@ import {
   marketplaceActivityMetadataValidator,
 } from "./marketplaceActivity/constants";
 import { dealStatusValidator } from "./deals/constants";
+import { commissionTierValidator } from "./marketplaceSettings/constants";
 
 const accountType = v.union(
   v.literal("client"),
@@ -433,6 +434,10 @@ export default defineSchema({
     currency: v.literal("MAD"),
     commissionRateBps: v.number(),
     commissionAmountMad: v.number(),
+    /** Optional for compatibility; all tier-based Deals snapshot these fields. */
+    commissionTierMinAmountMad: v.optional(v.number()),
+    commissionTierMaxAmountMad: v.optional(v.union(v.number(), v.null())),
+    commissionConfigVersion: v.optional(v.number()),
     status: dealStatusValidator,
     createdAt: v.number(),
   })
@@ -453,15 +458,18 @@ export default defineSchema({
 
   marketplaceSettings: defineTable({
     key: v.literal("global"),
-    commissionRateBps: v.number(),
+    commissionTiers: v.array(commissionTierValidator),
+    commissionConfigVersion: v.number(),
     updatedAt: v.number(),
     updatedByUserId: v.id("users"),
   }).index("by_key", ["key"]),
 
   marketplaceSettingsHistory: defineTable({
-    settingKey: v.literal("commission_rate_bps"),
-    oldCommissionRateBps: v.union(v.number(), v.null()),
-    newCommissionRateBps: v.number(),
+    settingKey: v.literal("commission_tiers"),
+    oldCommissionTiers: v.array(commissionTierValidator),
+    newCommissionTiers: v.array(commissionTierValidator),
+    oldCommissionConfigVersion: v.union(v.number(), v.null()),
+    newCommissionConfigVersion: v.number(),
     actorUserId: v.id("users"),
     createdAt: v.number(),
   }).index("by_settingKey_and_createdAt", ["settingKey", "createdAt"]),

@@ -4,11 +4,8 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
-import { getCurrentCommissionRateBps } from "../marketplaceSettings/index";
+import { resolveCommissionForDealAmount } from "../marketplaceSettings/index";
 import { dealStatusValidator } from "./constants";
-
-const BPS_DENOMINATOR = 10_000;
-const MAD_MINOR_UNITS = 100;
 
 const dealValidator = v.object({
   id: v.id("deals"),
@@ -23,34 +20,14 @@ const dealValidator = v.object({
   currency: v.literal("MAD"),
   commissionRateBps: v.number(),
   commissionAmountMad: v.number(),
+  commissionTierMinAmountMad: v.union(v.number(), v.null()),
+  commissionTierMaxAmountMad: v.union(v.number(), v.null()),
+  commissionConfigVersion: v.union(v.number(), v.null()),
   status: dealStatusValidator,
   createdAt: v.number(),
 });
 
 type Ctx = QueryCtx | MutationCtx;
-
-/** Round half-up to the nearest centime using integer arithmetic. */
-export function commercialSnapshots(amountMad: number, commissionRateBps: number) {
-  if (!Number.isFinite(amountMad) || amountMad <= 0) {
-    throw new ConvexError("INVALID_DEAL_AMOUNT");
-  }
-  if (!Number.isInteger(commissionRateBps) || commissionRateBps < 0 || commissionRateBps > BPS_DENOMINATOR) {
-    throw new ConvexError("INVALID_DEAL_COMMISSION_RATE");
-  }
-
-  const amountCentimes = Math.round(amountMad * MAD_MINOR_UNITS);
-  if (!Number.isSafeInteger(amountCentimes)) throw new ConvexError("INVALID_DEAL_AMOUNT");
-  const weightedCentimes = amountCentimes * commissionRateBps;
-  if (!Number.isSafeInteger(weightedCentimes)) throw new ConvexError("INVALID_DEAL_AMOUNT");
-  const commissionCentimes = Math.floor(
-    (weightedCentimes + BPS_DENOMINATOR / 2) / BPS_DENOMINATOR,
-  );
-
-  return {
-    agreedAmountMad: amountCentimes / MAD_MINOR_UNITS,
-    commissionAmountMad: commissionCentimes / MAD_MINOR_UNITS,
-  };
-}
 
 async function requireDealViewer(ctx: Ctx, deal: Doc<"deals">) {
   const userId = await getAuthUserId(ctx);
@@ -94,6 +71,9 @@ function toDealDto(deal: Doc<"deals">) {
     currency: deal.currency,
     commissionRateBps: deal.commissionRateBps,
     commissionAmountMad: deal.commissionAmountMad,
+    commissionTierMinAmountMad: deal.commissionTierMinAmountMad ?? null,
+    commissionTierMaxAmountMad: deal.commissionTierMaxAmountMad ?? null,
+    commissionConfigVersion: deal.commissionConfigVersion ?? null,
     status: deal.status,
     createdAt: deal.createdAt,
   };
@@ -200,8 +180,7 @@ export async function createDealFromAcceptedFinalQuote(
     throw new ConvexError("DEAL_ALREADY_EXISTS_FOR_PROJECT");
   }
 
-  const commissionRateBps = await getCurrentCommissionRateBps(ctx);
-  const snapshots = commercialSnapshots(revision.price, commissionRateBps);
+  const commission = await resolveCommissionForDealAmount(ctx, revision.price);
   const now = Date.now();
   const dealId = await ctx.db.insert("deals", {
     projectId: project._id,
@@ -211,9 +190,13 @@ export async function createDealFromAcceptedFinalQuote(
     acceptedFinalQuoteRevisionId: revision._id,
     conversationId: finalQuote.conversationId,
     initialQuoteId: finalQuote.initialQuoteId,
-    ...snapshots,
+    agreedAmountMad: commission.agreedAmountMad,
     currency: "MAD",
-    commissionRateBps,
+    commissionRateBps: commission.commissionRateBps,
+    commissionAmountMad: commission.commissionAmountMad,
+    commissionTierMinAmountMad: commission.matchedTier.minAmountMad,
+    commissionTierMaxAmountMad: commission.matchedTier.maxAmountMad,
+    commissionConfigVersion: commission.configurationVersion,
     status: "active",
     createdAt: now,
   });
@@ -236,9 +219,14 @@ export async function createDealFromAcceptedFinalQuote(
     dealId,
     newStatus: "active",
     metadata: {
-      agreedAmountMad: snapshots.agreedAmountMad,
-      commissionRateBps,
-      commissionAmountMad: snapshots.commissionAmountMad,
+      agreedAmountMad: commission.agreedAmountMad,
+      commissionRateBps: commission.commissionRateBps,
+      commissionAmountMad: commission.commissionAmountMad,
+      commissionTierMinAmountMad: commission.matchedTier.minAmountMad,
+      commissionConfigVersion: commission.configurationVersion,
+      ...(commission.matchedTier.maxAmountMad === null
+        ? {}
+        : { commissionTierMaxAmountMad: commission.matchedTier.maxAmountMad }),
       currency: "MAD",
     },
     createdAt: now,

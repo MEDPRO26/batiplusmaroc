@@ -4,11 +4,18 @@ import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import type { CommissionTier } from "./marketplaceSettings/constants";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
 type Backend = ReturnType<typeof convexTest>;
 type AccountType = "client" | "company" | "admin" | "seo_team";
+
+const APPROVED_TIERS: CommissionTier[] = [
+  { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 300 },
+  { minAmountMad: 300_001, maxAmountMad: 500_000, commissionRateBps: 500 },
+  { minAmountMad: 500_001, maxAmountMad: null, commissionRateBps: 1_000 },
+];
 
 function asUser(t: Backend, userId: Id<"users">) {
   return t.withIdentity({
@@ -32,7 +39,10 @@ async function seedUser(t: Backend, accountType: AccountType) {
   );
 }
 
-async function setupAcceptedSource(price = 395_000, commissionRateBps = 1_000) {
+async function setupAcceptedSource(
+  price = 395_000,
+  commissionTiers: CommissionTier[] = APPROVED_TIERS,
+) {
   const t = convexTest(schema, modules);
   const clientUserId = await seedUser(t, "client");
   const otherClientUserId = await seedUser(t, "client");
@@ -44,7 +54,8 @@ async function setupAcceptedSource(price = 395_000, commissionRateBps = 1_000) {
   await t.run((ctx) =>
     ctx.db.insert("marketplaceSettings", {
       key: "global",
-      commissionRateBps,
+      commissionTiers,
+      commissionConfigVersion: 1,
       updatedAt: 1,
       updatedByUserId: adminUserId,
     }),
@@ -234,8 +245,11 @@ describe("Deal creation and immutable commercial truth", () => {
       conversationId: source.conversationId,
       initialQuoteId: source.initialQuoteId,
       agreedAmountMad: 395_000,
-      commissionRateBps: 1_000,
-      commissionAmountMad: 39_500,
+      commissionRateBps: 500,
+      commissionAmountMad: 19_750,
+      commissionTierMinAmountMad: 300_001,
+      commissionTierMaxAmountMad: 500_000,
+      commissionConfigVersion: 1,
       currency: "MAD",
       status: "active",
     });
@@ -255,8 +269,11 @@ describe("Deal creation and immutable commercial truth", () => {
         newStatus: "active",
         metadata: {
           agreedAmountMad: 395_000,
-          commissionRateBps: 1_000,
-          commissionAmountMad: 39_500,
+          commissionRateBps: 500,
+          commissionAmountMad: 19_750,
+          commissionTierMinAmountMad: 300_001,
+          commissionTierMaxAmountMad: 500_000,
+          commissionConfigVersion: 1,
           currency: "MAD",
         },
       }),
@@ -269,34 +286,47 @@ describe("Deal creation and immutable commercial truth", () => {
     const deal = await source.t.run((ctx) => ctx.db.get(created.dealId));
     expect(deal).toMatchObject({
       agreedAmountMad: 123_456.78,
-      commissionRateBps: 1_000,
-      commissionAmountMad: 12_345.68,
+      commissionRateBps: 300,
+      commissionAmountMad: 3_703.7,
+      commissionTierMinAmountMad: 0,
+      commissionTierMaxAmountMad: 300_000,
     });
   });
 
   test("a newly created Deal uses the currently configured commission rate", async () => {
-    const source = await setupAcceptedSource(395_000, 800);
+    const source = await setupAcceptedSource(395_000, [
+      { minAmountMad: 0, maxAmountMad: null, commissionRateBps: 800 },
+    ]);
     const created = await createDeal(source.t, source.finalQuoteId);
     const deal = await source.t.run((ctx) => ctx.db.get(created.dealId));
     expect(deal).toMatchObject({
       agreedAmountMad: 395_000,
       commissionRateBps: 800,
       commissionAmountMad: 31_600,
+      commissionTierMinAmountMad: 0,
+      commissionTierMaxAmountMad: null,
     });
   });
 
-  test("an existing Deal keeps its snapshots after the admin changes the global rate", async () => {
+  test("an existing Deal keeps its snapshots after the admin changes the tier schedule", async () => {
     const source = await setupAcceptedSource();
     const created = await createDeal(source.t, source.finalQuoteId);
     await asUser(source.t, source.adminUserId).mutation(
-      api.marketplaceSettings.index.updateCommissionRate,
-      { commissionRateBps: 800 },
+      api.marketplaceSettings.index.updateCommissionTiers,
+      {
+        commissionTiers: [
+          { minAmountMad: 0, maxAmountMad: null, commissionRateBps: 700 },
+        ],
+      },
     );
     const deal = await source.t.run((ctx) => ctx.db.get(created.dealId));
     expect(deal).toMatchObject({
       agreedAmountMad: 395_000,
-      commissionRateBps: 1_000,
-      commissionAmountMad: 39_500,
+      commissionRateBps: 500,
+      commissionAmountMad: 19_750,
+      commissionTierMinAmountMad: 300_001,
+      commissionTierMaxAmountMad: 500_000,
+      commissionConfigVersion: 1,
     });
   });
 
@@ -350,8 +380,11 @@ describe("Deal creation and immutable commercial truth", () => {
     );
     expect(deal).toMatchObject({
       agreedAmountMad: 395_000,
-      commissionRateBps: 1_000,
-      commissionAmountMad: 39_500,
+      commissionRateBps: 500,
+      commissionAmountMad: 19_750,
+      commissionTierMinAmountMad: 300_001,
+      commissionTierMaxAmountMad: 500_000,
+      commissionConfigVersion: 1,
     });
   });
 

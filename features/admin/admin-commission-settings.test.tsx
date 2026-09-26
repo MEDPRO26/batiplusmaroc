@@ -1,5 +1,5 @@
-import { renderToStaticMarkup } from "react-dom/server";
 import { NextIntlClientProvider } from "next-intl";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
 import type { Id } from "@/convex/_generated/dataModel";
 import { routing } from "@/i18n/routing";
@@ -16,9 +16,7 @@ vi.mock("@/i18n/navigation", () => ({
     href,
     ...props
   }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
+    <a href={href} {...props}>{children}</a>
   ),
   usePathname: () => "/admin/settings",
   getPathname: () => "/admin/settings",
@@ -26,18 +24,33 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("next/navigation", () => ({ useParams: () => ({ locale: "en" }) }));
 
 import {
+  addTierDraft,
   AdminCommissionSettingsView,
   formatBpsAsPercentage,
+  parseWholeMad,
   percentageInputToBps,
+  removeTierDraft,
+  tiersToDrafts,
+  updateTierDraft,
+  validateTierDrafts,
 } from "./components/admin-commission-settings-panel";
 import { AdminShell } from "./components/admin-shell";
 
+const tiers = [
+  { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 300 },
+  { minAmountMad: 300_001, maxAmountMad: 500_000, commissionRateBps: 500 },
+  { minAmountMad: 500_001, maxAmountMad: null, commissionRateBps: 1_000 },
+];
+
 const configured = {
   configured: true,
-  commissionRateBps: 1_000,
+  commissionTiers: tiers,
+  commissionConfigVersion: 3,
   updatedAt: 1,
   updatedByUserId: "admin-1" as Id<"users">,
 };
+
+const drafts = tiersToDrafts(tiers);
 
 function render(
   locale: "fr" | "en",
@@ -51,9 +64,11 @@ function render(
     >
       <AdminShell email="admin@example.test" firstName="Ada" lastName="Admin">
         <AdminCommissionSettingsView
+          drafts={drafts}
           error=""
-          input="10.00"
-          onInputChange={() => undefined}
+          onAdd={() => undefined}
+          onChange={() => undefined}
+          onRemove={() => undefined}
           onSubmit={() => undefined}
           saving={false}
           setting={configured}
@@ -65,14 +80,13 @@ function render(
   );
 }
 
-describe("admin marketplace commission settings", () => {
+describe("admin marketplace commission tier settings", () => {
   test("maps the localized settings route and activates the existing nav item", () => {
     expect(routing.pathnames[routes.adminSettings]).toEqual({
       fr: "/admin/parametres",
       en: "/admin/settings",
     });
-    const html = render("en");
-    expect(html).toMatch(
+    expect(render("en")).toMatch(
       /aria-current="page"[^>]*>(?:(?!<\/span>)[\s\S])*Settings<\/span>/,
     );
   });
@@ -90,85 +104,104 @@ describe("admin marketplace commission settings", () => {
 
   test.each(["", "abc", "10.005", "-1", "30.01", "100"])(
     "rejects invalid percentage input %s",
-    (input) => {
-      expect(percentageInputToBps(input)).toBeNull();
-    },
+    (input) => expect(percentageInputToBps(input)).toBeNull(),
   );
 
-  test("formats basis points without floating-point percentage authority", () => {
+  test("parses formatted whole-MAD values and formats bps", () => {
+    expect(parseWholeMad("300,000")).toBe(300_000);
+    expect(parseWholeMad("500 001")).toBe(500_001);
+    expect(parseWholeMad("300000.5")).toBeNull();
     expect(formatBpsAsPercentage(750)).toBe("7.50");
-    expect(formatBpsAsPercentage(1_050)).toBe("10.50");
+  });
+
+  test("renders existing tiers, editable controls, version, and open-ended final tier", () => {
+    const html = render("en");
+    expect(html).toContain("Marketplace commission rules");
+    expect(html).toContain("Version 3");
+    expect(html).toContain('value="300000"');
+    expect(html).toContain('value="300001"');
+    expect(html).toContain('value="10.00"');
+    expect(html).toContain("No limit");
+    expect(html).toContain("Add tier");
+    expect(html).toContain("Remove tier");
+  });
+
+  test("adds, edits, removes, and converts a tier draft", () => {
+    const added = addTierDraft(drafts, "new-tier");
+    expect(added).toHaveLength(4);
+    expect(added.at(-1)).toMatchObject({ id: "new-tier", maxAmountMad: "" });
+
+    const edited = updateTierDraft(added, "new-tier", "commissionPercent", "7.5");
+    expect(edited.at(-1)?.commissionPercent).toBe("7.5");
+
+    const removed = removeTierDraft(drafts, drafts[1].id);
+    expect(removed).toHaveLength(2);
+    expect(removed.at(-1)?.maxAmountMad).toBe("");
+  });
+
+  test("converts a valid edited schedule to authoritative integer values", () => {
+    const edited = updateTierDraft(drafts, drafts[1].id, "commissionPercent", "7.5");
+    expect(validateTierDrafts(edited)).toEqual({
+      tiers: [tiers[0], { ...tiers[1], commissionRateBps: 750 }, tiers[2]],
+    });
   });
 
   test.each([
     [
-      "en",
-      "Marketplace commission",
-      "Commission rate",
-      "Applies to new Deals only.",
-      "Save changes",
+      "overlap",
+      [
+        { id: "a", minAmountMad: "0", maxAmountMad: "300000", commissionPercent: "3" },
+        { id: "b", minAmountMad: "250000", maxAmountMad: "", commissionPercent: "5" },
+      ],
+      "overlap",
     ],
     [
-      "fr",
-      "Commission de la marketplace",
-      "Taux de commission",
-      "S’applique uniquement aux nouveaux contrats.",
-      "Enregistrer les modifications",
+      "gap",
+      [
+        { id: "a", minAmountMad: "0", maxAmountMad: "300000", commissionPercent: "3" },
+        { id: "b", minAmountMad: "350000", maxAmountMad: "", commissionPercent: "5" },
+      ],
+      "gap",
     ],
-  ] as const)(
-    "renders the editable configured form in %s",
-    (locale, title, label, scope, save) => {
-      const html = render(locale);
-      expect(html).toContain(title);
-      expect(html).toContain(label);
-      expect(html).toContain(scope);
-      expect(html).toContain(save);
-      expect(html).toContain('name="commissionRate"');
-      expect(html).toContain('value="10.00"');
-      expect(html).not.toContain('name="commissionRate" disabled=""');
-      expect(html).toContain("md:grid-cols-[minmax(0,1fr)_minmax(240px,300px)]");
-    },
-  );
+    [
+      "bounded final tier",
+      [{ id: "a", minAmountMad: "0", maxAmountMad: "300000", commissionPercent: "3" }],
+      "finalTierOpen",
+    ],
+  ] as const)("returns a targeted validation error for %s", (_name, value, error) => {
+    expect(validateTierDrafts(value)).toEqual({ error });
+  });
 
-  test("renders loading and explicit unconfigured states", () => {
-    const loading = render("en", { setting: undefined, input: "" });
-    expect(loading).toContain('aria-busy="true"');
-    expect(loading).toContain("Loading commission settings");
+  test.each([
+    ["en", "Marketplace commission rules", "Deal value from", "No limit", "Save changes"],
+    ["fr", "Règles de commission", "Montant du contrat à partir de", "Sans limite", "Enregistrer les modifications"],
+  ] as const)("renders the requested terminology in %s", (locale, title, from, noLimit, save) => {
+    const html = render(locale);
+    expect(html).toContain(title);
+    expect(html).toContain(from);
+    expect(html).toContain(noLimit);
+    expect(html).toContain(save);
+  });
 
-    const empty = render("en", {
+  test("renders loading, unconfigured, validation, saving, success, and backend errors", () => {
+    expect(render("en", { setting: undefined })).toContain('aria-busy="true"');
+    expect(render("en", {
       setting: {
         configured: false,
-        commissionRateBps: null,
+        commissionTiers: [],
+        commissionConfigVersion: null,
         updatedAt: null,
         updatedByUserId: null,
       },
-      input: "",
-    });
-    expect(empty).toContain("Commission configuration required");
-    expect(empty).toContain('value=""');
-  });
+      drafts: [{ id: "empty", minAmountMad: "0", maxAmountMad: "", commissionPercent: "" }],
+    })).toContain("Commission rules must be configured");
 
-  test("renders validation, saving, success, and backend error feedback", () => {
-    const invalid = render("en", {
-      error: "Invalid commission rate",
-      input: "31",
-    });
-    expect(invalid).toContain('role="alert"');
-    expect(invalid).toContain("Invalid commission rate");
-
-    const saving = render("en", { saving: true });
-    expect(saving).toContain("Saving…");
-    expect(saving).toContain('disabled=""');
-
-    const success = render("en", {
-      success: "Commission updated successfully",
-    });
-    expect(success).toContain('role="status"');
-    expect(success).toContain("Commission updated successfully");
-
-    const backendError = render("en", {
-      error: "The commission setting could not be loaded or saved. Please try again.",
-    });
-    expect(backendError).toContain("could not be loaded or saved");
+    expect(render("en", { error: "Ranges cannot overlap." })).toContain('role="alert"');
+    expect(render("en", { error: "Ranges cannot contain gaps." })).toContain("contain gaps");
+    expect(render("en", { saving: true })).toContain("Saving…");
+    expect(render("en", { success: "Commission rules updated successfully." }))
+      .toContain('role="status"');
+    expect(render("en", { error: "The commission rules could not be loaded or saved." }))
+      .toContain("could not be loaded or saved");
   });
 });

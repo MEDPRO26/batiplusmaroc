@@ -4,12 +4,19 @@ import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { getCurrentCommissionRateBps } from "./marketplaceSettings/index";
+import type { CommissionTier } from "./marketplaceSettings/constants";
+import { resolveCommissionForDealAmount } from "./marketplaceSettings/index";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
 type Backend = ReturnType<typeof convexTest>;
 type AccountType = "client" | "company" | "admin" | "seo_team";
+
+const APPROVED_TIERS: CommissionTier[] = [
+  { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 300 },
+  { minAmountMad: 300_001, maxAmountMad: 500_000, commissionRateBps: 500 },
+  { minAmountMad: 500_001, maxAmountMad: null, commissionRateBps: 1_000 },
+];
 
 function asUser(t: Backend, userId: Id<"users">) {
   return t.withIdentity({
@@ -42,31 +49,40 @@ async function setup() {
   };
 }
 
-describe("global marketplace commission setting", () => {
-  test("admin reads the explicit unconfigured state and can configure the rate", async () => {
+async function saveApprovedTiers(state: Awaited<ReturnType<typeof setup>>) {
+  return await asUser(state.t, state.adminId).mutation(
+    api.marketplaceSettings.index.updateCommissionTiers,
+    { commissionTiers: APPROVED_TIERS },
+  );
+}
+
+describe("admin-managed marketplace commission tiers", () => {
+  test("admin reads the explicit unconfigured state and saves a valid tier schedule", async () => {
     const state = await setup();
     const admin = asUser(state.t, state.adminId);
     await expect(admin.query(api.marketplaceSettings.index.getCommissionSetting, {}))
       .resolves.toEqual({
         configured: false,
-        commissionRateBps: null,
+        commissionTiers: [],
+        commissionConfigVersion: null,
         updatedAt: null,
         updatedByUserId: null,
       });
-    await expect(
-      admin.mutation(api.marketplaceSettings.index.updateCommissionRate, {
-        commissionRateBps: 1_050,
-      }),
-    ).resolves.toEqual({ commissionRateBps: 1_050, changed: true });
+    await expect(saveApprovedTiers(state)).resolves.toEqual({
+      commissionTiers: APPROVED_TIERS,
+      commissionConfigVersion: 1,
+      changed: true,
+    });
     await expect(admin.query(api.marketplaceSettings.index.getCommissionSetting, {}))
       .resolves.toMatchObject({
         configured: true,
-        commissionRateBps: 1_050,
+        commissionTiers: APPROVED_TIERS,
+        commissionConfigVersion: 1,
         updatedByUserId: state.adminId,
       });
   });
 
-  test("client, company, SEO team, and anonymous callers cannot read or update", async () => {
+  test("client, company, SEO team, and anonymous callers cannot read or update tiers", async () => {
     const state = await setup();
     for (const userId of [state.clientId, state.companyId, state.seoId]) {
       await expect(
@@ -77,8 +93,8 @@ describe("global marketplace commission setting", () => {
       ).rejects.toThrow("ADMIN_REQUIRED");
       await expect(
         asUser(state.t, userId).mutation(
-          api.marketplaceSettings.index.updateCommissionRate,
-          { commissionRateBps: 1_000 },
+          api.marketplaceSettings.index.updateCommissionTiers,
+          { commissionTiers: APPROVED_TIERS },
         ),
       ).rejects.toThrow("ADMIN_REQUIRED");
     }
@@ -86,98 +102,218 @@ describe("global marketplace commission setting", () => {
       state.t.query(api.marketplaceSettings.index.getCommissionSetting, {}),
     ).rejects.toThrow("NOT_AUTHENTICATED");
     await expect(
-      state.t.mutation(api.marketplaceSettings.index.updateCommissionRate, {
-        commissionRateBps: 1_000,
+      state.t.mutation(api.marketplaceSettings.index.updateCommissionTiers, {
+        commissionTiers: APPROVED_TIERS,
       }),
     ).rejects.toThrow("NOT_AUTHENTICATED");
   });
 
-  test.each([-1, 3_001, 10.5, Number.NaN])(
-    "rejects invalid numeric rate %s",
-    async (commissionRateBps) => {
-      const state = await setup();
-      await expect(
-        asUser(state.t, state.adminId).mutation(
-          api.marketplaceSettings.index.updateCommissionRate,
-          { commissionRateBps },
-        ),
-      ).rejects.toThrow("INVALID_COMMISSION_RATE");
-    },
-  );
-
-  test("the strict argument validator rejects malformed strings", async () => {
+  test.each([
+    ["empty", [], "COMMISSION_TIERS_REQUIRED"],
+    ["overlap", [
+      { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 300 },
+      { minAmountMad: 250_000, maxAmountMad: null, commissionRateBps: 500 },
+    ], "COMMISSION_TIERS_OVERLAP"],
+    ["gap", [
+      { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 300 },
+      { minAmountMad: 350_000, maxAmountMad: null, commissionRateBps: 500 },
+    ], "COMMISSION_TIERS_GAP"],
+    ["unordered", [
+      { minAmountMad: 0, maxAmountMad: 500_000, commissionRateBps: 300 },
+      { minAmountMad: 0, maxAmountMad: null, commissionRateBps: 500 },
+    ], "COMMISSION_TIERS_UNORDERED"],
+    ["duplicate range", [
+      { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 300 },
+      { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 500 },
+      { minAmountMad: 300_001, maxAmountMad: null, commissionRateBps: 700 },
+    ], "COMMISSION_TIERS_UNORDERED"],
+    ["two open tiers", [
+      { minAmountMad: 0, maxAmountMad: null, commissionRateBps: 300 },
+      { minAmountMad: 300_001, maxAmountMad: null, commissionRateBps: 500 },
+    ], "COMMISSION_MULTIPLE_OPEN_TIERS"],
+    ["bounded final tier", [
+      { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 300 },
+    ], "COMMISSION_FINAL_TIER_OPEN_REQUIRED"],
+    ["negative boundary", [
+      { minAmountMad: -1, maxAmountMad: null, commissionRateBps: 300 },
+    ], "INVALID_COMMISSION_TIER_BOUNDARY"],
+    ["nonzero first boundary", [
+      { minAmountMad: 1, maxAmountMad: null, commissionRateBps: 300 },
+    ], "COMMISSION_FIRST_TIER_ZERO_REQUIRED"],
+    ["inverted boundary", [
+      { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 300 },
+      { minAmountMad: 300_001, maxAmountMad: 300_000, commissionRateBps: 500 },
+      { minAmountMad: 300_001, maxAmountMad: null, commissionRateBps: 700 },
+    ], "INVALID_COMMISSION_TIER_BOUNDARY"],
+    ["decimal boundary", [
+      { minAmountMad: 0, maxAmountMad: 300_000.5, commissionRateBps: 300 },
+      { minAmountMad: 300_001, maxAmountMad: null, commissionRateBps: 500 },
+    ], "INVALID_COMMISSION_TIER_BOUNDARY"],
+    ["negative rate", [
+      { minAmountMad: 0, maxAmountMad: null, commissionRateBps: -1 },
+    ], "INVALID_COMMISSION_RATE"],
+    ["decimal bps", [
+      { minAmountMad: 0, maxAmountMad: null, commissionRateBps: 10.5 },
+    ], "INVALID_COMMISSION_RATE"],
+    ["NaN rate", [
+      { minAmountMad: 0, maxAmountMad: null, commissionRateBps: Number.NaN },
+    ], "INVALID_COMMISSION_RATE"],
+    ["excessive rate", [
+      { minAmountMad: 0, maxAmountMad: null, commissionRateBps: 3_001 },
+    ], "INVALID_COMMISSION_RATE"],
+  ] as const)("rejects %s configuration", async (_name, commissionTiers, code) => {
     const state = await setup();
-    const malformed = { commissionRateBps: "10" } as unknown as {
-      commissionRateBps: number;
-    };
     await expect(
       asUser(state.t, state.adminId).mutation(
-        api.marketplaceSettings.index.updateCommissionRate,
+        api.marketplaceSettings.index.updateCommissionTiers,
+        { commissionTiers: commissionTiers as unknown as CommissionTier[] },
+      ),
+    ).rejects.toThrow(code);
+  });
+
+  test("strict argument validation rejects malformed tier values", async () => {
+    const state = await setup();
+    const malformed = {
+      commissionTiers: [{
+        minAmountMad: "0",
+        maxAmountMad: null,
+        commissionRateBps: 300,
+      }],
+    } as unknown as { commissionTiers: CommissionTier[] };
+    await expect(
+      asUser(state.t, state.adminId).mutation(
+        api.marketplaceSettings.index.updateCommissionTiers,
         malformed,
+      ),
+    ).rejects.toThrow();
+
+    const malformedRate = {
+      commissionTiers: [{
+        minAmountMad: 0,
+        maxAmountMad: null,
+        commissionRateBps: "3",
+      }],
+    } as unknown as { commissionTiers: CommissionTier[] };
+    await expect(
+      asUser(state.t, state.adminId).mutation(
+        api.marketplaceSettings.index.updateCommissionTiers,
+        malformedRate,
       ),
     ).rejects.toThrow();
   });
 
-  test("each real change appends immutable old/new audit history", async () => {
+  test("real changes increment the version and append complete immutable schedules", async () => {
     const state = await setup();
     const admin = asUser(state.t, state.adminId);
-    await admin.mutation(api.marketplaceSettings.index.updateCommissionRate, {
-      commissionRateBps: 1_000,
-    });
-    await admin.mutation(api.marketplaceSettings.index.updateCommissionRate, {
-      commissionRateBps: 800,
-    });
+    await saveApprovedTiers(state);
+    const changed = [
+      { minAmountMad: 0, maxAmountMad: 250_000, commissionRateBps: 300 },
+      { minAmountMad: 250_001, maxAmountMad: 600_000, commissionRateBps: 600 },
+      { minAmountMad: 600_001, maxAmountMad: null, commissionRateBps: 900 },
+    ];
     await expect(
-      admin.mutation(api.marketplaceSettings.index.updateCommissionRate, {
-        commissionRateBps: 800,
+      admin.mutation(api.marketplaceSettings.index.updateCommissionTiers, {
+        commissionTiers: changed,
       }),
-    ).resolves.toEqual({ commissionRateBps: 800, changed: false });
+    ).resolves.toMatchObject({ commissionConfigVersion: 2, changed: true });
+    await expect(
+      admin.mutation(api.marketplaceSettings.index.updateCommissionTiers, {
+        commissionTiers: changed,
+      }),
+    ).resolves.toMatchObject({ commissionConfigVersion: 2, changed: false });
 
     const history = await state.t.run((ctx) =>
       ctx.db
         .query("marketplaceSettingsHistory")
         .withIndex("by_settingKey_and_createdAt", (q) =>
-          q.eq("settingKey", "commission_rate_bps"),
+          q.eq("settingKey", "commission_tiers"),
         )
         .order("asc")
         .take(10),
     );
     expect(history).toHaveLength(2);
     expect(history[0]).toMatchObject({
-      oldCommissionRateBps: null,
-      newCommissionRateBps: 1_000,
+      oldCommissionTiers: [],
+      newCommissionTiers: APPROVED_TIERS,
+      oldCommissionConfigVersion: null,
+      newCommissionConfigVersion: 1,
       actorUserId: state.adminId,
     });
     expect(history[1]).toMatchObject({
-      oldCommissionRateBps: 1_000,
-      newCommissionRateBps: 800,
+      oldCommissionTiers: APPROVED_TIERS,
+      newCommissionTiers: changed,
+      oldCommissionConfigVersion: 1,
+      newCommissionConfigVersion: 2,
       actorUserId: state.adminId,
     });
-    expect(history[0]._id).not.toBe(history[1]._id);
+  });
+});
+
+describe("flat-bracket commission resolution", () => {
+  test.each([
+    [299_999, APPROVED_TIERS[0], 300, 8_999.97],
+    [300_000, APPROVED_TIERS[0], 300, 9_000],
+    [300_001, APPROVED_TIERS[1], 500, 15_000.05],
+    [499_999, APPROVED_TIERS[1], 500, 24_999.95],
+    [500_000, APPROVED_TIERS[1], 500, 25_000],
+    [500_001, APPROVED_TIERS[2], 1_000, 50_000.1],
+    [1_000_000, APPROVED_TIERS[2], 1_000, 100_000],
+    [2_000_000, APPROVED_TIERS[2], 1_000, 200_000],
+  ])("resolves exact boundary %i", async (amount, tier, rate, commission) => {
+    const state = await setup();
+    await saveApprovedTiers(state);
+    const result = await state.t.run((ctx) =>
+      resolveCommissionForDealAmount(ctx, amount),
+    );
+    expect(result).toEqual({
+      agreedAmountMad: amount,
+      commissionRateBps: rate,
+      commissionAmountMad: commission,
+      matchedTier: {
+        minAmountMad: tier.minAmountMad,
+        maxAmountMad: tier.maxAmountMad,
+      },
+      configurationVersion: 1,
+    });
   });
 
-  test("trusted helper returns the current value and fails for missing or invalid data", async () => {
+  test.each([
+    [300_000, 300, 9_000],
+    [450_000, 500, 22_500],
+    [500_000, 500, 25_000],
+    [800_000, 1_000, 80_000],
+    [1_000_000, 1_000, 100_000],
+  ])("applies one rate to all of %i MAD", async (amount, rate, commission) => {
+    const state = await setup();
+    await saveApprovedTiers(state);
+    await expect(
+      state.t.run((ctx) => resolveCommissionForDealAmount(ctx, amount)),
+    ).resolves.toMatchObject({
+      agreedAmountMad: amount,
+      commissionRateBps: rate,
+      commissionAmountMad: commission,
+    });
+  });
+
+  test("missing or corrupt configuration fails safely without a fallback", async () => {
     const state = await setup();
     await expect(
-      state.t.run((ctx) => getCurrentCommissionRateBps(ctx)),
+      state.t.run((ctx) => resolveCommissionForDealAmount(ctx, 450_000)),
     ).rejects.toThrow("COMMISSION_CONFIGURATION_REQUIRED");
-
-    const settingId = await state.t.run((ctx) =>
+    await state.t.run((ctx) =>
       ctx.db.insert("marketplaceSettings", {
         key: "global",
-        commissionRateBps: 750,
+        commissionTiers: [
+          { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 300 },
+          { minAmountMad: 250_000, maxAmountMad: null, commissionRateBps: 500 },
+        ],
+        commissionConfigVersion: 1,
         updatedAt: 1,
         updatedByUserId: state.adminId,
       }),
     );
     await expect(
-      state.t.run((ctx) => getCurrentCommissionRateBps(ctx)),
-    ).resolves.toBe(750);
-    await state.t.run((ctx) =>
-      ctx.db.patch(settingId, { commissionRateBps: 3_001 }),
-    );
-    await expect(
-      state.t.run((ctx) => getCurrentCommissionRateBps(ctx)),
-    ).rejects.toThrow("INVALID_COMMISSION_RATE");
+      state.t.run((ctx) => resolveCommissionForDealAmount(ctx, 450_000)),
+    ).rejects.toThrow("COMMISSION_CONFIGURATION_INVALID");
   });
 });

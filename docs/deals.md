@@ -21,16 +21,38 @@ internal Convex operation for trusted business logic.
 ## Commercial snapshots
 
 The accepted revision's MAD price is normalized to centimes and stored as
-`agreedAmountMad`. An authorized admin configures the one global marketplace
-rate in integer basis points. There is no implicit default: Deal creation fails
-safely until the rate is configured. Commission is calculated with integer
-centime arithmetic and rounded half-up to the nearest centime, then stored as
-`commissionAmountMad`.
+`agreedAmountMad`. An authorized admin configures one ordered global schedule
+of flat commission brackets. Tier boundaries are whole MAD integers and rates
+are integer basis points. There is no implicit default: Deal creation fails
+safely until a valid, gap-free schedule with an open-ended final tier exists.
 
-These commercial fields and all relationship fields are immutable. Step 8.1
-exposes no mutation that can rewrite them. The rate is not accepted from client
-or company input, and later marketplace-rate changes apply only to future Deals.
-Step 8.2 will consume the current setting through the trusted server helper.
+Exactly one tier is matched from the Deal's whole-MAD bracket value. For an
+accepted amount containing centimes, tier lookup uses its floored whole-MAD
+value so the integer boundaries remain gap-free; the commission still uses the
+exact normalized centime amount. The matched tier's one rate applies to the
+entire accepted Deal amount; this is not a progressive or tax-bracket
+calculation. The result is rounded half-up to the nearest centime and stored as
+`commissionAmountMad`.
+For example, the approved V1 schedule resolves 450,000 MAD to 5% on the full
+450,000 MAD, producing a 22,500 MAD commission.
+
+These commercial fields and all relationship fields are immutable. New Deals
+also snapshot the matched tier's lower/upper bounds and configuration version
+for financial traceability. The rate, matched tier, and commission are never
+accepted from client or company input. Later schedule changes apply only to
+future Deals. Step 8.2 will consume the schedule through the trusted
+`resolveCommissionForDealAmount` server helper.
+
+## Development migration note
+
+Before replacing the single-rate schema, the configured development deployment
+was inspected: `marketplaceSettings`, `marketplaceSettingsHistory`, and `deals`
+contained no documents. The obsolete `commissionRateBps` setting and its
+single-rate history shape were therefore removed cleanly with no data rewrite
+or invented conversion. Production was not inspected or changed. If another
+environment contains legacy single-rate data, it must be migrated explicitly
+before this schema is promoted there; a single rate is not silently converted
+into a tier schedule.
 
 ## Status and authorization
 
