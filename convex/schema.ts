@@ -6,7 +6,7 @@ import {
   marketplaceActivityEventTypeValidator,
   marketplaceActivityMetadataValidator,
 } from "./marketplaceActivity/constants";
-import { dealStatusValidator } from "./deals/constants";
+import { commissionStatusValidator, dealStatusValidator } from "./deals/constants";
 import { commissionTierValidator } from "./marketplaceSettings/constants";
 
 const accountType = v.union(
@@ -441,13 +441,19 @@ export default defineSchema({
     /** The selected Company owes this frozen amount to the Batiplus platform. */
     commissionDebtorCompanyId: v.id("companies"),
     commissionBeneficiary: v.literal("batiplus"),
-    commissionStatus: v.literal("due"),
+    commissionStatus: commissionStatusValidator,
+    commissionPaidAt: v.optional(v.number()),
+    commissionPaidByAdminUserId: v.optional(v.id("users")),
+    commissionPaymentReference: v.optional(v.string()),
+    commissionPaymentNote: v.optional(v.string()),
     status: dealStatusValidator,
     createdAt: v.number(),
   })
     .index("by_projectId", ["projectId"])
     .index("by_clientUserId", ["clientUserId"])
     .index("by_companyId", ["companyId"])
+    .index("by_commissionStatus_and_createdAt", ["commissionStatus", "createdAt"])
+    .index("by_companyId_and_commissionStatus", ["companyId", "commissionStatus"])
     .index("by_status", ["status"])
     .index("by_acceptedFinalQuoteId", ["acceptedFinalQuoteId"]),
 
@@ -457,6 +463,18 @@ export default defineSchema({
     toStatus: dealStatusValidator,
     actorUserId: v.id("users"),
     reason: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_dealId_and_createdAt", ["dealId", "createdAt"]),
+
+  commissionStatusHistory: defineTable({
+    dealId: v.id("deals"),
+    companyId: v.id("companies"),
+    fromStatus: commissionStatusValidator,
+    toStatus: commissionStatusValidator,
+    commissionAmountMad: v.number(),
+    actorAdminUserId: v.id("users"),
+    paymentReference: v.optional(v.string()),
+    paymentNote: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_dealId_and_createdAt", ["dealId", "createdAt"]),
 

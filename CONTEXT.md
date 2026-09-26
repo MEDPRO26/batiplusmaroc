@@ -41,7 +41,8 @@ _Avoid_: Client fee, progressive commission
 
 **Commission Obligation**:
 The Deal-specific debt in which the selected Company is the debtor and the
-Batiplus platform is the beneficiary; the Client is not the debtor.
+Batiplus platform is the beneficiary; the Client is not the debtor. An Admin
+may record its one-way operational status from due to paid after receipt.
 _Avoid_: Client commission, commission deduction
 
 **Batiplus Platform**:

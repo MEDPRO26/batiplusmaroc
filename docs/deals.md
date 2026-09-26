@@ -66,9 +66,9 @@ selected Company (debtor) -> Batiplus platform (beneficiary)
 ```
 
 The Client is a Deal participant but is never the commission debtor. V1 embeds
-the obligation snapshot in the Deal instead of duplicating it in a separate
-commission table. Only the initial `due` state is implemented here; payment,
-collection, invoicing, overdue handling, and accounting belong to a later step.
+the obligation snapshot in the Deal. An Admin may confirm receipt exactly once
+with the `due -> paid` transition. This is manual operational tracking only: it
+does not collect money or introduce invoicing, overdue handling, or accounting.
 
 ## State transitions and audit
 
@@ -78,6 +78,11 @@ Successful acceptance commits these lifecycle changes together:
 - Project: `published | in_discussion -> company_selected`;
 - Deal: created as `active`;
 - commission obligation: created as `due`.
+
+When an Admin confirms receipt, the Deal stores the payment timestamp, Admin,
+and optional reference/note. The same transaction appends one immutable
+`commissionStatusHistory` row and a `commission_paid` marketplace activity.
+Repeated confirmation is rejected, and the commercial snapshots are unchanged.
 
 The initial `projectQuotes` participation record remains `discussion_open`
 because the current state model has no `won` status. Competing proposals are not

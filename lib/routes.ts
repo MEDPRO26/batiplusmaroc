@@ -38,6 +38,7 @@ export const routes = {
   companyPortfolio: "/espace-entreprise/portfolio",
   admin: "/admin",
   adminProjects: "/admin/projects",
+  adminDeals: "/admin/deals",
   adminSiteVisits: "/admin/site-visits",
   adminVerification: "/admin/verification",
   adminSettings: "/admin/settings",

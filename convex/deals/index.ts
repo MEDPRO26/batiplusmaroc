@@ -5,7 +5,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { resolveCommissionForDealAmount } from "../marketplaceSettings/index";
-import { dealStatusValidator } from "./constants";
+import { commissionStatusValidator, dealStatusValidator } from "./constants";
 
 const dealValidator = v.object({
   id: v.id("deals"),
@@ -26,7 +26,7 @@ const dealValidator = v.object({
   commissionConfigVersion: v.number(),
   commissionDebtorCompanyId: v.id("companies"),
   commissionBeneficiary: v.literal("batiplus"),
-  commissionStatus: v.literal("due"),
+  commissionStatus: commissionStatusValidator,
   status: dealStatusValidator,
   createdAt: v.number(),
 });

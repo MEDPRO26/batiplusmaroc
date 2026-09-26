@@ -2367,6 +2367,32 @@
     "accountFallback": "Administrateur",
     "footerTeam": "Équipe Batiplus"
   },
+  "adminDeals": {
+    "metaTitle": "Suivi des commissions | Batiplus",
+    "metaDescription": "Suivre les obligations de commission des entreprises pour les transactions Batiplus.",
+    "title": "Transactions et commissions",
+    "lead": "Suivez les commissions dues à Batiplus par les entreprises sélectionnées. L’enregistrement du paiement est uniquement une confirmation administrative.",
+    "filtersLabel": "Statut de la commission",
+    "status": { "all": "Toutes", "due": "Due", "paid": "Payée" },
+    "searchLabel": "Rechercher des transactions",
+    "searchPlaceholder": "Rechercher un projet ou une entreprise",
+    "loading": "Chargement des obligations de commission…",
+    "empty": "Aucune obligation de commission ne correspond à ces filtres.",
+    "columns": { "project": "Projet", "company": "Entreprise", "dealAmount": "Montant du contrat", "commission": "Commission due", "statusLabel": "Statut", "created": "Créée le", "action": "Action" },
+    "view": "Voir les détails",
+    "commissionOf": "{rate} de {amount}",
+    "close": "Fermer",
+    "fields": { "dealAmount": "Montant convenu", "commission": "Commission due", "rate": "Taux enregistré", "configVersion": "Version de configuration", "status": "Statut du paiement", "created": "Transaction créée le", "paidAt": "Payée le", "paidBy": "Enregistrée par", "reference": "Référence de paiement", "note": "Note interne" },
+    "markPaidTitle": "Marquer la commission comme payée",
+    "markPaidHelp": "Confirmez que Batiplus a reçu cette commission de l’entreprise. Cette action ne traite aucun paiement.",
+    "referenceLabel": "Référence de paiement (facultative)",
+    "noteLabel": "Note interne (facultative)",
+    "cancel": "Annuler",
+    "confirmPaid": "Confirmer le paiement",
+    "saving": "Enregistrement…",
+    "paidSuccess": "Commission marquée comme payée.",
+    "errors": { "alreadyPaid": "Cette commission est déjà marquée comme payée.", "invalidInput": "Vérifiez la référence ou la note de paiement.", "generic": "Le statut de la commission n’a pas pu être mis à jour. Réessayez." }
+  },
   "adminSettings": {
     "metaTitle": "Paramètres admin | Batiplus",
     "metaDescription": "Gérer les paramètres privés de la marketplace Batiplus.",
@@ -3777,6 +3803,10 @@
         "COMMISSION_MULTIPLE_OPEN_TIERS": "Seule la dernière tranche de commission peut être sans limite supérieure.",
         "COMMISSION_CONFIGURATION_REQUIRED": "Configurez les règles de commission avant de créer un contrat.",
         "COMMISSION_CONFIGURATION_INVALID": "Les règles de commission sont invalides. Contactez un administrateur.",
+        "COMMISSION_ALREADY_PAID": "Cette commission est déjà marquée comme payée.",
+        "COMMISSION_SNAPSHOT_INCOMPLETE": "Cette transaction ne contient pas un instantané de commission complet.",
+        "INVALID_COMMISSION_PAYMENT_REFERENCE": "La référence de paiement est trop longue.",
+        "INVALID_COMMISSION_PAYMENT_NOTE": "La note interne de paiement est trop longue.",
         "NETWORK": "Problème de connexion. Nous allons réessayer.",
         "UNKNOWN": "Une erreur est survenue. Veuillez réessayer."
       }

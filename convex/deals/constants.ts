@@ -11,3 +11,10 @@ export const dealStatusValidator = v.union(
 );
 
 export type DealStatus = "active" | "completed" | "cancelled";
+
+export const commissionStatusValidator = v.union(
+  v.literal("due"),
+  v.literal("paid"),
+);
+
+export type CommissionStatus = "due" | "paid";

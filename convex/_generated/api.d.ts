@@ -10,6 +10,7 @@
 
 import type * as admin_access from "../admin/access.js";
 import type * as admin_bootstrap from "../admin/bootstrap.js";
+import type * as admin_deals from "../admin/deals.js";
 import type * as admin_index from "../admin/index.js";
 import type * as admin_projects from "../admin/projects.js";
 import type * as admin_siteVisits from "../admin/siteVisits.js";
@@ -89,6 +90,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   "admin/access": typeof admin_access;
   "admin/bootstrap": typeof admin_bootstrap;
+  "admin/deals": typeof admin_deals;
   "admin/index": typeof admin_index;
   "admin/projects": typeof admin_projects;
   "admin/siteVisits": typeof admin_siteVisits;

@@ -2367,6 +2367,32 @@
     "accountFallback": "Administrator",
     "footerTeam": "Batiplus team"
   },
+  "adminDeals": {
+    "metaTitle": "Commission tracking | Batiplus",
+    "metaDescription": "Track company commission obligations for Batiplus Deals.",
+    "title": "Deals & commissions",
+    "lead": "Track commission owed by selected companies to Batiplus. Recording payment is an administrative confirmation only.",
+    "filtersLabel": "Commission status",
+    "status": { "all": "All", "due": "Due", "paid": "Paid" },
+    "searchLabel": "Search Deals",
+    "searchPlaceholder": "Search project or company",
+    "loading": "Loading commission obligations…",
+    "empty": "No commission obligations match these filters.",
+    "columns": { "project": "Project", "company": "Company", "dealAmount": "Deal amount", "commission": "Commission owed", "statusLabel": "Status", "created": "Created", "action": "Action" },
+    "view": "View details",
+    "commissionOf": "{rate} of {amount}",
+    "close": "Close",
+    "fields": { "dealAmount": "Agreed Deal amount", "commission": "Commission owed", "rate": "Snapshotted rate", "configVersion": "Commission config version", "status": "Payment status", "created": "Deal created", "paidAt": "Paid at", "paidBy": "Recorded by", "reference": "Payment reference", "note": "Internal note" },
+    "markPaidTitle": "Mark commission as paid",
+    "markPaidHelp": "Confirm that Batiplus received this commission from the company. This does not process a payment.",
+    "referenceLabel": "Payment reference (optional)",
+    "noteLabel": "Internal note (optional)",
+    "cancel": "Cancel",
+    "confirmPaid": "Confirm paid",
+    "saving": "Saving…",
+    "paidSuccess": "Commission marked as paid.",
+    "errors": { "alreadyPaid": "This commission has already been marked as paid.", "invalidInput": "Check the payment reference or note.", "generic": "The commission status could not be updated. Try again." }
+  },
   "adminSettings": {
     "metaTitle": "Admin settings | Batiplus",
     "metaDescription": "Manage private Batiplus marketplace settings.",
@@ -3777,6 +3803,10 @@
         "COMMISSION_MULTIPLE_OPEN_TIERS": "Only the final commission tier can have no upper limit.",
         "COMMISSION_CONFIGURATION_REQUIRED": "Configure the marketplace commission rules before creating a Deal.",
         "COMMISSION_CONFIGURATION_INVALID": "The marketplace commission rules are invalid. Contact an administrator.",
+        "COMMISSION_ALREADY_PAID": "This commission has already been marked as paid.",
+        "COMMISSION_SNAPSHOT_INCOMPLETE": "This Deal does not have a complete commission snapshot.",
+        "INVALID_COMMISSION_PAYMENT_REFERENCE": "The payment reference is too long.",
+        "INVALID_COMMISSION_PAYMENT_NOTE": "The internal payment note is too long.",
         "NETWORK": "Connection problem. We’ll try again.",
         "UNKNOWN": "Something went wrong. Please try again."
       }

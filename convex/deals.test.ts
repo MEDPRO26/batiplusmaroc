@@ -568,3 +568,46 @@ describe("Deal read authorization", () => {
     ).rejects.toThrow("NOT_AUTHENTICATED");
   });
 });
+
+describe("Admin commission payment tracking", () => {
+  test("admin can mark a due commission paid exactly once with immutable history", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    const admin = asUser(source.t, source.adminUserId);
+    const result = await admin.mutation(api.admin.deals.markCommissionPaid, {
+      dealId: created.dealId,
+      paymentReference: "  BANK-2026-0042  ",
+      paymentNote: "  Confirmed by finance team.  ",
+    });
+    expect(result.commissionStatus).toBe("paid");
+    expect(await source.t.run((ctx) => ctx.db.get(created.dealId))).toMatchObject({
+      commissionStatus: "paid",
+      commissionPaidByAdminUserId: source.adminUserId,
+      commissionPaymentReference: "BANK-2026-0042",
+      commissionPaymentNote: "Confirmed by finance team.",
+    });
+    const history = await source.t.run((ctx) => ctx.db.query("commissionStatusHistory").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect());
+    expect(history).toHaveLength(1);
+    expect(history[0]).toMatchObject({ fromStatus: "due", toStatus: "paid", actorAdminUserId: source.adminUserId });
+    await expect(admin.mutation(api.admin.deals.markCommissionPaid, { dealId: created.dealId })).rejects.toThrow("COMMISSION_ALREADY_PAID");
+    expect(await source.t.run((ctx) => ctx.db.query("commissionStatusHistory").collect())).toHaveLength(1);
+  });
+
+  test("non-admins cannot list or update commission obligations", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    await expect(asUser(source.t, source.companyUserId).query(api.admin.deals.listCommissionObligations, { status: "all" })).rejects.toThrow("ADMIN_REQUIRED");
+    await expect(asUser(source.t, source.clientUserId).mutation(api.admin.deals.markCommissionPaid, { dealId: created.dealId })).rejects.toThrow("ADMIN_REQUIRED");
+  });
+
+  test("admin list filters by status and searches project or company", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    await source.t.run((ctx) => ctx.db.patch(source.projectId, { title: "Riad restoration" }));
+    const admin = asUser(source.t, source.adminUserId);
+    const due = await admin.query(api.admin.deals.listCommissionObligations, { status: "due", search: "atlas" });
+    expect(due).toHaveLength(1);
+    expect(due[0]).toMatchObject({ dealId: created.dealId, projectTitle: "Riad restoration", companyName: "Atlas Build", commissionStatus: "due" });
+    expect(await admin.query(api.admin.deals.listCommissionObligations, { status: "paid" })).toEqual([]);
+  });
+});
