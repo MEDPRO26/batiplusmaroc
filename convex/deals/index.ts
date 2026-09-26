@@ -2,10 +2,13 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { internalMutation, query } from "../_generated/server";
+import { internalMutation, mutation, query } from "../_generated/server";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { resolveCommissionForDealAmount } from "../marketplaceSettings/index";
+import { requireClientUser } from "../projects/access";
+import { assertProjectTransition } from "../projects/state";
 import { commissionStatusValidator, dealStatusValidator } from "./constants";
+import { assertDealCompletable, isDealReviewEligible } from "./state";
 
 const dealValidator = v.object({
   id: v.id("deals"),
@@ -28,6 +31,9 @@ const dealValidator = v.object({
   commissionBeneficiary: v.literal("batiplus"),
   commissionStatus: commissionStatusValidator,
   status: dealStatusValidator,
+  completedAt: v.union(v.number(), v.null()),
+  completedByUserId: v.union(v.id("users"), v.null()),
+  reviewEligible: v.boolean(),
   createdAt: v.number(),
 });
 
@@ -83,6 +89,9 @@ function toDealDto(deal: Doc<"deals">) {
     commissionBeneficiary: deal.commissionBeneficiary,
     commissionStatus: deal.commissionStatus,
     status: deal.status,
+    completedAt: deal.completedAt ?? null,
+    completedByUserId: deal.completedByUserId ?? null,
+    reviewEligible: isDealReviewEligible(deal.status),
     createdAt: deal.createdAt,
   };
 }
@@ -101,6 +110,116 @@ export const getByProject = query({
     if (!deal) return null;
     await requireDealViewer(ctx, deal);
     return toDealDto(deal);
+  },
+});
+
+/** Owning Client command that completes the Deal and its Project atomically. */
+export const completeDeal = mutation({
+  args: { dealId: v.id("deals") },
+  returns: v.object({
+    dealId: v.id("deals"),
+    projectId: v.id("projects"),
+    status: v.literal("completed"),
+    completedAt: v.number(),
+    reviewEligible: v.literal(true),
+  }),
+  handler: async (ctx, args) => {
+    const { userId } = await requireClientUser(ctx);
+    const deal = await ctx.db.get(args.dealId);
+    if (!deal || deal.clientUserId !== userId) throw new ConvexError("DEAL_NOT_FOUND");
+
+    assertDealCompletable(deal.status);
+    const [project, company, initialQuote, conversation, finalQuote, revision] = await Promise.all([
+      ctx.db.get(deal.projectId),
+      ctx.db.get(deal.companyId),
+      ctx.db.get(deal.initialQuoteId),
+      ctx.db.get(deal.conversationId),
+      ctx.db.get(deal.acceptedFinalQuoteId),
+      ctx.db.get(deal.acceptedFinalQuoteRevisionId),
+    ]);
+    if (!project || project.clientId !== userId) throw new ConvexError("DEAL_COMPLETION_INTEGRITY_ERROR");
+    if (
+      !company ||
+      !initialQuote ||
+      initialQuote.projectId !== project._id ||
+      initialQuote.companyId !== deal.companyId ||
+      !conversation ||
+      conversation.projectId !== project._id ||
+      conversation.clientId !== userId ||
+      conversation.companyId !== deal.companyId ||
+      conversation.quoteId !== deal.initialQuoteId ||
+      !finalQuote ||
+      finalQuote.projectId !== project._id ||
+      finalQuote.clientId !== userId ||
+      finalQuote.companyId !== deal.companyId ||
+      finalQuote.initialQuoteId !== deal.initialQuoteId ||
+      finalQuote.conversationId !== deal.conversationId ||
+      finalQuote.status !== "accepted" ||
+      finalQuote.acceptedRevisionId !== deal.acceptedFinalQuoteRevisionId ||
+      !revision ||
+      revision.finalQuoteId !== finalQuote._id ||
+      project.selectedCompanyId !== deal.companyId ||
+      project.selectedFinalQuoteId !== deal.acceptedFinalQuoteId ||
+      deal.commissionDebtorCompanyId !== deal.companyId ||
+      deal.commissionBeneficiary !== "batiplus"
+    ) {
+      throw new ConvexError("DEAL_COMPLETION_INTEGRITY_ERROR");
+    }
+    try {
+      assertProjectTransition(project.status, "completed");
+    } catch {
+      throw new ConvexError("DEAL_NOT_COMPLETABLE");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(deal._id, {
+      status: "completed",
+      completedAt: now,
+      completedByUserId: userId,
+    });
+    await ctx.db.patch(project._id, { status: "completed", updatedAt: now });
+    await ctx.db.insert("dealStatusHistory", {
+      dealId: deal._id,
+      fromStatus: "active",
+      toStatus: "completed",
+      actorUserId: userId,
+      createdAt: now,
+    });
+    await ctx.db.insert("projectStatusHistory", {
+      projectId: project._id,
+      oldStatus: project.status,
+      newStatus: "completed",
+      changedBy: userId,
+      changedAt: now,
+    });
+    await appendMarketplaceActivity(ctx, {
+      projectId: project._id,
+      eventType: "deal_completed",
+      actorUserId: userId,
+      actorType: "client",
+      companyId: deal.companyId,
+      quoteId: deal.initialQuoteId,
+      conversationId: deal.conversationId,
+      finalQuoteId: deal.acceptedFinalQuoteId,
+      finalQuoteRevisionId: deal.acceptedFinalQuoteRevisionId,
+      dealId: deal._id,
+      oldStatus: "active",
+      newStatus: "completed",
+      metadata: {
+        projectOldStatus: project.status,
+        projectNewStatus: "completed",
+        commissionStatus: deal.commissionStatus,
+        reviewEligible: true,
+      },
+      createdAt: now,
+    });
+    return {
+      dealId: deal._id,
+      projectId: project._id,
+      status: "completed" as const,
+      completedAt: now,
+      reviewEligible: true as const,
+    };
   },
 });
 

@@ -2094,6 +2094,26 @@
       "companySelected": "Company selected",
       "openConversation": "Open conversation"
     },
+    "completion": {
+      "eyebrow": "Deal completion",
+      "loading": "Loading completion status…",
+      "activeTitle": "Work in progress",
+      "activeLead": "When the agreed work is fully finished, confirm completion to close this Deal and Project.",
+      "action": "Confirm completion",
+      "confirmTitle": "Confirm that the work is complete?",
+      "confirmLead": "This will complete the Deal and Project and make the Deal eligible for a review. It does not change commission payment status.",
+      "cancel": "Cancel",
+      "confirmAction": "Complete Deal",
+      "saving": "Completing…",
+      "completedTitle": "Work completed",
+      "completedLead": "You confirmed completion on {date}.",
+      "reviewEligible": "This Deal is now eligible for a review.",
+      "errors": {
+        "alreadyCompleted": "This Deal has already been completed.",
+        "notCompletable": "This Deal cannot be completed from its current state.",
+        "generic": "The Deal could not be completed. Please try again."
+      }
+    },
     "history": {
       "title": "Status history",
       "transition": "{from} → {to}",
@@ -3839,6 +3859,10 @@
         "INVALID_FINAL_QUOTE_REASON": "Enter a valid reason.",
         "INVALID_ACTIVITY_FINAL_QUOTE": "The final quote activity could not be recorded.",
         "INVALID_ACTIVITY_FINAL_QUOTE_REVISION": "The final quote revision activity could not be recorded.",
+        "DEAL_NOT_FOUND": "This Deal could not be found.",
+        "DEAL_ALREADY_COMPLETED": "This Deal has already been completed.",
+        "DEAL_NOT_COMPLETABLE": "This Deal cannot be completed from its current state.",
+        "DEAL_COMPLETION_INTEGRITY_ERROR": "This Deal cannot be completed because its project relationship is inconsistent.",
         "INVALID_COMMISSION_RATE": "Enter a commission rate between 0.00% and 30.00%.",
         "INVALID_COMMISSION_TIER_BOUNDARY": "Enter valid whole-MAD commission tier boundaries.",
         "COMMISSION_TIERS_REQUIRED": "Add at least one commission tier.",

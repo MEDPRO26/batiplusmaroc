@@ -1,4 +1,4 @@
-# Deal domain (V1 Step 8.2)
+# Deal domain (V1 Steps 8.2–9)
 
 A Deal is Batiplus's authoritative commercial record after the project-owning
 Client accepts the current revision of a Company's Final Quote. The accepted
@@ -83,6 +83,22 @@ When an Admin confirms receipt, the Deal stores the payment timestamp, Admin,
 and optional reference/note. The same transaction appends one immutable
 `commissionStatusHistory` row and a `commission_paid` marketplace activity.
 Repeated confirmation is rejected, and the commercial snapshots are unchanged.
+
+The owning Client may later run the explicit `deals.index.completeDeal`
+command. It accepts only the Deal ID, re-derives the Project relationship,
+requires an active Deal and an eligible selected Project, and atomically:
+
+- changes the Deal from `active` to `completed`;
+- records `completedAt` and `completedByUserId`;
+- changes the Project from `company_selected | in_progress` to `completed`;
+- appends Deal and Project status history and one `deal_completed` activity;
+- makes the Deal review-eligible.
+
+The command does not gate on or change the commission lifecycle. A `due` or
+`paid` commission remains exactly as it was. Repeated completion is rejected
+without rewriting timestamps or duplicating audit rows. Company members,
+Admins, SEO users, other Clients, and anonymous callers have no completion
+override.
 
 ## Company commission visibility
 

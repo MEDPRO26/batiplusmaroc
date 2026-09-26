@@ -447,6 +447,8 @@ export default defineSchema({
     commissionPaymentReference: v.optional(v.string()),
     commissionPaymentNote: v.optional(v.string()),
     status: dealStatusValidator,
+    completedAt: v.optional(v.number()),
+    completedByUserId: v.optional(v.id("users")),
     createdAt: v.number(),
   })
     .index("by_projectId", ["projectId"])

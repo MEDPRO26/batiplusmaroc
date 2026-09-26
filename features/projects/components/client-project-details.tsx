@@ -1,10 +1,10 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import Image from "next/image";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { StatusBadge } from "@/features/clients/components/client-dashboard";
 import { ErrorState } from "@/features/shared/components/error-state";
@@ -56,6 +56,7 @@ export function ClientProjectDetailsView({ project, quotesSlot }: { project: Pro
         <StatusBadge status={project.status} />
       </header>
       <ClientProjectCurrentStep project={project} />
+      {project.viewerRole === "owner" ? <ClientDealCompletion project={project} /> : null}
       {project.status === "pending_review" ? <p className="mt-7 rounded-2xl bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900" role="status">{t("statusDescription.pending_review")}</p> : null}
       {project.status === "needs_changes" ? <p className="mt-7 rounded-2xl bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900" role="status">{t("statusDescription.needs_changes")}</p> : null}
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -75,3 +76,67 @@ export function ClientProjectDetailsView({ project, quotesSlot }: { project: Pro
 }
 
 function Detail({ label, value }: { label: string; value: string }) { return <div><dt className="text-muted">{label}</dt><dd className="mt-1 font-medium text-ink">{value}</dd></div>; }
+
+export function ClientDealCompletion({ project }: { project: ProjectDetails }) {
+  const relevant = project.status === "company_selected" || project.status === "in_progress" || project.status === "completed";
+  const deal = useQuery(api.deals.index.getByProject, relevant ? { projectId: project.id } : "skip");
+  const completeDeal = useMutation(api.deals.index.completeDeal);
+  const t = useTranslations("clientProjects.completion");
+  const locale = useLocale();
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  if (!relevant || deal === null) return null;
+  if (deal === undefined) {
+    return <p className="mt-6 text-sm text-muted" role="status">{t("loading")}</p>;
+  }
+  const dealId = deal.id;
+
+  async function confirm() {
+    setBusy(true);
+    setError("");
+    try {
+      await completeDeal({ dealId });
+      setConfirming(false);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "";
+      setError(message.includes("DEAL_ALREADY_COMPLETED") ? t("errors.alreadyCompleted") : message.includes("DEAL_NOT_COMPLETABLE") ? t("errors.notCompletable") : t("errors.generic"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const completed = deal.status === "completed";
+  return (
+    <section aria-labelledby="deal-completion-title" className="mt-6 rounded-2xl border border-brand-border bg-white p-5 sm:p-6">
+      <p className="m-0 text-[11px] font-bold tracking-[0.12em] text-brand uppercase">{t("eyebrow")}</p>
+      <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="m-0 text-lg font-semibold text-ink" id="deal-completion-title">{completed ? t("completedTitle") : t("activeTitle")}</h2>
+          <p className="mt-1 mb-0 max-w-2xl text-sm leading-6 text-muted">
+            {completed && deal.completedAt
+              ? t("completedLead", { date: new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "Africa/Casablanca" }).format(deal.completedAt) })
+              : t("activeLead")}
+          </p>
+          {completed && deal.reviewEligible ? <p className="mt-2 mb-0 text-sm font-medium text-emerald-700">{t("reviewEligible")}</p> : null}
+        </div>
+        {!completed ? <button className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={() => { setError(""); setConfirming(true); }} type="button">{t("action")}</button> : null}
+      </div>
+      {error && !confirming ? <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}
+      {confirming ? <DealCompletionDialog busy={busy} error={error} onCancel={() => setConfirming(false)} onConfirm={() => void confirm()} /> : null}
+    </section>
+  );
+}
+
+export function DealCompletionDialog({ busy, error, onCancel, onConfirm }: { busy: boolean; error: string; onCancel: () => void; onConfirm: () => void }) {
+  const t = useTranslations("clientProjects.completion");
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    confirmRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape" && !busy) onCancel(); };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [busy, onCancel]);
+  return <div className="fixed inset-0 z-[110] grid place-items-center bg-black/50 p-4"><button aria-label={t("cancel")} className="absolute inset-0" disabled={busy} onClick={onCancel} type="button" /><div aria-describedby="deal-completion-description" aria-labelledby="deal-completion-dialog-title" aria-modal="true" className="relative z-10 w-full max-w-md rounded-[20px] bg-white p-5 shadow-[0_24px_48px_rgba(16,24,40,0.18)] sm:p-6" role="dialog"><h2 className="m-0 text-lg font-semibold text-ink" id="deal-completion-dialog-title">{t("confirmTitle")}</h2><p className="mt-3 mb-0 text-sm leading-6 text-muted" id="deal-completion-description">{t("confirmLead")}</p>{error ? <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}<div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button className="min-h-11 rounded-full px-5 text-sm font-semibold text-muted disabled:opacity-55" disabled={busy} onClick={onCancel} type="button">{t("cancel")}</button><button className="min-h-11 rounded-full bg-brand px-5 text-sm font-semibold text-white disabled:opacity-55" disabled={busy} onClick={onConfirm} ref={confirmRef} type="button">{busy ? t("saving") : t("confirmAction")}</button></div></div></div>;
+}

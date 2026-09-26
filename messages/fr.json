@@ -2094,6 +2094,26 @@
       "companySelected": "Entreprise sélectionnée",
       "openConversation": "Ouvrir la conversation"
     },
+    "completion": {
+      "eyebrow": "Clôture de l’accord",
+      "loading": "Chargement du statut de clôture…",
+      "activeTitle": "Travaux en cours",
+      "activeLead": "Lorsque les travaux convenus sont entièrement terminés, confirmez leur achèvement pour clôturer l’accord et le projet.",
+      "action": "Confirmer l’achèvement",
+      "confirmTitle": "Confirmer que les travaux sont terminés ?",
+      "confirmLead": "Cette action terminera l’accord et le projet et rendra l’accord éligible à un avis. Elle ne modifie pas le statut de paiement de la commission.",
+      "cancel": "Annuler",
+      "confirmAction": "Terminer l’accord",
+      "saving": "Clôture…",
+      "completedTitle": "Travaux terminés",
+      "completedLead": "Vous avez confirmé l’achèvement le {date}.",
+      "reviewEligible": "Cet accord est désormais éligible à un avis.",
+      "errors": {
+        "alreadyCompleted": "Cet accord est déjà terminé.",
+        "notCompletable": "Cet accord ne peut pas être terminé depuis son état actuel.",
+        "generic": "Impossible de terminer l’accord. Veuillez réessayer."
+      }
+    },
     "history": {
       "title": "Historique du statut",
       "transition": "{from} → {to}",
@@ -3839,6 +3859,10 @@
         "INVALID_FINAL_QUOTE_REASON": "Saisissez un motif valide.",
         "INVALID_ACTIVITY_FINAL_QUOTE": "L’activité du devis final n’a pas pu être enregistrée.",
         "INVALID_ACTIVITY_FINAL_QUOTE_REVISION": "L’activité de la révision n’a pas pu être enregistrée.",
+        "DEAL_NOT_FOUND": "Cet accord est introuvable.",
+        "DEAL_ALREADY_COMPLETED": "Cet accord est déjà terminé.",
+        "DEAL_NOT_COMPLETABLE": "Cet accord ne peut pas être terminé depuis son état actuel.",
+        "DEAL_COMPLETION_INTEGRITY_ERROR": "Cet accord ne peut pas être terminé car sa relation avec le projet est incohérente.",
         "INVALID_COMMISSION_RATE": "Saisissez un taux de commission compris entre 0,00 % et 30,00 %.",
         "INVALID_COMMISSION_TIER_BOUNDARY": "Saisissez des limites de tranche valides en MAD entiers.",
         "COMMISSION_TIERS_REQUIRED": "Ajoutez au moins une tranche de commission.",

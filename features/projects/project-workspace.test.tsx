@@ -9,7 +9,7 @@ import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 
 const queryState = vi.hoisted(() => ({ value: undefined as unknown }));
-vi.mock("convex/react", () => ({ useQuery: () => queryState.value }));
+vi.mock("convex/react", () => ({ useQuery: () => queryState.value, useMutation: () => vi.fn() }));
 vi.mock("next/image", () => ({ default: ({ alt }: { alt: string }) => <span data-alt={alt} /> }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string | { pathname: string; query?: Record<string, string> } }) => {
@@ -23,7 +23,7 @@ vi.mock("@/i18n/navigation", () => ({
 
 import { ClientDashboardView, ClientProjectCard, ClientProjectsView, greetingPeriod, resolveClientDashboardRedirect } from "@/features/clients/components/client-dashboard";
 import { routes } from "@/lib/routes";
-import { ClientProjectDetailsView } from "@/features/projects/components/client-project-details";
+import { ClientDealCompletion, ClientProjectDetailsView, DealCompletionDialog } from "@/features/projects/components/client-project-details";
 import { ProjectDiscoveryEmptyState, ProjectDiscoveryResults } from "@/features/projects/components/project-discovery-empty-state";
 
 const projectId = "project-1" as Id<"projects">;
@@ -174,6 +174,53 @@ describe("client project workspace", () => {
     expect(html).toContain("Pending review → Needs changes");
     expect(html).toContain("Continue project");
     expect(html).toContain("?projectId=project-1");
+  });
+
+  test("shows the Client-only completion action and confirmation dialog in EN and FR", () => {
+    const details: ProjectDetails = {
+      ...baseProject,
+      status: "company_selected",
+      customCategoryText: null,
+      neighborhood: null,
+      description: "A complete family villa construction project.",
+      propertyType: "house",
+      surface: 180,
+      surfaceUnknown: false,
+      images: [],
+      attachments: [],
+      history: [],
+      viewerRole: "owner",
+    };
+    queryState.value = { id: "deal-1", status: "active", completedAt: null, reviewEligible: false };
+    const active = render("en", <ClientDealCompletion project={details} />);
+    expect(active).toContain("Confirm completion");
+    expect(active).toContain("Work in progress");
+    const dialog = render("fr", <DealCompletionDialog busy={false} error="" onCancel={() => undefined} onConfirm={() => undefined} />);
+    expect(dialog).toContain('role="dialog"');
+    expect(dialog).toContain("Confirmer que les travaux sont terminés");
+    expect(dialog).toContain("Terminer l’accord");
+  });
+
+  test("shows completion date and review eligibility without another action", () => {
+    const details = {
+      ...baseProject,
+      status: "completed" as const,
+      customCategoryText: null,
+      neighborhood: null,
+      description: "A complete family villa construction project.",
+      propertyType: "house" as const,
+      surface: 180,
+      surfaceUnknown: false,
+      images: [],
+      attachments: [],
+      history: [],
+      viewerRole: "owner" as const,
+    } satisfies ProjectDetails;
+    queryState.value = { id: "deal-1", status: "completed", completedAt: 1_790_000_000_000, reviewEligible: true };
+    const html = render("en", <ClientDealCompletion project={details} />);
+    expect(html).toContain("Work completed");
+    expect(html).toContain("eligible for a review");
+    expect(html).not.toContain("Confirm completion");
   });
 
   test("uses the marketplace empty state and never the personal-project message", () => {

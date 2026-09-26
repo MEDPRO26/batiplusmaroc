@@ -570,6 +570,119 @@ describe("Deal read authorization", () => {
   });
 });
 
+describe("Deal completion lifecycle", () => {
+  test("owning Client completes the Deal and Project atomically while commission stays due", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    const client = asUser(source.t, source.clientUserId);
+    await expect(client.query(api.deals.index.getByProject, { projectId: source.projectId }))
+      .resolves.toMatchObject({ status: "active", reviewEligible: false, completedAt: null });
+
+    const before = await source.t.run((ctx) => ctx.db.get(created.dealId));
+    const result = await client.mutation(api.deals.index.completeDeal, { dealId: created.dealId });
+    expect(result).toMatchObject({ dealId: created.dealId, projectId: source.projectId, status: "completed", reviewEligible: true });
+
+    const state = await source.t.run(async (ctx) => ({
+      deal: await ctx.db.get(created.dealId),
+      project: await ctx.db.get(source.projectId),
+      dealHistory: await ctx.db.query("dealStatusHistory").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect(),
+      projectHistory: await ctx.db.query("projectStatusHistory").withIndex("by_projectId_and_changedAt", (q) => q.eq("projectId", source.projectId)).collect(),
+      activity: await ctx.db.query("marketplaceActivity").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect(),
+    }));
+    expect(state.deal).toMatchObject({ status: "completed", completedAt: result.completedAt, completedByUserId: source.clientUserId, commissionStatus: "due" });
+    expect(state.project).toMatchObject({ status: "completed", updatedAt: result.completedAt });
+    expect(state.dealHistory).toHaveLength(2);
+    expect(state.dealHistory[1]).toMatchObject({ fromStatus: "active", toStatus: "completed", actorUserId: source.clientUserId, createdAt: result.completedAt });
+    expect(state.projectHistory).toEqual([expect.objectContaining({ oldStatus: "company_selected", newStatus: "completed", changedBy: source.clientUserId, changedAt: result.completedAt })]);
+    expect(state.activity.map((item) => item.eventType)).toEqual(["deal_created", "commission_due", "deal_completed"]);
+    expect(state.activity[2]).toMatchObject({ oldStatus: "active", newStatus: "completed", metadata: { projectOldStatus: "company_selected", projectNewStatus: "completed", commissionStatus: "due", reviewEligible: true } });
+    expect(state.deal).toMatchObject({
+      agreedAmountMad: before?.agreedAmountMad,
+      commissionRateBps: before?.commissionRateBps,
+      commissionAmountMad: before?.commissionAmountMad,
+      commissionConfigVersion: before?.commissionConfigVersion,
+    });
+    await expect(client.query(api.deals.index.getByProject, { projectId: source.projectId }))
+      .resolves.toMatchObject({ status: "completed", reviewEligible: true, completedAt: result.completedAt });
+  });
+
+  test("completion is independent from an already-paid commission", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    const paid = await asUser(source.t, source.adminUserId).mutation(api.admin.deals.markCommissionPaid, { dealId: created.dealId, paymentReference: "BANK-42" });
+    await asUser(source.t, source.clientUserId).mutation(api.deals.index.completeDeal, { dealId: created.dealId });
+    const deal = await source.t.run((ctx) => ctx.db.get(created.dealId));
+    expect(deal).toMatchObject({ status: "completed", commissionStatus: "paid", commissionPaidAt: paid.paidAt, commissionPaymentReference: "BANK-42" });
+    expect(await source.t.run((ctx) => ctx.db.query("commissionStatusHistory").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect())).toHaveLength(1);
+  });
+
+  test("repeated completion is rejected without rewriting timestamps or audit", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    const client = asUser(source.t, source.clientUserId);
+    const first = await client.mutation(api.deals.index.completeDeal, { dealId: created.dealId });
+    await expect(client.mutation(api.deals.index.completeDeal, { dealId: created.dealId })).rejects.toThrow("DEAL_ALREADY_COMPLETED");
+    const state = await source.t.run(async (ctx) => ({
+      deal: await ctx.db.get(created.dealId),
+      dealHistory: await ctx.db.query("dealStatusHistory").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect(),
+      projectHistory: await ctx.db.query("projectStatusHistory").withIndex("by_projectId_and_changedAt", (q) => q.eq("projectId", source.projectId)).collect(),
+      completedActivity: await ctx.db.query("marketplaceActivity").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).filter((q) => q.eq(q.field("eventType"), "deal_completed")).collect(),
+    }));
+    expect(state.deal?.completedAt).toBe(first.completedAt);
+    expect(state.dealHistory).toHaveLength(2);
+    expect(state.projectHistory).toHaveLength(1);
+    expect(state.completedActivity).toHaveLength(1);
+  });
+
+  test("other roles and anonymous callers cannot complete a Deal", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    await expect(asUser(source.t, source.otherClientUserId).mutation(api.deals.index.completeDeal, { dealId: created.dealId })).rejects.toThrow("DEAL_NOT_FOUND");
+    for (const userId of [source.companyUserId, source.otherCompanyUserId, source.adminUserId, source.seoUserId]) {
+      await expect(asUser(source.t, userId).mutation(api.deals.index.completeDeal, { dealId: created.dealId })).rejects.toThrow("CLIENT_ACCOUNT_REQUIRED");
+    }
+    await expect(source.t.mutation(api.deals.index.completeDeal, { dealId: created.dealId })).rejects.toThrow("NOT_AUTHENTICATED");
+    expect(await source.t.run((ctx) => ctx.db.get(created.dealId))).toMatchObject({ status: "active" });
+  });
+
+  test("invalid Deal state and relationship corruption fail without partial writes", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    const client = asUser(source.t, source.clientUserId);
+    await source.t.run((ctx) => ctx.db.patch(source.projectId, { selectedCompanyId: source.otherCompanyId }));
+    await expect(client.mutation(api.deals.index.completeDeal, { dealId: created.dealId })).rejects.toThrow("DEAL_COMPLETION_INTEGRITY_ERROR");
+    let state = await source.t.run(async (ctx) => ({ deal: await ctx.db.get(created.dealId), project: await ctx.db.get(source.projectId), histories: await ctx.db.query("dealStatusHistory").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect() }));
+    expect(state.deal).toMatchObject({ status: "active" });
+    expect(state.project).toMatchObject({ status: "company_selected" });
+    expect(state.histories).toHaveLength(1);
+
+    await source.t.run(async (ctx) => { await ctx.db.patch(source.projectId, { selectedCompanyId: source.companyId }); await ctx.db.patch(created.dealId, { status: "cancelled" }); });
+    await expect(client.mutation(api.deals.index.completeDeal, { dealId: created.dealId })).rejects.toThrow("DEAL_NOT_COMPLETABLE");
+    state = await source.t.run(async (ctx) => ({ deal: await ctx.db.get(created.dealId), project: await ctx.db.get(source.projectId), histories: await ctx.db.query("dealStatusHistory").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect() }));
+    expect(state.deal).toMatchObject({ status: "cancelled" });
+    expect(state.project).toMatchObject({ status: "company_selected" });
+    expect(state.histories).toHaveLength(1);
+  });
+
+  test("an incomplete legacy relationship is rejected with a controlled error and rolls back", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    await source.t.run((ctx) => ctx.db.delete(source.acceptedRevisionId));
+    await expect(asUser(source.t, source.clientUserId).mutation(api.deals.index.completeDeal, { dealId: created.dealId }))
+      .rejects.toThrow("DEAL_COMPLETION_INTEGRITY_ERROR");
+    const state = await source.t.run(async (ctx) => ({
+      deal: await ctx.db.get(created.dealId),
+      project: await ctx.db.get(source.projectId),
+      dealHistory: await ctx.db.query("dealStatusHistory").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect(),
+      projectHistory: await ctx.db.query("projectStatusHistory").withIndex("by_projectId_and_changedAt", (q) => q.eq("projectId", source.projectId)).collect(),
+    }));
+    expect(state.deal).toMatchObject({ status: "active" });
+    expect(state.project).toMatchObject({ status: "company_selected" });
+    expect(state.dealHistory).toHaveLength(1);
+    expect(state.projectHistory).toHaveLength(0);
+  });
+});
+
 describe("Admin commission payment tracking", () => {
   test("admin can mark a due commission paid exactly once with immutable history", async () => {
     const source = await setupAcceptedSource();

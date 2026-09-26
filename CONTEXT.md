@@ -34,6 +34,12 @@ The immutable commercial record created by Company Selection, preserving the
 accepted parties, amount, quote, and marketplace commission facts.
 _Avoid_: Payment, invoice
 
+**Deal Completion**:
+The owning Client's final confirmation that the selected Company completed the
+agreed work. It completes both the Deal and Project and makes the Deal eligible
+for a review, independently of commission payment.
+_Avoid_: Commission settlement, Company self-completion
+
 **Marketplace Commission**:
 The flat-bracket fee owed to Batiplus for a Deal, calculated from the full
 accepted Deal amount using the schedule in effect at Company Selection.
