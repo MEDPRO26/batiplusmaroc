@@ -2367,6 +2367,27 @@
     "accountFallback": "Administrator",
     "footerTeam": "Batiplus team"
   },
+  "adminSettings": {
+    "metaTitle": "Admin settings | Batiplus",
+    "metaDescription": "Manage private Batiplus marketplace settings.",
+    "title": "Settings",
+    "lead": "Manage the platform rules that apply to future marketplace activity.",
+    "policyLabel": "Commercial policy",
+    "marketplaceCommission": "Marketplace commission",
+    "commissionRate": "Commission rate",
+    "appliesNewDeals": "Applies to new Deals only.",
+    "existingDealsKeepRate": "Existing Deals keep their original commission rate.",
+    "rateHelp": "Enter a percentage from 0.00% to 30.00%.",
+    "saveChanges": "Save changes",
+    "saving": "Saving…",
+    "updatedSuccess": "Commission updated successfully",
+    "invalidRate": "Invalid commission rate",
+    "configurationRequired": "Commission configuration required",
+    "loading": "Loading commission settings…",
+    "backendError": "The commission setting could not be loaded or saved. Please try again.",
+    "errorTitle": "Settings unavailable",
+    "retry": "Try again"
+  },
   "adminVerification": {
     "metaTitle": "Company verification",
     "metaDescription": "Review company verification submissions.",
@@ -3730,6 +3751,8 @@
         "INVALID_FINAL_QUOTE_REASON": "Enter a valid reason.",
         "INVALID_ACTIVITY_FINAL_QUOTE": "The final quote activity could not be recorded.",
         "INVALID_ACTIVITY_FINAL_QUOTE_REVISION": "The final quote revision activity could not be recorded.",
+        "INVALID_COMMISSION_RATE": "Enter a commission rate between 0.00% and 30.00%.",
+        "COMMISSION_CONFIGURATION_REQUIRED": "Configure the marketplace commission before creating a Deal.",
         "NETWORK": "Connection problem. We’ll try again.",
         "UNKNOWN": "Something went wrong. Please try again."
       }

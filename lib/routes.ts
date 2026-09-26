@@ -40,6 +40,7 @@ export const routes = {
   adminProjects: "/admin/projects",
   adminSiteVisits: "/admin/site-visits",
   adminVerification: "/admin/verification",
+  adminSettings: "/admin/settings",
   seoRoot: "/seo",
   seoDashboard: "/seo/dashboard",
   seoArticles: "/seo/articles",

@@ -6,6 +6,7 @@ import {
   marketplaceActivityEventTypeValidator,
   marketplaceActivityMetadataValidator,
 } from "./marketplaceActivity/constants";
+import { dealStatusValidator } from "./deals/constants";
 
 const accountType = v.union(
   v.literal("client"),
@@ -204,8 +205,7 @@ export default defineSchema({
     siteVisitId: v.optional(v.id("siteVisits")),
     finalQuoteId: v.optional(v.id("finalQuotes")),
     finalQuoteRevisionId: v.optional(v.id("finalQuoteRevisions")),
-    /** Future deal module IDs are stored as opaque IDs until that table exists. */
-    dealId: v.optional(v.string()),
+    dealId: v.optional(v.id("deals")),
     oldStatus: v.optional(v.string()),
     newStatus: v.optional(v.string()),
     reason: v.optional(v.string()),
@@ -215,7 +215,8 @@ export default defineSchema({
     .index("by_projectId_and_createdAt", ["projectId", "createdAt"])
     .index("by_eventType_and_createdAt", ["eventType", "createdAt"])
     .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"])
-    .index("by_finalQuoteId_and_createdAt", ["finalQuoteId", "createdAt"]),
+    .index("by_finalQuoteId_and_createdAt", ["finalQuoteId", "createdAt"])
+    .index("by_dealId_and_createdAt", ["dealId", "createdAt"]),
 
   siteAssessments: defineTable({
     projectId: v.id("projects"),
@@ -418,6 +419,52 @@ export default defineSchema({
   })
     .index("by_token", ["token"])
     .index("by_finalQuoteId", ["finalQuoteId"]),
+
+  deals: defineTable({
+    projectId: v.id("projects"),
+    clientUserId: v.id("users"),
+    companyId: v.id("companies"),
+    acceptedFinalQuoteId: v.id("finalQuotes"),
+    acceptedFinalQuoteRevisionId: v.id("finalQuoteRevisions"),
+    /** Operational trace back to the discussion and initial estimate. */
+    conversationId: v.id("conversations"),
+    initialQuoteId: v.id("projectQuotes"),
+    agreedAmountMad: v.number(),
+    currency: v.literal("MAD"),
+    commissionRateBps: v.number(),
+    commissionAmountMad: v.number(),
+    status: dealStatusValidator,
+    createdAt: v.number(),
+  })
+    .index("by_projectId", ["projectId"])
+    .index("by_clientUserId", ["clientUserId"])
+    .index("by_companyId", ["companyId"])
+    .index("by_status", ["status"])
+    .index("by_acceptedFinalQuoteId", ["acceptedFinalQuoteId"]),
+
+  dealStatusHistory: defineTable({
+    dealId: v.id("deals"),
+    fromStatus: v.optional(dealStatusValidator),
+    toStatus: dealStatusValidator,
+    actorUserId: v.id("users"),
+    reason: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_dealId_and_createdAt", ["dealId", "createdAt"]),
+
+  marketplaceSettings: defineTable({
+    key: v.literal("global"),
+    commissionRateBps: v.number(),
+    updatedAt: v.number(),
+    updatedByUserId: v.id("users"),
+  }).index("by_key", ["key"]),
+
+  marketplaceSettingsHistory: defineTable({
+    settingKey: v.literal("commission_rate_bps"),
+    oldCommissionRateBps: v.union(v.number(), v.null()),
+    newCommissionRateBps: v.number(),
+    actorUserId: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_settingKey_and_createdAt", ["settingKey", "createdAt"]),
 
   quoteStatusHistory: defineTable({
     quoteId: v.id("projectQuotes"),

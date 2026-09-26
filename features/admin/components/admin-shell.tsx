@@ -44,7 +44,7 @@ const ADMIN_NAVIGATION: { id: AdminNavId; label: AdminNavLabel; href?: AppRoute 
   { id: "reviews", label: "navReviews" },
   { id: "profile", label: "navProfile" },
   { id: "support", label: "navSupport" },
-  { id: "settings", label: "navSettings" },
+  { id: "settings", label: "navSettings", href: routes.adminSettings },
 ];
 
 export const ADMIN_PRESS =

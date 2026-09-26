@@ -18,7 +18,7 @@ type AppendMarketplaceActivityArgs = {
   siteVisitId?: Id<"siteVisits">;
   finalQuoteId?: Id<"finalQuotes">;
   finalQuoteRevisionId?: Id<"finalQuoteRevisions">;
-  dealId?: string;
+  dealId?: Id<"deals">;
   oldStatus?: string;
   newStatus?: string;
   reason?: string;
@@ -34,7 +34,7 @@ export async function appendMarketplaceActivity(
   ctx: MutationCtx,
   args: AppendMarketplaceActivityArgs,
 ) {
-  const [project, actor, company, quote, conversation, siteAssessment, siteVisit, finalQuote, finalQuoteRevision] = await Promise.all([
+  const [project, actor, company, quote, conversation, siteAssessment, siteVisit, finalQuote, finalQuoteRevision, deal] = await Promise.all([
     ctx.db.get(args.projectId),
     ctx.db.get(args.actorUserId),
     args.companyId ? ctx.db.get(args.companyId) : null,
@@ -44,6 +44,7 @@ export async function appendMarketplaceActivity(
     args.siteVisitId ? ctx.db.get(args.siteVisitId) : null,
     args.finalQuoteId ? ctx.db.get(args.finalQuoteId) : null,
     args.finalQuoteRevisionId ? ctx.db.get(args.finalQuoteRevisionId) : null,
+    args.dealId ? ctx.db.get(args.dealId) : null,
   ]);
 
   if (!project) throw new ConvexError("PROJECT_NOT_FOUND");
@@ -62,6 +63,17 @@ export async function appendMarketplaceActivity(
     args.finalQuoteRevisionId &&
     (!finalQuoteRevision || !args.finalQuoteId || finalQuoteRevision.finalQuoteId !== args.finalQuoteId)
   ) throw new ConvexError("INVALID_ACTIVITY_FINAL_QUOTE_REVISION");
+  if (
+    args.dealId &&
+    (!deal ||
+      deal.projectId !== args.projectId ||
+      (args.companyId !== undefined && deal.companyId !== args.companyId) ||
+      (args.quoteId !== undefined && deal.initialQuoteId !== args.quoteId) ||
+      (args.conversationId !== undefined && deal.conversationId !== args.conversationId) ||
+      (args.finalQuoteId !== undefined && deal.acceptedFinalQuoteId !== args.finalQuoteId) ||
+      (args.finalQuoteRevisionId !== undefined &&
+        deal.acceptedFinalQuoteRevisionId !== args.finalQuoteRevisionId))
+  ) throw new ConvexError("INVALID_ACTIVITY_DEAL");
   if (
     args.siteVisitId &&
     (!siteVisit ||
