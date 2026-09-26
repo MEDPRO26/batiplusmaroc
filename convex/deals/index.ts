@@ -12,6 +12,7 @@ const dealValidator = v.object({
   projectId: v.id("projects"),
   clientUserId: v.id("users"),
   companyId: v.id("companies"),
+  createdByUserId: v.id("users"),
   acceptedFinalQuoteId: v.id("finalQuotes"),
   acceptedFinalQuoteRevisionId: v.id("finalQuoteRevisions"),
   conversationId: v.id("conversations"),
@@ -20,9 +21,12 @@ const dealValidator = v.object({
   currency: v.literal("MAD"),
   commissionRateBps: v.number(),
   commissionAmountMad: v.number(),
-  commissionTierMinAmountMad: v.union(v.number(), v.null()),
+  commissionTierMinAmountMad: v.number(),
   commissionTierMaxAmountMad: v.union(v.number(), v.null()),
-  commissionConfigVersion: v.union(v.number(), v.null()),
+  commissionConfigVersion: v.number(),
+  commissionDebtorCompanyId: v.id("companies"),
+  commissionBeneficiary: v.literal("batiplus"),
+  commissionStatus: v.literal("due"),
   status: dealStatusValidator,
   createdAt: v.number(),
 });
@@ -63,6 +67,7 @@ function toDealDto(deal: Doc<"deals">) {
     projectId: deal.projectId,
     clientUserId: deal.clientUserId,
     companyId: deal.companyId,
+    createdByUserId: deal.createdByUserId,
     acceptedFinalQuoteId: deal.acceptedFinalQuoteId,
     acceptedFinalQuoteRevisionId: deal.acceptedFinalQuoteRevisionId,
     conversationId: deal.conversationId,
@@ -71,9 +76,12 @@ function toDealDto(deal: Doc<"deals">) {
     currency: deal.currency,
     commissionRateBps: deal.commissionRateBps,
     commissionAmountMad: deal.commissionAmountMad,
-    commissionTierMinAmountMad: deal.commissionTierMinAmountMad ?? null,
-    commissionTierMaxAmountMad: deal.commissionTierMaxAmountMad ?? null,
-    commissionConfigVersion: deal.commissionConfigVersion ?? null,
+    commissionTierMinAmountMad: deal.commissionTierMinAmountMad,
+    commissionTierMaxAmountMad: deal.commissionTierMaxAmountMad,
+    commissionConfigVersion: deal.commissionConfigVersion,
+    commissionDebtorCompanyId: deal.commissionDebtorCompanyId,
+    commissionBeneficiary: deal.commissionBeneficiary,
+    commissionStatus: deal.commissionStatus,
     status: deal.status,
     createdAt: deal.createdAt,
   };
@@ -117,6 +125,13 @@ async function validateCreationSource(ctx: MutationCtx, finalQuoteId: Id<"finalQ
     ctx.db.get(finalQuote.companyId),
     ctx.db.get(finalQuote.acceptedByUserId),
   ]);
+  const activeCompanyMember = company
+    ? await ctx.db
+        .query("companyMembers")
+        .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first()
+    : null;
 
   if (
     !project ||
@@ -130,14 +145,20 @@ async function validateCreationSource(ctx: MutationCtx, finalQuoteId: Id<"finalQ
     !initialQuote ||
     initialQuote.projectId !== project._id ||
     initialQuote.companyId !== finalQuote.companyId ||
+    initialQuote.status !== "discussion_open" ||
     !conversation ||
+    conversation.status !== "active" ||
     conversation.projectId !== project._id ||
     conversation.clientId !== project.clientId ||
     conversation.companyId !== finalQuote.companyId ||
     conversation.quoteId !== initialQuote._id ||
     !company ||
+    company.verificationStatus !== "verified" ||
+    company.onboardingStatus !== "completed" ||
+    !activeCompanyMember ||
     !acceptedBy ||
     acceptedBy.accountType !== "client" ||
+    acceptedBy.onboardingStatus !== "completed" ||
     finalQuote.acceptedByUserId !== project.clientId
   ) {
     throw new ConvexError("DEAL_SOURCE_INTEGRITY_ERROR");
@@ -152,8 +173,8 @@ async function validateCreationSource(ctx: MutationCtx, finalQuoteId: Id<"finalQ
 }
 
 /**
- * Step 8.1 integration boundary. Only trusted Convex code can call this.
- * Step 8.2 may call the exported helper from the quote-acceptance transaction.
+ * Trusted command used by the Final Quote acceptance transaction. It accepts
+ * only a relationship ID; all commercial values are resolved server-side.
  */
 export async function createDealFromAcceptedFinalQuote(
   ctx: MutationCtx,
@@ -186,6 +207,7 @@ export async function createDealFromAcceptedFinalQuote(
     projectId: project._id,
     clientUserId: project.clientId,
     companyId: finalQuote.companyId,
+    createdByUserId: actorUserId,
     acceptedFinalQuoteId: finalQuote._id,
     acceptedFinalQuoteRevisionId: revision._id,
     conversationId: finalQuote.conversationId,
@@ -197,6 +219,9 @@ export async function createDealFromAcceptedFinalQuote(
     commissionTierMinAmountMad: commission.matchedTier.minAmountMad,
     commissionTierMaxAmountMad: commission.matchedTier.maxAmountMad,
     commissionConfigVersion: commission.configurationVersion,
+    commissionDebtorCompanyId: finalQuote.companyId,
+    commissionBeneficiary: "batiplus",
+    commissionStatus: "due",
     status: "active",
     createdAt: now,
   });
@@ -219,6 +244,33 @@ export async function createDealFromAcceptedFinalQuote(
     dealId,
     newStatus: "active",
     metadata: {
+      agreedAmountMad: commission.agreedAmountMad,
+      commissionRateBps: commission.commissionRateBps,
+      commissionAmountMad: commission.commissionAmountMad,
+      commissionTierMinAmountMad: commission.matchedTier.minAmountMad,
+      commissionConfigVersion: commission.configurationVersion,
+      ...(commission.matchedTier.maxAmountMad === null
+        ? {}
+        : { commissionTierMaxAmountMad: commission.matchedTier.maxAmountMad }),
+      currency: "MAD",
+    },
+    createdAt: now,
+  });
+  await appendMarketplaceActivity(ctx, {
+    projectId: project._id,
+    eventType: "commission_due",
+    actorUserId,
+    actorType: "client",
+    companyId: finalQuote.companyId,
+    quoteId: finalQuote.initialQuoteId,
+    conversationId: finalQuote.conversationId,
+    finalQuoteId: finalQuote._id,
+    finalQuoteRevisionId: revision._id,
+    dealId,
+    newStatus: "due",
+    metadata: {
+      debtor: "company",
+      beneficiary: "batiplus",
       agreedAmountMad: commission.agreedAmountMad,
       commissionRateBps: commission.commissionRateBps,
       commissionAmountMad: commission.commissionAmountMad,

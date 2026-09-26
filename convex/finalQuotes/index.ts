@@ -4,6 +4,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser, requireVerifiedCompanyUser } from "../companies/access";
+import { createDealFromAcceptedFinalQuote } from "../deals/index";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import { assertProjectTransition } from "../projects/state";
@@ -363,7 +364,10 @@ export const review = mutation({
       ctx.db.get(parent.conversationId), ctx.db.get(parent.companyId),
     ]);
     if (!revision || revision.finalQuoteId !== parent._id || parent.currentRevisionId !== revision._id) throw new ConvexError("FINAL_QUOTE_REVISION_NOT_CURRENT");
-    if (parent.status === "accepted" && args.action === "accept" && parent.acceptedRevisionId === revision._id) return { status: "accepted" as const, duplicate: true };
+    if (parent.status === "accepted" && args.action === "accept" && parent.acceptedRevisionId === revision._id) {
+      await createDealFromAcceptedFinalQuote(ctx, parent._id);
+      return { status: "accepted" as const, duplicate: true };
+    }
     if (parent.status !== "submitted") throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");
     if (!initialQuote || !conversation || !company || initialQuote.projectId !== project._id || initialQuote.companyId !== parent.companyId || initialQuote.status !== "discussion_open" ||
       conversation.projectId !== project._id || conversation.quoteId !== initialQuote._id || conversation.companyId !== parent.companyId || conversation.clientId !== client.userId || conversation.status !== "active" ||
@@ -394,6 +398,7 @@ export const review = mutation({
       await appendMarketplaceActivity(ctx, { projectId: parent.projectId, eventType: "company_selected", actorUserId: client.userId, actorType: "client", companyId: parent.companyId,
         quoteId: parent.initialQuoteId, conversationId: parent.conversationId, ...siteRefs, finalQuoteId: parent._id, finalQuoteRevisionId: revision._id,
         oldStatus: project.status, newStatus: "company_selected", metadata: { revisionNumber: revision.revisionNumber, price: revision.price, currency: "MAD" }, createdAt: now });
+      await createDealFromAcceptedFinalQuote(ctx, parent._id);
     }
     return { status: next, duplicate: false };
   },

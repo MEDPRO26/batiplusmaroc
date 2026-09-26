@@ -425,6 +425,7 @@ export default defineSchema({
     projectId: v.id("projects"),
     clientUserId: v.id("users"),
     companyId: v.id("companies"),
+    createdByUserId: v.id("users"),
     acceptedFinalQuoteId: v.id("finalQuotes"),
     acceptedFinalQuoteRevisionId: v.id("finalQuoteRevisions"),
     /** Operational trace back to the discussion and initial estimate. */
@@ -434,10 +435,13 @@ export default defineSchema({
     currency: v.literal("MAD"),
     commissionRateBps: v.number(),
     commissionAmountMad: v.number(),
-    /** Optional for compatibility; all tier-based Deals snapshot these fields. */
-    commissionTierMinAmountMad: v.optional(v.number()),
-    commissionTierMaxAmountMad: v.optional(v.union(v.number(), v.null())),
-    commissionConfigVersion: v.optional(v.number()),
+    commissionTierMinAmountMad: v.number(),
+    commissionTierMaxAmountMad: v.union(v.number(), v.null()),
+    commissionConfigVersion: v.number(),
+    /** The selected Company owes this frozen amount to the Batiplus platform. */
+    commissionDebtorCompanyId: v.id("companies"),
+    commissionBeneficiary: v.literal("batiplus"),
+    commissionStatus: v.literal("due"),
     status: dealStatusValidator,
     createdAt: v.number(),
   })

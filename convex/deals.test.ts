@@ -240,6 +240,7 @@ describe("Deal creation and immutable commercial truth", () => {
       projectId: source.projectId,
       clientUserId: source.clientUserId,
       companyId: source.companyId,
+      createdByUserId: source.clientUserId,
       acceptedFinalQuoteId: source.finalQuoteId,
       acceptedFinalQuoteRevisionId: source.acceptedRevisionId,
       conversationId: source.conversationId,
@@ -250,6 +251,9 @@ describe("Deal creation and immutable commercial truth", () => {
       commissionTierMinAmountMad: 300_001,
       commissionTierMaxAmountMad: 500_000,
       commissionConfigVersion: 1,
+      commissionDebtorCompanyId: source.companyId,
+      commissionBeneficiary: "batiplus",
+      commissionStatus: "due",
       currency: "MAD",
       status: "active",
     });
@@ -276,6 +280,20 @@ describe("Deal creation and immutable commercial truth", () => {
           commissionConfigVersion: 1,
           currency: "MAD",
         },
+      }),
+      expect.objectContaining({
+        eventType: "commission_due",
+        dealId: created.dealId,
+        companyId: source.companyId,
+        actorUserId: source.clientUserId,
+        newStatus: "due",
+        metadata: expect.objectContaining({
+          debtor: "company",
+          beneficiary: "batiplus",
+          commissionRateBps: 500,
+          commissionAmountMad: 19_750,
+          commissionConfigVersion: 1,
+        }),
       }),
     ]);
   });
@@ -361,11 +379,11 @@ describe("Deal creation and immutable commercial truth", () => {
       activity: await ctx.db
         .query("marketplaceActivity")
         .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", first.dealId))
-        .take(2),
+        .take(3),
     }));
     expect(counts.deals).toHaveLength(1);
     expect(counts.history).toHaveLength(1);
-    expect(counts.activity).toHaveLength(1);
+    expect(counts.activity).toHaveLength(2);
   });
 
   test("Deal snapshots do not follow later Final Quote changes", async () => {
