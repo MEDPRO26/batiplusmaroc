@@ -329,10 +329,82 @@ Admins would invent recipient policy and require a new notification type
 without a demonstrated V1 need. Company submission authorization and behavior
 remain unchanged.
 
+## Step 12.2.7 audited canonical event matrix
+
+This matrix is the backend source of truth for the Step 12.3 UI. “Excluded”
+means the actor cannot receive the event through its authoritative recipient
+derivation; Company fan-out also has an explicit actor guard.
+
+| Domain event | Notification type | Entity | Recipient | Actor behavior | Dedupe key |
+| --- | --- | --- | --- | --- | --- |
+| Company submits an initial Proposal | `proposal_received` | `proposal` | Project-owning Client | Company submitter excluded | `proposal:{proposalId}:received` |
+| Client opens Proposal discussion | `proposal_accepted` | `proposal` | Active Proposal-Company members | Client actor excluded | `proposal:{proposalId}:accepted` |
+| Client creates a direct Invitation | `invitation_received` | `invitation` | Active invited-Company members | Client actor excluded | `invitation:{invitationId}:received` |
+| Company accepts an Invitation | `invitation_accepted` | `invitation` | Project-owning Client | Company actor excluded | `invitation:{invitationId}:accepted` |
+| Company declines an Invitation | `invitation_declined` | `invitation` | Project-owning Client | Company actor excluded | `invitation:{invitationId}:declined` |
+| Client sends an unlocked Message | `message_received` | `conversation` | Active conversation-Company members | Client actor excluded | `message:{messageId}:received` |
+| Company sends an unlocked Message | `message_received` | `conversation` | Project-owning Client | Sender and Company teammates excluded | `message:{messageId}:received` |
+| Either side proposes a Site Visit | `site_visit_proposed` | `site_visit` | Opposite marketplace side | Actor side excluded | `site_visit:{siteVisitId}:proposed` |
+| Either side confirms a Site Visit | `site_visit_confirmed` | `site_visit` | Opposite marketplace side | Actor side excluded | `site_visit:{siteVisitId}:confirmed` |
+| Either side counter-proposes a Site Visit | `site_visit_rescheduled` | `site_visit` | Opposite marketplace side | Actor side excluded | `site_visit:{siteVisitId}:rescheduled:{proposalId}` |
+| Either side cancels a Site Visit | `site_visit_cancelled` | `site_visit` | Opposite marketplace side | Actor side excluded | `site_visit:{siteVisitId}:cancelled` |
+| Company submits a Final Quote revision | `final_quote_submitted` | `final_quote` | Project-owning Client | Company actor excluded | `final_quote_revision:{revisionId}:submitted` |
+| Client accepts a Final Quote and selects the Company | `final_quote_accepted` | `final_quote` | Active selected-Company members | Client actor excluded | `final_quote:{finalQuoteId}:accepted` |
+| Deal creation establishes commission due | `commission_due` | `deal` | Active debtor-Company members | System consequence; no actor | `deal:{dealId}:commission_due` |
+| Admin records commission paid | `commission_paid` | `deal` | Active debtor-Company members | Admin actor excluded | `deal:{dealId}:commission_paid` |
+| Client completes a Deal | `deal_completed` | `deal` | Active selected-Company members | Client actor excluded | `deal:{dealId}:completed` |
+| Client creates a Review | `review_received` | `review` | Active reviewed-Company members | Client actor excluded | `review:{reviewId}:received` |
+| Admin approves Company verification | `company_verification_approved` | `company_verification` | Active verified-Company members | Admin actor excluded | `company_verification:{verificationId}:approved:{historyId}` |
+| Admin rejects Company verification | `company_verification_rejected` | `company_verification` | Active rejected-Company members | Admin actor excluded | `company_verification:{verificationId}:rejected:{historyId}` |
+
+### Audited cross-cutting guarantees
+
+- Client recipients always come from the authoritative Project or conversation;
+  no notification mutation accepts a recipient from the frontend.
+- Company recipients use `companyMembers.by_companyId_and_status` and include
+  every active member whose current account type is `company`, whose onboarding
+  is complete, and whose single membership resolves to that workspace. Inactive
+  or duplicate memberships, stale cross-role memberships, unrelated Companies,
+  Admins, SEO users, Clients, and the actor are excluded; a dangling user
+  reference aborts the transaction rather than silently losing a recipient.
+- Payload fields are constrained snapshots: Proposal and Invitation use
+  `projectTitle`/`companyName`; Message additionally uses
+  `actorDisplayName`/a normalized 120-character `messagePreview`; Site Visit
+  additionally uses `actorDisplayName`/`scheduledAt`; Final Quote uses
+  `amountMad`; commission uses only the commission `amountMad`; completion uses
+  project/company names; Review additionally uses `rating`; verification uses
+  only `companyName`.
+- Message markup and control characters are removed before preview storage.
+  Text is capped at 120 characters; a PDF-only Message uses its normalized file
+  name as the preview. Exact addresses, contact data, quote terms, payment
+  references/notes, Review comments, commission configuration, verification
+  documents/reasons, and rendered FR/EN copy are not notification payloads.
+- Type-to-entity compatibility is enforced centrally before insertion. The
+  domain transition, its history/activity, notifications, and unread counters
+  execute in the same Convex transaction, so a notification failure rolls the
+  entire authoritative command back.
+- Recipient listing, dedupe lookup, recipient state, and Company fan-out all
+  use their matching indexes. Inbox history is cursor-paginated and no public
+  notification query performs an unbounded scan. Final Quote and Deal active-
+  member preconditions also use the composite Company/status index.
+- Open-Project and direct-Invitation entry paths converge on the same unlocked
+  conversation, Final Quote, Deal, commission, completion, and Review logic.
+  The acceptance moment intentionally emits `final_quote_accepted` plus the
+  distinct financial `commission_due`, but not redundant `company_selected` or
+  `deal_created` notifications.
+
+`deal_created` remains a constrained, UI-translated notification type reserved
+for a future explicitly approved product event; it is deliberately unwired to
+avoid acceptance spam. The `project` entity variant is likewise reserved and
+has no currently mapped notification type. Verification submission, Site Visit
+decline/completion, Final Quote change/decline/withdrawal, and Review moderation
+are intentionally unwired. Notification creation remains database-only with no
+email, SMS, Web Push, service-worker, queue, or network-delivery dependency.
+
 ## Boundaries and future phases
 
 Notifications answer “who needs to know?” and never replace marketplace audit
-or activity records, which answer “what happened?”. Step 12.2.7 is the next
-backend event-integration phase.
-Step 12.3 will add the in-app UI, Step 12.4 preferences, and Step 12.5+ browser
-push and delivery. This foundation has no coupling to those delivery channels.
+or activity records, which answer “what happened?”. Steps 12.2.1–12.2.6 are
+audited and form the stable backend boundary for Step 12.3 in-app UI. Step 12.4
+will add preferences, and Step 12.5+ will add browser push and delivery. This
+foundation has no coupling to those delivery channels.

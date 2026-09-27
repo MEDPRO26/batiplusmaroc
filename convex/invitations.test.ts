@@ -420,6 +420,42 @@ describe("direct company invitation authorization and creation", () => {
 });
 
 describe("invitation decisions and isolation", () => {
+  test("notification recipient failure rolls back an Invitation decision atomically", async () => {
+    const state = await setup();
+    const created = await asUser(state.t, state.clientId).mutation(
+      api.invitations.index.inviteCompanyToProject,
+      { companyId: state.company.companyId, projectId: state.projectId },
+    );
+    await state.t.run((ctx) => ctx.db.delete(state.clientId));
+
+    await expect(asUser(state.t, state.company.userId).mutation(
+      api.invitations.index.acceptInvitation,
+      { invitationId: created.invitationId },
+    )).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const stored = await state.t.run(async (ctx) => ({
+      project: await ctx.db.get(state.projectId),
+      invitation: await ctx.db.get(created.invitationId),
+      history: await ctx.db
+        .query("invitationStatusHistory")
+        .withIndex("by_invitationId_and_createdAt", (q) =>
+          q.eq("invitationId", created.invitationId),
+        )
+        .take(10),
+      activity: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", state.projectId))
+        .take(10),
+      decisionNotifications: (await ctx.db.query("notifications").take(20))
+        .filter((notification) => notification.type === "invitation_accepted"),
+    }));
+    expect(stored.project?.status).toBe("published");
+    expect(stored.invitation?.status).toBe("pending");
+    expect(stored.history.map((entry) => entry.toStatus)).toEqual(["pending"]);
+    expect(stored.activity.map((entry) => entry.eventType)).toEqual(["company_invited"]);
+    expect(stored.decisionNotifications).toEqual([]);
+  });
+
   test("only the invited company can accept; acceptance is historical and idempotency fails closed", async () => {
     const state = await setup();
     const created = await asUser(state.t, state.clientId).mutation(

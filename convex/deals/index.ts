@@ -270,8 +270,9 @@ async function validateCreationSource(ctx: MutationCtx, finalQuoteId: Id<"finalQ
   const activeCompanyMember = company
     ? await ctx.db
         .query("companyMembers")
-        .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
-        .filter((q) => q.eq(q.field("status"), "active"))
+        .withIndex("by_companyId_and_status", (q) =>
+          q.eq("companyId", company._id).eq("status", "active"),
+        )
         .first()
     : null;
 

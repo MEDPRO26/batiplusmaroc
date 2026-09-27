@@ -477,6 +477,25 @@ describe("message notification integration", () => {
     )).resolves.toBe(2);
   });
 
+  test("message previews strip markup and controls and stay capped at 120 characters", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    const body = `<script>alert(1)</script>\u0000${" chantier".repeat(30)}`;
+
+    await asUser(state.t, state.clientId).mutation(api.messages.index.sendMessage, {
+      conversationId: conversationId!,
+      body,
+      clientMessageId: "safe-preview",
+    });
+
+    const [notification] = await messageNotifications(state.t, state.company.userId);
+    const preview = notification?.payload.messagePreview;
+    expect(preview).toHaveLength(120);
+    expect(preview).toMatch(/^alert\(1\) chantier/);
+    expect(preview).not.toMatch(/[<>\u0000-\u001f\u007f]/);
+    expect(JSON.stringify(notification?.payload)).not.toContain("<script>");
+  });
+
   test("a Company message notifies only the Client, never the sender or same-side teammates", async () => {
     const state = await setup();
     const { conversationId } = await openDiscussion(state);
@@ -667,7 +686,12 @@ describe("private company PDF message attachments", () => {
     expect(invariants.finalQuotes).toEqual([]);
     expect(invariants.activity).toEqual(activityBefore);
     expect(invariants.attachments).toHaveLength(2);
-    expect(await messageNotifications(state.t, state.clientId)).toHaveLength(2);
+    const notifications = await messageNotifications(state.t, state.clientId);
+    expect(notifications).toHaveLength(2);
+    expect(notifications.map((notification) => notification.payload.messagePreview)).toEqual([
+      "document.pdf",
+      "Voici le plan.",
+    ]);
     expect(await messageNotifications(state.t, state.company.userId)).toEqual([]);
   });
 

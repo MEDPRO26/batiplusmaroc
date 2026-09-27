@@ -132,14 +132,22 @@ export async function createNotificationForActiveCompanyMembers(
   args: CreateCompanyNotificationArgs,
 ) {
   const { companyId, ...notification } = args;
-  let activeMemberCount = 0;
+  let authorizedMemberCount = 0;
   let recipientCount = 0;
   for await (const membership of ctx.db
     .query("companyMembers")
     .withIndex("by_companyId_and_status", (q) =>
       q.eq("companyId", companyId).eq("status", "active"),
     )) {
-    activeMemberCount += 1;
+    const member = await ctx.db.get(membership.userId);
+    if (!member) throw new ConvexError("NOTIFICATION_RECIPIENT_NOT_FOUND");
+    if (member.accountType !== "company" || member.onboardingStatus !== "completed") continue;
+    const memberships = await ctx.db
+      .query("companyMembers")
+      .withIndex("by_userId", (q) => q.eq("userId", membership.userId))
+      .take(2);
+    if (memberships.length !== 1 || memberships[0]._id !== membership._id) continue;
+    authorizedMemberCount += 1;
     if (membership.userId === notification.actorUserId) continue;
     await createNotification(ctx, {
       ...notification,
@@ -147,7 +155,7 @@ export async function createNotificationForActiveCompanyMembers(
     });
     recipientCount += 1;
   }
-  if (activeMemberCount === 0) {
+  if (authorizedMemberCount === 0) {
     throw new ConvexError("COMPANY_NOTIFICATION_RECIPIENT_NOT_FOUND");
   }
   return { recipientCount };

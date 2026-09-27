@@ -4,7 +4,11 @@ import { convexTest } from "convex-test";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { createNotification, type CreateNotificationArgs } from "./notifications/model";
+import {
+  createNotification,
+  createNotificationForActiveCompanyMembers,
+  type CreateNotificationArgs,
+} from "./notifications/model";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -72,7 +76,7 @@ async function setup() {
     createdAt: 1,
     updatedAt: 1,
   }));
-  return { t, clientId, companyId, adminId, seoId, projectId, proposalId };
+  return { t, clientId, companyId, adminId, seoId, projectId, companyRecordId, proposalId };
 }
 
 async function notify(
@@ -180,7 +184,7 @@ describe("notification foundation", () => {
     await expect(viewer.query(api.notifications.index.getMyUnreadCount, {})).resolves.toBe(0);
     expect((await viewer.query(api.notifications.index.listMyNotifications, page())).page.every((item) => item.readAt !== null)).toBe(true);
 
-    await notify(state.t, {
+    const afterMarkAll = await notify(state.t, {
       recipientUserId: state.clientId,
       entity: { type: "proposal", id: state.proposalId },
       payload: { messagePreview: "A new message after mark-all" },
@@ -188,6 +192,10 @@ describe("notification foundation", () => {
     await expect(viewer.query(api.notifications.index.getMyUnreadCount, {})).resolves.toBe(1);
     const after = await viewer.query(api.notifications.index.listMyNotifications, page());
     expect(after.page[0]).toMatchObject({ type: "proposal_received", readAt: null });
+    await expect(viewer.mutation(api.notifications.index.markNotificationRead, {
+      notificationId: afterMarkAll.notificationId,
+    })).resolves.toMatchObject({ changed: true });
+    await expect(viewer.query(api.notifications.index.getMyUnreadCount, {})).resolves.toBe(0);
   });
 
   test("keeps a notification created in the mark-all millisecond logically unread", async () => {
@@ -246,6 +254,44 @@ describe("notification foundation", () => {
     const other = await notify(state.t, { ...args, recipientUserId: state.companyId });
     expect(other.created).toBe(true);
     await expect(asUser(state.t, state.companyId).query(api.notifications.index.getMyUnreadCount, {})).resolves.toBe(1);
+  });
+
+  test("Company fan-out excludes its actor while notifying other authorized active members", async () => {
+    const state = await setup();
+    const teammateId = await addUser(state.t, "company");
+    await state.t.run(async (ctx) => {
+      for (const userId of [state.companyId, teammateId]) {
+        await ctx.db.insert("companyMembers", {
+          companyId: state.companyRecordId,
+          userId,
+          role: userId === state.companyId ? "owner" : "staff",
+          status: "active",
+          createdAt: 1,
+        });
+      }
+      await createNotificationForActiveCompanyMembers(ctx, {
+        companyId: state.companyRecordId,
+        actorUserId: state.companyId,
+        type: "proposal_accepted",
+        entity: { type: "proposal", id: state.proposalId },
+        payload: { companyName: "Atlas Build" },
+        dedupeKey: `proposal:${state.proposalId}:accepted`,
+      });
+    });
+
+    expect((await asUser(state.t, state.companyId).query(
+      api.notifications.index.listMyNotifications,
+      page(),
+    )).page).toEqual([]);
+    expect((await asUser(state.t, teammateId).query(
+      api.notifications.index.listMyNotifications,
+      page(),
+    )).page).toEqual([
+      expect.objectContaining({
+        type: "proposal_accepted",
+        actorUserId: state.companyId,
+      }),
+    ]);
   });
 
   test("validates trusted creation input and query results react to new writes", async () => {

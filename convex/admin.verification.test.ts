@@ -194,14 +194,70 @@ describe("admin company verification", () => {
     const { ownerId, companyId, verificationId } = await seedPendingCompany(t);
     const activeMemberId = await seedCompanyMember(t, companyId, "active");
     const inactiveMemberId = await seedCompanyMember(t, companyId, "inactive");
-    const unrelatedMemberId = (await seedPendingCompany(t, { name: "Other Company" })).ownerId;
-    await t.run((ctx) => ctx.db.insert("companyMembers", {
-      companyId,
-      userId: adminId,
-      role: "staff",
-      status: "active",
-      createdAt: 1,
-    }));
+    const unrelatedCompany = await seedPendingCompany(t, { name: "Other Company" });
+    const unrelatedMemberId = unrelatedCompany.ownerId;
+    const unauthorizedMemberIds = await t.run(async (ctx) => {
+      const userIds: Id<"users">[] = [];
+      for (const accountType of ["admin", "client", "seo_team"] as const) {
+        const userId = await ctx.db.insert("users", {
+          email: `${crypto.randomUUID()}@example.test`,
+          accountType,
+          onboardingStatus: "completed",
+          createdAt: 1,
+          updatedAt: 1,
+        });
+        await ctx.db.insert("companyMembers", {
+          companyId,
+          userId,
+          role: "staff",
+          status: "active",
+          createdAt: 1,
+        });
+        userIds.push(userId);
+      }
+      const pendingCompanyUserId = await ctx.db.insert("users", {
+        email: `${crypto.randomUUID()}@example.test`,
+        accountType: "company",
+        onboardingStatus: "pending",
+        createdAt: 1,
+        updatedAt: 1,
+      });
+      await ctx.db.insert("companyMembers", {
+        companyId,
+        userId: pendingCompanyUserId,
+        role: "staff",
+        status: "active",
+        createdAt: 1,
+      });
+      userIds.push(pendingCompanyUserId);
+
+      const duplicateMemberUserId = await ctx.db.insert("users", {
+        email: `${crypto.randomUUID()}@example.test`,
+        accountType: "company",
+        onboardingStatus: "completed",
+        createdAt: 1,
+        updatedAt: 1,
+      });
+      for (const memberCompanyId of [companyId, unrelatedCompany.companyId]) {
+        await ctx.db.insert("companyMembers", {
+          companyId: memberCompanyId,
+          userId: duplicateMemberUserId,
+          role: "staff",
+          status: "active",
+          createdAt: 1,
+        });
+      }
+      userIds.push(duplicateMemberUserId);
+
+      await ctx.db.insert("companyMembers", {
+        companyId,
+        userId: adminId,
+        role: "staff",
+        status: "active",
+        createdAt: 1,
+      });
+      return userIds;
+    });
 
     await expect(
       asUser(t, adminId).mutation(api.admin.verification.approveCompanyVerification, { companyId }),
@@ -236,6 +292,9 @@ describe("admin company verification", () => {
     expect(await notificationsFor(t, inactiveMemberId)).toEqual([]);
     expect(await notificationsFor(t, unrelatedMemberId)).toEqual([]);
     expect(await notificationsFor(t, adminId)).toEqual([]);
+    for (const userId of unauthorizedMemberIds) {
+      expect(await notificationsFor(t, userId)).toEqual([]);
+    }
 
     await expect(
       asUser(t, adminId).mutation(api.admin.verification.approveCompanyVerification, { companyId }),

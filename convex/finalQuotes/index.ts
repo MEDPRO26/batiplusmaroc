@@ -448,8 +448,9 @@ export const review = mutation({
       conversation.projectId !== project._id || conversation.quoteId !== initialQuote._id || conversation.companyId !== parent.companyId || conversation.clientId !== client.userId || conversation.status !== "active" ||
       company.verificationStatus !== "verified" || company.onboardingStatus !== "completed") throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");
     const activeCompanyMember = await ctx.db.query("companyMembers")
-      .withIndex("by_companyId", (q) => q.eq("companyId", parent.companyId))
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .withIndex("by_companyId_and_status", (q) =>
+        q.eq("companyId", parent.companyId).eq("status", "active"),
+      )
       .first();
     if (!activeCompanyMember) throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");
     if (project.status === "company_selected") throw new ConvexError("FINAL_QUOTE_PROJECT_ALREADY_SELECTED");
