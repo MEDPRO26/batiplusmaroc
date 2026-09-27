@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
+import type { FunctionArgs } from "convex/server";
 import { describe, expect, test } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
@@ -9,6 +10,7 @@ import schema from "./schema";
 const modules = import.meta.glob("./**/*.ts");
 type Backend = ReturnType<typeof convexTest>;
 type AccountType = "client" | "company" | "admin" | "seo_team";
+const notificationPage = { paginationOpts: { numItems: 20, cursor: null } };
 
 async function seedUser(t: Backend, accountType: AccountType) {
   return await t.run((ctx) =>
@@ -127,6 +129,24 @@ const validQuote = {
 describe("direct company invitation authorization and creation", () => {
   test("only the owning client can invite an eligible company to an eligible project", async () => {
     const state = await setup();
+    const activeStaffId = await seedUser(state.t, "company");
+    const inactiveStaffId = await seedUser(state.t, "company");
+    await state.t.run(async (ctx) => {
+      await ctx.db.insert("companyMembers", {
+        companyId: state.company.companyId,
+        userId: activeStaffId,
+        role: "staff",
+        status: "active",
+        createdAt: 1,
+      });
+      await ctx.db.insert("companyMembers", {
+        companyId: state.company.companyId,
+        userId: inactiveStaffId,
+        role: "staff",
+        status: "inactive",
+        createdAt: 1,
+      });
+    });
     const adminId = await seedUser(state.t, "admin");
     const seoId = await seedUser(state.t, "seo_team");
     const args = {
@@ -209,6 +229,46 @@ describe("direct company invitation authorization and creation", () => {
         invitationId: result.invitationId,
       }),
     ]);
+    for (const recipientUserId of [state.company.userId, activeStaffId]) {
+      const notifications = await asUser(state.t, recipientUserId).query(
+        api.notifications.index.listMyNotifications,
+        notificationPage,
+      );
+      expect(notifications.page).toEqual([
+        expect.objectContaining({
+          type: "invitation_received",
+          entity: { type: "invitation", id: result.invitationId },
+          actorUserId: state.clientId,
+          payload: {
+            projectTitle: "Direct apartment renovation",
+            companyName: expect.any(String),
+          },
+          readAt: null,
+        }),
+      ]);
+      await expect(asUser(state.t, recipientUserId).query(
+        api.notifications.index.getMyUnreadCount,
+        {},
+      )).resolves.toBe(1);
+    }
+    for (const excludedUserId of [
+      inactiveStaffId,
+      state.otherCompany.userId,
+      state.clientId,
+      state.otherClientId,
+    ]) {
+      expect((await asUser(state.t, excludedUserId).query(
+        api.notifications.index.listMyNotifications,
+        notificationPage,
+      )).page).toEqual([]);
+    }
+    const receivedNotifications = await state.t.run((ctx) => ctx.db
+      .query("notifications")
+      .withIndex("by_recipientUserId_and_dedupeKey", (q) => q
+        .eq("recipientUserId", state.company.userId)
+        .eq("dedupeKey", `invitation:${result.invitationId}:received`))
+      .take(2));
+    expect(receivedNotifications).toHaveLength(1);
   });
 
   test("rejects unverified companies and selected or completed projects", async () => {
@@ -313,6 +373,50 @@ describe("direct company invitation authorization and creation", () => {
     );
     expect(stored).toHaveLength(1);
   });
+
+  test("notification recipient integrity failure rolls back Invitation creation atomically", async () => {
+    const state = await setup();
+    await state.t.run((ctx) => ctx.db.delete(state.company.userId));
+
+    await expect(asUser(state.t, state.clientId).mutation(
+      api.invitations.index.inviteCompanyToProject,
+      { companyId: state.company.companyId, projectId: state.projectId },
+    )).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const rolledBack = await state.t.run(async (ctx) => ({
+      invitations: await ctx.db
+        .query("invitations")
+        .withIndex("by_projectId_and_companyId", (q) => q
+          .eq("projectId", state.projectId)
+          .eq("companyId", state.company.companyId))
+        .take(10),
+      activity: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", state.projectId))
+        .take(10),
+    }));
+    expect(rolledBack).toEqual({ invitations: [], activity: [] });
+  });
+
+  test("rejects a frontend-supplied Invitation notification recipient", async () => {
+    const state = await setup();
+    const forgedArgs = {
+      companyId: state.company.companyId,
+      projectId: state.projectId,
+      recipientUserId: state.otherCompany.userId,
+    } as unknown as FunctionArgs<typeof api.invitations.index.inviteCompanyToProject>;
+
+    await expect(asUser(state.t, state.clientId).mutation(
+      api.invitations.index.inviteCompanyToProject,
+      forgedArgs,
+    )).rejects.toThrow();
+    for (const userId of [state.company.userId, state.otherCompany.userId]) {
+      expect((await asUser(state.t, userId).query(
+        api.notifications.index.listMyNotifications,
+        notificationPage,
+      )).page).toEqual([]);
+    }
+  });
 });
 
 describe("invitation decisions and isolation", () => {
@@ -350,6 +454,35 @@ describe("invitation decisions and isolation", () => {
         { invitationId: created.invitationId },
       ),
     ).rejects.toThrow("INVITATION_ALREADY_ACCEPTED");
+
+    const clientNotifications = await asUser(state.t, state.clientId).query(
+      api.notifications.index.listMyNotifications,
+      notificationPage,
+    );
+    expect(clientNotifications.page).toEqual([
+      expect.objectContaining({
+        type: "invitation_accepted",
+        entity: { type: "invitation", id: created.invitationId },
+        actorUserId: state.company.userId,
+        payload: {
+          projectTitle: "Direct apartment renovation",
+          companyName: expect.any(String),
+        },
+        readAt: null,
+      }),
+    ]);
+    await expect(asUser(state.t, state.clientId).query(
+      api.notifications.index.getMyUnreadCount,
+      {},
+    )).resolves.toBe(1);
+    expect((await asUser(state.t, state.company.userId).query(
+      api.notifications.index.listMyNotifications,
+      notificationPage,
+    )).page.map((notification) => notification.type)).toEqual(["invitation_received"]);
+    expect((await asUser(state.t, state.otherCompany.userId).query(
+      api.notifications.index.listMyNotifications,
+      notificationPage,
+    )).page).toEqual([]);
     await expect(
       asUser(state.t, state.company.userId).mutation(
         api.invitations.index.declineInvitation,
@@ -451,6 +584,29 @@ describe("invitation decisions and isolation", () => {
         { invitationId: created.invitationId },
       ),
     ).rejects.toThrow("INVITATION_ALREADY_DECLINED");
+    const clientNotifications = await asUser(state.t, state.clientId).query(
+      api.notifications.index.listMyNotifications,
+      notificationPage,
+    );
+    expect(clientNotifications.page).toEqual([
+      expect.objectContaining({
+        type: "invitation_declined",
+        entity: { type: "invitation", id: created.invitationId },
+        actorUserId: state.company.userId,
+        payload: {
+          projectTitle: "Direct apartment renovation",
+          companyName: expect.any(String),
+        },
+      }),
+    ]);
+    await expect(asUser(state.t, state.clientId).query(
+      api.notifications.index.getMyUnreadCount,
+      {},
+    )).resolves.toBe(1);
+    expect((await asUser(state.t, state.company.userId).query(
+      api.notifications.index.listMyNotifications,
+      notificationPage,
+    )).page.map((notification) => notification.type)).toEqual(["invitation_received"]);
     await expect(
       asUser(state.t, state.company.userId).mutation(
         api.invitations.index.declineInvitation,

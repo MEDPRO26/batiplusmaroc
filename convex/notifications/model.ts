@@ -46,6 +46,10 @@ export type CreateNotificationArgs = {
   dedupeKey?: string;
 };
 
+type CreateCompanyNotificationArgs = Omit<CreateNotificationArgs, "recipientUserId"> & {
+  companyId: Id<"companies">;
+};
+
 function validatePayload(payload: NotificationPayload) {
   for (const [key, value] of Object.entries(payload)) {
     if (typeof value === "string") {
@@ -117,4 +121,28 @@ export async function createNotification(ctx: MutationCtx, args: CreateNotificat
     });
   }
   return { notificationId, created: true };
+}
+
+/** Notify every active member because each has the same Company workspace authority. */
+export async function createNotificationForActiveCompanyMembers(
+  ctx: MutationCtx,
+  args: CreateCompanyNotificationArgs,
+) {
+  const { companyId, ...notification } = args;
+  let recipientCount = 0;
+  for await (const membership of ctx.db
+    .query("companyMembers")
+    .withIndex("by_companyId_and_status", (q) =>
+      q.eq("companyId", companyId).eq("status", "active"),
+    )) {
+    await createNotification(ctx, {
+      ...notification,
+      recipientUserId: membership.userId,
+    });
+    recipientCount += 1;
+  }
+  if (recipientCount === 0) {
+    throw new ConvexError("COMPANY_NOTIFICATION_RECIPIENT_NOT_FOUND");
+  }
+  return { recipientCount };
 }

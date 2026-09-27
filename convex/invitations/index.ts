@@ -4,6 +4,10 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
+import {
+  createNotification,
+  createNotificationForActiveCompanyMembers,
+} from "../notifications/model";
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import { assertProjectTransition } from "../projects/state";
 import { isActiveQuoteStatus } from "../quotes/state";
@@ -264,6 +268,17 @@ export const inviteCompanyToProject = mutation({
       newStatus: "pending",
       createdAt: now,
     });
+    await createNotificationForActiveCompanyMembers(ctx, {
+      companyId: company._id,
+      actorUserId: userId,
+      type: "invitation_received",
+      entity: { type: "invitation", id: invitationId },
+      payload: {
+        ...(project.title?.trim() ? { projectTitle: project.title.trim() } : {}),
+        ...(company.name?.trim() ? { companyName: company.name.trim() } : {}),
+      },
+      dedupeKey: `invitation:${invitationId}:received`,
+    });
     return { invitationId, status: "pending" as const };
   },
 });
@@ -363,6 +378,17 @@ async function decideInvitation(
     oldStatus: invitation.status,
     newStatus: nextStatus,
     createdAt: now,
+  });
+  await createNotification(ctx, {
+    recipientUserId: project.clientId,
+    actorUserId: userId,
+    type: nextStatus === "accepted" ? "invitation_accepted" : "invitation_declined",
+    entity: { type: "invitation", id: invitation._id },
+    payload: {
+      ...(project.title?.trim() ? { projectTitle: project.title.trim() } : {}),
+      ...(company.name?.trim() ? { companyName: company.name.trim() } : {}),
+    },
+    dedupeKey: `invitation:${invitation._id}:${nextStatus}`,
   });
   return { status: nextStatus };
 }

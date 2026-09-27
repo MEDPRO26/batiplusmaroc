@@ -14,6 +14,10 @@ import { getPublicMediaUrl } from "../storage/publicUrl";
 import { ensureConversationForQuote } from "../messages/index";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { invitationForPair } from "../invitations/index";
+import {
+  createNotification,
+  createNotificationForActiveCompanyMembers,
+} from "../notifications/model";
 import { assertQuoteTransition, isActiveQuoteStatus, type QuoteStatus } from "./state";
 
 const MAX_ESTIMATED_PRICE_MAD = 100_000_000;
@@ -433,6 +437,17 @@ export const submitInitialQuote = mutation({
       newStatus: "submitted",
       createdAt: now,
     });
+    await createNotification(ctx, {
+      recipientUserId: project.clientId,
+      actorUserId: userId,
+      type: "proposal_received",
+      entity: { type: "proposal", id: quoteId },
+      payload: {
+        ...(project.title?.trim() ? { projectTitle: project.title.trim() } : {}),
+        ...(company.name?.trim() ? { companyName: company.name.trim() } : {}),
+      },
+      dedupeKey: `proposal:${quoteId}:received`,
+    });
     if (directInvitation) {
       const submittedQuote = await ctx.db.get(quoteId);
       if (!submittedQuote) throw new ConvexError("QUOTE_NOT_FOUND");
@@ -590,6 +605,19 @@ export const reviewInitialQuote = mutation({
         newStatus: status,
         reason: reason || undefined,
         createdAt: Date.now(),
+      });
+      const company = await ctx.db.get(quote.companyId);
+      if (!company) throw new ConvexError("COMPANY_NOT_FOUND");
+      await createNotificationForActiveCompanyMembers(ctx, {
+        companyId: company._id,
+        actorUserId: userId,
+        type: "proposal_accepted",
+        entity: { type: "proposal", id: quote._id },
+        payload: {
+          ...(project.title?.trim() ? { projectTitle: project.title.trim() } : {}),
+          ...(company.name?.trim() ? { companyName: company.name.trim() } : {}),
+        },
+        dedupeKey: `proposal:${quote._id}:accepted`,
       });
       return {
         status,
