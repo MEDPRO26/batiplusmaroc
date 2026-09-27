@@ -1,8 +1,8 @@
 # Notifications
 
-Step 12.1 provides the backend contract for in-app notifications. Step 12.2.1
-wires Proposal and Invitation events into that contract. This module does not
-create notification UI or send email/SMS/push messages.
+Step 12.1 provides the backend contract for in-app notifications. Steps 12.2.1
+and 12.2.2 wire Proposal, Invitation, and Message events into that contract.
+This module does not create notification UI or send email/SMS/push messages.
 
 ## Data model
 
@@ -116,11 +116,46 @@ recipient-integrity failure rolls back the entire transition. Domain retries
 either fail their existing state guard or resolve through the per-recipient
 dedupe key without producing another notification.
 
+## Step 12.2.2 message event map
+
+| Authoritative domain event | Notification type | Recipient |
+| --- | --- | --- |
+| Client sends an unlocked user message | `message_received` | Every active member of the conversation Company |
+| Company sends an unlocked user message | `message_received` | Project-owning Client |
+
+The message sender is never notified. Company-to-Client messages do not notify
+other members of the sender's Company; notifications always cross to the
+opposite marketplace side. Client-to-Company fan-out matches the existing
+conversation authorization model, where every active Company member can access
+the shared Company conversation. Inactive and unrelated Company members are
+excluded.
+
+`sendAuthorizedMessage` remains the authoritative write boundary for text and
+PDF-attachment messages. Its existing conversation and `discussion_open` quote
+checks run before the message write, so pre-engagement open Projects and pending
+or declined direct Invitations cannot create messages or message notifications.
+The current `messages` table contains only Client- or Company-authored messages;
+there is no system-message type to notify for.
+
+Each notification references the `conversation`, which is the future navigation
+target, and uses `message:{messageId}:received` as its per-recipient dedupe key.
+The locale-neutral payload contains safe available snapshots of `projectTitle`,
+`companyName`, `actorDisplayName`, and a whitespace-normalized plain-text
+`messagePreview` capped at 120 characters. It contains no rendered FR/EN copy,
+HTML, contact details, or full message body.
+
+Message persistence, attachment claiming, conversation metadata, recipient
+notifications, and unread-count increments share one Convex transaction. A
+notification validation or recipient-integrity failure therefore rolls back the
+entire message write. Idempotent retries resolve the existing message before
+notification creation, while distinct messages with identical text retain
+distinct message-derived notification keys.
+
 ## Boundaries and future phases
 
 Notifications answer “who needs to know?” and never replace marketplace audit
 or activity records, which answer “what happened?”. Later Step 12.2.x work will
-wire messages, site visits, final quotes, deals, commissions, completion,
-reviews, and verification. Step 12.3 will add the in-app UI, Step 12.4
-preferences, and Step 12.5+ browser push and delivery. This foundation has no
-coupling to those delivery channels.
+wire site visits, final quotes, deals, commissions, completion, reviews, and
+verification. Step 12.3 will add the in-app UI, Step 12.4 preferences, and Step
+12.5+ browser push and delivery. This foundation has no coupling to those
+delivery channels.

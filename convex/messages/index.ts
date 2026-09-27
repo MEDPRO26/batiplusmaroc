@@ -4,6 +4,10 @@ import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
+import {
+  createNotification,
+  createNotificationForActiveCompanyMembers,
+} from "../notifications/model";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 
 const MAX_CONVERSATIONS = 100;
@@ -53,6 +57,71 @@ const messageValidator = v.object({
 
 type MessageCtx = QueryCtx | MutationCtx;
 type Viewer = { userId: Id<"users">; viewerType: "client" | "company" };
+
+function clientDisplayName(client: Doc<"users">) {
+  const firstName = client.firstName?.trim();
+  const lastInitial = client.lastName?.trim().charAt(0);
+  if (firstName && lastInitial) return `${firstName} ${lastInitial}.`;
+  return firstName || client.name?.trim() || "";
+}
+
+function plainMessagePreview(value: string) {
+  const preview = value
+    .replace(/<[^>]*>/g, "")
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MESSAGE_PREVIEW_LENGTH);
+  return preview || undefined;
+}
+
+async function createMessageReceivedNotifications(
+  ctx: MutationCtx,
+  conversation: Doc<"conversations">,
+  viewer: Viewer,
+  messageId: Id<"messages">,
+  previewSource: string,
+) {
+  const [project, company, actor] = await Promise.all([
+    ctx.db.get(conversation.projectId),
+    ctx.db.get(conversation.companyId),
+    ctx.db.get(viewer.userId),
+  ]);
+  if (!project || project.clientId !== conversation.clientId || !company || !actor) {
+    throw new ConvexError("CONVERSATION_NOT_FOUND");
+  }
+
+  const projectTitle = project.title?.trim();
+  const companyName = company.name?.trim();
+  const actorDisplayName = viewer.viewerType === "client"
+    ? clientDisplayName(actor)
+    : companyName;
+  const messagePreview = plainMessagePreview(previewSource);
+  const notification = {
+    actorUserId: viewer.userId,
+    type: "message_received" as const,
+    entity: { type: "conversation" as const, id: conversation._id },
+    payload: {
+      ...(projectTitle ? { projectTitle } : {}),
+      ...(companyName ? { companyName } : {}),
+      ...(actorDisplayName ? { actorDisplayName } : {}),
+      ...(messagePreview ? { messagePreview } : {}),
+    },
+    dedupeKey: `message:${messageId}:received`,
+  };
+
+  if (viewer.viewerType === "client") {
+    await createNotificationForActiveCompanyMembers(ctx, {
+      companyId: conversation.companyId,
+      ...notification,
+    });
+  } else {
+    await createNotification(ctx, {
+      recipientUserId: conversation.clientId,
+      ...notification,
+    });
+  }
+}
 
 function isMessagingQuoteStatus(status: Doc<"projectQuotes">["status"]) {
   // Add future accepted/final-quote states here when those flows exist.
@@ -148,6 +217,7 @@ export async function sendAuthorizedMessage(
   if (args.attachment) await ctx.db.patch(args.attachment.uploadIntentId, { claimedAt: now });
   const preview = body || args.attachment?.originalFileName || "";
   await ctx.db.patch(conversation._id, { updatedAt: now, lastMessageAt: now, lastMessagePreview: preview.slice(0, MESSAGE_PREVIEW_LENGTH), ...(viewer.viewerType === "client" ? { clientLastReadAt: now, clientLastSentAt: now } : { companyLastReadAt: now, companyLastSentAt: now }) });
+  await createMessageReceivedNotifications(ctx, conversation, viewer, messageId, preview);
   return { messageId, attachmentId, createdAt: now, duplicate: false };
 }
 
@@ -160,13 +230,6 @@ async function logoUrlFor(ctx: MessageCtx, company: Doc<"companies">) {
   }
   if (company.logoStorageId) return await ctx.storage.getUrl(company.logoStorageId);
   return null;
-}
-
-function clientDisplayName(client: Doc<"users">) {
-  const firstName = client.firstName?.trim();
-  const lastInitial = client.lastName?.trim().charAt(0);
-  if (firstName && lastInitial) return `${firstName} ${lastInitial}.`;
-  return firstName || client.name?.trim() || "";
 }
 
 async function threadFor(ctx: MessageCtx, conversation: Doc<"conversations">, viewerType: Viewer["viewerType"]) {

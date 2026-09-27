@@ -864,6 +864,21 @@ describe("accepted invitation convergence", () => {
         }),
       ],
     });
+    const companyNotifications = await asUser(
+      state.t,
+      state.company.userId,
+    ).query(api.notifications.index.listMyNotifications, notificationPage);
+    expect(companyNotifications.page.filter(
+      (notification) => notification.type === "message_received",
+    )).toEqual([
+      expect.objectContaining({
+        entity: { type: "conversation", id: submitted.conversationId },
+        actorUserId: state.clientId,
+        payload: expect.objectContaining({
+          messagePreview: "Thank you for accepting our invitation.",
+        }),
+      }),
+    ]);
     await expect(
       asUser(state.t, state.otherCompany.userId).mutation(
         api.messages.index.sendMessage,
