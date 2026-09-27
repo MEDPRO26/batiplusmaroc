@@ -81,6 +81,19 @@ async function expectNoDealSelection(
   expect(state.deals).toHaveLength(0);
 }
 
+async function notificationsFor(t: Backend, recipientUserId: Id<"users">) {
+  const result = await asUser(t, recipientUserId).query(
+    api.notifications.index.listMyNotifications,
+    { paginationOpts: { numItems: 20, cursor: null } },
+  );
+  return result.page;
+}
+
+async function storedNotificationsFor(t: Backend, recipientUserId: Id<"users">) {
+  const rows = await t.run((ctx) => ctx.db.query("notifications").take(100));
+  return rows.filter((row) => row.recipientUserId === recipientUserId);
+}
+
 describe("final quote request and privacy", () => {
   test("owner request is idempotent and creates one trusted activity", async () => {
     const s = await setup(); const c = asUser(s.t, s.clientId);
@@ -110,10 +123,194 @@ describe("final quote request and privacy", () => {
     await expect(asUser(s.t, s.competitorUserId).mutation(api.finalQuotes.index.submitRevision, { conversationId: s.conversationId, ...revision })).rejects.toThrow("CONVERSATION_NOT_FOUND");
     await s.t.run((ctx) => ctx.db.patch(s.companyId, { verificationStatus: "pending" }));
     await expect(asUser(s.t, s.companyUserId).mutation(api.finalQuotes.index.submitRevision, { conversationId: s.conversationId, ...revision })).rejects.toThrow("COMPANY_VERIFICATION_REQUIRED");
+    expect(await notificationsFor(s.t, s.clientId)).toHaveLength(0);
   });
 });
 
 describe("immutable revision state machine", () => {
+  test("submission notifies only the Client with a safe revision-deduplicated payload", async () => {
+    const s = await setup();
+    const client = asUser(s.t, s.clientId);
+    const company = asUser(s.t, s.companyUserId);
+    const requested = await client.mutation(api.finalQuotes.index.request, {
+      conversationId: s.conversationId,
+    });
+    const submitted = await company.mutation(api.finalQuotes.index.submitRevision, {
+      conversationId: s.conversationId,
+      ...revision,
+    });
+
+    const clientNotifications = await notificationsFor(s.t, s.clientId);
+    expect(clientNotifications).toHaveLength(1);
+    expect(clientNotifications[0]).toMatchObject({
+      type: "final_quote_submitted",
+      entity: { type: "final_quote", id: requested.finalQuoteId },
+      actorUserId: s.companyUserId,
+      payload: {
+        projectTitle: "Villa renovation",
+        companyName: "Atlas Build",
+        amountMad: 380_000,
+      },
+    });
+    expect((await storedNotificationsFor(s.t, s.clientId))[0]?.dedupeKey).toBe(
+      `final_quote_revision:${submitted.revisionId}:submitted`,
+    );
+    expect(clientNotifications[0]?.payload).not.toHaveProperty("paymentTerms");
+    expect(clientNotifications[0]?.payload).not.toHaveProperty("commissionRateBps");
+    expect(await notificationsFor(s.t, s.companyUserId)).toHaveLength(0);
+    await expect(client.query(api.notifications.index.getMyUnreadCount, {})).resolves.toBe(1);
+    await expect(company.query(api.notifications.index.getMyUnreadCount, {})).resolves.toBe(0);
+
+    await expect(company.mutation(api.finalQuotes.index.submitRevision, {
+      conversationId: s.conversationId,
+      ...revision,
+    })).rejects.toThrow("FINAL_QUOTE_NOT_SUBMITTABLE");
+    expect(await notificationsFor(s.t, s.clientId)).toHaveLength(1);
+  });
+
+  test("acceptance sends one anti-spam success notification to each active Company member", async () => {
+    const s = await setup();
+    const teammateUserId = await user(s.t, "company");
+    const inactiveUserId = await user(s.t, "company");
+    await s.t.run(async (ctx) => {
+      await ctx.db.insert("companyMembers", {
+        companyId: s.companyId,
+        userId: teammateUserId,
+        role: "staff",
+        status: "active",
+        createdAt: 2,
+      });
+      await ctx.db.insert("companyMembers", {
+        companyId: s.companyId,
+        userId: inactiveUserId,
+        role: "staff",
+        status: "inactive",
+        createdAt: 2,
+      });
+    });
+    const { requested, submitted } = await prepareSubmittedFinalQuote(s);
+    const client = asUser(s.t, s.clientId);
+    const args = {
+      finalQuoteId: requested.finalQuoteId,
+      revisionId: submitted.revisionId,
+      action: "accept" as const,
+    };
+
+    await expect(client.mutation(api.finalQuotes.index.review, args)).resolves.toEqual({
+      status: "accepted",
+      duplicate: false,
+    });
+    await expect(client.mutation(api.finalQuotes.index.review, args)).resolves.toEqual({
+      status: "accepted",
+      duplicate: true,
+    });
+
+    for (const recipientUserId of [s.companyUserId, teammateUserId]) {
+      const notifications = await notificationsFor(s.t, recipientUserId);
+      expect(notifications).toHaveLength(1);
+      expect(notifications[0]).toMatchObject({
+        type: "final_quote_accepted",
+        entity: { type: "final_quote", id: requested.finalQuoteId },
+        actorUserId: s.clientId,
+        payload: {
+          projectTitle: "Villa renovation",
+          companyName: "Atlas Build",
+          amountMad: 380_000,
+        },
+      });
+      expect((await storedNotificationsFor(s.t, recipientUserId))[0]?.dedupeKey).toBe(
+        `final_quote:${requested.finalQuoteId}:accepted`,
+      );
+      expect(notifications.map((notification) => notification.type)).toEqual([
+        "final_quote_accepted",
+      ]);
+      await expect(
+        asUser(s.t, recipientUserId).query(api.notifications.index.getMyUnreadCount, {}),
+      ).resolves.toBe(1);
+    }
+    expect(await notificationsFor(s.t, inactiveUserId)).toHaveLength(0);
+    expect(await notificationsFor(s.t, s.competitorUserId)).toHaveLength(0);
+    expect((await notificationsFor(s.t, s.clientId)).map((item) => item.type)).toEqual([
+      "final_quote_submitted",
+    ]);
+  });
+
+  test("notification recipient failure rolls back Final Quote submission", async () => {
+    const s = await setup();
+    const requested = await asUser(s.t, s.clientId).mutation(
+      api.finalQuotes.index.request,
+      { conversationId: s.conversationId },
+    );
+    await s.t.run((ctx) => ctx.db.delete(s.clientId));
+
+    await expect(
+      asUser(s.t, s.companyUserId).mutation(api.finalQuotes.index.submitRevision, {
+        conversationId: s.conversationId,
+        ...revision,
+      }),
+    ).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const state = await s.t.run(async (ctx) => ({
+      parent: await ctx.db.get(requested.finalQuoteId),
+      revisions: await ctx.db
+        .query("finalQuoteRevisions")
+        .withIndex("by_finalQuoteId_and_createdAt", (q) =>
+          q.eq("finalQuoteId", requested.finalQuoteId),
+        )
+        .take(2),
+      events: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_finalQuoteId_and_createdAt", (q) =>
+          q.eq("finalQuoteId", requested.finalQuoteId),
+        )
+        .take(10),
+    }));
+    expect(state.parent).toMatchObject({ status: "draft" });
+    expect(state.parent?.currentRevisionId).toBeUndefined();
+    expect(state.revisions).toHaveLength(0);
+    expect(state.events.map((event) => event.eventType)).toEqual(["final_quote_requested"]);
+  });
+
+  test("notification recipient failure rolls back acceptance, Deal, commission, and audit writes", async () => {
+    const s = await setup();
+    const { requested, submitted } = await prepareSubmittedFinalQuote(s);
+    await s.t.run((ctx) => ctx.db.delete(s.companyUserId));
+
+    await expect(
+      asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      }),
+    ).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const state = await s.t.run(async (ctx) => ({
+      project: await ctx.db.get(s.projectId),
+      finalQuote: await ctx.db.get(requested.finalQuoteId),
+      deals: await ctx.db
+        .query("deals")
+        .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+        .take(2),
+      dealHistory: await ctx.db.query("dealStatusHistory").take(2),
+      events: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_finalQuoteId_and_createdAt", (q) =>
+          q.eq("finalQuoteId", requested.finalQuoteId),
+        )
+        .take(20),
+    }));
+    expect(state.project).toMatchObject({ status: "published" });
+    expect(state.project?.selectedCompanyId).toBeUndefined();
+    expect(state.finalQuote).toMatchObject({ status: "submitted" });
+    expect(state.finalQuote?.acceptedRevisionId).toBeUndefined();
+    expect(state.deals).toHaveLength(0);
+    expect(state.dealHistory).toHaveLength(0);
+    expect(state.events.map((event) => event.eventType)).toEqual([
+      "final_quote_requested",
+      "final_quote_submitted",
+    ]);
+  });
+
   test("request, submit, revise, and accept atomically select the company and create the Deal obligation", async () => {
     const s = await setup(); const client = asUser(s.t, s.clientId); const company = asUser(s.t, s.companyUserId);
     const requested = await client.mutation(api.finalQuotes.index.request, { conversationId: s.conversationId });
@@ -184,6 +381,7 @@ describe("immutable revision state machine", () => {
     const submitted = await company.mutation(api.finalQuotes.index.submitRevision, { conversationId: s.conversationId, ...revision });
     await s.t.run((ctx) => ctx.db.patch(submitted.revisionId, { validUntil: "2000-01-01" }));
     await expect(client.mutation(api.finalQuotes.index.review, { finalQuoteId: parent.finalQuoteId, revisionId: submitted.revisionId, action: "accept" })).rejects.toThrow("FINAL_QUOTE_EXPIRED");
+    expect(await notificationsFor(s.t, s.companyUserId)).toHaveLength(0);
   });
 
   test("owning company can withdraw submitted quote and cannot reopen it", async () => {
@@ -485,6 +683,7 @@ describe("atomic Deal creation at Final Quote acceptance", () => {
     expect(state.project?.selectedCompanyId).toBeUndefined();
     expect(state.finalQuote?.status).toBe("submitted");
     expect(state.deals).toHaveLength(0);
+    expect(await notificationsFor(s.t, s.companyUserId)).toHaveLength(0);
   });
 
   test("a repeated acceptance returns idempotently without duplicating Deal or obligation", async () => {
@@ -567,7 +766,7 @@ describe("atomic Deal creation at Final Quote acceptance", () => {
     expect(deals).toHaveLength(0);
   });
 
-  test("invite-only and open marketplace paths converge on the same Deal command", async () => {
+  test("invite-only and open marketplace paths converge on the same Deal and notifications", async () => {
     for (const visibility of ["marketplace", "invite_only"] as const) {
       const s = await setup({ visibility });
       const requested = await asUser(s.t, s.clientId).mutation(
@@ -596,6 +795,12 @@ describe("atomic Deal creation at Final Quote acceptance", () => {
         commissionDebtorCompanyId: s.companyId,
         commissionBeneficiary: "batiplus",
       });
+      expect((await notificationsFor(s.t, s.clientId)).map((item) => item.type)).toEqual([
+        "final_quote_submitted",
+      ]);
+      expect((await notificationsFor(s.t, s.companyUserId)).map((item) => item.type)).toEqual([
+        "final_quote_accepted",
+      ]);
     }
   });
 });

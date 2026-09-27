@@ -6,6 +6,10 @@ import { mutation, query } from "../_generated/server";
 import { requireCompanyUser, requireVerifiedCompanyUser } from "../companies/access";
 import { createDealFromAcceptedFinalQuote } from "../deals/index";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
+import {
+  createNotification,
+  createNotificationForActiveCompanyMembers,
+} from "../notifications/model";
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import { assertProjectTransition } from "../projects/state";
 import { assertFinalQuoteTransition } from "./state";
@@ -141,6 +145,61 @@ async function activitySiteRefs(parent: Doc<"finalQuotes">) {
     siteAssessmentId: parent.siteAssessmentId,
     siteVisitId: parent.siteVisitId,
   };
+}
+
+function notificationPayload(
+  project: Doc<"projects">,
+  company: Doc<"companies">,
+  amountMad: number,
+) {
+  const projectTitle = project.title?.trim();
+  const companyName = company.name?.trim();
+  return {
+    ...(projectTitle ? { projectTitle } : {}),
+    ...(companyName ? { companyName } : {}),
+    amountMad,
+  };
+}
+
+async function createFinalQuoteSubmittedNotification(
+  ctx: MutationCtx,
+  args: {
+    parent: Doc<"finalQuotes">;
+    project: Doc<"projects">;
+    company: Doc<"companies">;
+    revisionId: Id<"finalQuoteRevisions">;
+    actorUserId: Id<"users">;
+    amountMad: number;
+  },
+) {
+  await createNotification(ctx, {
+    recipientUserId: args.parent.clientId,
+    actorUserId: args.actorUserId,
+    type: "final_quote_submitted",
+    entity: { type: "final_quote", id: args.parent._id },
+    payload: notificationPayload(args.project, args.company, args.amountMad),
+    dedupeKey: `final_quote_revision:${args.revisionId}:submitted`,
+  });
+}
+
+async function createFinalQuoteAcceptedNotifications(
+  ctx: MutationCtx,
+  args: {
+    parent: Doc<"finalQuotes">;
+    project: Doc<"projects">;
+    company: Doc<"companies">;
+    actorUserId: Id<"users">;
+    amountMad: number;
+  },
+) {
+  await createNotificationForActiveCompanyMembers(ctx, {
+    companyId: args.parent.companyId,
+    actorUserId: args.actorUserId,
+    type: "final_quote_accepted",
+    entity: { type: "final_quote", id: args.parent._id },
+    payload: notificationPayload(args.project, args.company, args.amountMad),
+    dedupeKey: `final_quote:${args.parent._id}:accepted`,
+  });
 }
 
 async function createVisitTriggeredParent(ctx: MutationCtx, context: Awaited<ReturnType<typeof contextForConversation>>, userId: Id<"users">) {
@@ -349,6 +408,14 @@ export const submitRevision = mutation({
       actorUserId: access.userId, actorType: "company", companyId: parent.companyId, quoteId: parent.initialQuoteId, conversationId: parent.conversationId,
       ...siteRefs, finalQuoteId: parent._id, finalQuoteRevisionId: revisionId, oldStatus: parent.status, newStatus: "submitted",
       metadata: { revisionNumber, price: Math.round(args.price * 100) / 100, currency: "MAD" }, createdAt: now });
+    await createFinalQuoteSubmittedNotification(ctx, {
+      parent,
+      project: context.project,
+      company: context.company,
+      revisionId,
+      actorUserId: access.userId,
+      amountMad: Math.round(args.price * 100) / 100,
+    });
     return { finalQuoteId: parent._id, revisionId, revisionNumber };
   },
 });
@@ -366,6 +433,14 @@ export const review = mutation({
     if (!revision || revision.finalQuoteId !== parent._id || parent.currentRevisionId !== revision._id) throw new ConvexError("FINAL_QUOTE_REVISION_NOT_CURRENT");
     if (parent.status === "accepted" && args.action === "accept" && parent.acceptedRevisionId === revision._id) {
       await createDealFromAcceptedFinalQuote(ctx, parent._id);
+      if (!company) throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");
+      await createFinalQuoteAcceptedNotifications(ctx, {
+        parent,
+        project,
+        company,
+        actorUserId: client.userId,
+        amountMad: revision.price,
+      });
       return { status: "accepted" as const, duplicate: true };
     }
     if (parent.status !== "submitted") throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");
@@ -399,6 +474,13 @@ export const review = mutation({
         quoteId: parent.initialQuoteId, conversationId: parent.conversationId, ...siteRefs, finalQuoteId: parent._id, finalQuoteRevisionId: revision._id,
         oldStatus: project.status, newStatus: "company_selected", metadata: { revisionNumber: revision.revisionNumber, price: revision.price, currency: "MAD" }, createdAt: now });
       await createDealFromAcceptedFinalQuote(ctx, parent._id);
+      await createFinalQuoteAcceptedNotifications(ctx, {
+        parent,
+        project,
+        company,
+        actorUserId: client.userId,
+        amountMad: revision.price,
+      });
     }
     return { status: next, duplicate: false };
   },

@@ -1,9 +1,9 @@
 # Notifications
 
 Step 12.1 provides the backend contract for in-app notifications. Steps 12.2.1
-through 12.2.3 wire Proposal, Invitation, Message, and Site Visit events into
-that contract. This module does not create notification UI or send
-email/SMS/push messages.
+through 12.2.4 wire Proposal, Invitation, Message, Site Visit, Final Quote, and
+Company Selection events into that contract. This module does not create
+notification UI or send email/SMS/push messages.
 
 ## Data model
 
@@ -187,10 +187,53 @@ new ID and notification. The domain transition, proposal/activity history,
 notification fan-out, and unread counts commit in one Convex transaction.
 Declining or completing a Site Visit does not emit a notification in this step.
 
+## Step 12.2.4 Final Quote and Deal event map
+
+| Authoritative domain transition | User-visible notification | Recipient |
+| --- | --- | --- |
+| A Company submits a Final Quote revision | `final_quote_submitted` | Project-owning Client |
+| Client accepts the current Final Quote + selects the Company + creates the Deal | `final_quote_accepted` | Every active member of the selected Company |
+| Deal creation caused by the Client's acceptance | none | Client actor is excluded |
+
+Acceptance, Company Selection, and Deal creation are one atomic marketplace
+success moment. They intentionally produce one Company-facing notification,
+not separate `final_quote_accepted`, `company_selected`, and `deal_created`
+items. The accepting Client is not notified about their own synchronous action,
+and `deal_created` remains an available notification type rather than being
+wired redundantly here. Commission notifications remain deferred to Step
+12.2.5 and are not folded into the selection notification.
+
+The submission and acceptance notifications both reference the Final Quote.
+This preserves the foundation's strict `final_quote_*` to `final_quote` entity
+contract and gives future UI a canonical view of the accepted commercial offer.
+Payloads contain only safe locale-neutral snapshots of `projectTitle`,
+`companyName`, and `amountMad`; they exclude quote terms, PDF data, contact
+details, and commission fields.
+
+Submission uses `final_quote_revision:{finalQuoteRevisionId}:submitted`. The
+immutable revision ID makes a retry idempotent while allowing a later requested
+revision to create a new notification. Acceptance uses
+`final_quote:{finalQuoteId}:accepted`, so a repeated acceptance cannot create a
+second item for any recipient.
+
+Company-directed acceptance notifications fan out to every active member of
+the selected Company, matching the shared workspace authorization model.
+Inactive members, unrelated Companies, the Client actor, Admins, and SEO users
+are excluded. Both open-Project and direct-Invitation participation paths have
+already converged on the same Final Quote mutation, so they produce the same
+notification behavior without path-specific logic.
+
+Final Quote revision persistence, activity, Client notification, and unread
+count commit in one transaction. On acceptance, quote acceptance, Project
+selection, Deal and commission snapshot creation, lifecycle history/activity,
+Company notification fan-out, and unread counts also commit in one transaction.
+Notification recipient or validation failure therefore rolls back the entire
+corresponding domain transition.
+
 ## Boundaries and future phases
 
 Notifications answer “who needs to know?” and never replace marketplace audit
 or activity records, which answer “what happened?”. Later Step 12.2.x work will
-wire final quotes, deals, commissions, completion, reviews, and verification.
+wire commissions, completion, reviews, and verification.
 Step 12.3 will add the in-app UI, Step 12.4 preferences, and Step 12.5+ browser
 push and delivery. This foundation has no coupling to those delivery channels.

@@ -24,6 +24,9 @@ Inside one Convex mutation, the command:
    accepted revision and calls `resolveCommissionForDealAmount()`;
 7. creates the immutable Deal and Company-to-Batiplus commission obligation;
 8. appends status history and marketplace activity.
+9. notifies every active selected-Company member once with
+   `final_quote_accepted`; it does not send redundant Company `deal_created`
+   notifications or notify the accepting Client about their own action.
 
 Convex commits all of these writes atomically. A missing or corrupt commission
 schedule, relationship mismatch, authorization failure, or any other error
