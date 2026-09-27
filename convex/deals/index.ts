@@ -5,6 +5,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { internalMutation, mutation, query } from "../_generated/server";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { resolveCommissionForDealAmount } from "../marketplaceSettings/index";
+import { createNotificationForActiveCompanyMembers } from "../notifications/model";
 import { requireClientUser } from "../projects/access";
 import { assertProjectTransition } from "../projects/state";
 import { commissionStatusValidator, dealStatusValidator } from "./constants";
@@ -38,6 +39,20 @@ const dealValidator = v.object({
 });
 
 type Ctx = QueryCtx | MutationCtx;
+
+function dealNotificationPayload(
+  project: Doc<"projects">,
+  company: Doc<"companies">,
+  amountMad?: number,
+) {
+  const projectTitle = project.title?.trim();
+  const companyName = company.name?.trim() || company.legalName?.trim();
+  return {
+    ...(projectTitle ? { projectTitle } : {}),
+    ...(companyName ? { companyName } : {}),
+    ...(amountMad === undefined ? {} : { amountMad }),
+  };
+}
 
 async function requireDealViewer(ctx: Ctx, deal: Doc<"deals">) {
   const userId = await getAuthUserId(ctx);
@@ -213,6 +228,14 @@ export const completeDeal = mutation({
       },
       createdAt: now,
     });
+    await createNotificationForActiveCompanyMembers(ctx, {
+      companyId: deal.companyId,
+      actorUserId: userId,
+      type: "deal_completed",
+      entity: { type: "deal", id: deal._id },
+      payload: dealNotificationPayload(project, company),
+      dedupeKey: `deal:${deal._id}:completed`,
+    });
     return {
       dealId: deal._id,
       projectId: project._id,
@@ -287,6 +310,7 @@ async function validateCreationSource(ctx: MutationCtx, finalQuoteId: Id<"finalQ
     finalQuote,
     project,
     revision,
+    company,
     actorUserId: finalQuote.acceptedByUserId,
   };
 }
@@ -305,7 +329,7 @@ export async function createDealFromAcceptedFinalQuote(
     .unique();
   if (existingForQuote) return { dealId: existingForQuote._id, duplicate: true };
 
-  const { finalQuote, project, revision, actorUserId } = await validateCreationSource(
+  const { finalQuote, project, revision, company, actorUserId } = await validateCreationSource(
     ctx,
     finalQuoteId,
   );
@@ -401,6 +425,13 @@ export async function createDealFromAcceptedFinalQuote(
       currency: "MAD",
     },
     createdAt: now,
+  });
+  await createNotificationForActiveCompanyMembers(ctx, {
+    companyId: finalQuote.companyId,
+    type: "commission_due",
+    entity: { type: "deal", id: dealId },
+    payload: dealNotificationPayload(project, company, commission.commissionAmountMad),
+    dedupeKey: `deal:${dealId}:commission_due`,
   });
   return { dealId, duplicate: false };
 }

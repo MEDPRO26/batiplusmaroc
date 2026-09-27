@@ -18,7 +18,10 @@ from 10 through 2,000 characters are required.
 
 The unique `reviews.by_dealId` index enforces one review per Deal. Review
 creation, Company aggregate adjustment, and immutable marketplace activity are
-committed atomically.
+committed atomically with one `review_received` notification for every active
+member of the reviewed Company. The notification contains the Project title,
+Company name, and rating, but never copies the full Review comment. Its
+deterministic key is `review:{reviewId}:received`.
 
 ## Public visibility and rating
 
@@ -41,6 +44,8 @@ no rating and a count of zero.
   `visible` and `hidden`.
 - Admins cannot edit review content. Clients cannot edit or delete it in V1.
 - Every creation, hide, and restore action appends a marketplace activity row.
+- Review creation notifies active reviewed-Company members; hide and restore
+  moderation actions do not create notifications.
 
 ## UI contract
 

@@ -3,6 +3,7 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
+import { createNotificationForActiveCompanyMembers } from "../notifications/model";
 import { requireClientUser } from "../projects/access";
 import {
   normalizeReviewComment,
@@ -91,6 +92,20 @@ export const createReview = mutation({
       projectId: project._id, eventType: "review_created", actorUserId: userId, actorType: "client",
       companyId: company._id, dealId: deal._id, reviewId, newStatus: "visible",
       metadata: { rating }, createdAt: now,
+    });
+    const projectTitle = project.title?.trim();
+    const companyName = company.name?.trim() || company.legalName?.trim();
+    await createNotificationForActiveCompanyMembers(ctx, {
+      companyId: company._id,
+      actorUserId: userId,
+      type: "review_received",
+      entity: { type: "review", id: reviewId },
+      payload: {
+        ...(projectTitle ? { projectTitle } : {}),
+        ...(companyName ? { companyName } : {}),
+        rating,
+      },
+      dedupeKey: `review:${reviewId}:received`,
     });
     return { reviewId, moderationStatus: "visible" as const, createdAt: now };
   },

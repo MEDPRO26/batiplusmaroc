@@ -92,7 +92,121 @@ async function create(state: Awaited<ReturnType<typeof setup>>, rating = 5, comm
   });
 }
 
+async function notificationsFor(t: Backend, recipientUserId: Id<"users">) {
+  const result = await asUser(t, recipientUserId).query(
+    api.notifications.index.listMyNotifications,
+    { paginationOpts: { numItems: 20, cursor: null } },
+  );
+  return result.page;
+}
+
+async function storedNotificationsFor(t: Backend, recipientUserId: Id<"users">) {
+  const rows = await t.run((ctx) => ctx.db.query("notifications").take(100));
+  return rows.filter((row) => row.recipientUserId === recipientUserId);
+}
+
 describe("Client Deal reviews", () => {
+  test("review creation notifies all active Company members with rating but no comment", async () => {
+    const state = await setup();
+    const teammateUserId = await user(state.t, "company", "Teammate");
+    const inactiveUserId = await user(state.t, "company", "Inactive");
+    const unrelatedUserId = await user(state.t, "company", "Unrelated");
+    const unrelatedCompanyId = await state.t.run((ctx) => ctx.db.insert("companies", {
+      name: "Unrelated Build",
+      onboardingStatus: "completed",
+      verificationStatus: "verified",
+      createdAt: 1,
+      updatedAt: 1,
+    }));
+    await state.t.run(async (ctx) => {
+      await ctx.db.insert("companyMembers", {
+        companyId: state.companyId,
+        userId: teammateUserId,
+        role: "staff",
+        status: "active",
+        createdAt: 2,
+      });
+      await ctx.db.insert("companyMembers", {
+        companyId: state.companyId,
+        userId: inactiveUserId,
+        role: "staff",
+        status: "inactive",
+        createdAt: 2,
+      });
+      await ctx.db.insert("companyMembers", {
+        companyId: unrelatedCompanyId,
+        userId: unrelatedUserId,
+        role: "owner",
+        status: "active",
+        createdAt: 2,
+      });
+    });
+    const project = await state.t.run((ctx) => ctx.db.get(state.projectId));
+    const comment = "Excellent work delivered with clear communication throughout.";
+    const created = await create(state, 5, comment);
+
+    for (const recipientUserId of [state.companyUserId, teammateUserId]) {
+      const notifications = await notificationsFor(state.t, recipientUserId);
+      expect(notifications).toHaveLength(1);
+      expect(notifications[0]).toMatchObject({
+        type: "review_received",
+        entity: { type: "review", id: created.reviewId },
+        actorUserId: state.clientUserId,
+        payload: {
+          projectTitle: project?.title,
+          companyName: "Atlas Build",
+          rating: 5,
+        },
+      });
+      expect(notifications[0]?.payload).not.toHaveProperty("comment");
+      expect(JSON.stringify(notifications[0]?.payload)).not.toContain(comment);
+      expect((await storedNotificationsFor(state.t, recipientUserId))[0]?.dedupeKey).toBe(
+        `review:${created.reviewId}:received`,
+      );
+      await expect(
+        asUser(state.t, recipientUserId).query(api.notifications.index.getMyUnreadCount, {}),
+      ).resolves.toBe(1);
+    }
+    expect(await notificationsFor(state.t, inactiveUserId)).toHaveLength(0);
+    expect(await notificationsFor(state.t, unrelatedUserId)).toHaveLength(0);
+    expect(await notificationsFor(state.t, state.clientUserId)).toHaveLength(0);
+
+    await expect(create(state, 4, "A duplicate review must not notify again."))
+      .rejects.toThrow("REVIEW_ALREADY_EXISTS");
+    for (const recipientUserId of [state.companyUserId, teammateUserId]) {
+      expect(await notificationsFor(state.t, recipientUserId)).toHaveLength(1);
+      await expect(
+        asUser(state.t, recipientUserId).query(
+          api.notifications.index.getMyUnreadCount,
+          {},
+        ),
+      ).resolves.toBe(1);
+    }
+  });
+
+  test("notification recipient failure rolls back review, aggregate, and activity", async () => {
+    const state = await setup();
+    await state.t.run((ctx) => ctx.db.delete(state.companyUserId));
+
+    await expect(create(state)).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const result = await state.t.run(async (ctx) => ({
+      reviews: await ctx.db
+        .query("reviews")
+        .withIndex("by_dealId", (q) => q.eq("dealId", state.dealId))
+        .take(2),
+      company: await ctx.db.get(state.companyId),
+      activity: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", state.dealId))
+        .take(10),
+    }));
+    expect(result.reviews).toHaveLength(0);
+    expect(result.company?.reviewCount).toBeUndefined();
+    expect(result.company?.reviewRatingTotal).toBeUndefined();
+    expect(result.activity).toHaveLength(0);
+  });
+
   test("completed Deal owner creates one visible review with trusted relationships and audit", async () => {
     const state = await setup();
     const created = await create(state, 5, "  Excellent   construction work delivered on time.  ");
@@ -182,6 +296,9 @@ describe("Review aggregates, public profile, and moderation", () => {
     const second = await setup("completed", { t: first.t, companyId: first.companyId });
     const five = await create(first, 5, "Excellent finish and clear communication throughout.");
     await create(second, 3, "Good work overall with a minor scheduling delay.");
+    const notificationCountBeforeModeration = (
+      await notificationsFor(first.t, first.companyUserId)
+    ).length;
     const admin = asUser(first.t, first.adminUserId);
     await expect(admin.mutation(api.admin.reviews.setReviewVisibility, { reviewId: five.reviewId, status: "hidden" })).resolves.toEqual({ status: "hidden", changed: true });
     expect(await first.t.run((ctx) => ctx.db.get(first.companyId))).toMatchObject({ reviewCount: 1, reviewRatingTotal: 3 });
@@ -194,6 +311,9 @@ describe("Review aggregates, public profile, and moderation", () => {
     expect(profile).toMatchObject({ rating: 4, reviewCount: 2 });
     const events = await first.t.run((ctx) => ctx.db.query("marketplaceActivity").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", first.dealId)).order("asc").take(10));
     expect(events.map((event) => event.eventType)).toEqual(["review_created", "review_hidden", "review_restored"]);
+    expect(await notificationsFor(first.t, first.companyUserId)).toHaveLength(
+      notificationCountBeforeModeration,
+    );
   });
 
   test("only Admin can moderate and repeated status is audit-idempotent", async () => {

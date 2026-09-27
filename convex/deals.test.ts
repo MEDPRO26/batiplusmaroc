@@ -105,6 +105,7 @@ async function setupAcceptedSource(
   const projectId = await t.run((ctx) =>
     ctx.db.insert("projects", {
       clientId: clientUserId,
+      title: "Riad restoration",
       countryCode: "MA",
       surfaceUnknown: false,
       budgetUnknown: false,
@@ -219,7 +220,72 @@ async function createDeal(t: Backend, finalQuoteId: Id<"finalQuotes">) {
   });
 }
 
+async function notificationsFor(t: Backend, recipientUserId: Id<"users">) {
+  const result = await asUser(t, recipientUserId).query(
+    api.notifications.index.listMyNotifications,
+    { paginationOpts: { numItems: 20, cursor: null } },
+  );
+  return result.page;
+}
+
+async function storedNotificationsFor(t: Backend, recipientUserId: Id<"users">) {
+  const rows = await t.run((ctx) => ctx.db.query("notifications").take(100));
+  return rows.filter((row) => row.recipientUserId === recipientUserId);
+}
+
+async function addActiveCompanyTeammate(
+  source: Awaited<ReturnType<typeof setupAcceptedSource>>,
+) {
+  const teammateUserId = await seedUser(source.t, "company");
+  await source.t.run((ctx) => ctx.db.insert("companyMembers", {
+    companyId: source.companyId,
+    userId: teammateUserId,
+    role: "staff",
+    status: "active",
+    createdAt: 2,
+  }));
+  return teammateUserId;
+}
+
 describe("Deal creation and immutable commercial truth", () => {
+  test("Deal creation notifies every active debtor-Company member once that commission is due", async () => {
+    const source = await setupAcceptedSource();
+    const teammateUserId = await addActiveCompanyTeammate(source);
+    const created = await createDeal(source.t, source.finalQuoteId);
+
+    for (const recipientUserId of [source.companyUserId, teammateUserId]) {
+      const notifications = await notificationsFor(source.t, recipientUserId);
+      expect(notifications).toHaveLength(1);
+      expect(notifications[0]).toMatchObject({
+        type: "commission_due",
+        entity: { type: "deal", id: created.dealId },
+        actorUserId: null,
+        payload: {
+          projectTitle: "Riad restoration",
+          companyName: "Atlas Build",
+          amountMad: 19_750,
+        },
+      });
+      expect((await storedNotificationsFor(source.t, recipientUserId))[0]?.dedupeKey).toBe(
+        `deal:${created.dealId}:commission_due`,
+      );
+      await expect(
+        asUser(source.t, recipientUserId).query(api.notifications.index.getMyUnreadCount, {}),
+      ).resolves.toBe(1);
+    }
+    expect(await notificationsFor(source.t, source.inactiveCompanyUserId)).toHaveLength(0);
+    expect(await notificationsFor(source.t, source.otherCompanyUserId)).toHaveLength(0);
+    expect(await notificationsFor(source.t, source.clientUserId)).toHaveLength(0);
+
+    await expect(createDeal(source.t, source.finalQuoteId)).resolves.toEqual({
+      dealId: created.dealId,
+      duplicate: true,
+    });
+    for (const recipientUserId of [source.companyUserId, teammateUserId]) {
+      expect(await notificationsFor(source.t, recipientUserId)).toHaveLength(1);
+    }
+  });
+
   test("accepted current Final Quote creates one active Deal with exact snapshots", async () => {
     const source = await setupAcceptedSource();
     const created = await createDeal(source.t, source.finalQuoteId);
@@ -571,6 +637,105 @@ describe("Deal read authorization", () => {
 });
 
 describe("Deal completion lifecycle", () => {
+  test.each(["due", "paid"] as const)(
+    "completion notifies all active Company members once while commission is %s",
+    async (commissionStatus) => {
+      const source = await setupAcceptedSource();
+      const teammateUserId = await addActiveCompanyTeammate(source);
+      const created = await createDeal(source.t, source.finalQuoteId);
+      if (commissionStatus === "paid") {
+        await asUser(source.t, source.adminUserId).mutation(
+          api.admin.deals.markCommissionPaid,
+          { dealId: created.dealId },
+        );
+      }
+      const client = asUser(source.t, source.clientUserId);
+      await client.mutation(api.deals.index.completeDeal, { dealId: created.dealId });
+
+      for (const recipientUserId of [source.companyUserId, teammateUserId]) {
+        const notifications = await notificationsFor(source.t, recipientUserId);
+        const completion = notifications.filter((item) => item.type === "deal_completed");
+        expect(completion).toEqual([
+          expect.objectContaining({
+            entity: { type: "deal", id: created.dealId },
+            actorUserId: source.clientUserId,
+            payload: {
+              projectTitle: "Riad restoration",
+              companyName: "Atlas Build",
+            },
+          }),
+        ]);
+        expect((await storedNotificationsFor(source.t, recipientUserId))
+          .find((item) => item.type === "deal_completed")?.dedupeKey).toBe(
+          `deal:${created.dealId}:completed`,
+        );
+        await expect(
+          asUser(source.t, recipientUserId).query(
+            api.notifications.index.getMyUnreadCount,
+            {},
+          ),
+        ).resolves.toBe(commissionStatus === "paid" ? 3 : 2);
+      }
+      expect(await notificationsFor(source.t, source.inactiveCompanyUserId)).toHaveLength(0);
+      expect(await notificationsFor(source.t, source.otherCompanyUserId)).toHaveLength(0);
+      expect(await notificationsFor(source.t, source.clientUserId)).toHaveLength(0);
+      await expect(client.mutation(api.deals.index.completeDeal, { dealId: created.dealId }))
+        .rejects.toThrow("DEAL_ALREADY_COMPLETED");
+      for (const recipientUserId of [source.companyUserId, teammateUserId]) {
+        expect((await notificationsFor(source.t, recipientUserId))
+          .filter((item) => item.type === "deal_completed")).toHaveLength(1);
+        await expect(
+          asUser(source.t, recipientUserId).query(
+            api.notifications.index.getMyUnreadCount,
+            {},
+          ),
+        ).resolves.toBe(commissionStatus === "paid" ? 3 : 2);
+      }
+      expect(await source.t.run((ctx) => ctx.db.get(created.dealId))).toMatchObject({
+        status: "completed",
+        commissionStatus,
+      });
+    },
+  );
+
+  test("notification recipient failure rolls back Deal and Project completion", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    await source.t.run((ctx) => ctx.db.delete(source.companyUserId));
+
+    await expect(
+      asUser(source.t, source.clientUserId).mutation(api.deals.index.completeDeal, {
+        dealId: created.dealId,
+      }),
+    ).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const state = await source.t.run(async (ctx) => ({
+      deal: await ctx.db.get(created.dealId),
+      project: await ctx.db.get(source.projectId),
+      dealHistory: await ctx.db
+        .query("dealStatusHistory")
+        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId))
+        .take(10),
+      projectHistory: await ctx.db
+        .query("projectStatusHistory")
+        .withIndex("by_projectId_and_changedAt", (q) => q.eq("projectId", source.projectId))
+        .take(10),
+      activity: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId))
+        .take(10),
+    }));
+    expect(state.deal).toMatchObject({ status: "active", commissionStatus: "due" });
+    expect(state.deal?.completedAt).toBeUndefined();
+    expect(state.project).toMatchObject({ status: "company_selected" });
+    expect(state.dealHistory).toHaveLength(1);
+    expect(state.projectHistory).toHaveLength(0);
+    expect(state.activity.map((item) => item.eventType)).toEqual([
+      "deal_created",
+      "commission_due",
+    ]);
+  });
+
   test("owning Client completes the Deal and Project atomically while commission stays due", async () => {
     const source = await setupAcceptedSource();
     const created = await createDeal(source.t, source.finalQuoteId);
@@ -684,6 +849,88 @@ describe("Deal completion lifecycle", () => {
 });
 
 describe("Admin commission payment tracking", () => {
+  test("commission payment notifies all active debtor-Company members without private payment data", async () => {
+    const source = await setupAcceptedSource();
+    const teammateUserId = await addActiveCompanyTeammate(source);
+    const created = await createDeal(source.t, source.finalQuoteId);
+    const admin = asUser(source.t, source.adminUserId);
+    await admin.mutation(api.admin.deals.markCommissionPaid, {
+      dealId: created.dealId,
+      paymentReference: "PRIVATE-BANK-REFERENCE",
+      paymentNote: "Private finance note",
+    });
+
+    for (const recipientUserId of [source.companyUserId, teammateUserId]) {
+      const notifications = await notificationsFor(source.t, recipientUserId);
+      const paid = notifications.filter((item) => item.type === "commission_paid");
+      expect(paid).toEqual([
+        expect.objectContaining({
+          entity: { type: "deal", id: created.dealId },
+          actorUserId: source.adminUserId,
+          payload: {
+            projectTitle: "Riad restoration",
+            companyName: "Atlas Build",
+            amountMad: 19_750,
+          },
+        }),
+      ]);
+      expect(paid[0]?.payload).not.toHaveProperty("paymentReference");
+      expect(paid[0]?.payload).not.toHaveProperty("paymentNote");
+      expect((await storedNotificationsFor(source.t, recipientUserId))
+        .find((item) => item.type === "commission_paid")?.dedupeKey).toBe(
+        `deal:${created.dealId}:commission_paid`,
+      );
+      await expect(
+        asUser(source.t, recipientUserId).query(api.notifications.index.getMyUnreadCount, {}),
+      ).resolves.toBe(2);
+    }
+    expect(await notificationsFor(source.t, source.inactiveCompanyUserId)).toHaveLength(0);
+    expect(await notificationsFor(source.t, source.otherCompanyUserId)).toHaveLength(0);
+    expect(await notificationsFor(source.t, source.adminUserId)).toHaveLength(0);
+
+    await expect(admin.mutation(api.admin.deals.markCommissionPaid, {
+      dealId: created.dealId,
+    })).rejects.toThrow("COMMISSION_ALREADY_PAID");
+    for (const recipientUserId of [source.companyUserId, teammateUserId]) {
+      expect((await notificationsFor(source.t, recipientUserId))
+        .filter((item) => item.type === "commission_paid")).toHaveLength(1);
+    }
+  });
+
+  test("notification recipient failure rolls back commission payment metadata and audit", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    await source.t.run((ctx) => ctx.db.delete(source.companyUserId));
+
+    await expect(
+      asUser(source.t, source.adminUserId).mutation(api.admin.deals.markCommissionPaid, {
+        dealId: created.dealId,
+        paymentReference: "BANK-ROLLBACK",
+        paymentNote: "Must roll back",
+      }),
+    ).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const state = await source.t.run(async (ctx) => ({
+      deal: await ctx.db.get(created.dealId),
+      history: await ctx.db
+        .query("commissionStatusHistory")
+        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId))
+        .take(10),
+      activity: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId))
+        .take(10),
+    }));
+    expect(state.deal).toMatchObject({ commissionStatus: "due" });
+    expect(state.deal?.commissionPaidAt).toBeUndefined();
+    expect(state.deal?.commissionPaymentReference).toBeUndefined();
+    expect(state.history).toHaveLength(0);
+    expect(state.activity.map((item) => item.eventType)).toEqual([
+      "deal_created",
+      "commission_due",
+    ]);
+  });
+
   test("admin can mark a due commission paid exactly once with immutable history", async () => {
     const source = await setupAcceptedSource();
     const created = await createDeal(source.t, source.finalQuoteId);

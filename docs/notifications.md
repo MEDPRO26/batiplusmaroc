@@ -1,9 +1,10 @@
 # Notifications
 
 Step 12.1 provides the backend contract for in-app notifications. Steps 12.2.1
-through 12.2.4 wire Proposal, Invitation, Message, Site Visit, Final Quote, and
-Company Selection events into that contract. This module does not create
-notification UI or send email/SMS/push messages.
+through 12.2.5 wire Proposal, Invitation, Message, Site Visit, Final Quote,
+Company Selection, Commission, Deal Completion, and Review events into that
+contract. This module does not create notification UI or send email/SMS/push
+messages.
 
 ## Data model
 
@@ -200,8 +201,9 @@ success moment. They intentionally produce one Company-facing notification,
 not separate `final_quote_accepted`, `company_selected`, and `deal_created`
 items. The accepting Client is not notified about their own synchronous action,
 and `deal_created` remains an available notification type rather than being
-wired redundantly here. Commission notifications remain deferred to Step
-12.2.5 and are not folded into the selection notification.
+wired redundantly here. Step 12.2.5 adds a separate `commission_due`
+notification because the financial obligation is distinct from winning the
+Project; it is not folded into the selection notification.
 
 The submission and acceptance notifications both reference the Final Quote.
 This preserves the foundation's strict `final_quote_*` to `final_quote` entity
@@ -230,10 +232,63 @@ Company notification fan-out, and unread counts also commit in one transaction.
 Notification recipient or validation failure therefore rolls back the entire
 corresponding domain transition.
 
+## Step 12.2.5 Commission, Completion, and Review event map
+
+| Authoritative domain event | Notification type | Recipient |
+| --- | --- | --- |
+| Deal creation establishes the commission obligation as due | `commission_due` | Every active member of the debtor Company |
+| Admin records the commission as paid | `commission_paid` | Every active member of the debtor Company |
+| Client completes the Deal | `deal_completed` | Every active member of the selected Company |
+| Client submits the Deal Review | `review_received` | Every active member of the reviewed Company |
+
+Company Selection and commission due intentionally produce two useful
+Company-facing items: `final_quote_accepted` says the Company won the Project,
+while `commission_due` communicates the separate Company-to-Batiplus financial
+obligation. No `deal_created` notification is emitted, so the acceptance
+transaction produces two notifications per active Company member rather than
+three overlapping success messages.
+
+All four events use the established shared-workspace recipient strategy. Every
+active member of the authoritative Company is notified; inactive members,
+unrelated Companies, the Client or Admin actor, SEO users, and public users are
+excluded. `commission_due` has no actor because it is a system consequence of
+Deal creation. `commission_paid` records the Admin actor, while
+`deal_completed` and `review_received` record the Client actor.
+
+Commission and completion notifications reference the `deal`; review
+notifications reference the immutable `review`. Locale-neutral payloads contain
+only the available `projectTitle` and `companyName` snapshots, plus `amountMad`
+for the commission amount on due/paid events or `rating` for a received review.
+Payment references, Admin notes, Review comments, contact details, commission
+configuration internals, and rendered FR/EN text are excluded.
+
+The exact dedupe keys are:
+
+- `deal:{dealId}:commission_due`
+- `deal:{dealId}:commission_paid`
+- `deal:{dealId}:completed`
+- `review:{reviewId}:received`
+
+Commission due is written inside the existing Final Quote acceptance and Deal
+creation transaction. Commission payment notification creation shares the
+Admin `due -> paid` mutation with payment metadata, history, and activity. Deal
+completion notification creation shares the Client completion mutation with
+Deal/Project state and history. Review notification creation shares the Review
+mutation with the immutable Review, Company rating aggregate, and activity.
+Recipient or notification validation failure rolls back the corresponding
+domain transition; rejected retries and invalid state transitions create no
+notification or unread-count increment.
+
+Open-Project and direct-Invitation paths have already converged on the same
+Deal. Their commission-due, completion, and review behavior is therefore
+identical and contains no acquisition-path branch. Review hide/restore
+moderation deliberately emits no notification. No UI, push delivery, or
+preferences are part of this step.
+
 ## Boundaries and future phases
 
 Notifications answer “who needs to know?” and never replace marketplace audit
-or activity records, which answer “what happened?”. Later Step 12.2.x work will
-wire commissions, completion, reviews, and verification.
+or activity records, which answer “what happened?”. Step 12.2.6 will wire
+Company Verification notifications.
 Step 12.3 will add the in-app UI, Step 12.4 preferences, and Step 12.5+ browser
 push and delivery. This foundation has no coupling to those delivery channels.

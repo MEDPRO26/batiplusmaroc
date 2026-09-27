@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { commissionStatusValidator, type CommissionStatus } from "../deals/constants";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
+import { createNotificationForActiveCompanyMembers } from "../notifications/model";
 import { requireAdminUser } from "./access";
 
 const listStatusValidator = v.union(v.literal("all"), commissionStatusValidator);
@@ -102,6 +103,11 @@ export const markCommissionPaid = mutation({
     if (deal.commissionDebtorCompanyId !== deal.companyId || deal.commissionBeneficiary !== "batiplus" || !Number.isSafeInteger(deal.commissionAmountMad) || deal.commissionAmountMad < 0 || !Number.isSafeInteger(deal.commissionConfigVersion)) {
       throw new ConvexError("COMMISSION_SNAPSHOT_INCOMPLETE");
     }
+    const [project, company] = await Promise.all([
+      ctx.db.get(deal.projectId),
+      ctx.db.get(deal.companyId),
+    ]);
+    if (!project || !company) throw new ConvexError("COMMISSION_SNAPSHOT_INCOMPLETE");
     const paymentReference = normalizeOptional(args.paymentReference, 120, "INVALID_COMMISSION_PAYMENT_REFERENCE");
     const paymentNote = normalizeOptional(args.paymentNote, 1000, "INVALID_COMMISSION_PAYMENT_NOTE");
     const now = Date.now();
@@ -138,6 +144,20 @@ export const markCommissionPaid = mutation({
       newStatus: "paid",
       metadata: { commissionAmountMad: deal.commissionAmountMad, commissionRateBps: deal.commissionRateBps, commissionConfigVersion: deal.commissionConfigVersion, currency: "MAD" },
       createdAt: now,
+    });
+    const projectTitle = project.title?.trim();
+    const companyName = company.name?.trim() || company.legalName?.trim();
+    await createNotificationForActiveCompanyMembers(ctx, {
+      companyId: deal.companyId,
+      actorUserId: admin._id,
+      type: "commission_paid",
+      entity: { type: "deal", id: deal._id },
+      payload: {
+        ...(projectTitle ? { projectTitle } : {}),
+        ...(companyName ? { companyName } : {}),
+        amountMad: deal.commissionAmountMad,
+      },
+      dedupeKey: `deal:${deal._id}:commission_paid`,
     });
     return { dealId: deal._id, commissionStatus: "paid" as const, paidAt: now };
   },

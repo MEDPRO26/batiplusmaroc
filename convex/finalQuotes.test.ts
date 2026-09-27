@@ -168,7 +168,7 @@ describe("immutable revision state machine", () => {
     expect(await notificationsFor(s.t, s.clientId)).toHaveLength(1);
   });
 
-  test("acceptance sends one anti-spam success notification to each active Company member", async () => {
+  test("acceptance sends selection and commission notifications without a third Deal notification", async () => {
     const s = await setup();
     const teammateUserId = await user(s.t, "company");
     const inactiveUserId = await user(s.t, "company");
@@ -207,8 +207,8 @@ describe("immutable revision state machine", () => {
 
     for (const recipientUserId of [s.companyUserId, teammateUserId]) {
       const notifications = await notificationsFor(s.t, recipientUserId);
-      expect(notifications).toHaveLength(1);
-      expect(notifications[0]).toMatchObject({
+      expect(notifications).toHaveLength(2);
+      expect(notifications.find((item) => item.type === "final_quote_accepted")).toMatchObject({
         type: "final_quote_accepted",
         entity: { type: "final_quote", id: requested.finalQuoteId },
         actorUserId: s.clientId,
@@ -218,15 +218,27 @@ describe("immutable revision state machine", () => {
           amountMad: 380_000,
         },
       });
-      expect((await storedNotificationsFor(s.t, recipientUserId))[0]?.dedupeKey).toBe(
+      expect(notifications.find((item) => item.type === "commission_due")).toMatchObject({
+        type: "commission_due",
+        entity: { type: "deal", id: expect.any(String) },
+        actorUserId: null,
+        payload: {
+          projectTitle: "Villa renovation",
+          companyName: "Atlas Build",
+          amountMad: 19_000,
+        },
+      });
+      expect((await storedNotificationsFor(s.t, recipientUserId))
+        .find((item) => item.type === "final_quote_accepted")?.dedupeKey).toBe(
         `final_quote:${requested.finalQuoteId}:accepted`,
       );
-      expect(notifications.map((notification) => notification.type)).toEqual([
+      expect(notifications.map((notification) => notification.type).sort()).toEqual([
+        "commission_due",
         "final_quote_accepted",
       ]);
       await expect(
         asUser(s.t, recipientUserId).query(api.notifications.index.getMyUnreadCount, {}),
-      ).resolves.toBe(1);
+      ).resolves.toBe(2);
     }
     expect(await notificationsFor(s.t, inactiveUserId)).toHaveLength(0);
     expect(await notificationsFor(s.t, s.competitorUserId)).toHaveLength(0);
@@ -766,7 +778,7 @@ describe("atomic Deal creation at Final Quote acceptance", () => {
     expect(deals).toHaveLength(0);
   });
 
-  test("invite-only and open marketplace paths converge on the same Deal and notifications", async () => {
+  test("invite-only and open marketplace paths converge through commission, completion, and review notifications", async () => {
     for (const visibility of ["marketplace", "invite_only"] as const) {
       const s = await setup({ visibility });
       const requested = await asUser(s.t, s.clientId).mutation(
@@ -795,11 +807,23 @@ describe("atomic Deal creation at Final Quote acceptance", () => {
         commissionDebtorCompanyId: s.companyId,
         commissionBeneficiary: "batiplus",
       });
+      if (!deal) throw new Error("missing Deal");
+      await asUser(s.t, s.clientId).mutation(api.deals.index.completeDeal, {
+        dealId: deal._id,
+      });
+      await asUser(s.t, s.clientId).mutation(api.reviews.index.createReview, {
+        dealId: deal._id,
+        rating: 5,
+        comment: "Excellent construction work and clear communication.",
+      });
       expect((await notificationsFor(s.t, s.clientId)).map((item) => item.type)).toEqual([
         "final_quote_submitted",
       ]);
-      expect((await notificationsFor(s.t, s.companyUserId)).map((item) => item.type)).toEqual([
+      expect((await notificationsFor(s.t, s.companyUserId)).map((item) => item.type).sort()).toEqual([
+        "commission_due",
+        "deal_completed",
         "final_quote_accepted",
+        "review_received",
       ]);
     }
   });

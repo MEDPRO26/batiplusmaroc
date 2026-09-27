@@ -27,6 +27,8 @@ Inside one Convex mutation, the command:
 9. notifies every active selected-Company member once with
    `final_quote_accepted`; it does not send redundant Company `deal_created`
    notifications or notify the accepting Client about their own action.
+10. separately notifies those members with `commission_due`, because the new
+    financial obligation is distinct from Company Selection.
 
 Convex commits all of these writes atomically. A missing or corrupt commission
 schedule, relationship mismatch, authorization failure, or any other error
@@ -84,8 +86,11 @@ Successful acceptance commits these lifecycle changes together:
 
 When an Admin confirms receipt, the Deal stores the payment timestamp, Admin,
 and optional reference/note. The same transaction appends one immutable
-`commissionStatusHistory` row and a `commission_paid` marketplace activity.
-Repeated confirmation is rejected, and the commercial snapshots are unchanged.
+`commissionStatusHistory` row and a `commission_paid` marketplace activity,
+then notifies every active debtor-Company member with `commission_paid`. The
+notification excludes the payment reference and internal note. Repeated
+confirmation is rejected, and the commercial snapshots and notification count
+are unchanged.
 
 The owning Client may later run the explicit `deals.index.completeDeal`
 command. It accepts only the Deal ID, re-derives the Project relationship,
@@ -96,6 +101,7 @@ requires an active Deal and an eligible selected Project, and atomically:
 - changes the Project from `company_selected | in_progress` to `completed`;
 - appends Deal and Project status history and one `deal_completed` activity;
 - makes the Deal review-eligible.
+- notifies every active selected-Company member with `deal_completed`.
 
 The command does not gate on or change the commission lifecycle. A `due` or
 `paid` commission remains exactly as it was. Repeated completion is rejected
