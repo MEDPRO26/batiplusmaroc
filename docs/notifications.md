@@ -1,10 +1,10 @@
 # Notifications
 
 Step 12.1 provides the backend contract for in-app notifications. Steps 12.2.1
-through 12.2.5 wire Proposal, Invitation, Message, Site Visit, Final Quote,
-Company Selection, Commission, Deal Completion, and Review events into that
-contract. This module does not create notification UI or send email/SMS/push
-messages.
+through 12.2.6 wire Proposal, Invitation, Message, Site Visit, Final Quote,
+Company Selection, Commission, Deal Completion, Review, and Company
+Verification events into that contract. This module does not create
+notification UI or send email/SMS/push messages.
 
 ## Data model
 
@@ -285,10 +285,54 @@ identical and contains no acquisition-path branch. Review hide/restore
 moderation deliberately emits no notification. No UI, push delivery, or
 preferences are part of this step.
 
+## Step 12.2.6 Company Verification event map
+
+| Authoritative domain event | Notification type | Recipient |
+| --- | --- | --- |
+| Admin approves a pending Company verification | `company_verification_approved` | Every active member of the verified Company |
+| Admin rejects a pending Company verification | `company_verification_rejected` | Every active member of the rejected Company |
+| Company submits or resubmits verification | none | Admin queue remains the authoritative V1 work surface |
+
+Approval and rejection notifications are emitted by the existing Admin
+moderation mutations after their state and immutable-history writes. They
+reference the current `company_verification` record, record the moderating
+Admin as actor, and contain only the locale-neutral `companyName` snapshot.
+The rejection reason is deliberately omitted: the current Company verification
+API does not expose it to Company members, while the Admin review API does, so
+it remains Admin-only data rather than becoming notification payload data.
+
+Company-directed events use the established shared-workspace rule: every
+active member of the authoritative Company is notified. Inactive members,
+unrelated Companies, Clients, SEO users, public callers, and the moderating
+Admin are excluded. Each intended recipient's unread count increases exactly
+once. A retry is rejected by the existing pending-state guard and cannot add a
+second notification.
+
+The current model updates one `companyVerifications` record across
+`rejected -> pending` resubmission cycles. Dedupe keys therefore include the
+immutable moderation history row ID:
+
+- `company_verification:{verificationId}:approved:{historyId}`
+- `company_verification:{verificationId}:rejected:{historyId}`
+
+This makes a retry of one transition idempotent without suppressing a later
+legitimate approval or rejection of the same verification record. Company
+status, immutable verification history, all Company-member notifications, and
+unread aggregates share one Convex transaction; recipient or entity validation
+failure rolls the whole moderation transition back.
+
+Submission-to-Admin notification is intentionally not implemented. The
+indexed Admin verification queue already exposes pending submissions, and the
+current account model has only a broad `admin` type with no operational
+verification assignment or active/inactive Admin audience. Broadcasting to all
+Admins would invent recipient policy and require a new notification type
+without a demonstrated V1 need. Company submission authorization and behavior
+remain unchanged.
+
 ## Boundaries and future phases
 
 Notifications answer “who needs to know?” and never replace marketplace audit
-or activity records, which answer “what happened?”. Step 12.2.6 will wire
-Company Verification notifications.
+or activity records, which answer “what happened?”. Step 12.2.7 is the next
+backend event-integration phase.
 Step 12.3 will add the in-app UI, Step 12.4 preferences, and Step 12.5+ browser
 push and delivery. This foundation has no coupling to those delivery channels.

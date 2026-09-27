@@ -126,25 +126,28 @@ export async function createNotification(ctx: MutationCtx, args: CreateNotificat
   return { notificationId, created: true };
 }
 
-/** Notify every active member because each has the same Company workspace authority. */
+/** Notify every active member with shared Company authority, excluding the actor. */
 export async function createNotificationForActiveCompanyMembers(
   ctx: MutationCtx,
   args: CreateCompanyNotificationArgs,
 ) {
   const { companyId, ...notification } = args;
+  let activeMemberCount = 0;
   let recipientCount = 0;
   for await (const membership of ctx.db
     .query("companyMembers")
     .withIndex("by_companyId_and_status", (q) =>
       q.eq("companyId", companyId).eq("status", "active"),
     )) {
+    activeMemberCount += 1;
+    if (membership.userId === notification.actorUserId) continue;
     await createNotification(ctx, {
       ...notification,
       recipientUserId: membership.userId,
     });
     recipientCount += 1;
   }
-  if (recipientCount === 0) {
+  if (activeMemberCount === 0) {
     throw new ConvexError("COMPANY_NOTIFICATION_RECIPIENT_NOT_FOUND");
   }
   return { recipientCount };

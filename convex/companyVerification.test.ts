@@ -18,7 +18,7 @@ beforeAll(async () => {
 
 type TestBackend = ReturnType<typeof convexTest>;
 
-async function seedCompany(t: TestBackend, options?: { accountType?: "client" | "company"; role?: "owner" | "staff"; status?: "active" | "inactive"; verificationStatus?: "draft" | "pending" | "verified" | "rejected" }) {
+async function seedCompany(t: TestBackend, options?: { accountType?: "client" | "company" | "admin" | "seo_team"; role?: "owner" | "staff"; status?: "active" | "inactive"; verificationStatus?: "draft" | "pending" | "verified" | "rejected" }) {
   return await t.run(async (ctx) => {
     const now = 100;
     const userId = await ctx.db.insert("users", {
@@ -76,6 +76,7 @@ describe("company verification", () => {
       verifications: await ctx.db.query("companyVerifications").collect(),
       history: await ctx.db.query("companyVerificationHistory").collect(),
       documents: await ctx.db.query("companyVerificationDocuments").collect(),
+      notifications: await ctx.db.query("notifications").collect(),
     }));
     expect(state.company?.verificationStatus).toBe("pending");
     expect(state.verifications).toHaveLength(1);
@@ -83,13 +84,20 @@ describe("company verification", () => {
     expect(state.history).toHaveLength(1);
     expect(state.history[0]).toMatchObject({ oldStatus: "draft", newStatus: "pending", changedBy: userId });
     expect(state.documents).toHaveLength(0);
+    expect(state.notifications).toEqual([]);
   });
 
-  test("rejects unauthenticated, client, staff, and inactive callers", async () => {
+  test("rejects unauthenticated, client, Admin, SEO, staff, and inactive callers", async () => {
     const unauthenticated = convexTest(schema, modules);
     await expect(unauthenticated.mutation(api.companyVerification.index.submitVerification, validInput)).rejects.toThrow("NOT_AUTHENTICATED");
 
-    for (const options of [{ accountType: "client" as const }, { role: "staff" as const }, { status: "inactive" as const }]) {
+    for (const options of [
+      { accountType: "client" as const },
+      { accountType: "admin" as const },
+      { accountType: "seo_team" as const },
+      { role: "staff" as const },
+      { status: "inactive" as const },
+    ]) {
       const t = convexTest(schema, modules);
       const { userId } = await seedCompany(t, options);
       await expect(asUser(t, userId).mutation(api.companyVerification.index.submitVerification, validInput)).rejects.toThrow(/COMPANY_ACCOUNT_REQUIRED|COMPANY_OWNER_REQUIRED/);

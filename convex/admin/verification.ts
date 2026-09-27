@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
+import { createNotificationForActiveCompanyMembers } from "../notifications/model";
 import { requireAdminUser } from "./access";
 
 const reviewStatusValidator = v.union(
@@ -261,15 +262,28 @@ export const approveCompanyVerification = mutation({
     if (company.verificationStatus !== "pending") {
       throw new ConvexError("VERIFICATION_NOT_PENDING");
     }
+    const verification = await ctx.db
+      .query("companyVerifications")
+      .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
+      .unique();
+    if (!verification) throw new ConvexError("VERIFICATION_RECORD_NOT_FOUND");
 
     const now = Date.now();
     await ctx.db.patch(company._id, { verificationStatus: "verified", updatedAt: now });
-    await ctx.db.insert("companyVerificationHistory", {
+    const historyId = await ctx.db.insert("companyVerificationHistory", {
       companyId: company._id,
       oldStatus: "pending",
       newStatus: "verified",
       changedBy: admin._id,
       changedAt: now,
+    });
+    await createNotificationForActiveCompanyMembers(ctx, {
+      companyId: company._id,
+      actorUserId: admin._id,
+      type: "company_verification_approved",
+      entity: { type: "company_verification", id: verification._id },
+      payload: { companyName: company.name?.trim() || verification.legalName },
+      dedupeKey: `company_verification:${verification._id}:approved:${historyId}`,
     });
 
     return { status: "verified" as const };
@@ -289,17 +303,30 @@ export const rejectCompanyVerification = mutation({
     if (company.verificationStatus !== "pending") {
       throw new ConvexError("VERIFICATION_NOT_PENDING");
     }
+    const verification = await ctx.db
+      .query("companyVerifications")
+      .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
+      .unique();
+    if (!verification) throw new ConvexError("VERIFICATION_RECORD_NOT_FOUND");
 
     const rejectionReason = normalizeRejectionReason(args.reason);
     const now = Date.now();
     await ctx.db.patch(company._id, { verificationStatus: "rejected", updatedAt: now });
-    await ctx.db.insert("companyVerificationHistory", {
+    const historyId = await ctx.db.insert("companyVerificationHistory", {
       companyId: company._id,
       oldStatus: "pending",
       newStatus: "rejected",
       changedBy: admin._id,
       changedAt: now,
       rejectionReason,
+    });
+    await createNotificationForActiveCompanyMembers(ctx, {
+      companyId: company._id,
+      actorUserId: admin._id,
+      type: "company_verification_rejected",
+      entity: { type: "company_verification", id: verification._id },
+      payload: { companyName: company.name?.trim() || verification.legalName },
+      dedupeKey: `company_verification:${verification._id}:rejected:${historyId}`,
     });
 
     return { status: "rejected" as const };
