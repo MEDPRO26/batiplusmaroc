@@ -9,6 +9,11 @@ import {
 import { commissionStatusValidator, dealStatusValidator } from "./deals/constants";
 import { commissionTierValidator } from "./marketplaceSettings/constants";
 import { reviewModerationStatusValidator } from "./reviews/constants";
+import {
+  notificationEntityValidator,
+  notificationPayloadValidator,
+  notificationTypeValidator,
+} from "./notifications/constants";
 
 const accountType = v.union(
   v.literal("client"),
@@ -120,6 +125,28 @@ export default defineSchema({
     .index("email", ["email"])
     .index("phone", ["phone"])
     .index("by_accountType", ["accountType"]),
+
+  notifications: defineTable({
+    recipientUserId: v.id("users"),
+    type: notificationTypeValidator,
+    entity: notificationEntityValidator,
+    payload: notificationPayloadValidator,
+    actorUserId: v.optional(v.id("users")),
+    dedupeKey: v.optional(v.string()),
+    createdAt: v.number(),
+    readAt: v.optional(v.number()),
+  })
+    .index("by_recipientUserId_and_createdAt", ["recipientUserId", "createdAt"])
+    .index("by_recipientUserId_and_dedupeKey", ["recipientUserId", "dedupeKey"]),
+
+  notificationRecipientStates: defineTable({
+    recipientUserId: v.id("users"),
+    /** Logical read boundary used by the O(1) mark-all operation. */
+    readThroughAt: v.optional(v.number()),
+    /** Exact transactional aggregate; notification documents remain canonical. */
+    unreadCount: v.number(),
+    updatedAt: v.number(),
+  }).index("by_recipientUserId", ["recipientUserId"]),
 
   clientProfiles: defineTable({
     userId: v.id("users"),
