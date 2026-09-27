@@ -261,6 +261,11 @@ describe("notification foundation", () => {
     await expect(notify(state.t, {
       recipientUserId: state.clientId,
       entity: { type: "proposal", id: state.proposalId },
+      payload: { scheduledAt: -1 },
+    })).rejects.toThrow("INVALID_NOTIFICATION_PAYLOAD");
+    await expect(notify(state.t, {
+      recipientUserId: state.clientId,
+      entity: { type: "proposal", id: state.proposalId },
       dedupeKey: "   ",
     })).rejects.toThrow("INVALID_NOTIFICATION_DEDUPE_KEY");
     await expect(state.t.run(async (ctx) => await createNotification(ctx, {

@@ -62,6 +62,9 @@ function validatePayload(payload: NotificationPayload) {
   if (payload.amountMad !== undefined && (!Number.isFinite(payload.amountMad) || payload.amountMad < 0)) {
     throw new ConvexError("INVALID_NOTIFICATION_PAYLOAD");
   }
+  if (payload.scheduledAt !== undefined && (!Number.isFinite(payload.scheduledAt) || payload.scheduledAt < 0)) {
+    throw new ConvexError("INVALID_NOTIFICATION_PAYLOAD");
+  }
   if (payload.rating !== undefined && (!Number.isInteger(payload.rating) || payload.rating < 1 || payload.rating > 5)) {
     throw new ConvexError("INVALID_NOTIFICATION_PAYLOAD");
   }

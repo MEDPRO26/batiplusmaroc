@@ -1,8 +1,9 @@
 # Notifications
 
 Step 12.1 provides the backend contract for in-app notifications. Steps 12.2.1
-and 12.2.2 wire Proposal, Invitation, and Message events into that contract.
-This module does not create notification UI or send email/SMS/push messages.
+through 12.2.3 wire Proposal, Invitation, Message, and Site Visit events into
+that contract. This module does not create notification UI or send
+email/SMS/push messages.
 
 ## Data model
 
@@ -151,11 +152,45 @@ entire message write. Idempotent retries resolve the existing message before
 notification creation, while distinct messages with identical text retain
 distinct message-derived notification keys.
 
+## Step 12.2.3 Site Visit event map
+
+| Authoritative domain event | Notification type | Recipient |
+| --- | --- | --- |
+| Client proposes a Site Visit | `site_visit_proposed` | Every active member of the conversation Company |
+| Company proposes a Site Visit | `site_visit_proposed` | Project-owning Client |
+| Either side confirms the other side's proposal | `site_visit_confirmed` | Opposite marketplace side from the confirming actor |
+| Either side submits a counter-proposal | `site_visit_rescheduled` | Opposite marketplace side from the rescheduling actor |
+| Either side cancels a confirmed Site Visit | `site_visit_cancelled` | Opposite marketplace side from the cancelling actor |
+
+Site Visit notifications follow the same workspace rule as messages: Client
+actions fan out to all active members of the authorized Company, while Company
+actions notify only the Project Client. The actor is never notified, and an
+outbound Company action does not notify that actor's teammates. Inactive and
+unrelated members are excluded.
+
+The notification entity is the `site_visit` itself. Payloads contain only safe,
+locale-neutral `projectTitle`, `companyName`, `actorDisplayName`, and
+`scheduledAt` snapshots. Exact site addresses, notes, cancellation reasons,
+contact details, and rendered FR/EN copy are not copied into notifications.
+
+The exact dedupe keys are:
+
+- `site_visit:{siteVisitId}:proposed`
+- `site_visit:{siteVisitId}:confirmed`
+- `site_visit:{siteVisitId}:rescheduled:{siteVisitProposalId}`
+- `site_visit:{siteVisitId}:cancelled`
+
+Each reschedule is an immutable `siteVisitProposals` row. Its ID is therefore a
+stable per-transition dedupe component: a retry returns the existing proposal
+without another notification, while a later legitimate counter-proposal gets a
+new ID and notification. The domain transition, proposal/activity history,
+notification fan-out, and unread counts commit in one Convex transaction.
+Declining or completing a Site Visit does not emit a notification in this step.
+
 ## Boundaries and future phases
 
 Notifications answer “who needs to know?” and never replace marketplace audit
 or activity records, which answer “what happened?”. Later Step 12.2.x work will
-wire site visits, final quotes, deals, commissions, completion, reviews, and
-verification. Step 12.3 will add the in-app UI, Step 12.4 preferences, and Step
-12.5+ browser push and delivery. This foundation has no coupling to those
-delivery channels.
+wire final quotes, deals, commissions, completion, reviews, and verification.
+Step 12.3 will add the in-app UI, Step 12.4 preferences, and Step 12.5+ browser
+push and delivery. This foundation has no coupling to those delivery channels.

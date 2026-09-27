@@ -47,6 +47,7 @@ export const notificationPayloadValidator = v.object({
   projectTitle: v.optional(v.string()),
   companyName: v.optional(v.string()),
   messagePreview: v.optional(v.string()),
+  scheduledAt: v.optional(v.number()),
   amountMad: v.optional(v.number()),
   rating: v.optional(v.number()),
 });

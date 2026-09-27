@@ -5,6 +5,10 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
+import {
+  createNotification,
+  createNotificationForActiveCompanyMembers,
+} from "../notifications/model";
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import { assertSiteAssessmentTransition, assertSiteVisitTransition, isActiveSiteAssessmentStatus } from "./state";
 
@@ -42,6 +46,69 @@ const assessmentValidator = v.object({
 const assessmentResultValidator = v.object({ viewerType: viewerTypeValidator, canInvite: v.boolean(), assessment: v.union(assessmentValidator, v.null()) });
 type Ctx = QueryCtx | MutationCtx;
 type Participant = { userId: Id<"users">; actorType: "client" | "company" };
+type SiteVisitNotificationType =
+  | "site_visit_proposed"
+  | "site_visit_confirmed"
+  | "site_visit_rescheduled"
+  | "site_visit_cancelled";
+
+function userDisplayName(user: Doc<"users">) {
+  const firstName = user.firstName?.trim();
+  const lastInitial = user.lastName?.trim().charAt(0);
+  if (firstName && lastInitial) return `${firstName} ${lastInitial}.`;
+  return firstName || user.name?.trim() || "";
+}
+
+async function createSiteVisitNotification(
+  ctx: MutationCtx,
+  args: {
+    visitId: Id<"siteVisits">;
+    projectId: Id<"projects">;
+    clientId: Id<"users">;
+    companyId: Id<"companies">;
+    participant: Participant;
+    type: SiteVisitNotificationType;
+    scheduledAt: number;
+    dedupeTransition: string;
+  },
+) {
+  const [project, company, actor] = await Promise.all([
+    ctx.db.get(args.projectId),
+    ctx.db.get(args.companyId),
+    ctx.db.get(args.participant.userId),
+  ]);
+  if (!project || project.clientId !== args.clientId || !company || !actor) {
+    throw new ConvexError("SITE_VISIT_INTEGRITY_ERROR");
+  }
+  const projectTitle = project.title?.trim();
+  const companyName = company.name?.trim();
+  const actorDisplayName = args.participant.actorType === "client"
+    ? userDisplayName(actor)
+    : companyName;
+  const notification = {
+    actorUserId: args.participant.userId,
+    type: args.type,
+    entity: { type: "site_visit" as const, id: args.visitId },
+    payload: {
+      ...(projectTitle ? { projectTitle } : {}),
+      ...(companyName ? { companyName } : {}),
+      ...(actorDisplayName ? { actorDisplayName } : {}),
+      scheduledAt: args.scheduledAt,
+    },
+    dedupeKey: `site_visit:${args.visitId}:${args.dedupeTransition}`,
+  };
+  if (args.participant.actorType === "client") {
+    await createNotificationForActiveCompanyMembers(ctx, {
+      companyId: args.companyId,
+      ...notification,
+    });
+  } else {
+    await createNotification(ctx, {
+      recipientUserId: args.clientId,
+      ...notification,
+    });
+  }
+}
 
 function proposerActorType(visit: Pick<Doc<"siteVisits">, "clientId" | "proposedByUserId">) {
   return visit.proposedByUserId === visit.clientId ? "client" as const : "company" as const;
@@ -275,6 +342,16 @@ export const proposeVisit = mutation({
       const proposalId = await ctx.db.insert("siteVisitProposals", { visitId: active._id, assessmentId: assessment._id, sequence: currentProposal.sequence + 1, proposedByUserId: participant.userId, proposedDate: args.proposedDate, proposedTime: args.proposedTime, timezone: MOROCCO_TIMEZONE, siteAddress, note, proposedAt: now });
       await ctx.db.patch(active._id, { proposedByUserId: participant.userId, currentProposalId: proposalId, proposedDate: args.proposedDate, proposedTime: args.proposedTime, timezone: MOROCCO_TIMEZONE, siteAddress, note, proposedAt: now, updatedAt: now });
       await appendMarketplaceActivity(ctx, { projectId: assessment.projectId, eventType: "site_visit_rescheduled", actorUserId: participant.userId, actorType: participant.actorType, companyId: assessment.companyId, quoteId: assessment.initialQuoteId, conversationId: assessment.conversationId, siteAssessmentId: assessment._id, siteVisitId: active._id, oldStatus: "proposed", newStatus: "proposed", metadata: { proposedDate: args.proposedDate, proposedTime: args.proposedTime, timezone: MOROCCO_TIMEZONE, scheduledEpoch }, createdAt: now });
+      await createSiteVisitNotification(ctx, {
+        visitId: active._id,
+        projectId: assessment.projectId,
+        clientId: assessment.clientId,
+        companyId: assessment.companyId,
+        participant,
+        type: "site_visit_rescheduled",
+        scheduledAt: scheduledEpoch,
+        dedupeTransition: `rescheduled:${proposalId}`,
+      });
       return { visitId: active._id, status: "proposed" as const, duplicate: false, rescheduled: true };
     }
     const latest = await latestVisitForAssessment(ctx, assessment._id);
@@ -283,6 +360,16 @@ export const proposeVisit = mutation({
     const proposalId = await ctx.db.insert("siteVisitProposals", { visitId, assessmentId: assessment._id, sequence: 1, proposedByUserId: participant.userId, proposedDate: args.proposedDate, proposedTime: args.proposedTime, timezone: MOROCCO_TIMEZONE, siteAddress, note, proposedAt: now });
     await ctx.db.patch(visitId, { currentProposalId: proposalId });
     await appendMarketplaceActivity(ctx, { projectId: assessment.projectId, eventType: "site_visit_proposed", actorUserId: participant.userId, actorType: participant.actorType, companyId: assessment.companyId, quoteId: assessment.initialQuoteId, conversationId: assessment.conversationId, siteAssessmentId: assessment._id, siteVisitId: visitId, newStatus: "proposed", metadata: { proposedDate: args.proposedDate, proposedTime: args.proposedTime, timezone: MOROCCO_TIMEZONE, scheduledEpoch }, createdAt: now });
+    await createSiteVisitNotification(ctx, {
+      visitId,
+      projectId: assessment.projectId,
+      clientId: assessment.clientId,
+      companyId: assessment.companyId,
+      participant,
+      type: "site_visit_proposed",
+      scheduledAt: scheduledEpoch,
+      dedupeTransition: "proposed",
+    });
     return { visitId, status: "proposed" as const, duplicate: false, rescheduled: false };
   },
 });
@@ -300,6 +387,18 @@ export const respondToVisit = mutation({
     const scheduledEpoch = moroccoDateTimeToEpoch(visit.proposedDate, visit.proposedTime);
     await ctx.db.patch(visit._id, desired === "confirmed" ? { status: desired, confirmedByUserId: participant.userId, confirmedAt: now, updatedAt: now } : { status: desired, active: false, declinedByUserId: participant.userId, declinedAt: now, updatedAt: now });
     await appendMarketplaceActivity(ctx, { projectId: visit.projectId, eventType: desired === "confirmed" ? "site_visit_confirmed" : "site_visit_declined", actorUserId: participant.userId, actorType: participant.actorType, companyId: visit.companyId, quoteId: visit.initialQuoteId, conversationId: visit.conversationId, siteAssessmentId: assessment._id, siteVisitId: visit._id, oldStatus: visit.status, newStatus: desired, metadata: { proposedDate: visit.proposedDate, proposedTime: visit.proposedTime, timezone: MOROCCO_TIMEZONE, scheduledEpoch }, createdAt: now });
+    if (desired === "confirmed") {
+      await createSiteVisitNotification(ctx, {
+        visitId: visit._id,
+        projectId: visit.projectId,
+        clientId: visit.clientId,
+        companyId: visit.companyId,
+        participant,
+        type: "site_visit_confirmed",
+        scheduledAt: scheduledEpoch,
+        dedupeTransition: "confirmed",
+      });
+    }
     return { status: desired, duplicate: false };
   },
 });
@@ -315,6 +414,16 @@ export const cancelVisit = mutation({
     const now = Date.now();
     await ctx.db.patch(visit._id, { status: "cancelled", active: false, cancelledByUserId: participant.userId, cancelledAt: now, cancellationReason: reason, updatedAt: now });
     await appendMarketplaceActivity(ctx, { projectId: visit.projectId, eventType: "site_visit_cancelled", actorUserId: participant.userId, actorType: participant.actorType, companyId: visit.companyId, quoteId: visit.initialQuoteId, conversationId: visit.conversationId, siteAssessmentId: assessment._id, siteVisitId: visit._id, oldStatus: visit.status, newStatus: "cancelled", reason, createdAt: now });
+    await createSiteVisitNotification(ctx, {
+      visitId: visit._id,
+      projectId: visit.projectId,
+      clientId: visit.clientId,
+      companyId: visit.companyId,
+      participant,
+      type: "site_visit_cancelled",
+      scheduledAt: moroccoDateTimeToEpoch(visit.proposedDate, visit.proposedTime),
+      dedupeTransition: "cancelled",
+    });
     return { status: "cancelled" as const, duplicate: false };
   },
 });
