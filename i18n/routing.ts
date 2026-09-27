@@ -132,6 +132,10 @@ export const routing = defineRouting({
       fr: "/espace-entreprise/projets",
       en: "/company/projects",
     },
+    "/espace-entreprise/invitations": {
+      fr: "/espace-entreprise/invitations",
+      en: "/company/invitations",
+    },
     "/espace-entreprise/projets/[projectId]": {
       fr: "/espace-entreprise/projets/[projectId]",
       en: "/company/projects/[projectId]",

@@ -12,6 +12,7 @@ type AppendMarketplaceActivityArgs = {
   actorUserId: Id<"users">;
   actorType: MarketplaceActivityActorType;
   companyId?: Id<"companies">;
+  invitationId?: Id<"invitations">;
   quoteId?: Id<"projectQuotes">;
   conversationId?: Id<"conversations">;
   siteAssessmentId?: Id<"siteAssessments">;
@@ -35,10 +36,11 @@ export async function appendMarketplaceActivity(
   ctx: MutationCtx,
   args: AppendMarketplaceActivityArgs,
 ) {
-  const [project, actor, company, quote, conversation, siteAssessment, siteVisit, finalQuote, finalQuoteRevision, deal, review] = await Promise.all([
+  const [project, actor, company, invitation, quote, conversation, siteAssessment, siteVisit, finalQuote, finalQuoteRevision, deal, review] = await Promise.all([
     ctx.db.get(args.projectId),
     ctx.db.get(args.actorUserId),
     args.companyId ? ctx.db.get(args.companyId) : null,
+    args.invitationId ? ctx.db.get(args.invitationId) : null,
     args.quoteId ? ctx.db.get(args.quoteId) : null,
     args.conversationId ? ctx.db.get(args.conversationId) : null,
     args.siteAssessmentId ? ctx.db.get(args.siteAssessmentId) : null,
@@ -54,6 +56,11 @@ export async function appendMarketplaceActivity(
     throw new ConvexError("INVALID_ACTIVITY_ACTOR");
   }
   if (args.companyId && !company) throw new ConvexError("COMPANY_NOT_FOUND");
+  if (
+    args.invitationId &&
+    (!invitation || invitation.projectId !== args.projectId ||
+      (args.companyId !== undefined && invitation.companyId !== args.companyId))
+  ) throw new ConvexError("INVALID_ACTIVITY_INVITATION");
   if (
     args.finalQuoteId &&
     (!finalQuote || finalQuote.projectId !== args.projectId ||

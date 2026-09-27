@@ -9,6 +9,7 @@ import type { QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
 import { isActiveQuoteStatus } from "../quotes/state";
+import { invitationForPair } from "../invitations/index";
 import { toPublicClientProfile } from "../lib/clientPublicShape";
 import {
   marketplaceBudgetRank,
@@ -560,14 +561,17 @@ export const getCompanyMarketplaceProject = query({
     const projectId = ctx.db.normalizeId("projects", args.projectId);
     if (!projectId) return null;
     const project = await ctx.db.get(projectId);
-    if (
-      !project ||
-      project.status !== "published" ||
-      project.visibility !== "marketplace" ||
-      !isCompleteMarketplaceProject(project)
-    ) {
-      return null;
-    }
+    if (!project || !isCompleteMarketplaceProject(project)) return null;
+    const invitation = await invitationForPair(ctx, projectId, company._id);
+    const directInvitation = invitation?.status === "accepted" ? invitation : null;
+    const canUseMarketplacePath =
+      invitation === null &&
+      project.status === "published" &&
+      project.visibility === "marketplace";
+    const canUseInvitationPath =
+      directInvitation !== null &&
+      (project.status === "published" || project.status === "in_discussion");
+    if (!canUseMarketplacePath && !canUseInvitationPath) return null;
     const card = await toMarketplaceCard(ctx, project);
     if (!card) return null;
     const client = await safeClientDetail(ctx, project.clientId);

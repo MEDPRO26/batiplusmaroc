@@ -4,6 +4,7 @@ import Image from "next/image";
 import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import type { api } from "@/convex/_generated/api";
+import { InviteCompanyButton } from "@/features/invitations/components/invite-company-button";
 
 type PublicCompany = NonNullable<FunctionReturnType<typeof api.portfolio.index.getPublicCompanyProfile>>;
 
@@ -78,13 +79,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
               </div>
 
               <div className="flex flex-col gap-2 sm:min-w-[220px]">
-                <button
-                  className="inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white opacity-70"
-                  disabled
-                  type="button"
-                >
-                  {t("invite")}
-                </button>
+                <InviteCompanyButton companyEligible={company.isVerified} companyId={company.id} className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white" />
                 <button
                   className="inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center rounded-full border border-[#c5c8cb] bg-white px-5 text-sm font-semibold text-ink opacity-70"
                   disabled
@@ -92,7 +87,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                 >
                   {t("quote")}
                 </button>
-                <p className="m-0 text-center text-xs leading-5 text-muted">{t("ctaSoon")}</p>
+                <p className="m-0 text-center text-xs leading-5 text-muted">{t("quoteSoon")}</p>
               </div>
             </div>
           </header>

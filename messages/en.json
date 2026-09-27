@@ -921,6 +921,10 @@
       "title": "Find projects — Batiplus",
       "description": "Browse approved construction projects available to companies on Batiplus."
     },
+    "companyInvitations": {
+      "title": "Project invitations — Batiplus",
+      "description": "Review and respond to direct project invitations from Batiplus clients."
+    },
     "companyCommissions": {
       "title": "Company commissions — Batiplus",
       "description": "Review your Company’s Batiplus commission obligations and payment status."
@@ -1191,6 +1195,7 @@
         "verificationBadge": "Verification badge",
         "portfolio": "Portfolio",
         "messages": "Messages",
+        "invitations": "Invitations",
         "commissions": "Commissions",
         "contact": "Help center"
       }
@@ -1722,6 +1727,7 @@
     "invite": "Invite to a project",
     "quote": "Request a quote",
     "ctaSoon": "This action will be available soon.",
+    "quoteSoon": "Direct quote requests are not available yet.",
     "overview": "Overview",
     "stats": "Company stats",
     "statYears": "Years experience",
@@ -3755,6 +3761,61 @@
       "companySelected": "Company selected"
     }
   },
+  "invitations": {
+    "client": {
+      "open": "Invite to a project",
+      "title": "Invite this company",
+      "lead": "Choose one of your active projects. The company can review the invitation before messaging opens.",
+      "close": "Close invitation dialog",
+      "loading": "Loading your projects…",
+      "chooseProject": "Choose a project",
+      "choosePlaceholder": "Select a project",
+      "chooseProjectError": "Choose a project before sending the invitation.",
+      "message": "Invitation message",
+      "optional": "(optional)",
+      "characterCount": "{count}/2,000 characters",
+      "send": "Send invitation",
+      "sending": "Sending…",
+      "cancel": "Cancel",
+      "sent": "Invitation sent.",
+      "done": "Done",
+      "empty": "You need an active project before inviting this company.",
+      "allInvited": "This company already has an invitation for each of your eligible projects.",
+      "postProject": "Post a project",
+      "signInRequired": "Sign in with a client account to invite this company.",
+      "signIn": "Sign in",
+      "clientRequired": "Only a completed client account can send project invitations.",
+      "clientWorkspace": "Client workspace",
+      "unavailable": "Only verified companies can receive project invitations.",
+      "status": { "pending": "Invitation sent", "accepted": "Invitation accepted", "declined": "Invitation declined" }
+    },
+    "company": {
+      "eyebrow": "Company workspace",
+      "title": "Project invitations",
+      "lead": "Review direct invitations from clients. Messaging and the proposal path open only after you accept.",
+      "filterLabel": "Filter invitations",
+      "filter": { "all": "All", "pending": "Pending", "accepted": "Accepted", "declined": "Declined" },
+      "status": { "pending": "Pending", "accepted": "Accepted", "declined": "Declined" },
+      "emptyTitle": "No invitations to show",
+      "emptyLead": "Direct project invitations will appear here.",
+      "invitedAt": "Invited {date}",
+      "location": "Location",
+      "category": "Category",
+      "budget": "Budget",
+      "client": "Client",
+      "fromClient": "From {name}",
+      "clientFallback": "Client",
+      "accept": "Accept invitation",
+      "decline": "Decline invitation",
+      "working": "Saving…",
+      "continue": "View project and submit proposal"
+    },
+    "project": {
+      "title": "Company invitations",
+      "loading": "Loading invitations…",
+      "status": { "pending": "Pending", "accepted": "Accepted", "declined": "Declined" }
+    }
+  },
   "ux": {
     "retry": "Try again",
     "offline": "Connection problem. We’ll try again.",
@@ -3845,6 +3906,16 @@
         "PROJECT_ATTACHMENT_NOT_FOUND": "This private document could not be found.",
         "PROJECT_NOT_PENDING_REVIEW": "Only projects pending review can be moderated.",
         "PROJECT_REVIEW_REASON_REQUIRED": "Enter a reason of at least 3 characters.",
+        "INVITATION_NOT_FOUND": "This invitation is unavailable.",
+        "INVALID_INVITATION_MESSAGE": "Keep the invitation message under 2,000 characters.",
+        "INVALID_INVITATION_TRANSITION": "This invitation action is no longer available.",
+        "ACTIVE_INVITATION_ALREADY_EXISTS": "An active invitation already exists for this company and project.",
+        "INVITATION_ALREADY_ACCEPTED": "This invitation has already been accepted.",
+        "INVITATION_ALREADY_DECLINED": "This invitation has already been declined.",
+        "PROJECT_NOT_ELIGIBLE_FOR_INVITATION": "This project is no longer eligible for invitations.",
+        "COMPANY_NOT_ELIGIBLE_FOR_INVITATION": "This company is not currently eligible for project invitations.",
+        "INVITATION_INTEGRITY_ERROR": "This invitation could not be loaded safely. Please contact support.",
+        "INVALID_ACTIVITY_INVITATION": "This invitation activity could not be recorded.",
         "PROJECT_NOT_ACCEPTING_QUOTES": "This project is no longer accepting initial quotes.",
         "ACTIVE_QUOTE_ALREADY_EXISTS": "Your company already has an active initial quote for this project.",
         "QUOTE_NOT_FOUND": "This initial quote could not be found.",

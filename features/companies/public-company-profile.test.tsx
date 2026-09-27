@@ -12,6 +12,9 @@ vi.mock("next-intl/server", () => ({
   getTranslations: async () => (key: string, values?: Record<string, unknown>) => key === "reviewBy" ? `reviewBy ${String(values?.name ?? "")}` : key,
   getFormatter: async () => ({ number: (value: number) => String(value), dateTime: () => "Sep 26, 2026" }),
 }));
+vi.mock("@/features/invitations/components/invite-company-button", () => ({
+  InviteCompanyButton: () => <button type="button">invite</button>,
+}));
 
 import { PublicCompanyProfile } from "./components/public-company-profile";
 
@@ -28,6 +31,7 @@ function objectShape(value: unknown): unknown {
 }
 
 const company = {
+  id: "company-1" as never,
   slug: "atlas-build",
   name: "Atlas Build",
   logoUrl: "https://cdn.example.test/logo.webp",

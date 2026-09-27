@@ -139,6 +139,7 @@ async function resolveProject(ctx: QueryCtx, project: {
 export const getPublicCompanyProfile = query({
   args: { slug: v.string() },
   returns: v.union(v.null(), v.object({
+    id: v.id("companies"),
     slug: v.string(),
     name: v.string(),
     logoUrl: v.union(v.string(), v.null()),
@@ -201,6 +202,7 @@ export const getPublicCompanyProfile = query({
       };
     }))).filter((review): review is NonNullable<typeof review> => review !== null);
     return {
+      id: company._id,
       slug: company.slug,
       name: company.name,
       logoUrl,

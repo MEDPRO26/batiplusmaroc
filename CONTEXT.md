@@ -47,6 +47,14 @@ visibility without editing its content. Hidden reviews do not contribute to the
 Company's public rating or review count.
 _Avoid_: Company-to-Client review, testimonial, editable Admin content
 
+**Direct Company Invitation**:
+The owning Client's request for one verified Company to consider an active
+Project. It is pending until that Company's active member accepts or declines.
+Acceptance records mutual interest and permits the Company to submit through
+the existing Proposal flow; the submitted direct Proposal opens the existing
+conversation. Decline preserves history and leaves messaging locked.
+_Avoid_: Request Quote, automatic proposal, open chat before acceptance
+
 **Marketplace Commission**:
 The flat-bracket fee owed to Batiplus for a Deal, calculated from the full
 accepted Deal amount using the schedule in effect at Company Selection.

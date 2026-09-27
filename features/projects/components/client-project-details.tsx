@@ -17,6 +17,7 @@ import { routes } from "@/lib/routes";
 import { ClientReceivedQuotes } from "@/features/quotes/components/client-received-quotes";
 import { ClientProjectCurrentStep } from "@/features/projects/components/client-project-current-step";
 import { ReviewDialog, type ReviewDraft } from "@/features/projects/components/review-dialog";
+import { ClientProjectInvitations } from "@/features/invitations/components/client-project-invitations";
 
 export { ReviewDialog } from "@/features/projects/components/review-dialog";
 
@@ -74,6 +75,7 @@ export function ClientProjectDetailsView({ project, quotesSlot }: { project: Pro
           {project.history.length ? <section className="rounded-2xl border border-brand-border bg-white p-5"><h2 className="m-0 text-base font-semibold text-ink">{t("history.title")}</h2><ol className="mt-4 grid gap-4 pl-5">{project.history.map((item, index) => <li className="text-sm leading-5 text-ink" key={`${item.changedAt}-${index}`}><span className="font-medium">{t("history.transition", { from: t(`status.${item.oldStatus}`), to: t(`status.${item.newStatus}`) })}</span><span className="mt-1 block text-xs text-muted">{t("history.meta", { actor: t(`history.actor.${item.actor}`), date: formatMarketplaceDateTime(item.changedAt, locale, { dateStyle: "medium", timeStyle: "short" }) })}</span>{item.reason ? <span className="mt-2 block rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">{item.reason}</span> : null}</li>)}</ol></section> : null}
         </aside>
       </div>
+      {project.viewerRole === "owner" ? <ClientProjectInvitations projectId={project.id} /> : null}
       {quotesSlot}
     </main>
   );

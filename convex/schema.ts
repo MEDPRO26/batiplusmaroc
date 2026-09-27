@@ -195,12 +195,37 @@ export default defineSchema({
     changedBy: v.id("users"), changedAt: v.number(), reason: v.optional(v.string()),
   }).index("by_projectId", ["projectId"]).index("by_projectId_and_changedAt", ["projectId", "changedAt"]),
 
+  invitations: defineTable({
+    projectId: v.id("projects"),
+    clientUserId: v.id("users"),
+    companyId: v.id("companies"),
+    message: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    acceptedAt: v.optional(v.number()),
+    declinedAt: v.optional(v.number()),
+  })
+    .index("by_projectId_and_companyId", ["projectId", "companyId"])
+    .index("by_companyId_and_createdAt", ["companyId", "createdAt"]),
+
+  invitationStatusHistory: defineTable({
+    invitationId: v.id("invitations"),
+    projectId: v.id("projects"),
+    companyId: v.id("companies"),
+    fromStatus: v.optional(v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined"))),
+    toStatus: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined")),
+    actorUserId: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_invitationId_and_createdAt", ["invitationId", "createdAt"]),
+
   marketplaceActivity: defineTable({
     projectId: v.id("projects"),
     eventType: marketplaceActivityEventTypeValidator,
     actorUserId: v.id("users"),
     actorType: marketplaceActivityActorTypeValidator,
     companyId: v.optional(v.id("companies")),
+    invitationId: v.optional(v.id("invitations")),
     quoteId: v.optional(v.id("projectQuotes")),
     conversationId: v.optional(v.id("conversations")),
     siteAssessmentId: v.optional(v.id("siteAssessments")),

@@ -10,6 +10,7 @@ import { api } from "@/convex/_generated/api";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { CompanyDiscoveryCardSkeleton } from "./company-directory-skeleton";
+import { InviteCompanyButton } from "@/features/invitations/components/invite-company-button";
 
 const services = [
   "houseConstruction",
@@ -364,10 +365,10 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
                 </div>
                 <p className="mt-5 mb-0 text-sm leading-6 text-ink/85">{profile.description}</p>
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                  <button className="button button-primary w-full cursor-not-allowed opacity-70" disabled type="button">{tProfile("invite")}</button>
+                  <InviteCompanyButton companyEligible={profile.isVerified} companyId={profile.id} />
                   <button className="button w-full cursor-not-allowed border border-brand-border bg-white text-ink opacity-70" disabled type="button">{tProfile("quote")}</button>
                 </div>
-                <p className="mt-2 mb-0 text-center text-xs leading-5 text-muted">{tProfile("ctaSoon")}</p>
+                <p className="mt-2 mb-0 text-center text-xs leading-5 text-muted">{tProfile("quoteSoon")}</p>
               </div>
 
               <div className="grid gap-8 px-5 py-6 sm:px-6">

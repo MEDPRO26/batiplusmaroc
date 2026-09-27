@@ -921,6 +921,10 @@
       "title": "Trouver des projets — Batiplus",
       "description": "Parcourez les projets de construction validés et accessibles aux entreprises sur Batiplus."
     },
+    "companyInvitations": {
+      "title": "Invitations aux projets — Batiplus",
+      "description": "Consultez et traitez les invitations directes envoyées par les clients Batiplus."
+    },
     "companyCommissions": {
       "title": "Commissions de l’entreprise — Batiplus",
       "description": "Consultez les commissions dues à Batiplus par votre entreprise et leur statut de paiement."
@@ -1191,6 +1195,7 @@
         "verificationBadge": "Badge de vérification",
         "portfolio": "Réalisations",
         "messages": "Messages",
+        "invitations": "Invitations",
         "commissions": "Commissions",
         "contact": "Centre d’aide"
       }
@@ -1722,6 +1727,7 @@
     "invite": "Inviter à un projet",
     "quote": "Demander un devis",
     "ctaSoon": "Cette action sera disponible prochainement.",
+    "quoteSoon": "Les demandes directes de devis ne sont pas encore disponibles.",
     "overview": "Présentation",
     "stats": "Chiffres clés",
     "statYears": "Années d’expérience",
@@ -3755,6 +3761,61 @@
       "companySelected": "Entreprise sélectionnée"
     }
   },
+  "invitations": {
+    "client": {
+      "open": "Inviter à un projet",
+      "title": "Inviter cette entreprise",
+      "lead": "Choisissez l’un de vos projets actifs. L’entreprise peut consulter l’invitation avant l’ouverture de la messagerie.",
+      "close": "Fermer la fenêtre d’invitation",
+      "loading": "Chargement de vos projets…",
+      "chooseProject": "Choisir un projet",
+      "choosePlaceholder": "Sélectionnez un projet",
+      "chooseProjectError": "Choisissez un projet avant d’envoyer l’invitation.",
+      "message": "Message d’invitation",
+      "optional": "(facultatif)",
+      "characterCount": "{count}/2 000 caractères",
+      "send": "Envoyer l’invitation",
+      "sending": "Envoi…",
+      "cancel": "Annuler",
+      "sent": "Invitation envoyée.",
+      "done": "Terminer",
+      "empty": "Vous devez avoir un projet actif avant d’inviter cette entreprise.",
+      "allInvited": "Cette entreprise a déjà reçu une invitation pour chacun de vos projets éligibles.",
+      "postProject": "Publier un projet",
+      "signInRequired": "Connectez-vous avec un compte client pour inviter cette entreprise.",
+      "signIn": "Connexion",
+      "clientRequired": "Seul un compte client finalisé peut envoyer des invitations.",
+      "clientWorkspace": "Espace client",
+      "unavailable": "Seules les entreprises vérifiées peuvent recevoir des invitations.",
+      "status": { "pending": "Invitation envoyée", "accepted": "Invitation acceptée", "declined": "Invitation refusée" }
+    },
+    "company": {
+      "eyebrow": "Espace entreprise",
+      "title": "Invitations aux projets",
+      "lead": "Consultez les invitations directes des clients. La messagerie et le parcours de proposition s’ouvrent uniquement après acceptation.",
+      "filterLabel": "Filtrer les invitations",
+      "filter": { "all": "Toutes", "pending": "En attente", "accepted": "Acceptées", "declined": "Refusées" },
+      "status": { "pending": "En attente", "accepted": "Acceptée", "declined": "Refusée" },
+      "emptyTitle": "Aucune invitation à afficher",
+      "emptyLead": "Les invitations directes aux projets apparaîtront ici.",
+      "invitedAt": "Invitation reçue le {date}",
+      "location": "Localisation",
+      "category": "Catégorie",
+      "budget": "Budget",
+      "client": "Client",
+      "fromClient": "De {name}",
+      "clientFallback": "Client",
+      "accept": "Accepter l’invitation",
+      "decline": "Refuser l’invitation",
+      "working": "Enregistrement…",
+      "continue": "Voir le projet et envoyer une proposition"
+    },
+    "project": {
+      "title": "Entreprises invitées",
+      "loading": "Chargement des invitations…",
+      "status": { "pending": "En attente", "accepted": "Acceptée", "declined": "Refusée" }
+    }
+  },
   "ux": {
     "retry": "Réessayer",
     "offline": "Problème de connexion. Nous allons réessayer.",
@@ -3845,6 +3906,16 @@
         "PROJECT_ATTACHMENT_NOT_FOUND": "Ce document privé est introuvable.",
         "PROJECT_NOT_PENDING_REVIEW": "Seuls les projets en attente peuvent être modérés.",
         "PROJECT_REVIEW_REASON_REQUIRED": "Saisissez un motif d’au moins 3 caractères.",
+        "INVITATION_NOT_FOUND": "Cette invitation n’est pas disponible.",
+        "INVALID_INVITATION_MESSAGE": "Limitez le message d’invitation à 2 000 caractères.",
+        "INVALID_INVITATION_TRANSITION": "Cette action n’est plus disponible pour cette invitation.",
+        "ACTIVE_INVITATION_ALREADY_EXISTS": "Une invitation active existe déjà pour cette entreprise et ce projet.",
+        "INVITATION_ALREADY_ACCEPTED": "Cette invitation a déjà été acceptée.",
+        "INVITATION_ALREADY_DECLINED": "Cette invitation a déjà été refusée.",
+        "PROJECT_NOT_ELIGIBLE_FOR_INVITATION": "Ce projet n’est plus éligible aux invitations.",
+        "COMPANY_NOT_ELIGIBLE_FOR_INVITATION": "Cette entreprise n’est pas actuellement éligible aux invitations.",
+        "INVITATION_INTEGRITY_ERROR": "Impossible de charger cette invitation en toute sécurité. Contactez le support.",
+        "INVALID_ACTIVITY_INVITATION": "L’activité de cette invitation n’a pas pu être enregistrée.",
         "PROJECT_NOT_ACCEPTING_QUOTES": "Ce projet n’accepte plus de devis estimatifs.",
         "ACTIVE_QUOTE_ALREADY_EXISTS": "Votre entreprise a déjà un devis estimatif actif pour ce projet.",
         "QUOTE_NOT_FOUND": "Ce devis estimatif est introuvable.",

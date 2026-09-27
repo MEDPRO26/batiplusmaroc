@@ -13,6 +13,7 @@ import {
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { ensureConversationForQuote } from "../messages/index";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
+import { invitationForPair } from "../invitations/index";
 import { assertQuoteTransition, isActiveQuoteStatus, type QuoteStatus } from "./state";
 
 const MAX_ESTIMATED_PRICE_MAD = 100_000_000;
@@ -302,13 +303,17 @@ export const getSubmissionContext = query({
     const projectId = ctx.db.normalizeId("projects", args.projectId);
     if (!projectId) return null;
     const project = await ctx.db.get(projectId);
-    if (
-      !project ||
-      project.status !== "published" ||
-      project.visibility !== "marketplace"
-    ) {
-      return null;
-    }
+    if (!project) return null;
+    const invitation = await invitationForPair(ctx, projectId, company._id);
+    const directInvitation = invitation?.status === "accepted" ? invitation : null;
+    const canUseMarketplacePath =
+      invitation === null &&
+      project.status === "published" &&
+      project.visibility === "marketplace";
+    const canUseInvitationPath =
+      directInvitation !== null &&
+      (project.status === "published" || project.status === "in_discussion");
+    if (!canUseMarketplacePath && !canUseInvitationPath) return null;
     const recentQuotes = await quotesForCompanyProject(ctx, projectId, company._id);
     const existing = activeQuote(recentQuotes);
     return {
@@ -346,7 +351,7 @@ export const getMyQuote = query({
   },
 });
 
-/** Submit the first commercial response. This transaction never creates or unlocks messaging. */
+/** Submit the first commercial response and open discussion only for an accepted direct invitation. */
 export const submitInitialQuote = mutation({
   args: {
     projectId: v.id("projects"),
@@ -356,13 +361,27 @@ export const submitInitialQuote = mutation({
     availableStartDate: v.string(),
     scope: v.string(),
   },
-  returns: v.object({ quoteId: v.id("projectQuotes"), status: v.literal("submitted") }),
+  returns: v.object({
+    quoteId: v.id("projectQuotes"),
+    status: v.union(v.literal("submitted"), v.literal("discussion_open")),
+    conversationId: v.union(v.id("conversations"), v.null()),
+  }),
   handler: async (ctx, args) => {
     const { company, userId } = await requireVerifiedCompanyUser(ctx);
     const project = await ctx.db.get(args.projectId);
     if (!project) throw new ConvexError("PROJECT_NOT_FOUND");
-    if (project.status !== "published") throw new ConvexError("PROJECT_NOT_ACCEPTING_QUOTES");
-    if (project.visibility !== "marketplace") throw new ConvexError("PROJECT_NOT_ACCEPTING_QUOTES");
+    const invitation = await invitationForPair(ctx, project._id, company._id);
+    const directInvitation = invitation?.status === "accepted" ? invitation : null;
+    const canUseMarketplacePath =
+      invitation === null &&
+      project.status === "published" &&
+      project.visibility === "marketplace";
+    const canUseInvitationPath =
+      directInvitation !== null &&
+      (project.status === "published" || project.status === "in_discussion");
+    if (!canUseMarketplacePath && !canUseInvitationPath) {
+      throw new ConvexError("PROJECT_NOT_ACCEPTING_QUOTES");
+    }
 
     const existing = activeQuote(
       await quotesForCompanyProject(ctx, project._id, company._id),
@@ -414,7 +433,33 @@ export const submitInitialQuote = mutation({
       newStatus: "submitted",
       createdAt: now,
     });
-    return { quoteId, status: "submitted" as const };
+    if (directInvitation) {
+      const submittedQuote = await ctx.db.get(quoteId);
+      if (!submittedQuote) throw new ConvexError("QUOTE_NOT_FOUND");
+      await appendStatusHistory(ctx, submittedQuote, "discussion_open", userId);
+      const status = "discussion_open" as const;
+      const conversationId = await ensureConversationForQuote(
+        ctx,
+        { ...submittedQuote, status },
+        project,
+        userId,
+      );
+      await appendMarketplaceActivity(ctx, {
+        projectId: project._id,
+        eventType: "discussion_opened",
+        actorUserId: userId,
+        actorType: "company",
+        companyId: company._id,
+        quoteId,
+        conversationId,
+        oldStatus: "submitted",
+        newStatus: status,
+        metadata: { directInvitation: true },
+        createdAt: Date.now(),
+      });
+      return { quoteId, status, conversationId };
+    }
+    return { quoteId, status: "submitted" as const, conversationId: null };
   },
 });
 
