@@ -29,6 +29,8 @@ vi.mock("@convex-dev/auth/react", () => ({
 }));
 vi.mock("convex/react", () => ({
   useQuery: vi.fn(() => null),
+  useMutation: vi.fn(() => vi.fn()),
+  usePaginatedQuery: vi.fn(() => ({ results: [], status: "Exhausted", loadMore: vi.fn() })),
   useConvexAuth: vi.fn(() => ({ isAuthenticated: false, isLoading: false })),
 }));
 
@@ -155,7 +157,7 @@ describe("role navbar content", () => {
     expect(html).toContain(routes.messages);
     expect(html).toContain(routes.clientProfile);
     expect(html).toContain("nav.searchLabel");
-    expect(html).toContain("nav.notifications");
+    expect(html).toContain("notifications.bell");
     expect(html).toContain("nav.profileMenu.client.accountSettings");
     expect(html).toContain("AB");
     expect(html).not.toContain(routes.postProject);
@@ -201,7 +203,7 @@ describe("role navbar content", () => {
     expect(html).toContain("nav.companySearchLabel");
     expect(html).toContain("nav.companySearchPlaceholder");
     expect(html).toContain("nav.searchScopeProjects");
-    expect(html).toContain("nav.notifications");
+    expect(html).toContain("notifications.bell");
     expect(html).toContain("company-navbar-search");
     expect(html).not.toContain(routes.postProject);
     expect(html).not.toContain(routes.clientDashboard);

@@ -3,8 +3,8 @@
 Step 12.1 provides the backend contract for in-app notifications. Steps 12.2.1
 through 12.2.6 wire Proposal, Invitation, Message, Site Visit, Final Quote,
 Company Selection, Commission, Deal Completion, Review, and Company
-Verification events into that contract. This module does not create
-notification UI or send email/SMS/push messages.
+Verification events into that contract. Step 12.3 adds the in-app UI; the
+module still does not send email, SMS, or push messages.
 
 ## Data model
 
@@ -66,8 +66,8 @@ notifications. Public calls derive the recipient from Convex Auth and expose no
 recipient argument. Cross-recipient IDs return `NOTIFICATION_NOT_FOUND`.
 
 Convex queries are reactive, so a subscribed list or unread-count query updates
-after a notification creation or read mutation without polling. The future UI
-must translate `type` with `next-intl` and use the structured payload only as
+after a notification creation or read mutation without polling. The Step 12.3
+UI translates `type` with `next-intl` and uses the structured payload only as
 interpolation data.
 
 ## Indexes
@@ -400,6 +400,50 @@ has no currently mapped notification type. Verification submission, Site Visit
 decline/completion, Final Quote change/decline/withdrawal, and Review moderation
 are intentionally unwired. Notification creation remains database-only with no
 email, SMS, Web Push, service-worker, queue, or network-delivery dependency.
+
+## Step 12.3 in-app UI architecture
+
+Authenticated Client, Company, Admin, and SEO workspace headers render one
+shared `NotificationBell`. The bell subscribes directly to
+`getMyUnreadCount`; it never derives the badge from the loaded list. Counts
+from 1 through 99 are exact, 100 and above render as `99+`, and zero is
+visually quiet. Convex query subscriptions update both count and recent items
+without polling or refresh.
+
+The accessible Radix dropdown requests only the newest eight records through
+the existing cursor-paginated `listMyNotifications` API. Opening it does not
+change read state. Selecting an item first awaits `markNotificationRead` and
+only navigates after success. `markAllNotificationsRead` is called once for
+the O(1) watermark operation; the UI never iterates through rows. Loading,
+empty, and safe translated error feedback reuse Batiplus workspace styling.
+
+`/[locale]/notifications` is the single authenticated history route for every
+account type. It keeps the current Client/Company navbar or Admin/SEO shell,
+loads 20 records initially, and uses cursor-based “Load more” pagination.
+
+`features/notifications/lib/presentation.ts` is the central presentation
+boundary. It maps every constrained type, including reserved `deal_created`,
+to an FR/EN `next-intl` key and icon category, then resolves role-safe
+destinations. Message events
+can deep-link directly to the existing conversation because their entity is a
+conversation. Other event entities do not expose their parent Project or
+conversation in the stable notification DTO, so V1 links to the closest
+existing authorized workspace surface (Project dashboard, Invitations,
+Messages, Commissions, profile, or verification) rather than inventing routes
+or performing unauthorized client-side lookups. Admin, SEO, and unknown-event
+fallbacks remain on the shared notification history surface. Raw Convex IDs
+and raw backend type strings are never displayed.
+
+Notification copy is rendered from locale-neutral payload fields at display
+time. A completeness regression compares the backend type constant with the
+presentation map and both locale dictionaries, preventing newly constrained
+types from silently rendering blank. Unknown future values use the localized
+“Marketplace update” fallback.
+
+Step 12.3 intentionally contains no toast fan-out, preferences, email, SMS,
+browser permission request, Push API, service worker, VAPID key, subscription,
+or other external-delivery behavior. Preferences remain Step 12.4 and browser
+push remains Step 12.5+.
 
 ## Boundaries and future phases
 

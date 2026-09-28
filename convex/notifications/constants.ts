@@ -1,5 +1,29 @@
 import { v } from "convex/values";
 
+export const NOTIFICATION_TYPES = [
+  "proposal_received",
+  "proposal_accepted",
+  "invitation_received",
+  "invitation_accepted",
+  "invitation_declined",
+  "message_received",
+  "site_visit_proposed",
+  "site_visit_confirmed",
+  "site_visit_rescheduled",
+  "site_visit_cancelled",
+  "final_quote_submitted",
+  "final_quote_accepted",
+  "deal_created",
+  "commission_due",
+  "commission_paid",
+  "deal_completed",
+  "review_received",
+  "company_verification_approved",
+  "company_verification_rejected",
+] as const;
+
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
 export const notificationTypeValidator = v.union(
   v.literal("proposal_received"),
   v.literal("proposal_accepted"),

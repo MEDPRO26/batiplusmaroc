@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { NavbarLogo } from "@/components/layout/navbar-logo";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Link, usePathname } from "@/i18n/navigation";
 import { routes, type AppRoute } from "@/lib/routes";
 
@@ -165,6 +166,7 @@ export function AdminPage({
           <span className="truncate font-medium text-[#17191d]">{breadcrumb}</span>
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <NotificationBell accountType="admin" tone="internal" />
           <LanguageSwitcher />
           {headerActions}
         </div>

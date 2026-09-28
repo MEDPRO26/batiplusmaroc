@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { NavbarLogo } from "@/components/layout/navbar-logo";
 import { ProfileMenu } from "@/components/layout/profile-menu";
 import { SignedInNavbarChrome } from "@/components/layout/signed-in-navbar-chrome";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 
@@ -77,33 +78,17 @@ export function ClientNavbarUtilities() {
   const t = useTranslations("nav");
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
-  const notificationRoot = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!searchOpen && !notificationsOpen) return;
+    if (!searchOpen) return;
     if (searchOpen) searchInput.current?.focus();
-    const close = (event: KeyboardEvent | MouseEvent) => {
-      if (event instanceof KeyboardEvent && event.key === "Escape") {
-        setSearchOpen(false);
-        setNotificationsOpen(false);
-      }
-      if (
-        event instanceof MouseEvent &&
-        notificationsOpen &&
-        !notificationRoot.current?.contains(event.target as Node)
-      ) {
-        setNotificationsOpen(false);
-      }
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSearchOpen(false);
     };
     document.addEventListener("keydown", close);
-    document.addEventListener("mousedown", close);
-    return () => {
-      document.removeEventListener("keydown", close);
-      document.removeEventListener("mousedown", close);
-    };
-  }, [notificationsOpen, searchOpen]);
+    return () => document.removeEventListener("keydown", close);
+  }, [searchOpen]);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -139,10 +124,7 @@ export function ClientNavbarUtilities() {
           aria-expanded={searchOpen}
           aria-label={t("searchLabel")}
           className={iconButton}
-          onClick={() => {
-            setNotificationsOpen(false);
-            setSearchOpen((value) => !value);
-          }}
+          onClick={() => setSearchOpen((value) => !value)}
           type="button"
         >
           <SearchIcon className="size-5" />
@@ -171,41 +153,13 @@ export function ClientNavbarUtilities() {
         ) : null}
       </div>
 
-      <div className="relative" ref={notificationRoot}>
-        <button
-          aria-controls="client-notifications-preview"
-          aria-expanded={notificationsOpen}
-          aria-label={t("notifications")}
-          className={iconButton}
-          onClick={() => {
-            setSearchOpen(false);
-            setNotificationsOpen((value) => !value);
-          }}
-          type="button"
-        >
-          <BellIcon />
-        </button>
-        {notificationsOpen ? (
-          <div
-            className="absolute top-[calc(100%+14px)] right-0 z-50 w-[min(88vw,280px)] rounded-2xl border border-brand-border bg-white p-4 text-sm leading-6 text-muted shadow-[0_18px_50px_rgb(23_61_99_/_0.14)]"
-            id="client-notifications-preview"
-            role="status"
-          >
-            <p className="m-0 font-semibold text-ink">{t("notifications")}</p>
-            <p className="mt-1 mb-0">{t("notificationsEmpty")}</p>
-          </div>
-        ) : null}
-      </div>
+      <NotificationBell accountType="client" />
     </div>
   );
 }
 
 function SearchIcon({ className = "size-5" }: { className?: string }) {
   return <svg aria-hidden className={className} fill="none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" /><path d="m16 16 4 4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" /></svg>;
-}
-
-function BellIcon() {
-  return <svg aria-hidden className="size-5" fill="none" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8.5h18C21 16 18 16 18 9Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.7" /><path d="M10 20h4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" /></svg>;
 }
 
 function ArrowIcon() {

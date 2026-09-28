@@ -11,6 +11,7 @@ vi.mock("next/font/google", () => ({
 vi.mock("convex/react", () => ({
   useQuery: () => [],
   useMutation: () => vi.fn(),
+  usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }),
 }));
 
 vi.mock("@/i18n/navigation", () => ({
@@ -25,6 +26,7 @@ vi.mock("@/i18n/navigation", () => ({
   ),
   usePathname: () => "/admin/verification",
   getPathname: () => "/admin/verification",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
 vi.mock("next/navigation", () => ({

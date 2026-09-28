@@ -20,7 +20,9 @@ vi.mock("@/i18n/navigation", () => ({
   ),
   usePathname: () => "/admin/settings",
   getPathname: () => "/admin/settings",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
+vi.mock("convex/react", () => ({ useQuery: () => 0, useMutation: () => vi.fn(), usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }) }));
 vi.mock("next/navigation", () => ({ useParams: () => ({ locale: "en" }) }));
 
 import {

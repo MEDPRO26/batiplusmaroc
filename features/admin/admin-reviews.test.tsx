@@ -7,12 +7,13 @@ import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 
 const convex = vi.hoisted(() => ({ rows: [] as unknown[] }));
-vi.mock("convex/react", () => ({ useQuery: () => convex.rows, useMutation: () => vi.fn() }));
+vi.mock("convex/react", () => ({ useQuery: () => convex.rows, useMutation: () => vi.fn(), usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }) }));
 vi.mock("next/font/google", () => ({ Outfit: () => ({ className: "font-outfit" }) }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => <a href={href} {...props}>{children}</a>,
   usePathname: () => "/admin/reviews",
   getPathname: () => "/admin/reviews",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
 import { AdminReviewsPanel } from "./components/admin-reviews-panel";

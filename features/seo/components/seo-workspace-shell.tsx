@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { NavbarLogo } from "@/components/layout/navbar-logo";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { routes, type AppRoute } from "@/lib/routes";
 
@@ -163,6 +164,7 @@ export function SeoWorkspaceShell({
             <span aria-hidden className="text-[#c5cad1]">/</span>
             <span className="truncate font-medium text-[#17191d]">{t(`nav.${active.id}`)}</span>
           </nav>
+          <NotificationBell accountType="seo_team" tone="internal" />
           <LanguageSwitcher />
         </header>
         <main className="flex min-w-0 flex-1 flex-col px-4 pb-10 pt-6 sm:px-6 lg:px-8" id="contenu">

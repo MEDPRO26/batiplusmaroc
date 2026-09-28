@@ -15,6 +15,7 @@ vi.mock("next/font/google", () => ({
 vi.mock("convex/react", () => ({
   useQuery: () => convex.queryResults.shift(),
   useMutation: () => vi.fn(),
+  usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }),
 }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({
@@ -28,6 +29,7 @@ vi.mock("@/i18n/navigation", () => ({
   ),
   usePathname: () => "/admin/projects",
   getPathname: () => "/admin/projects",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 vi.mock("next/navigation", () => ({ useParams: () => ({ locale: "en" }) }));
 
