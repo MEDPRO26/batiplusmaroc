@@ -67,4 +67,15 @@ existing Batiplus operational support conversation. Protected Client and Company
 CTAs are disabled where the current query already supplies Company availability;
 the backend guard remains authoritative for every write.
 
-No notification, email, or browser-push event is emitted for status changes.
+Only transitions into `suspended` or out of `suspended` emit the OC2.8 account
+notification and eligible browser Push. Transitions between `normal` and
+`needs_attention` are silent. No email event is emitted.
+
+## OC2.9 audit note
+
+The repository-wide suspension inventory confirmed that every acquisition and
+pre-selection progression path above reaches the centralized guard, including
+Client-initiated operations targeting a Company. Concurrent Admin transitions are
+serialized by Convex document conflict detection and produce a contiguous history
+chain. Company/public projections and notification/Push payloads were regression-
+tested with private sentinels. See [the OC2.9 audit](./oc2-security-audit.md).

@@ -267,6 +267,40 @@ describe("conversation authorization and privacy", () => {
     await expect(state.t.query(api.messages.index.getConversation, { conversationId })).rejects.toThrow("NOT_AUTHENTICATED");
   });
 
+  test("denies Admin and SEO access to marketplace message bodies, pagination, and read state", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    const sent = await asUser(state.t, state.clientId).mutation(
+      api.messages.index.sendMessage,
+      {
+        conversationId: conversationId!,
+        body: "MARKETPLACE-PRIVATE-SENTINEL",
+        clientMessageId: "private-admin-boundary",
+      },
+    );
+    const adminId = await seedUser(state.t, "admin");
+    const seoId = await seedUser(state.t, "seo_team");
+
+    for (const userId of [adminId, seoId]) {
+      const actor = asUser(state.t, userId);
+      await expect(actor.query(api.messages.index.getConversation, {
+        conversationId: conversationId!,
+      })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+      await expect(actor.query(api.messages.index.listMessages, {
+        conversationId: conversationId!,
+        paginationOpts: { numItems: 20, cursor: null },
+      })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+      await expect(actor.mutation(api.messages.index.markConversationRead, {
+        conversationId: conversationId!,
+      })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+      await expect(actor.query(api.messages.index.listMyThreads, {}))
+        .rejects.toThrow("INVALID_ACCOUNT_TYPE");
+    }
+
+    const stored = await state.t.run((ctx) => ctx.db.get(sent.messageId));
+    expect(stored?.body).toBe("MARKETPLACE-PRIVATE-SENTINEL");
+  });
+
   test("returns safe DTOs without private contact or legal fields", async () => {
     const state = await setup();
     const { conversationId } = await openDiscussion(state);

@@ -861,3 +861,13 @@ or activity records, which answer “what happened?”. Steps 12.2.1–12.2.6 ar
 audited and form the stable backend boundary for the Step 12.3 in-app UI,
 Step 12.4 preference policy, Step 12.5 device foundation, and Step 12.6
 marketplace Web Push delivery. Mandatory in-app behavior remains unchanged.
+
+### OC2.9 privacy audit
+
+The OC2.9 audit reconfirmed active-member/Admin recipient isolation,
+`normal ↔ needs_attention` silence, role-safe destination fallbacks, and the
+allowlisted Push `{title, body, url, tag}` envelope. Regression sentinels prove
+that suspension reasons and Internal Notes do not enter notification rows,
+in-app presentation, Push presentation, or delivery requests. Subscription
+ownership and recipient-bound permanent-failure cleanup remain unchanged. See
+[the consolidated OC2.9 security audit](./oc2-security-audit.md).

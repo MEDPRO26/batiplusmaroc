@@ -124,6 +124,92 @@ async function siteVisitNotifications(t: Backend, userId: Id<"users">) {
 }
 
 describe("site visit scheduling", () => {
+  test("blocks every suspended progression path while preserving decline and cancellation", async () => {
+    const invitation = await setup();
+    await invitation.t.run(async (ctx) => {
+      await ctx.db.delete(invitation.assessmentId);
+      await ctx.db.patch(invitation.company.companyId, { operationalStatus: "suspended" });
+    });
+    await expect(asUser(invitation.t, invitation.clientId).mutation(
+      api.siteVisits.index.invite,
+      { conversationId: invitation.conversationId },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+
+    const assessment = await setup();
+    await assessment.t.run((ctx) => ctx.db.patch(assessment.company.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(assessment.t, assessment.company.userId).mutation(
+      api.siteVisits.index.respond,
+      { assessmentId: assessment.assessmentId, decision: "accept" },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+    await expect(asUser(assessment.t, assessment.company.userId).mutation(
+      api.siteVisits.index.respond,
+      { assessmentId: assessment.assessmentId, decision: "decline" },
+    )).resolves.toMatchObject({ status: "declined" });
+
+    const proposed = await acceptedSetup();
+    await proposed.t.run((ctx) => ctx.db.patch(proposed.company.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(proposed.t, proposed.clientId).mutation(
+      api.siteVisits.index.proposeVisit,
+      { assessmentId: proposed.assessmentId, ...futureSchedule() },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+
+    const response = await acceptedSetup();
+    const visit = await asUser(response.t, response.clientId).mutation(
+      api.siteVisits.index.proposeVisit,
+      { assessmentId: response.assessmentId, ...futureSchedule() },
+    );
+    await response.t.run((ctx) => ctx.db.patch(response.company.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(response.t, response.company.userId).mutation(
+      api.siteVisits.index.respondToVisit,
+      { visitId: visit.visitId, decision: "confirm" },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+    await expect(asUser(response.t, response.company.userId).mutation(
+      api.siteVisits.index.respondToVisit,
+      { visitId: visit.visitId, decision: "decline" },
+    )).resolves.toMatchObject({ status: "declined" });
+
+    const completion = await acceptedSetup();
+    const completableVisit = await asUser(completion.t, completion.clientId).mutation(
+      api.siteVisits.index.proposeVisit,
+      { assessmentId: completion.assessmentId, ...futureSchedule() },
+    );
+    await asUser(completion.t, completion.company.userId).mutation(
+      api.siteVisits.index.respondToVisit,
+      { visitId: completableVisit.visitId, decision: "confirm" },
+    );
+    await makeVisitDue(completion.t, completableVisit.visitId);
+    await completion.t.run((ctx) => ctx.db.patch(completion.company.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(completion.t, completion.clientId).mutation(
+      api.siteVisits.index.completeVisit,
+      { visitId: completableVisit.visitId },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+
+    const cancellation = await acceptedSetup();
+    const cancellableVisit = await asUser(cancellation.t, cancellation.clientId).mutation(
+      api.siteVisits.index.proposeVisit,
+      { assessmentId: cancellation.assessmentId, ...futureSchedule() },
+    );
+    await asUser(cancellation.t, cancellation.company.userId).mutation(
+      api.siteVisits.index.respondToVisit,
+      { visitId: cancellableVisit.visitId, decision: "confirm" },
+    );
+    await cancellation.t.run((ctx) => ctx.db.patch(cancellation.company.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(cancellation.t, cancellation.company.userId).mutation(
+      api.siteVisits.index.cancelVisit,
+      { visitId: cancellableVisit.visitId, reason: "Safe disengagement." },
+    )).resolves.toMatchObject({ status: "cancelled" });
+  });
+
   test("requires an accepted assessment and rejects invited or declined assessments", async () => {
     const invited = await setup();
     await expect(asUser(invited.t, invited.clientId).mutation(api.siteVisits.index.proposeVisit, { assessmentId: invited.assessmentId, ...futureSchedule() })).rejects.toThrow("SITE_VISIT_REQUIRES_ACCEPTED_ASSESSMENT");

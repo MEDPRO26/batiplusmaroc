@@ -449,3 +449,12 @@ independent from `adminCompanyConversationReads.readThroughSequence`.
 Internal Admin notes remain strictly separate and continue to create zero
 notifications. OC2.8 adds no assignment, ticketing, SLA, email, SMS, WhatsApp,
 bulk messaging, or new marketplace event rules.
+
+## OC2.9 — Security and authorization audit
+
+The consolidated role matrix, cross-Company IDOR review, marketplace-chat privacy
+boundary, suspension mutation inventory, notification/Push review, race guarantees,
+and findings are recorded in [OC2.9 security and authorization audit](./oc2-security-audit.md).
+Convex guards remain authoritative for every child query and mutation. The Admin
+layout and Company Batiplus server page guard are defense in depth; direct function
+calls still derive identity, role, membership, and Company scope on every request.

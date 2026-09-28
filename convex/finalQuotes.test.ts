@@ -95,6 +95,38 @@ async function storedNotificationsFor(t: Backend, recipientUserId: Id<"users">) 
 }
 
 describe("final quote request and privacy", () => {
+  test("blocks suspended request, upload preparation, and submission paths", async () => {
+    const requestBlocked = await setup();
+    await requestBlocked.t.run((ctx) => ctx.db.patch(requestBlocked.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(requestBlocked.t, requestBlocked.clientId).mutation(
+      api.finalQuotes.index.request,
+      { conversationId: requestBlocked.conversationId },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+
+    const companyBlocked = await setup();
+    const parent = await asUser(companyBlocked.t, companyBlocked.clientId).mutation(
+      api.finalQuotes.index.request,
+      { conversationId: companyBlocked.conversationId },
+    );
+    await companyBlocked.t.run((ctx) => ctx.db.patch(companyBlocked.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(companyBlocked.t, companyBlocked.companyUserId).mutation(
+      api.finalQuotes.index.prepareAfterSiteVisit,
+      { conversationId: companyBlocked.conversationId },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+    await expect(asUser(companyBlocked.t, companyBlocked.companyUserId).mutation(
+      api.finalQuotes.index.generatePdfUploadUrl,
+      { finalQuoteId: parent.finalQuoteId },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+    await expect(asUser(companyBlocked.t, companyBlocked.companyUserId).mutation(
+      api.finalQuotes.index.submitRevision,
+      { conversationId: companyBlocked.conversationId, ...revision },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+  });
+
   test("owner request is idempotent and creates one trusted activity", async () => {
     const s = await setup(); const c = asUser(s.t, s.clientId);
     const first = await c.mutation(api.finalQuotes.index.request, { conversationId: s.conversationId });
@@ -128,6 +160,48 @@ describe("final quote request and privacy", () => {
 });
 
 describe("immutable revision state machine", () => {
+  test("blocks suspended acceptance and Deal creation while allowing remediation and withdrawal", async () => {
+    const acceptance = await setup();
+    const acceptedCandidate = await prepareSubmittedFinalQuote(acceptance);
+    await acceptance.t.run((ctx) => ctx.db.patch(acceptance.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(acceptance.t, acceptance.clientId).mutation(
+      api.finalQuotes.index.review,
+      {
+        finalQuoteId: acceptedCandidate.requested.finalQuoteId,
+        revisionId: acceptedCandidate.submitted.revisionId,
+        action: "accept",
+      },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+    await expectNoDealSelection(acceptance, acceptedCandidate.requested.finalQuoteId);
+
+    const remediation = await setup();
+    const remediationCandidate = await prepareSubmittedFinalQuote(remediation);
+    await remediation.t.run((ctx) => ctx.db.patch(remediation.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(remediation.t, remediation.clientId).mutation(
+      api.finalQuotes.index.review,
+      {
+        finalQuoteId: remediationCandidate.requested.finalQuoteId,
+        revisionId: remediationCandidate.submitted.revisionId,
+        action: "request_changes",
+        reason: "Clarify the remediation scope.",
+      },
+    )).resolves.toMatchObject({ status: "changes_requested" });
+
+    const withdrawal = await setup();
+    const withdrawalCandidate = await prepareSubmittedFinalQuote(withdrawal);
+    await withdrawal.t.run((ctx) => ctx.db.patch(withdrawal.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(withdrawal.t, withdrawal.companyUserId).mutation(
+      api.finalQuotes.index.withdraw,
+      { finalQuoteId: withdrawalCandidate.requested.finalQuoteId, reason: "Safe withdrawal." },
+    )).resolves.toMatchObject({ status: "withdrawn" });
+  });
+
   test("submission notifies only the Client with a safe revision-deduplicated payload", async () => {
     const s = await setup();
     const client = asUser(s.t, s.clientId);

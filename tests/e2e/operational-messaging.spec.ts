@@ -3,6 +3,7 @@ import { buildHarness, hasHorizontalOverflow, mountHarness } from "./support/com
 
 let adminBundle = "";
 let companyBundle = "";
+let restrictedCompanyBundle = "";
 let marketplaceBundle = "";
 const companyId = "company-atlas";
 const conversationId = "operational-atlas";
@@ -17,6 +18,11 @@ test.beforeAll(async () => {
   companyBundle = await buildHarness(
     `import { CompanyOperationalMessaging } from "./features/operations/components/company-operational-messaging";`,
     `<CompanyOperationalMessaging />`,
+  );
+  restrictedCompanyBundle = await buildHarness(
+    `import { CompanyNavbar } from "./components/layout/company-navbar";
+     import { CompanyOperationalMessaging } from "./features/operations/components/company-operational-messaging";`,
+    `<><CompanyNavbar user={{ firstName: "Sara", lastName: "Company", email: "sara@example.test", onboardingStatus: "completed" }} /><CompanyOperationalMessaging /></>`,
   );
   marketplaceBundle = await buildHarness(
     `import { MessagesInboxView } from "./features/messages/components/messages-inbox";`,
@@ -298,6 +304,31 @@ test("Company FR exposes the localized route purpose and composer", async ({ pag
   expect(await hasHorizontalOverflow(page)).toBe(false);
 });
 
+test("suspended Company sees only the safe restriction state and can still use Batiplus support", async ({ page }) => {
+  const state = companyState("en", {
+    conversation: companySummary({ unreadCount: 0, hasUnread: false }),
+    messages: [operationalMessage(1, "Support remains available", "admin", false)],
+  });
+  const queries = state.__queries as Record<string, unknown>;
+  queries["companies.index.getOnboardingProfile"] = {
+    accountRestricted: true,
+    name: "Atlas Build",
+    publicSlug: "atlas-build",
+    verificationStatus: "verified",
+    logoUrl: null,
+  };
+  queries["notifications.index.getMyUnreadCount"] = 0;
+  await mountHarness(page, restrictedCompanyBundle, state);
+
+  await expect(page.getByRole("status")).toContainText("marketplace access is temporarily suspended");
+  await expect(page.getByRole("link", { name: "Contact Batiplus support" }))
+    .toHaveAttribute("href", "/espace-entreprise/batiplus");
+  await expect(page.getByText("Support remains available")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Message", exact: true })).toBeEnabled();
+  await expect(page.getByText("needs_attention")).toHaveCount(0);
+  await expect(page.getByText("PRIVATE-SUSPENSION-REASON-XYZ")).toHaveCount(0);
+});
+
 test("marketplace Messages never renders the operational sentinel", async ({ page }) => {
   await mountHarness(page, marketplaceBundle, {
     __locale: "en",
@@ -308,4 +339,13 @@ test("marketplace Messages never renders the operational sentinel", async ({ pag
   });
   await expect(page.getByText("PRIVATE_MARKETPLACE_SENTINEL")).toBeVisible();
   await expect(page.getByText("ADMIN_OPERATIONAL_SENTINEL")).toHaveCount(0);
+});
+
+test("anonymous direct URL attacks are redirected before Admin or Company operations render", async ({ page }) => {
+  await page.goto("/en/admin/companies");
+  await expect(page).toHaveURL(/\/en\/sign-in(?:\?|$)/);
+
+  await page.goto("/en/company/batiplus");
+  await expect(page).toHaveURL(/\/en\/sign-in(?:\?|$)/);
+  await expect(page.getByText("Internal Notes", { exact: true })).toHaveCount(0);
 });

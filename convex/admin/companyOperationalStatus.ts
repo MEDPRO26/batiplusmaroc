@@ -44,7 +44,11 @@ export const listHistory = query({
   returns: paginationResultValidator(historyItemValidator),
   handler: async (ctx, args) => {
     await requireAdminUser(ctx);
-    if (!Number.isFinite(args.paginationOpts.numItems) || args.paginationOpts.numItems > 30) {
+    if (
+      !Number.isInteger(args.paginationOpts.numItems)
+      || args.paginationOpts.numItems < 1
+      || args.paginationOpts.numItems > 30
+    ) {
       throw new ConvexError("INVALID_COMPANY_OPERATIONAL_STATUS_PAGE_SIZE");
     }
     const company = await ctx.db.get(args.companyId);

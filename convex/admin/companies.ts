@@ -48,6 +48,15 @@ const invitationStatusValidator = v.union(
   v.literal("declined"),
 );
 
+const MAX_COMPANY_PAGE_SIZE = 50;
+const MAX_REVIEW_PAGE_SIZE = 30;
+
+function requireBoundedPageSize(numItems: number, max: number, code: string) {
+  if (!Number.isInteger(numItems) || numItems < 1 || numItems > max) {
+    throw new ConvexError(code);
+  }
+}
+
 const companyListItemValidator = v.object({
   companyId: v.id("companies"),
   name: v.string(),
@@ -251,6 +260,11 @@ export const listCompanies = query({
   returns: paginationResultValidator(companyListItemValidator),
   handler: async (ctx, args) => {
     await requireAdminUser(ctx);
+    requireBoundedPageSize(
+      args.paginationOpts.numItems,
+      MAX_COMPANY_PAGE_SIZE,
+      "INVALID_ADMIN_COMPANY_PAGE_SIZE",
+    );
     const result = await listCompaniesPage(ctx, args);
     const page = await Promise.all(result.page.map(async (company) => {
       const [services, members, latestActivity] = await Promise.all([
@@ -602,6 +616,11 @@ export const listCompanyReviews = query({
     await requireAdminUser(ctx);
     const company = await ctx.db.get(args.companyId);
     if (!company) throw new ConvexError("COMPANY_NOT_FOUND");
+    requireBoundedPageSize(
+      args.paginationOpts.numItems,
+      MAX_REVIEW_PAGE_SIZE,
+      "INVALID_ADMIN_COMPANY_REVIEW_PAGE_SIZE",
+    );
     const result = await ctx.db.query("reviews")
       .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", args.companyId))
       .order("desc")

@@ -78,6 +78,24 @@ describe("admin company operations authorization", () => {
 });
 
 describe("admin company list and summary", () => {
+  test("rejects invalid and unbounded Company and review page sizes", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    const companyId = await seedCompany(t, "Atlas");
+    const admin = asUser(t, adminId);
+
+    for (const numItems of [0, 51, 1.5, Number.NaN]) {
+      await expect(admin.query(api.admin.companies.listCompanies, listArgs(numItems)))
+        .rejects.toThrow("INVALID_ADMIN_COMPANY_PAGE_SIZE");
+    }
+    for (const numItems of [0, 31, 1.5, Number.NaN]) {
+      await expect(admin.query(api.admin.companies.listCompanyReviews, {
+        companyId,
+        ...listArgs(numItems),
+      })).rejects.toThrow("INVALID_ADMIN_COMPANY_REVIEW_PAGE_SIZE");
+    }
+  });
+
   test("paginates, searches and filters every verification/onboarding state", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedUser(t, "admin", "Admin");
@@ -114,6 +132,19 @@ describe("admin company list and summary", () => {
     const removed = await seedCompany(t, "Removed");
     await t.run((ctx) => ctx.db.delete(removed));
     await expect(asUser(t, admin).query(api.admin.companies.getCompanySummary, { companyId: removed })).resolves.toBeNull();
+    await expect(asUser(t, admin).query(api.admin.companies.listCompanyProjectsDeals, {
+      companyId: removed,
+      ...listArgs(),
+    })).rejects.toThrow("COMPANY_NOT_FOUND");
+    await expect(asUser(t, admin).query(api.admin.companies.listCompanyReviews, {
+      companyId: removed,
+      ...listArgs(),
+    })).rejects.toThrow("COMPANY_NOT_FOUND");
+
+    const wrongTableId = await seedUser(t, "client", "WrongTable");
+    await expect(asUser(t, admin).query(api.admin.companies.getCompanySummary, {
+      companyId: wrongTableId as unknown as Id<"companies">,
+    })).rejects.toThrow();
   });
 });
 

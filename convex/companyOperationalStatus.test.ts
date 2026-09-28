@@ -9,7 +9,7 @@ import schema from "./schema";
 const modules = import.meta.glob("./**/*.ts");
 type Backend = ReturnType<typeof convexTest>;
 
-async function user(t: Backend, accountType: "admin" | "client" | "company", name: string) {
+async function user(t: Backend, accountType: "admin" | "client" | "company" | "seo_team", name: string) {
   return await t.run((ctx) => ctx.db.insert("users", {
     email: `${name}-${crypto.randomUUID()}@status.test`,
     firstName: name,
@@ -85,6 +85,7 @@ describe("Company operational status administration", () => {
     const t = convexTest(schema, modules);
     const adminId = await user(t, "admin", "Admin");
     const clientId = await user(t, "client", "Client");
+    const seoId = await user(t, "seo_team", "SEO");
     const target = await company(t, "Atlas");
     const inactiveMemberId = await user(t, "company", "Inactive");
     await t.run((ctx) => ctx.db.insert("companyMembers", {
@@ -97,11 +98,32 @@ describe("Company operational status administration", () => {
 
     await expect(asUser(t, adminId).query(api.admin.companyOperationalStatus.get, { companyId: target.companyId }))
       .resolves.toEqual({ status: "normal" });
-    await expect(asUser(t, clientId).mutation(api.admin.companyOperationalStatus.change, {
+    const changeArgs = {
       companyId: target.companyId,
-      toStatus: "suspended",
+      toStatus: "suspended" as const,
       reason: "Repeated marketplace policy violations.",
-    })).rejects.toThrow("ADMIN_REQUIRED");
+    };
+    await expect(t.query(api.admin.companyOperationalStatus.get, {
+      companyId: target.companyId,
+    })).rejects.toThrow("NOT_AUTHENTICATED");
+    await expect(t.query(api.admin.companyOperationalStatus.listHistory, {
+      companyId: target.companyId,
+      paginationOpts: { numItems: 20, cursor: null },
+    })).rejects.toThrow("NOT_AUTHENTICATED");
+    await expect(t.mutation(api.admin.companyOperationalStatus.change, changeArgs))
+      .rejects.toThrow("NOT_AUTHENTICATED");
+    for (const deniedUserId of [clientId, target.userId, inactiveMemberId, seoId]) {
+      const denied = asUser(t, deniedUserId);
+      await expect(denied.query(api.admin.companyOperationalStatus.get, {
+        companyId: target.companyId,
+      })).rejects.toThrow("ADMIN_REQUIRED");
+      await expect(denied.query(api.admin.companyOperationalStatus.listHistory, {
+        companyId: target.companyId,
+        paginationOpts: { numItems: 20, cursor: null },
+      })).rejects.toThrow("ADMIN_REQUIRED");
+      await expect(denied.mutation(api.admin.companyOperationalStatus.change, changeArgs))
+        .rejects.toThrow("ADMIN_REQUIRED");
+    }
     await expect(asUser(t, adminId).mutation(api.admin.companyOperationalStatus.change, {
       companyId: target.companyId,
       toStatus: "normal",
@@ -113,10 +135,11 @@ describe("Company operational status administration", () => {
       reason: "too short",
     })).rejects.toThrow("INVALID_COMPANY_OPERATIONAL_STATUS_REASON");
 
+    const privateReason = "PRIVATE-SUSPENSION-REASON-XYZ policy violations.";
     await asUser(t, adminId).mutation(api.admin.companyOperationalStatus.change, {
       companyId: target.companyId,
       toStatus: "suspended",
-      reason: "  Repeated   marketplace policy violations.  ",
+      reason: `  ${privateReason}  `,
     });
     const stored = await t.run(async (ctx) => ({
       company: await ctx.db.get(target.companyId),
@@ -128,7 +151,7 @@ describe("Company operational status administration", () => {
     expect(stored.history).toEqual([expect.objectContaining({
       fromStatus: "normal",
       toStatus: "suspended",
-      reason: "Repeated marketplace policy violations.",
+      reason: privateReason,
       changedByAdminUserId: adminId,
     })]);
     const activity = await asUser(t, adminId).query(api.admin.companyActivity.listCompanyActivity, {
@@ -142,7 +165,7 @@ describe("Company operational status administration", () => {
       newStatus: "suspended",
       actor: expect.objectContaining({ type: "admin" }),
     }));
-    expect(JSON.stringify(activity.page)).not.toContain("Repeated marketplace policy violations");
+    expect(JSON.stringify(activity.page)).not.toContain(privateReason);
     const notifications = await t.run((ctx) => ctx.db.query("notifications").collect());
     expect(notifications).toHaveLength(1);
     expect(notifications[0].recipientUserId).not.toBe(inactiveMemberId);
@@ -153,7 +176,7 @@ describe("Company operational status administration", () => {
       payload: { companyId: target.companyId, companyName: "Atlas" },
       actorUserId: adminId,
     });
-    expect(JSON.stringify(notifications)).not.toContain("Repeated marketplace policy violations");
+    expect(JSON.stringify(notifications)).not.toContain(privateReason);
     expect(JSON.stringify(notifications)).not.toContain("fromStatus");
     expect(JSON.stringify(notifications)).not.toContain("toStatus");
     expect(Object.keys(notifications[0].payload).sort()).toEqual(["companyId", "companyName"]);
@@ -200,6 +223,47 @@ describe("Company operational status administration", () => {
     ]);
     expect(notifications.page.every((row) => row.entity.type === "company_operational_status")).toBe(true);
     expect(notifications.page.every((row) => row.payload.companyId === target.companyId)).toBe(true);
+  });
+
+  test("bounds private status history and serializes concurrent transitions", async () => {
+    const t = convexTest(schema, modules);
+    const adminA = await user(t, "admin", "AdminA");
+    const adminB = await user(t, "admin", "AdminB");
+    const target = await company(t, "Atlas", "normal");
+    const admin = asUser(t, adminA);
+
+    for (const numItems of [0, 31, 1.5, Number.NaN]) {
+      await expect(admin.query(api.admin.companyOperationalStatus.listHistory, {
+        companyId: target.companyId,
+        paginationOpts: { numItems, cursor: null },
+      })).rejects.toThrow("INVALID_COMPANY_OPERATIONAL_STATUS_PAGE_SIZE");
+    }
+
+    await Promise.all([
+      asUser(t, adminA).mutation(api.admin.companyOperationalStatus.change, {
+        companyId: target.companyId,
+        toStatus: "suspended",
+        reason: "Concurrent administrative suspension decision.",
+      }),
+      asUser(t, adminB).mutation(api.admin.companyOperationalStatus.change, {
+        companyId: target.companyId,
+        toStatus: "needs_attention",
+        reason: "Concurrent administrative attention decision.",
+      }),
+    ]);
+
+    const stored = await t.run(async (ctx) => ({
+      company: await ctx.db.get(target.companyId),
+      history: await ctx.db.query("companyOperationalStatusHistory")
+        .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", target.companyId))
+        .collect(),
+    }));
+    expect(stored.history).toHaveLength(2);
+    const first = stored.history[0];
+    const second = stored.history[1];
+    expect(first.fromStatus).toBe("normal");
+    expect(second.fromStatus).toBe(first.toStatus);
+    expect(stored.company?.operationalStatus).toBe(second.toStatus);
   });
 });
 
@@ -254,5 +318,43 @@ describe("Company operational marketplace boundary", () => {
     expect(JSON.stringify(profile)).not.toContain("needs_attention");
     await expect(t.query(api.portfolio.index.getPublicCompanyProfile, { slug: normalDoc!.slug! }))
       .resolves.toMatchObject({ marketplaceAvailable: true });
+  });
+
+  test("keeps operational support read, send, and read-state available while suspended", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await user(t, "admin", "Admin");
+    const suspended = await company(t, "SuspendedSupport", "suspended");
+    const first = await asUser(t, adminId).mutation(
+      api.adminCompanyMessaging.sendAdminMessage,
+      {
+        companyId: suspended.companyId,
+        body: "Contact Batiplus to resolve the restriction.",
+        idempotencyKey: "suspended-support-admin",
+      },
+    );
+
+    await expect(asUser(t, suspended.userId).query(
+      api.adminCompanyMessaging.listMyMessages,
+      {
+        conversationId: first.conversationId,
+        paginationOpts: { numItems: 20, cursor: null },
+      },
+    )).resolves.toMatchObject({
+      page: [expect.objectContaining({ body: "Contact Batiplus to resolve the restriction." })],
+    });
+    await expect(asUser(t, suspended.userId).mutation(
+      api.adminCompanyMessaging.markMyConversationRead,
+      {
+        conversationId: first.conversationId,
+        readThroughMessageId: first.messageId,
+      },
+    )).resolves.toMatchObject({ unreadCount: 0 });
+    await expect(asUser(t, suspended.userId).mutation(
+      api.adminCompanyMessaging.sendCompanyMessage,
+      {
+        body: "We are providing the requested remediation details.",
+        idempotencyKey: "suspended-support-company",
+      },
+    )).resolves.toMatchObject({ conversationId: first.conversationId, duplicate: false });
   });
 });

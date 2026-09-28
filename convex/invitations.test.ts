@@ -123,6 +123,34 @@ const validQuote = {
 };
 
 describe("direct company invitation authorization and creation", () => {
+  test("blocks a suspended Company from accepting while preserving decline", async () => {
+    const accepting = await setup();
+    const invitation = await asUser(accepting.t, accepting.clientId).mutation(
+      api.invitations.index.inviteCompanyToProject,
+      { companyId: accepting.company.companyId, projectId: accepting.projectId },
+    );
+    await accepting.t.run((ctx) => ctx.db.patch(accepting.company.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(accepting.t, accepting.company.userId).mutation(
+      api.invitations.index.acceptInvitation,
+      { invitationId: invitation.invitationId },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+
+    const declining = await setup();
+    const declineInvitation = await asUser(declining.t, declining.clientId).mutation(
+      api.invitations.index.inviteCompanyToProject,
+      { companyId: declining.company.companyId, projectId: declining.projectId },
+    );
+    await declining.t.run((ctx) => ctx.db.patch(declining.company.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(declining.t, declining.company.userId).mutation(
+      api.invitations.index.declineInvitation,
+      { invitationId: declineInvitation.invitationId },
+    )).resolves.toEqual({ status: "declined" });
+  });
+
   test("only the owning client can invite an eligible company to an eligible project", async () => {
     const state = await setup();
     const activeStaffId = await seedUser(state.t, "company");
