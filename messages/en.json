@@ -2390,20 +2390,21 @@
   "notificationPreferences": {
     "eyebrow": "Delivery settings",
     "title": "Notification preferences",
-    "description": "Choose which updates may use browser push and manage this device. Your in-app notifications are not affected.",
+    "description": "Manage browser push and this device. In-app notifications stay in your inbox.",
     "inApp": {
       "title": "In-app notifications",
+      "alwaysOn": "Always on",
       "description": "Important Batiplus marketplace updates are always available in your notification inbox. They cannot be disabled."
     },
     "push": {
       "title": "Browser push notifications",
-      "description": "Choose whether eligible Batiplus updates may use browser push.",
+      "description": "Allow eligible marketplace updates to use browser push.",
       "toggle": "Enable browser push preference",
       "previewNotice": "This preference does not request browser permission. Device permission is managed separately below."
     },
     "device": {
       "title": "This device",
-      "description": "Enable browser notifications only after an explicit permission request. You can also send a test notification to this device.",
+      "description": "Ask for browser permission on this device, then optionally send a test.",
       "status": {
         "loading": "Checking browser notification support…",
         "unsupported": "Browser push is not supported on this device.",
@@ -2423,7 +2424,7 @@
     },
     "categories": {
       "title": "Push categories",
-      "description": "These controls apply only to marketplace push delivery. In-app notifications remain available.",
+      "description": "Choose which marketplace events can send a push. In-app notifications stay available.",
       "internalRoleNotice": "Category controls are hidden because this workspace does not currently receive marketplace event notifications.",
       "projects": {
         "title": "Projects",

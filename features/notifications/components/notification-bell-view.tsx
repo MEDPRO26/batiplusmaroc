@@ -19,18 +19,22 @@ export function NotificationBellView({
   loading,
   pending,
   error,
+  open,
   tone = "marketplace",
   onMarkAll,
   onOpen,
+  onOpenChange,
 }: {
   unreadCount: number | undefined;
   notifications: NotificationItemRecord[];
   loading: boolean;
   pending: boolean;
   error: boolean;
+  open?: boolean;
   tone?: "marketplace" | "internal";
   onMarkAll: () => void;
   onOpen: (notification: NotificationItemRecord) => void;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const t = useTranslations("notifications");
   const locale = useLocale();
@@ -40,7 +44,7 @@ export function NotificationBellView({
     : "relative grid size-11 shrink-0 place-items-center rounded-full border-0 bg-transparent text-ink transition-[background-color,color,scale] duration-150 active:scale-[0.96] hover:bg-brand-soft hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand";
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={onOpenChange} open={open}>
       <DropdownMenuTrigger asChild>
         <button
           aria-label={count > 0 ? t("bellWithUnread", { count }) : t("bell")}
@@ -64,18 +68,20 @@ export function NotificationBellView({
       >
         <div className="flex items-center justify-between gap-3 border-b border-brand-border px-4 py-3">
           <div>
-            <p className="font-semibold text-ink">{t("title")}</p>
-            <p className="text-xs text-muted">{t("unreadCount", { count })}</p>
+            <p className="text-sm font-semibold text-ink">{t("title")}</p>
+            <p className="mt-0.5 text-xs text-muted">{t("unreadCount", { count })}</p>
           </div>
-          <button
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-brand hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-            disabled={pending || count === 0}
-            onClick={onMarkAll}
-            type="button"
-          >
-            <CheckCheck aria-hidden className="size-4" />
-            {t("markAll")}
-          </button>
+          {count > 0 ? (
+            <button
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-brand hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              disabled={pending}
+              onClick={onMarkAll}
+              type="button"
+            >
+              <CheckCheck aria-hidden className="size-3.5" />
+              {t("markAll")}
+            </button>
+          ) : null}
         </div>
         {error ? <p className="m-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">{t("error")}</p> : null}
         <div aria-busy={loading} className="max-h-[min(60vh,430px)] overflow-y-auto p-1.5">
@@ -90,6 +96,7 @@ export function NotificationBellView({
           {notifications.map((notification) => (
             <NotificationItem
               compact
+              disabled={pending}
               key={notification.id}
               notification={notification}
               onOpen={() => onOpen(notification)}

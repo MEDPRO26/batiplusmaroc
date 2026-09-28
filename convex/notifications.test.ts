@@ -115,6 +115,7 @@ describe("notification foundation", () => {
         page: [expect.objectContaining({
           type: "proposal_received",
           entity: { type: "proposal", id: state.proposalId },
+          projectId: state.projectId,
           payload: { projectTitle: "Riad renovation" },
           actorUserId: state.clientId,
           createdAt: expect.any(Number),

@@ -23,9 +23,11 @@ import {
   notificationIconCategory,
   notificationTranslationKey,
   readThenNavigate,
+  resolveNotificationDestinationForOpen,
   unreadBadgeLabel,
   type NotificationRecord,
 } from "@/features/notifications/lib/presentation";
+import { localizedNotificationDestination } from "@/lib/notifications/destination";
 import { routes } from "@/lib/routes";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
@@ -190,19 +192,49 @@ describe("notification presentation", () => {
     expect(html).toContain("Atlas Build sent a proposal for Villa Atlas.");
     expect(html).toContain("Unread: Atlas Build sent a proposal for Villa Atlas.");
     expect(html).toContain("Villa Atlas was marked completed.");
-    expect(html).toContain("bg-brand-soft/65");
+    expect(html).toContain("bg-brand-soft/50");
   });
 
   test("resolves representative event families to existing role-safe routes", () => {
     expect(notificationDestination(notification("proposal_received", { type: "proposal", id: "proposal-1" as Id<"projectQuotes"> }), "client")).toBe(routes.clientDashboard);
+    expect(notificationDestination(notification("proposal_accepted", { type: "proposal", id: "proposal-1" as Id<"projectQuotes"> }), "company")).toBe(routes.companyProjects);
     expect(notificationDestination(notification("invitation_received", { type: "invitation", id: "invitation-1" as Id<"invitations"> }), "company")).toBe(routes.companyInvitations);
+    expect(notificationDestination(notification("invitation_accepted", { type: "invitation", id: "invitation-1" as Id<"invitations"> }), "client")).toBe(routes.clientDashboard);
+    expect(notificationDestination(notification("invitation_declined", { type: "invitation", id: "invitation-1" as Id<"invitations"> }), "client")).toBe(routes.clientDashboard);
     expect(notificationDestination(notification("message_received", { type: "conversation", id: "conversation-1" as Id<"conversations"> }), "client")).toEqual({ pathname: routes.messagesConversation, params: { conversationId: "conversation-1" } });
     expect(notificationDestination(notification("site_visit_confirmed", { type: "site_visit", id: "visit-1" as Id<"siteVisits"> }), "company")).toBe(routes.messages);
     expect(notificationDestination(notification("final_quote_submitted", { type: "final_quote", id: "quote-1" as Id<"finalQuotes"> }), "client")).toBe(routes.messages);
+    expect(notificationDestination(notification("final_quote_accepted", { type: "final_quote", id: "quote-1" as Id<"finalQuotes"> }), "company")).toBe(routes.messages);
     expect(notificationDestination(notification("commission_due", { type: "deal", id: "deal-1" as Id<"deals"> }), "company")).toBe(routes.companyCommissions);
+    expect(notificationDestination(notification("commission_paid", { type: "deal", id: "deal-1" as Id<"deals"> }), "company")).toBe(routes.companyCommissions);
     expect(notificationDestination(notification("deal_completed", { type: "deal", id: "deal-1" as Id<"deals"> }), "company")).toBe(routes.companyDashboard);
     expect(notificationDestination(notification("review_received", { type: "review", id: "review-1" as Id<"reviews"> }), "company")).toBe(routes.companyProfileManagement);
+    expect(notificationDestination(notification("company_verification_approved", { type: "company_verification", id: "verification-1" as Id<"companyVerifications"> }), "company")).toBe(routes.companyVerification);
     expect(notificationDestination(notification("company_verification_rejected", { type: "company_verification", id: "verification-1" as Id<"companyVerifications"> }), "company")).toBe(routes.companyVerification);
+  });
+
+  test("resolves proposal notifications to the related role-safe Project route", async () => {
+    const projectId = "project-1" as Id<"projects">;
+    const received = { ...notification("proposal_received", { type: "proposal", id: "proposal-1" as Id<"projectQuotes"> }), projectId };
+    const accepted = { ...notification("proposal_accepted", { type: "proposal", id: "proposal-1" as Id<"projectQuotes"> }), projectId };
+
+    expect(resolveNotificationDestinationForOpen(received, "client")).toEqual({
+      pathname: routes.clientProject,
+      params: { projectId },
+    });
+    expect(resolveNotificationDestinationForOpen(accepted, "company")).toEqual({
+      pathname: routes.companyProject,
+      params: { projectId },
+    });
+    expect(localizedNotificationDestination("en", received, "client", { projectId })).toBe("/en/client/projects/project-1");
+    expect(localizedNotificationDestination("fr", received, "client", { projectId })).toBe("/fr/espace-client/projets/project-1");
+    expect(localizedNotificationDestination("en", accepted, "company", { projectId })).toBe("/en/company/projects/project-1");
+    expect(localizedNotificationDestination("fr", accepted, "company", { projectId })).toBe("/fr/espace-entreprise/projets/project-1");
+  });
+
+  test("falls back safely when the related proposal Project is unavailable", async () => {
+    const row = notification("proposal_received", { type: "proposal", id: "proposal-1" as Id<"projectQuotes"> });
+    expect(resolveNotificationDestinationForOpen(row, "client")).toBe(routes.notifications);
   });
 
   test("keeps internal-role and unknown destinations inside the shared notification surface", () => {

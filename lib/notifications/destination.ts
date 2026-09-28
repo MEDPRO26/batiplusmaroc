@@ -15,11 +15,18 @@ export type NotificationDestination =
         | typeof routes.messagesConversation
         | typeof routes.seoArticle
     >
+  | { pathname: typeof routes.clientProject; params: { projectId: string } }
+  | { pathname: typeof routes.companyProject; params: { projectId: string } }
   | { pathname: typeof routes.messagesConversation; params: { conversationId: string } };
+
+export type NotificationDestinationContext = {
+  projectId?: string;
+};
 
 export function notificationDestination(
   notification: NotificationDestinationInput,
   accountType: NotificationAccountType,
+  context: NotificationDestinationContext = {},
 ): NotificationDestination {
   if (accountType === "admin" || accountType === "seo_team") return routes.notifications;
   if (notification.type === "message_received" && notification.entity.type === "conversation") {
@@ -30,10 +37,17 @@ export function notificationDestination(
   }
   switch (notification.type) {
     case "proposal_received":
+      if (accountType === "client" && context.projectId) {
+        return { pathname: routes.clientProject, params: { projectId: context.projectId } };
+      }
+      return accountType === "client" ? routes.clientDashboard : routes.companyProjects;
     case "invitation_accepted":
     case "invitation_declined":
       return accountType === "client" ? routes.clientDashboard : routes.companyProjects;
     case "proposal_accepted":
+      if (accountType === "company" && context.projectId) {
+        return { pathname: routes.companyProject, params: { projectId: context.projectId } };
+      }
       return accountType === "company" ? routes.companyProjects : routes.clientDashboard;
     case "invitation_received":
       return accountType === "company" ? routes.companyInvitations : routes.clientDashboard;
@@ -74,10 +88,19 @@ export function localizedNotificationDestination(
   locale: "fr" | "en",
   notification: NotificationDestinationInput,
   accountType: NotificationAccountType,
+  context: NotificationDestinationContext = {},
 ) {
-  const destination = notificationDestination(notification, accountType);
+  const destination = notificationDestination(notification, accountType, context);
   if (typeof destination !== "string") {
-    return `/${locale}/messages/${encodeURIComponent(destination.params.conversationId)}`;
+    if (destination.pathname === routes.messagesConversation) {
+      return `/${locale}/messages/${encodeURIComponent(destination.params.conversationId)}`;
+    }
+    const projectId = encodeURIComponent(destination.params.projectId);
+    const area = destination.pathname === routes.clientProject
+      ? locale === "en" ? "client" : "espace-client"
+      : locale === "en" ? "company" : "espace-entreprise";
+    const projects = locale === "en" ? "projects" : "projets";
+    return `/${locale}/${area}/${projects}/${projectId}`;
   }
   const pathname = locale === "en" ? ENGLISH_PATHS[destination] ?? destination : destination;
   return `/${locale}${pathname === "/" ? "" : pathname}`;

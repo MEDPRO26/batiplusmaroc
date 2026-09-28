@@ -2390,20 +2390,21 @@
   "notificationPreferences": {
     "eyebrow": "Paramètres de diffusion",
     "title": "Préférences de notification",
-    "description": "Choisissez les actualités qui pourront utiliser les notifications push et gérez cet appareil. Vos notifications dans l’application ne sont pas affectées.",
+    "description": "Gérez les notifications push et cet appareil. Les notifications dans l’application restent dans votre boîte.",
     "inApp": {
       "title": "Notifications dans l’application",
+      "alwaysOn": "Toujours actives",
       "description": "Les actualités importantes de la marketplace Batiplus restent toujours disponibles dans votre boîte de notifications. Elles ne peuvent pas être désactivées."
     },
     "push": {
       "title": "Notifications push du navigateur",
-      "description": "Choisissez si les actualités Batiplus éligibles peuvent utiliser les notifications push.",
+      "description": "Autorisez les actualités marketplace éligibles à utiliser les notifications push.",
       "toggle": "Activer la préférence des notifications push",
       "previewNotice": "Cette préférence ne demande aucune autorisation au navigateur. L’autorisation de cet appareil se gère séparément ci-dessous."
     },
     "device": {
       "title": "Cet appareil",
-      "description": "Activez les notifications du navigateur uniquement après une demande d’autorisation explicite. Vous pouvez aussi envoyer une notification de test à cet appareil.",
+      "description": "Demandez l’autorisation du navigateur sur cet appareil, puis envoyez éventuellement un test.",
       "status": {
         "loading": "Vérification de la compatibilité du navigateur…",
         "unsupported": "Les notifications push ne sont pas prises en charge sur cet appareil.",
@@ -2423,7 +2424,7 @@
     },
     "categories": {
       "title": "Catégories de notifications push",
-      "description": "Ces réglages s’appliquent uniquement à la diffusion push des événements marketplace. Les notifications dans l’application restent disponibles.",
+      "description": "Choisissez quels événements marketplace peuvent envoyer une notification push. Les notifications dans l’application restent disponibles.",
       "internalRoleNotice": "Les catégories sont masquées, car cet espace ne reçoit actuellement aucune notification d’événement marketplace.",
       "projects": {
         "title": "Projets",

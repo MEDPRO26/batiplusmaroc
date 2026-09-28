@@ -16,6 +16,7 @@ const notificationValidator = v.object({
   id: v.id("notifications"),
   type: notificationTypeValidator,
   entity: notificationEntityValidator,
+  projectId: v.union(v.id("projects"), v.null()),
   payload: notificationPayloadValidator,
   actorUserId: v.union(v.id("users"), v.null()),
   createdAt: v.number(),
@@ -54,18 +55,24 @@ export const listMyNotifications = query({
     ]);
     return {
       ...page,
-      page: page.page.map((notification) => ({
-        id: notification._id,
-        type: notification.type,
-        entity: notification.entity,
-        payload: notification.payload,
-        actorUserId: notification.actorUserId ?? null,
-        createdAt: notification.createdAt,
-        readAt: notification.readAt ?? (
-          state?.readThroughAt !== undefined && notification.createdAt <= state.readThroughAt
-            ? state.readThroughAt
-            : null
-        ),
+      page: await Promise.all(page.page.map(async (notification) => {
+        const proposal = notification.entity.type === "proposal"
+          ? await ctx.db.get(notification.entity.id)
+          : null;
+        return {
+          id: notification._id,
+          type: notification.type,
+          entity: notification.entity,
+          projectId: proposal?.projectId ?? null,
+          payload: notification.payload,
+          actorUserId: notification.actorUserId ?? null,
+          createdAt: notification.createdAt,
+          readAt: notification.readAt ?? (
+            state?.readThroughAt !== undefined && notification.createdAt <= state.readThroughAt
+              ? state.readThroughAt
+              : null
+          ),
+        };
       })),
     };
   },

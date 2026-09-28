@@ -21,10 +21,12 @@ const ICONS: Record<NotificationIconCategory | "marketplace", ComponentType<{ cl
 export function NotificationItem({
   notification,
   compact = false,
+  disabled = false,
   onOpen,
 }: {
   notification: NotificationRecord;
   compact?: boolean;
+  disabled?: boolean;
   onOpen: () => void;
 }) {
   const t = useTranslations("notifications");
@@ -37,14 +39,15 @@ export function NotificationItem({
   return (
     <button
       aria-label={unread ? t("openUnread", { notification: label }) : label}
-      className={`group flex w-full min-w-0 items-start gap-3 rounded-xl border-0 px-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
-        compact ? "py-3" : "py-4"
-      } ${unread ? "bg-brand-soft/65 hover:bg-brand-soft" : "bg-transparent hover:bg-slate-50"}`}
+      className={`group flex w-full min-w-0 cursor-pointer items-start gap-3 border-0 text-left transition-colors disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand ${
+        compact ? "rounded-xl px-3 py-3" : "px-4 py-4 sm:px-5"
+      } ${unread ? "bg-brand-soft/50 hover:bg-brand-soft" : "bg-transparent hover:bg-slate-50/80"}`}
+      disabled={disabled}
       onClick={onOpen}
       type="button"
     >
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white text-brand shadow-sm ring-1 ring-brand-border">
-        <Icon aria-hidden className="size-[18px]" />
+      <span className={`grid shrink-0 place-items-center rounded-full bg-white text-brand ring-1 ring-brand-border ${compact ? "size-9" : "size-10"}`}>
+        <Icon aria-hidden className={compact ? "size-4" : "size-[18px]"} />
       </span>
       <span className="min-w-0 flex-1">
         <span className={`block break-words text-sm leading-5 text-ink ${unread ? "font-semibold" : "font-medium"}`}>

@@ -199,65 +199,60 @@ export function BrowserPushDeviceView({
   const enabled = status === "enabled";
   const actionable = status === "not_enabled" || status === "error";
   const icon = status === "loading"
-    ? <LoaderCircle aria-hidden className="size-5 animate-spin" />
+    ? <LoaderCircle aria-hidden className="size-4 animate-spin" />
     : enabled
-      ? <CheckCircle2 aria-hidden className="size-5" />
+      ? <CheckCircle2 aria-hidden className="size-4" />
       : status === "denied" || status === "error"
-        ? <CircleAlert aria-hidden className="size-5" />
-        : <MonitorSmartphone aria-hidden className="size-5" />;
+        ? <CircleAlert aria-hidden className="size-4" />
+        : <MonitorSmartphone aria-hidden className="size-4" />;
 
   return (
-    <div className="rounded-xl border border-brand-border p-4 sm:p-5" data-testid="browser-push-device">
-      <div className="flex items-start gap-3">
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-soft text-brand">
-          {icon}
-        </span>
-        <div className="min-w-0">
-          <h3 className="font-semibold text-ink">{t("title")}</h3>
-          <p className="mt-1 text-sm leading-6 text-muted">{t("description")}</p>
-          <p aria-live="polite" className="mt-3 text-sm font-medium text-ink">
-            {t(`status.${status}`)}
-          </p>
+    <div className="border-b border-brand-border px-5 py-4 sm:px-6" data-testid="browser-push-device">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 gap-3">
+          <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-ink">{t("title")}</h3>
+            <p className="mt-1 text-sm leading-6 text-muted">{t("description")}</p>
+            <p aria-live="polite" className="mt-2 text-sm font-medium text-ink">
+              {t(`status.${status}`)}
+            </p>
+            {!globalPushEnabled ? (
+              <p className="mt-2 text-xs leading-5 text-muted">{t("globalPreferenceOff")}</p>
+            ) : null}
+            {status === "denied" ? (
+              <p className="mt-2 text-xs leading-5 text-muted">{t("deniedHelp")}</p>
+            ) : null}
+            {testResult === "success" ? (
+              <p aria-live="polite" className="mt-2 text-sm font-medium text-emerald-700">{t("testSuccess")}</p>
+            ) : null}
+            {testResult === "error" ? (
+              <p className="mt-2 text-sm text-red-800" role="alert">{t("testError")}</p>
+            ) : null}
+          </div>
         </div>
-      </div>
 
-      {!globalPushEnabled ? (
-        <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2.5 text-xs leading-5 text-muted">
-          {t("globalPreferenceOff")}
-        </p>
-      ) : null}
-
-      {status === "denied" ? (
-        <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-900">
-          {t("deniedHelp")}
-        </p>
-      ) : null}
-
-      {testResult === "success" ? (
-        <p aria-live="polite" className="mt-4 text-sm font-medium text-emerald-700">{t("testSuccess")}</p>
-      ) : null}
-      {testResult === "error" ? (
-        <p className="mt-4 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-900" role="alert">
-          {t("testError")}
-        </p>
-      ) : null}
-
-      <div className="mt-5 flex flex-wrap gap-3">
-        {actionable ? (
-          <DeviceButton disabled={busy} onClick={onEnable} primary>
-            {busy ? t("working") : t("enable")}
-          </DeviceButton>
-        ) : null}
-        {enabled ? (
-          <>
-            <DeviceButton disabled={busy} onClick={onTest} primary>
-              <BellRing aria-hidden className="size-4" />
-              {busy ? t("working") : t("sendTest")}
-            </DeviceButton>
-            <DeviceButton disabled={busy} onClick={onDisable}>
-              {t("disable")}
-            </DeviceButton>
-          </>
+        {(actionable || enabled) ? (
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            {actionable ? (
+              <DeviceButton disabled={busy} onClick={onEnable} primary>
+                {busy ? t("working") : t("enable")}
+              </DeviceButton>
+            ) : null}
+            {enabled ? (
+              <>
+                <DeviceButton disabled={busy} onClick={onTest} primary>
+                  <BellRing aria-hidden className="size-4" />
+                  {busy ? t("working") : t("sendTest")}
+                </DeviceButton>
+                <DeviceButton disabled={busy} onClick={onDisable}>
+                  {t("disable")}
+                </DeviceButton>
+              </>
+            ) : null}
+          </div>
         ) : null}
       </div>
     </div>
@@ -277,8 +272,10 @@ function DeviceButton({
 }) {
   return (
     <button
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 ${
-        primary ? "bg-brand text-white hover:bg-brand-dark" : "border border-brand-border text-ink hover:bg-slate-50"
+      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-3.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 ${
+        primary
+          ? "bg-brand text-white hover:bg-brand-dark"
+          : "border border-brand-border bg-white text-ink hover:bg-slate-50"
       }`}
       disabled={disabled}
       onClick={onClick}

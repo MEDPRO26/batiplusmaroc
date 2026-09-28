@@ -5,12 +5,14 @@ import {
   type NotificationAccountType,
   type NotificationDestination,
 } from "@/lib/notifications/destination";
+import { routes } from "@/lib/routes";
 
 export type { NotificationAccountType, NotificationDestination };
 export type NotificationRecord = {
   id: Id<"notifications">;
   type: NotificationType;
   entity: Doc<"notifications">["entity"];
+  projectId?: Id<"projects"> | null;
   payload: Doc<"notifications">["payload"];
   actorUserId: Id<"users"> | null;
   createdAt: number;
@@ -90,4 +92,21 @@ export async function readThenNavigate(
 ) {
   if (notification.readAt === null) await markRead(notification.id);
   navigate(destination);
+}
+
+export function resolveNotificationDestinationForOpen(
+  notification: NotificationRecord,
+  accountType: NotificationAccountType,
+): NotificationDestination {
+  const needsProposalProject = (
+    (notification.type === "proposal_received" && accountType === "client")
+    || (notification.type === "proposal_accepted" && accountType === "company")
+  );
+  if (!needsProposalProject || notification.entity.type !== "proposal") {
+    return notificationDestination(notification, accountType);
+  }
+
+  return notification.projectId
+    ? notificationDestination(notification, accountType, { projectId: notification.projectId })
+    : routes.notifications;
 }
