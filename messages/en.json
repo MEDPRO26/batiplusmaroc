@@ -2390,20 +2390,40 @@
   "notificationPreferences": {
     "eyebrow": "Delivery settings",
     "title": "Notification preferences",
-    "description": "Choose which updates may use browser push in a future release. Your in-app notifications are not affected.",
+    "description": "Choose which updates may use browser push and manage this device. Your in-app notifications are not affected.",
     "inApp": {
       "title": "In-app notifications",
       "description": "Important Batiplus marketplace updates are always available in your notification inbox. They cannot be disabled."
     },
     "push": {
       "title": "Browser push notifications",
-      "description": "Record whether you want eligible Batiplus updates delivered through browser push when that channel becomes available.",
-      "toggle": "Enable future browser push notifications",
-      "previewNotice": "Preference only: Batiplus does not request browser permission or deliver push notifications yet."
+      "description": "Choose whether eligible Batiplus updates may use browser push when marketplace delivery is added.",
+      "toggle": "Enable browser push preference",
+      "previewNotice": "This preference does not request browser permission. Device permission is managed separately below."
+    },
+    "device": {
+      "title": "This device",
+      "description": "Enable browser notifications only after an explicit permission request. Step 12.5 sends test notifications only.",
+      "status": {
+        "loading": "Checking browser notification support…",
+        "unsupported": "Browser push is not supported on this device.",
+        "not_enabled": "Not enabled on this device.",
+        "denied": "Browser notification permission is denied.",
+        "enabled": "Enabled on this device.",
+        "error": "Browser notification setup could not be completed."
+      },
+      "globalPreferenceOff": "This device can be registered for testing, but future marketplace push will remain off until your global push preference is enabled.",
+      "deniedHelp": "Change the notification permission in your browser settings if you want to enable this device. Batiplus will not prompt again while permission is denied.",
+      "enable": "Enable on this device",
+      "disable": "Disable on this device",
+      "sendTest": "Send test notification",
+      "working": "Working…",
+      "testSuccess": "Test notification sent.",
+      "testError": "The test notification could not be sent. Please try again."
     },
     "categories": {
-      "title": "Future push categories",
-      "description": "These controls apply only to future browser push. In-app notifications remain available.",
+      "title": "Push categories",
+      "description": "These controls apply only to future marketplace push delivery. In-app notifications remain available.",
       "internalRoleNotice": "Category controls are hidden because this workspace does not currently receive marketplace event notifications.",
       "projects": {
         "title": "Projects",

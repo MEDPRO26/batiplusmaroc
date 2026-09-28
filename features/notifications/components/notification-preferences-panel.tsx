@@ -9,6 +9,7 @@ import {
   NotificationPreferencesView,
 } from "@/features/notifications/components/notification-preferences-view";
 import type { NotificationAccountType } from "@/features/notifications/lib/presentation";
+import { BrowserPushDeviceControls } from "@/features/notifications/components/browser-push-device-controls";
 
 function samePreferences(first: NotificationPreferences, second: NotificationPreferences) {
   return first.pushEnabled === second.pushEnabled
@@ -78,6 +79,7 @@ export function NotificationPreferencesPanel({
       saved={saved}
       saving={saving}
       value={value}
+      deviceControls={<BrowserPushDeviceControls globalPushEnabled={value.pushEnabled} />}
     />
   );
 }

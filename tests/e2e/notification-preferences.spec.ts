@@ -91,9 +91,9 @@ async function mount(
 test("marketplace user changes and saves future-push preferences without a permission request", async ({ page }) => {
   await mount(page, "en", "company");
   await expect(page.getByText("Important Batiplus marketplace updates are always available", { exact: false })).toBeVisible();
-  await expect(page.getByText("Preference only", { exact: false })).toBeVisible();
+  await expect(page.getByText("does not request browser permission", { exact: false })).toBeVisible();
 
-  const master = page.getByRole("switch", { name: "Enable future browser push notifications" });
+  const master = page.getByRole("switch", { name: "Enable browser push preference" });
   const messages = page.getByRole("switch", { name: "Enable future push for messages" });
   await expect(master).not.toBeChecked();
   await expect(messages).toBeDisabled();
@@ -124,7 +124,7 @@ test("French internal-role UI stays concise and responsive", async ({ page }) =>
     { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
-    await expect(page.getByRole("switch", { name: "Activer les futures notifications push du navigateur" })).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Activer la préférence des notifications push" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   }
   expect(await page.evaluate(() => (window as Window & { __permissionCalls?: number }).__permissionCalls)).toBe(0);

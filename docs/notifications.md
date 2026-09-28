@@ -440,10 +440,9 @@ presentation map and both locale dictionaries, preventing newly constrained
 types from silently rendering blank. Unknown future values use the localized
 “Marketplace update” fallback.
 
-Step 12.3 intentionally contains no toast fan-out, email, SMS, browser
-permission request, Push API, service worker, VAPID key, subscription, or other
-external-delivery behavior. Step 12.4 adds preference state only; browser push
-remains Step 12.5+.
+Step 12.3 intentionally contains no toast fan-out or external delivery.
+Step 12.4 adds preference state only, and Step 12.5 adds the separately scoped
+browser/device foundation described below.
 
 ## Step 12.4 delivery policy and preferences
 
@@ -519,14 +518,119 @@ Step 12.6 may add delivery-time grouping or throttling without changing the
 in-app record. Final Quote acceptance and `commission_due` remain distinct,
 useful events; no `deal_created` event was wired.
 
-This step contains no browser `Notification` API call, permission prompt,
-service worker, Push API subscription, VAPID key, delivery job, email, SMS,
-digest, batching, or throttling engine.
+This preference step itself does not request browser permission. Step 12.5's
+device control is the only explicit entry point into that browser flow.
+
+## Step 12.5 browser push foundation
+
+Step 12.5 adds browser/device infrastructure without connecting any marketplace
+event to Web Push. The architecture remains:
+
+```text
+domain event -> in-app notification -> delivery policy -> Step 12.6 delivery
+```
+
+The only delivery available in Step 12.5 is the authenticated infrastructure
+test notification.
+
+### Subscription model and multiple devices
+
+`pushSubscriptions` stores one private row per browser push endpoint:
+
+- `userId`
+- `endpoint`
+- `p256dh`
+- `auth`
+- `createdAt`
+- `updatedAt`
+- optional `lastUsedAt`
+
+`by_endpoint` enforces endpoint-level dedupe and `by_userId` provides bounded
+recipient lookup. A user may register up to 20 browsers/devices. Re-registering
+the same endpoint for the same user refreshes its keys without creating a row;
+an endpoint already owned by another user cannot be claimed. Disabling one
+device deletes only that endpoint and leaves the user's other devices intact.
+
+All public functions derive the user from Convex Auth and accept no `userId`.
+The current-device query returns only `registered` and `updatedAt`; endpoint and
+encryption secrets are never listed by a public query. Anonymous and roleless
+accounts are rejected. The VAPID private key is never stored in Convex data and
+never enters the Next.js client graph.
+
+### VAPID configuration
+
+Generate one key pair per environment:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Configure the development Convex deployment with:
+
+```bash
+npx convex env set NEXT_PUBLIC_VAPID_PUBLIC_KEY '<public-key>'
+npx convex env set VAPID_PRIVATE_KEY '<private-key>'
+npx convex env set VAPID_SUBJECT 'mailto:notifications@example.com'
+```
+
+Set the same `NEXT_PUBLIC_VAPID_PUBLIC_KEY` in the Next.js/Vercel build
+environment. It is intentionally public and build-time inlined. Keep
+`VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` server-side on Convex only; neither uses
+the `NEXT_PUBLIC_` prefix. Missing or invalid server configuration fails the
+test action with the controlled `PUSH_NOT_CONFIGURED` error. This repository
+does not create, rotate, or modify production secrets automatically.
+
+### Permission, service worker, and device lifecycle
+
+The existing shared `/{locale}/notifications` settings panel contains the
+device controls; no second settings page exists. Loading resolves into one of
+four product states: unsupported, not enabled, permission denied, or enabled on
+this device. Permission is never requested during render, page load, preference
+save, or support detection. It is requested only after the user activates
+“Enable on this device”. A denied permission removes the enable action and
+directs the user to browser settings instead of prompting repeatedly.
+
+After permission is granted, the browser registers `/push-sw.js` with root
+scope, creates or reuses a `PushSubscription` with the public VAPID key, and
+persists its endpoint and encryption keys under the authenticated user.
+Disabling first calls the browser subscription's `unsubscribe()`, then removes
+that exact owned endpoint from Convex. Global/category preference state remains
+separate: a valid device may exist while global push is off, but future
+marketplace delivery must require both preference approval and a valid device.
+
+`public/push-sw.js` implements only `push` and `notificationclick`. It adds no
+offline cache, installability, fetch interception, background sync, or other
+PWA behavior. Payload text is type/length checked, malformed JSON falls back to
+safe Batiplus values, and click URLs must resolve to the current origin.
+External, protocol-relative, malformed, and missing URLs fall back to
+`/en/notifications`. A click focuses and navigates an existing Batiplus window
+or opens a new same-origin window.
+
+### Test delivery and invalid cleanup
+
+`sendMyTestPush` is a public authenticated Convex Node action with no recipient
+argument. It sends only the fixed localized EN/FR setup payload to the caller's
+own bounded subscription set. It is infrastructure verification, not a
+marketplace event, and it cannot target another user.
+
+Web Push responses `404` and `410` are permanent failures and delete only the
+matching caller-owned subscription. Temporary/network/5xx failures are logged
+without endpoint or key material, counted in a controlled result, and preserve
+the subscription. There is no retry queue, batching, digest, email, SMS, or
+WhatsApp delivery in this phase.
+
+### Step 12.6 boundary
+
+No Proposal, Invitation, Message, Site Visit, Final Quote, commission, Deal,
+Review, or verification mutation calls the Web Push action. Step 12.6 must add
+an internal delivery boundary that requires all of: an approved event policy,
+global preference, category preference, and at least one valid subscription.
+It may then reuse the permanent-failure cleanup implemented here.
 
 ## Boundaries and future phases
 
 Notifications answer “who needs to know?” and never replace marketplace audit
 or activity records, which answer “what happened?”. Steps 12.2.1–12.2.6 are
-audited and form the stable backend boundary for the Step 12.3 in-app UI and
-Step 12.4 preference policy. Step 12.5+ may add browser push permission,
-subscriptions, and delivery without changing mandatory in-app behavior.
+audited and form the stable backend boundary for the Step 12.3 in-app UI,
+Step 12.4 preference policy, and Step 12.5 device foundation. Step 12.6 may add
+marketplace Web Push delivery without changing mandatory in-app behavior.

@@ -2,6 +2,7 @@
 
 import { BellRing, Check, Info, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import type {
   NotificationPreferenceCategory,
   NotificationPreferences,
@@ -25,6 +26,7 @@ export function NotificationPreferencesView({
   dirty,
   onChange,
   onSave,
+  deviceControls,
 }: {
   accountType: NotificationAccountType;
   value: NotificationPreferences;
@@ -34,6 +36,7 @@ export function NotificationPreferencesView({
   dirty: boolean;
   onChange: (value: NotificationPreferences) => void;
   onSave: () => void;
+  deviceControls?: ReactNode;
 }) {
   const t = useTranslations("notificationPreferences");
   const showCategories = accountType === "client" || accountType === "company";
@@ -93,6 +96,8 @@ export function NotificationPreferencesView({
             <p>{t("push.previewNotice")}</p>
           </div>
         </div>
+
+        {deviceControls}
 
         {showCategories ? (
           <fieldset className="rounded-xl border border-brand-border p-4 sm:p-5">

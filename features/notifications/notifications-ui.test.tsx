@@ -12,6 +12,7 @@ import {
   NotificationPreferencesView,
 } from "@/features/notifications/components/notification-preferences-view";
 import { NotificationsPage } from "@/features/notifications/components/notifications-page";
+import { BrowserPushDeviceView } from "@/features/notifications/components/browser-push-device-controls";
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   NOTIFICATION_PREFERENCE_CATEGORIES,
@@ -50,6 +51,8 @@ vi.mock("convex/react", () => ({
   useQuery: (reference: Parameters<typeof getFunctionName>[0]) =>
     getFunctionName(reference) === state.preferencesFunctionName ? state.preferences : state.unread,
   useMutation: () => vi.fn(async () => ({})),
+  useAction: () => vi.fn(async () => ({ sent: 1, removed: 0, failed: 0 })),
+  useConvex: () => ({ query: vi.fn(async () => ({ registered: false, updatedAt: null })) }),
   usePaginatedQuery: () => ({ results: state.results, status: state.status, loadMore: vi.fn() }),
 }));
 vi.mock("@/i18n/navigation", () => ({
@@ -105,6 +108,27 @@ function renderPreferences(
         saved={false}
         saving={false}
         value={DEFAULT_NOTIFICATION_PREFERENCES}
+        {...overrides}
+      />
+    </NextIntlClientProvider>,
+  );
+}
+
+function renderDevice(
+  status: Parameters<typeof BrowserPushDeviceView>[0]["status"],
+  locale: "en" | "fr" = "en",
+  overrides: Partial<Parameters<typeof BrowserPushDeviceView>[0]> = {},
+) {
+  return renderToStaticMarkup(
+    <NextIntlClientProvider locale={locale} messages={locale === "en" ? en : fr} timeZone="Africa/Casablanca">
+      <BrowserPushDeviceView
+        busy={false}
+        globalPushEnabled={false}
+        onDisable={vi.fn()}
+        onEnable={vi.fn()}
+        onTest={vi.fn()}
+        status={status}
+        testResult="idle"
         {...overrides}
       />
     </NextIntlClientProvider>,
@@ -232,8 +256,8 @@ describe("notification preferences UI", () => {
       },
     });
     expect(html).toContain("Important Batiplus marketplace updates are always available");
-    expect(html).toContain("Preference only");
-    expect(html).toContain("Enable future browser push notifications");
+    expect(html).toContain("does not request browser permission");
+    expect(html).toContain("Enable browser push preference");
     expect(html).toContain("aria-checked=\"true\"");
     expect(html).toContain("Enable future push for messages");
     expect(html).toContain("aria-checked=\"false\"");
@@ -243,7 +267,7 @@ describe("notification preferences UI", () => {
   test("uses French copy and hides irrelevant categories for internal roles", () => {
     const html = renderPreferences("fr", "seo_team");
     expect(html).toContain("Préférences de notification");
-    expect(html).toContain("Préférence uniquement");
+    expect(html).toContain("ne demande aucune autorisation au navigateur");
     expect(html).toContain("Les catégories sont masquées");
     expect(html).not.toContain("Activer les futures notifications push pour les projets");
   });
@@ -256,5 +280,27 @@ describe("notification preferences UI", () => {
     expect(status).toContain("Preferences updated.");
     expect(status).toContain("role=\"alert\"");
     expect(status).toContain("We couldn’t save your preferences.");
+  });
+
+  test("renders every browser permission and device subscription state", () => {
+    expect(renderDevice("loading")).toContain("Checking browser notification support");
+    expect(renderDevice("unsupported")).toContain("Browser push is not supported");
+    expect(renderDevice("not_enabled")).toContain("Not enabled on this device");
+    expect(renderDevice("not_enabled")).toContain("Enable on this device");
+    expect(renderDevice("denied")).toContain("Browser notification permission is denied");
+    expect(renderDevice("denied")).not.toContain(">Enable on this device<");
+    expect(renderDevice("enabled")).toContain("Enabled on this device");
+    expect(renderDevice("enabled")).toContain("Send test notification");
+    expect(renderDevice("enabled")).toContain("Disable on this device");
+    expect(renderDevice("error")).toContain("setup could not be completed");
+  });
+
+  test("localizes device controls and exposes test success and error accessibly", () => {
+    const success = renderDevice("enabled", "fr", { testResult: "success" });
+    expect(success).toContain("Activées sur cet appareil");
+    expect(success).toContain("Notification de test envoyée");
+    const error = renderDevice("enabled", "en", { testResult: "error" });
+    expect(error).toContain("role=\"alert\"");
+    expect(error).toContain("test notification could not be sent");
   });
 });
