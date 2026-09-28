@@ -353,3 +353,57 @@ OC2.5 still adds no operational notifications or Push delivery; those remain
 deferred to OC2.8. Attachments, internal Admin notes, Company status or
 suspension, assignment, ticketing, SLA, CRM, bulk messaging, and message
 editing/deletion also remain outside this UI step.
+
+## OC2.6 — Internal Admin notes
+
+The consolidated Admin Company detail now includes an **Internal Notes** tab
+after Messages. Its stable deep link is
+`/admin/companies/[companyId]?tab=internalNotes` in English and the equivalent
+localized Company detail route in French. The tab states explicitly that its
+contents are visible only to Batiplus administrators.
+
+### Model, authorization, and bounds
+
+`companyAdminNotes` is a dedicated append-only table containing only the target
+`companyId`, server-derived `authorAdminUserId`, trimmed plain-text `body`, and
+server-authored `createdAt`. The compound
+`by_companyId_and_createdAt` index supports Company-scoped, newest-first native
+cursor pagination without a table scan. Pages are limited to 1–30 rows and the
+Admin UI requests 20 at a time.
+
+Both `admin.companyNotes.listCompanyAdminNotes` and
+`createCompanyAdminNote` call the canonical `requireAdminUser()` guard before
+reading or writing. Creation verifies that the target Company exists and
+accepts no author argument. Bodies must contain 1–5,000 characters after outer
+whitespace is trimmed. The constrained read DTO contains only note ID, body,
+safe Admin display name, and timestamp; it never returns raw user/auth records
+or Admin email.
+
+There are intentionally no edit, delete, soft-delete, pin, reaction, status,
+assignment, attachment, or generic update endpoints. Corrections are recorded
+as new notes so the record remains immutable.
+
+### UI, realtime, and privacy boundary
+
+The Admin-only panel uses record cards rather than chat bubbles. It provides a
+labelled text-only textarea, bounded character count, disabled/working state,
+clear-on-success behavior, draft preservation with a localized alert on
+failure, an empty state, and cursor-based **Load more** behavior. Results stay
+newest first, overlapping cursor rows are deduplicated, and normal Convex query
+reactivity lets another Admin's new note appear without polling.
+
+Internal notes are not stored in `adminCompanyMessages` or
+`adminCompanyConversations`, are never copied to `marketplaceActivity`, and do
+not create notifications. Company operational messaging, Company profile and
+dashboard APIs, public Company profiles, notification APIs, marketplace
+activity, Client surfaces, and SEO surfaces do not query this table. Backend
+role and privacy regressions plus browser sentinels enforce that separation.
+
+All visible copy exists in aligned English and French catalogs. The existing
+arrow/Home/End tab behavior includes Internal Notes, while the composer and
+cards remain usable without horizontal overflow at desktop, 1024px, 768px, and
+375×812 mobile sizes.
+
+OC2.6 does not implement operational Company status, suspension/reactivation,
+CRM, tickets, SLA, notifications, Push, Project/Deal linking, or note editing
+and deletion. Those remain outside this append-only V1 feature.

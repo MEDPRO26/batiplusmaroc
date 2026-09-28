@@ -56,8 +56,8 @@ function state(locale: "en" | "fr") {
 }
 
 for (const copy of [
-  { locale: "en" as const, title: "Companies", view: "View company", overview: "Overview", verification: "Verification", projects: "Projects & Deals", commissions: "Commissions", reviews: "Reviews", activity: "Activity", messages: "Messages", emptyConversation: "No operational conversation with this company yet.", verificationRecord: "Verification record", commissionDue: "Due", activityEmpty: "No activity recorded for this company yet." },
-  { locale: "fr" as const, title: "Entreprises", view: "Voir l’entreprise", overview: "Vue d’ensemble", verification: "Vérification", projects: "Projets et Deals", commissions: "Commissions", reviews: "Avis", activity: "Activité", messages: "Messages", emptyConversation: "Aucune conversation opérationnelle avec cette entreprise pour le moment.", verificationRecord: "Dossier de vérification", commissionDue: "Due", activityEmpty: "Aucune activité enregistrée pour cette entreprise pour le moment." },
+  { locale: "en" as const, title: "Companies", view: "View company", overview: "Overview", verification: "Verification", projects: "Projects & Deals", commissions: "Commissions", reviews: "Reviews", activity: "Activity", messages: "Messages", internalNotes: "Internal Notes", emptyNotes: "No internal notes for this company yet.", emptyConversation: "No operational conversation with this company yet.", verificationRecord: "Verification record", commissionDue: "Due", activityEmpty: "No activity recorded for this company yet." },
+  { locale: "fr" as const, title: "Entreprises", view: "Voir l’entreprise", overview: "Vue d’ensemble", verification: "Vérification", projects: "Projets et Deals", commissions: "Commissions", reviews: "Avis", activity: "Activité", messages: "Messages", internalNotes: "Notes internes", emptyNotes: "Aucune note interne pour cette entreprise pour le moment.", emptyConversation: "Aucune conversation opérationnelle avec cette entreprise pour le moment.", verificationRecord: "Dossier de vérification", commissionDue: "Due", activityEmpty: "Aucune activité enregistrée pour cette entreprise pour le moment." },
 ]) {
   test(`Admin Companies list is responsive in ${copy.locale}`, async ({ page }) => {
     await mountHarness(page, listBundle, state(copy.locale));
@@ -88,10 +88,12 @@ for (const copy of [
     await expect(page.getByText(copy.activityEmpty)).toBeVisible();
     await page.getByRole("tab", { name: copy.messages }).click();
     await expect(page.getByText(copy.emptyConversation)).toBeVisible();
+    await page.getByRole("tab", { name: copy.internalNotes }).click();
+    await expect(page.getByText(copy.emptyNotes)).toBeVisible();
     await page.getByRole("tab", { name: copy.messages }).press("Home");
     await expect(page.getByRole("tab", { name: copy.overview })).toHaveAttribute("aria-selected", "true");
     await page.getByRole("tab", { name: copy.overview }).press("End");
-    await expect(page.getByRole("tab", { name: copy.messages })).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByRole("tab", { name: copy.internalNotes })).toHaveAttribute("aria-selected", "true");
     await expect(page.getByText("THIS PRIVATE CLIENT COMPANY MESSAGE MUST NEVER RENDER")).toHaveCount(0);
 
     for (const viewport of [{ width: 1440, height: 900 }, { width: 1024, height: 768 }, { width: 768, height: 1024 }, { width: 375, height: 812 }]) {

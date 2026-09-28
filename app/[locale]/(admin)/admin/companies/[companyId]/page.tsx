@@ -8,7 +8,7 @@ type Props = {
   searchParams: Promise<{ tab?: string | string[] }>;
 };
 
-const TABS = new Set<AdminCompanyTab>(["overview", "verification", "projectsDeals", "commissions", "reviews", "activity", "messages"]);
+const TABS = new Set<AdminCompanyTab>(["overview", "verification", "projectsDeals", "commissions", "reviews", "activity", "messages", "internalNotes"]);
 
 export async function generateMetadata({ params }: Props) {
   const locale = await resolveLocale(params);

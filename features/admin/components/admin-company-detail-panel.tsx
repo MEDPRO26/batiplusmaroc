@@ -8,17 +8,18 @@ import { useId, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ADMIN_PRESS, AdminPage } from "@/features/admin/components/admin-shell";
+import { CompanyAdminNotes } from "@/features/admin/components/company-admin-notes";
 import { CompanyActivityTimeline } from "@/features/admin/components/company-activity-timeline";
 import { OperationalConversation } from "@/features/operations/components/operational-conversation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 
-export type AdminCompanyTab = "overview" | "verification" | "projectsDeals" | "commissions" | "reviews" | "activity" | "messages";
+export type AdminCompanyTab = "overview" | "verification" | "projectsDeals" | "commissions" | "reviews" | "activity" | "messages" | "internalNotes";
 type Summary = NonNullable<FunctionReturnType<typeof api.admin.companies.getCompanySummary>>;
 type Commission = FunctionReturnType<typeof api.admin.deals.listCommissionObligations>[number];
 type Review = FunctionReturnType<typeof api.admin.companies.listCompanyReviews>["page"][number];
 
-const TABS: AdminCompanyTab[] = ["overview", "verification", "projectsDeals", "commissions", "reviews", "activity", "messages"];
+const TABS: AdminCompanyTab[] = ["overview", "verification", "projectsDeals", "commissions", "reviews", "activity", "messages", "internalNotes"];
 
 export function AdminCompanyDetailPanel({ companyId, initialTab = "overview" }: { companyId: Id<"companies">; initialTab?: AdminCompanyTab }) {
   const t = useTranslations("adminCompanies");
@@ -88,6 +89,7 @@ export function AdminCompanyDetailPanel({ companyId, initialTab = "overview" }: 
         {tab === "reviews" ? <Reviews companyId={companyId} /> : null}
         {tab === "activity" ? <CompanyActivityTimeline companyId={companyId} /> : null}
         {tab === "messages" ? operationalSummary === undefined ? <Loading /> : <AdminOperationalMessages companyId={companyId} companyName={summary.name} conversation={operationalSummary} /> : null}
+        {tab === "internalNotes" ? <CompanyAdminNotes companyId={companyId} /> : null}
       </section>
     </AdminPage>
   );

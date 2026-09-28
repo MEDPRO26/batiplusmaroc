@@ -4458,7 +4458,7 @@
       "back": "Retour aux entreprises",
       "publicProfile": "Voir le profil public",
       "tabsLabel": "Sections de l’entreprise",
-      "tabs": { "overview": "Vue d’ensemble", "verification": "Vérification", "projectsDeals": "Projets et Deals", "commissions": "Commissions", "reviews": "Avis", "activity": "Activité", "messages": "Messages" }
+      "tabs": { "overview": "Vue d’ensemble", "verification": "Vérification", "projectsDeals": "Projets et Deals", "commissions": "Commissions", "reviews": "Avis", "activity": "Activité", "messages": "Messages", "internalNotes": "Notes internes" }
     },
     "overview": {
       "profile": "Profil de l’entreprise",
@@ -4547,6 +4547,24 @@
       "lead": "Vous n’avez plus accès à cette conversation opérationnelle.",
       "retry": "Réessayer"
     }
+  },
+  "adminNotes": {
+    "title": "Notes internes",
+    "privateLead": "Visibles uniquement par les administrateurs Batiplus.",
+    "composerTitle": "Ajouter une note interne",
+    "immutableHelp": "Les notes ne peuvent pas être modifiées après leur création. Ajoutez une nouvelle note pour corriger une information précédente.",
+    "label": "Note",
+    "placeholder": "Consignez un contexte opérationnel privé concernant cette entreprise…",
+    "plainTextHelp": "Texte brut uniquement. Cette note ne sera pas partagée avec l’entreprise.",
+    "characterCount": "{count} caractères sur {maximum}",
+    "add": "Ajouter une note",
+    "adding": "Ajout…",
+    "createError": "La note n’a pas pu être ajoutée. Votre texte est conservé — réessayez.",
+    "empty": "Aucune note interne pour cette entreprise pour le moment.",
+    "loading": "Chargement des notes internes",
+    "listLabel": "Notes internes concernant cette entreprise",
+    "loadMore": "Charger plus",
+    "loadingMore": "Chargement"
   },
   "companyWork": {
     "activeTitle": "Projets actifs",

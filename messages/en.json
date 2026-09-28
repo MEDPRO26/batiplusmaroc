@@ -4458,7 +4458,7 @@
       "back": "Back to companies",
       "publicProfile": "View public profile",
       "tabsLabel": "Company sections",
-      "tabs": { "overview": "Overview", "verification": "Verification", "projectsDeals": "Projects & Deals", "commissions": "Commissions", "reviews": "Reviews", "activity": "Activity", "messages": "Messages" }
+      "tabs": { "overview": "Overview", "verification": "Verification", "projectsDeals": "Projects & Deals", "commissions": "Commissions", "reviews": "Reviews", "activity": "Activity", "messages": "Messages", "internalNotes": "Internal Notes" }
     },
     "overview": {
       "profile": "Company profile",
@@ -4547,6 +4547,24 @@
       "lead": "You no longer have access to this operational conversation.",
       "retry": "Try again"
     }
+  },
+  "adminNotes": {
+    "title": "Internal notes",
+    "privateLead": "Visible only to Batiplus administrators.",
+    "composerTitle": "Add an internal note",
+    "immutableHelp": "Notes cannot be edited after creation. Add a new note to correct previous information.",
+    "label": "Note",
+    "placeholder": "Record private operational context about this company…",
+    "plainTextHelp": "Plain text only. This note will not be shared with the Company.",
+    "characterCount": "{count} of {maximum} characters",
+    "add": "Add note",
+    "adding": "Adding…",
+    "createError": "The note could not be added. Your text is still here—try again.",
+    "empty": "No internal notes for this company yet.",
+    "loading": "Loading internal notes",
+    "listLabel": "Internal notes for this company",
+    "loadMore": "Load more",
+    "loadingMore": "Loading more"
   },
   "companyWork": {
     "activeTitle": "Active projects",

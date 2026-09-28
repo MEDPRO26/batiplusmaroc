@@ -686,6 +686,14 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_conversationId_and_userId", ["conversationId", "userId"]),
 
+  /** Append-only, Admin-visible operational records about one Company. */
+  companyAdminNotes: defineTable({
+    companyId: v.id("companies"),
+    authorAdminUserId: v.id("users"),
+    body: v.string(),
+    createdAt: v.number(),
+  }).index("by_companyId_and_createdAt", ["companyId", "createdAt"]),
+
   messageAttachments: defineTable({
     conversationId: v.id("conversations"),
     messageId: v.id("messages"),
