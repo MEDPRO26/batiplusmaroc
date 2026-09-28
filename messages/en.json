@@ -2387,6 +2387,55 @@
       "fallback": "Marketplace update"
     }
   },
+  "notificationPreferences": {
+    "eyebrow": "Delivery settings",
+    "title": "Notification preferences",
+    "description": "Choose which updates may use browser push in a future release. Your in-app notifications are not affected.",
+    "inApp": {
+      "title": "In-app notifications",
+      "description": "Important Batiplus marketplace updates are always available in your notification inbox. They cannot be disabled."
+    },
+    "push": {
+      "title": "Browser push notifications",
+      "description": "Record whether you want eligible Batiplus updates delivered through browser push when that channel becomes available.",
+      "toggle": "Enable future browser push notifications",
+      "previewNotice": "Preference only: Batiplus does not request browser permission or deliver push notifications yet."
+    },
+    "categories": {
+      "title": "Future push categories",
+      "description": "These controls apply only to future browser push. In-app notifications remain available.",
+      "internalRoleNotice": "Category controls are hidden because this workspace does not currently receive marketplace event notifications.",
+      "projects": {
+        "title": "Projects",
+        "description": "Proposals and invitations.",
+        "toggle": "Enable future push for projects"
+      },
+      "messages": {
+        "title": "Messages",
+        "description": "New conversation messages.",
+        "toggle": "Enable future push for messages"
+      },
+      "site_visits": {
+        "title": "Site visits",
+        "description": "Proposals, confirmations, rescheduling, and cancellations.",
+        "toggle": "Enable future push for site visits"
+      },
+      "commercial": {
+        "title": "Commercial activity",
+        "description": "Final quotes, commissions, completion, and reviews.",
+        "toggle": "Enable future push for commercial activity"
+      },
+      "account": {
+        "title": "Account and verification",
+        "description": "Company verification decisions.",
+        "toggle": "Enable future push for account and verification"
+      }
+    },
+    "save": "Save preferences",
+    "saving": "Saving…",
+    "success": "Preferences updated.",
+    "error": "We couldn’t save your preferences. Please try again."
+  },
   "adminDashboard": {
     "sampleNote": "Visual preview. These figures are not connected to Batiplus data yet.",
     "searchLabel": "Quick search",

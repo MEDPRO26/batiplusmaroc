@@ -1,10 +1,21 @@
 import { NextIntlClientProvider } from "next-intl";
+import { getFunctionName } from "convex/server";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { NOTIFICATION_TYPES } from "@/convex/notifications/constants";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
+import {
+  NOTIFICATION_PREFERENCE_CATEGORY_ORDER,
+  NotificationPreferencesSkeleton,
+  NotificationPreferencesView,
+} from "@/features/notifications/components/notification-preferences-view";
 import { NotificationsPage } from "@/features/notifications/components/notifications-page";
+import {
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  NOTIFICATION_PREFERENCE_CATEGORIES,
+} from "@/convex/notifications/deliveryPolicy";
 import {
   NOTIFICATION_PRESENTATION,
   notificationDestination,
@@ -18,9 +29,26 @@ import { routes } from "@/lib/routes";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 
-const state = vi.hoisted(() => ({ unread: 0, results: [] as NotificationRecord[], status: "Exhausted" }));
+const state = vi.hoisted(() => ({
+  unread: 0,
+  results: [] as NotificationRecord[],
+  status: "Exhausted",
+  preferencesFunctionName: "",
+  preferences: {
+    pushEnabled: false,
+    pushCategories: {
+      projects: true,
+      messages: true,
+      site_visits: true,
+      commercial: true,
+      account: true,
+    },
+    updatedAt: null as number | null,
+  },
+}));
 vi.mock("convex/react", () => ({
-  useQuery: () => state.unread,
+  useQuery: (reference: Parameters<typeof getFunctionName>[0]) =>
+    getFunctionName(reference) === state.preferencesFunctionName ? state.preferences : state.unread,
   useMutation: () => vi.fn(async () => ({})),
   usePaginatedQuery: () => ({ results: state.results, status: state.status, loadMore: vi.fn() }),
 }));
@@ -28,6 +56,10 @@ vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => <a href={href} {...props}>{children}</a>,
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
+
+state.preferencesFunctionName = getFunctionName(
+  api.notifications.preferences.getMyNotificationPreferences,
+);
 
 function renderBell(locale: "en" | "fr" = "en") {
   return renderToStaticMarkup(
@@ -57,8 +89,35 @@ function notification(type: NotificationRecord["type"], entity: NotificationReco
   };
 }
 
+function renderPreferences(
+  locale: "en" | "fr" = "en",
+  accountType: "client" | "company" | "admin" | "seo_team" = "client",
+  overrides: Partial<Parameters<typeof NotificationPreferencesView>[0]> = {},
+) {
+  return renderToStaticMarkup(
+    <NextIntlClientProvider locale={locale} messages={locale === "en" ? en : fr} timeZone="Africa/Casablanca">
+      <NotificationPreferencesView
+        accountType={accountType}
+        dirty={false}
+        error={false}
+        onChange={vi.fn()}
+        onSave={vi.fn()}
+        saved={false}
+        saving={false}
+        value={DEFAULT_NOTIFICATION_PREFERENCES}
+        {...overrides}
+      />
+    </NextIntlClientProvider>,
+  );
+}
+
 describe("notification presentation", () => {
-  beforeEach(() => { state.unread = 0; state.results = []; state.status = "Exhausted"; });
+  beforeEach(() => {
+    state.unread = 0;
+    state.results = [];
+    state.status = "Exhausted";
+    state.preferences = { ...DEFAULT_NOTIFICATION_PREFERENCES, updatedAt: null };
+  });
 
   test("has a localized presentation for every backend type, including the reserved type", () => {
     expect(Object.keys(NOTIFICATION_PRESENTATION).sort()).toEqual([...NOTIFICATION_TYPES].sort());
@@ -149,5 +208,53 @@ describe("notification presentation", () => {
     await readThenNavigate(row, routes.clientDashboard, markRead, navigate);
     expect(markRead).not.toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith(routes.clientDashboard);
+  });
+});
+
+describe("notification preferences UI", () => {
+  test("keeps the UI category list complete and both locale shapes aligned", () => {
+    expect([...NOTIFICATION_PREFERENCE_CATEGORY_ORDER]).toEqual([...NOTIFICATION_PREFERENCE_CATEGORIES]);
+    expect(Object.keys(en.notificationPreferences).sort()).toEqual(Object.keys(fr.notificationPreferences).sort());
+    for (const category of NOTIFICATION_PREFERENCE_CATEGORIES) {
+      expect(en.notificationPreferences.categories[category].title).toBeTruthy();
+      expect(fr.notificationPreferences.categories[category].title).toBeTruthy();
+      expect(en.notificationPreferences.categories[category].toggle).toBeTruthy();
+      expect(fr.notificationPreferences.categories[category].toggle).toBeTruthy();
+    }
+  });
+
+  test("renders mandatory in-app copy, current values, and all categories for marketplace roles", () => {
+    const html = renderPreferences("en", "company", {
+      dirty: true,
+      value: {
+        pushEnabled: true,
+        pushCategories: { ...DEFAULT_NOTIFICATION_PREFERENCES.pushCategories, messages: false },
+      },
+    });
+    expect(html).toContain("Important Batiplus marketplace updates are always available");
+    expect(html).toContain("Preference only");
+    expect(html).toContain("Enable future browser push notifications");
+    expect(html).toContain("aria-checked=\"true\"");
+    expect(html).toContain("Enable future push for messages");
+    expect(html).toContain("aria-checked=\"false\"");
+    expect(html).toContain("Save preferences");
+  });
+
+  test("uses French copy and hides irrelevant categories for internal roles", () => {
+    const html = renderPreferences("fr", "seo_team");
+    expect(html).toContain("Préférences de notification");
+    expect(html).toContain("Préférence uniquement");
+    expect(html).toContain("Les catégories sont masquées");
+    expect(html).not.toContain("Activer les futures notifications push pour les projets");
+  });
+
+  test("renders loading, success, and safe error states", () => {
+    const loading = renderToStaticMarkup(<NotificationPreferencesSkeleton />);
+    expect(loading).toContain("role=\"status\"");
+    expect(loading).toContain("aria-label=\"loading\"");
+    const status = renderPreferences("en", "client", { saved: true, error: true });
+    expect(status).toContain("Preferences updated.");
+    expect(status).toContain("role=\"alert\"");
+    expect(status).toContain("We couldn’t save your preferences.");
   });
 });

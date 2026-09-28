@@ -14,6 +14,7 @@ import {
   notificationPayloadValidator,
   notificationTypeValidator,
 } from "./notifications/constants";
+import { notificationPushCategoriesValidator } from "./notifications/deliveryPolicy";
 
 const accountType = v.union(
   v.literal("client"),
@@ -147,6 +148,13 @@ export default defineSchema({
     unreadCount: v.number(),
     updatedAt: v.number(),
   }).index("by_recipientUserId", ["recipientUserId"]),
+
+  notificationPreferences: defineTable({
+    userId: v.id("users"),
+    pushEnabled: v.boolean(),
+    pushCategories: notificationPushCategoriesValidator,
+    updatedAt: v.number(),
+  }).index("by_userId", ["userId"]),
 
   clientProfiles: defineTable({
     userId: v.id("users"),

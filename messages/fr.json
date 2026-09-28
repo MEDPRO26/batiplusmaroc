@@ -2387,6 +2387,55 @@
       "fallback": "Mise à jour de la marketplace"
     }
   },
+  "notificationPreferences": {
+    "eyebrow": "Paramètres de diffusion",
+    "title": "Préférences de notification",
+    "description": "Choisissez les actualités qui pourront utiliser les notifications push du navigateur dans une prochaine version. Vos notifications dans l’application ne sont pas affectées.",
+    "inApp": {
+      "title": "Notifications dans l’application",
+      "description": "Les actualités importantes de la marketplace Batiplus restent toujours disponibles dans votre boîte de notifications. Elles ne peuvent pas être désactivées."
+    },
+    "push": {
+      "title": "Notifications push du navigateur",
+      "description": "Indiquez si vous souhaitez recevoir les actualités Batiplus éligibles par notification push lorsque ce canal sera disponible.",
+      "toggle": "Activer les futures notifications push du navigateur",
+      "previewNotice": "Préférence uniquement : Batiplus ne demande pas encore l’autorisation du navigateur et n’envoie aucune notification push."
+    },
+    "categories": {
+      "title": "Catégories des futures notifications push",
+      "description": "Ces réglages s’appliquent uniquement aux futures notifications push. Les notifications dans l’application restent disponibles.",
+      "internalRoleNotice": "Les catégories sont masquées, car cet espace ne reçoit actuellement aucune notification d’événement marketplace.",
+      "projects": {
+        "title": "Projets",
+        "description": "Propositions et invitations.",
+        "toggle": "Activer les futures notifications push pour les projets"
+      },
+      "messages": {
+        "title": "Messages",
+        "description": "Nouveaux messages de conversation.",
+        "toggle": "Activer les futures notifications push pour les messages"
+      },
+      "site_visits": {
+        "title": "Visites techniques",
+        "description": "Propositions, confirmations, reprogrammations et annulations.",
+        "toggle": "Activer les futures notifications push pour les visites techniques"
+      },
+      "commercial": {
+        "title": "Activité commerciale",
+        "description": "Devis finaux, commissions, achèvement et avis.",
+        "toggle": "Activer les futures notifications push pour l’activité commerciale"
+      },
+      "account": {
+        "title": "Compte et vérification",
+        "description": "Décisions de vérification de l’entreprise.",
+        "toggle": "Activer les futures notifications push pour le compte et la vérification"
+      }
+    },
+    "save": "Enregistrer les préférences",
+    "saving": "Enregistrement…",
+    "success": "Préférences mises à jour.",
+    "error": "Impossible d’enregistrer vos préférences. Veuillez réessayer."
+  },
   "adminDashboard": {
     "sampleNote": "Aperçu visuel. Ces chiffres ne sont pas encore connectés aux données Batiplus.",
     "searchLabel": "Recherche rapide",

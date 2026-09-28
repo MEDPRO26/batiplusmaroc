@@ -7,6 +7,7 @@ import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { NotificationItem } from "@/features/notifications/components/notification-item";
 import { NotificationListSkeleton } from "@/features/notifications/components/notification-bell-view";
+import { NotificationPreferencesPanel } from "@/features/notifications/components/notification-preferences-panel";
 import { notificationDestination, readThenNavigate, type NotificationAccountType } from "@/features/notifications/lib/presentation";
 import { useRouter } from "@/i18n/navigation";
 
@@ -112,6 +113,7 @@ export function NotificationsPage({ accountType }: { accountType: NotificationAc
           </button>
         </div>
       ) : null}
+      <NotificationPreferencesPanel accountType={accountType} />
     </section>
   );
 }

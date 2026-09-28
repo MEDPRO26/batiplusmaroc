@@ -440,15 +440,93 @@ presentation map and both locale dictionaries, preventing newly constrained
 types from silently rendering blank. Unknown future values use the localized
 “Marketplace update” fallback.
 
-Step 12.3 intentionally contains no toast fan-out, preferences, email, SMS,
-browser permission request, Push API, service worker, VAPID key, subscription,
-or other external-delivery behavior. Preferences remain Step 12.4 and browser
-push remains Step 12.5+.
+Step 12.3 intentionally contains no toast fan-out, email, SMS, browser
+permission request, Push API, service worker, VAPID key, subscription, or other
+external-delivery behavior. Step 12.4 adds preference state only; browser push
+remains Step 12.5+.
+
+## Step 12.4 delivery policy and preferences
+
+`convex/notifications/deliveryPolicy.ts` is the single Strategy boundary for
+notification delivery rules. Every currently wired marketplace event has
+`inApp: true`: user preferences never suppress the trusted domain mutation or
+its in-app notification record. Push is an additive future channel.
+
+The active policy is:
+
+| Notification Type | Category | In-app | Push Eligible |
+| --- | --- | --- | --- |
+| `proposal_received` | Projects | Yes | Yes |
+| `proposal_accepted` | Projects | Yes | Yes |
+| `invitation_received` | Projects | Yes | Yes |
+| `invitation_accepted` | Projects | Yes | Yes |
+| `invitation_declined` | Projects | Yes | Yes |
+| `message_received` | Messages | Yes | Yes |
+| `site_visit_proposed` | Site visits | Yes | Yes |
+| `site_visit_confirmed` | Site visits | Yes | Yes |
+| `site_visit_rescheduled` | Site visits | Yes | Yes |
+| `site_visit_cancelled` | Site visits | Yes | Yes |
+| `final_quote_submitted` | Commercial | Yes | Yes |
+| `final_quote_accepted` | Commercial | Yes | Yes |
+| `commission_due` | Commercial | Yes | Yes |
+| `commission_paid` | Commercial | Yes | Yes |
+| `deal_completed` | Commercial | Yes | Yes |
+| `review_received` | Commercial | Yes | Yes |
+| `company_verification_approved` | Account | Yes | Yes |
+| `company_verification_rejected` | Account | Yes | Yes |
+
+`deal_created` remains reserved and unwired. Its policy is fail-closed:
+in-app disabled, push ineligible, and no user-facing category. Unknown future
+types use the same safe result until they are explicitly reviewed and mapped.
+No preference control exposes reserved or unknown types.
+
+`notificationPreferences` stores at most one recipient-owned document:
+
+- `userId`
+- `pushEnabled`
+- `pushCategories.projects`
+- `pushCategories.messages`
+- `pushCategories.site_visits`
+- `pushCategories.commercial`
+- `pushCategories.account`
+- `updatedAt`
+
+The read API returns defaults without creating a row: global push is disabled
+and every category is enabled. This means push remains opt-in while a future
+opt-in does not unexpectedly omit a category. `getMyNotificationPreferences`
+and `updateMyNotificationPreferences` derive the user from Convex Auth, accept
+no `userId`, reject anonymous callers and unknown fields, and allow only the
+five boolean category keys.
+
+The shared `/{locale}/notifications` surface contains the settings panel for
+all authenticated roles. Client and Company users see the five category
+controls. Admin and SEO users see only the master future-push preference because
+their workspaces currently receive no marketplace event families. UI copy
+states that these choices never disable in-app notifications and that enabling
+the preference does not request browser permission.
+
+`resolveNotificationDelivery` currently evaluates policy plus the stored global
+and category preferences. A later delivery step may send push only when all of
+the following are true:
+
+1. the event is push eligible;
+2. global push is enabled;
+3. its category is enabled; and
+4. Step 12.5 has created a valid browser permission and push subscription.
+
+Messages remain individually eligible but are not throttled or grouped here.
+Step 12.6 may add delivery-time grouping or throttling without changing the
+in-app record. Final Quote acceptance and `commission_due` remain distinct,
+useful events; no `deal_created` event was wired.
+
+This step contains no browser `Notification` API call, permission prompt,
+service worker, Push API subscription, VAPID key, delivery job, email, SMS,
+digest, batching, or throttling engine.
 
 ## Boundaries and future phases
 
 Notifications answer “who needs to know?” and never replace marketplace audit
 or activity records, which answer “what happened?”. Steps 12.2.1–12.2.6 are
-audited and form the stable backend boundary for Step 12.3 in-app UI. Step 12.4
-will add preferences, and Step 12.5+ will add browser push and delivery. This
-foundation has no coupling to those delivery channels.
+audited and form the stable backend boundary for the Step 12.3 in-app UI and
+Step 12.4 preference policy. Step 12.5+ may add browser push permission,
+subscriptions, and delivery without changing mandatory in-app behavior.
