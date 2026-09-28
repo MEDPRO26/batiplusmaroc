@@ -274,3 +274,82 @@ attachments to V1.5, and the full Admin/Company messaging UI and browser
 coverage to OC2.5. External rate limiting remains a launch/security
 consideration; V1 currently relies on bounded inputs, authenticated role checks,
 and deterministic retry protection.
+
+## OC2.5 — Admin ↔ Company operational messaging UI
+
+OC2.5 exposes the OC2.4 channel through two stable, locale-aware destinations:
+
+- Admins use the **Messages** tab in the existing Company detail route. The
+  deep-link form is `/admin/companies/[companyId]?tab=messages` in English and
+  `/admin/entreprises/[companyId]?tab=messages` in French.
+- Company members use `/company/batiplus` in English and
+  `/espace-entreprise/batiplus` in French. The Company navigation calls this
+  destination **Batiplus**, keeping it visibly separate from marketplace
+  **Messages**.
+
+The Admin route remains protected by the server-rendered Admin layout. The
+Company client gate permits only Company accounts, including active members who
+are still onboarding, while OC2.4 dynamically enforces active, unambiguous
+membership for every query and mutation. An inactive member therefore loses
+access immediately and receives a localized route error rather than a raw
+Convex message. Client, SEO, and anonymous users are redirected to their safe
+workspace or sign-in destination before an operational query is issued.
+
+### Shared conversation presentation
+
+Both wrappers use the same operational conversation, message bubble, empty
+state, loading state, and composer components. Messages render as escaped plain
+text with preserved line breaks, wrapping, a visible sender name and sender
+role, and a locale-aware Morocco timestamp. Own-message alignment is reinforced
+with text labels, so sender identity does not depend on color alone.
+
+The OC2.4 query loads the latest cursor page in chronological order and moves
+the cursor toward older messages. Since Convex's pagination hook appends loaded
+pages, the UI sorts the accumulated immutable messages by authoritative
+sequence. Older rows therefore appear above current rows without duplicates.
+The scroll container starts near the newest message, moves to a newly appended
+message, and preserves its viewport offset when older history is inserted.
+
+All data remains in normal reactive Convex queries. A new message from the
+other side updates the open thread without polling or manual refresh. Once the
+latest rendered message exists, the active tab/page marks through that exact
+message ID. Merely rendering Company navigation or an inactive Admin tab never
+marks anything read. The Admin Messages tab displays the current Admin's unread
+count; OC2.4 continues to keep every Admin and Company member's watermark
+independent.
+
+### Composer behavior
+
+The shared composer accepts plain text only and enforces the 5,000-character UI
+limit while OC2.4 remains authoritative. Whitespace-only drafts cannot submit.
+Enter sends on desktop, Shift+Enter inserts a line break, and the Send button
+remains the primary mobile action. An in-flight ref plus disabled controls stops
+rapid duplicate submits, and every logical attempt carries a browser-generated
+idempotency key.
+
+The input clears only after success. A failed send retains both the text and
+the attempt's idempotency key so **Retry** safely repeats the same request.
+Errors are localized and announced without exposing backend strings. There are
+no attachment, upload, Markdown, HTML, edit, delete, or rich-text controls.
+
+### Localization, accessibility, and isolation verification
+
+All route, navigation, empty, loading, error, sender, unread, pagination, and
+composer copy lives in the aligned English and French catalogs. The tablist
+supports arrow, Home, and End navigation; controls have visible focus styles
+and at least 44-pixel targets; the composer has a programmatic label; errors
+use alert semantics; and the message history is a labelled live ordered list.
+The layout is bounded and overflow-tested at desktop, tablet, and 375×812
+mobile sizes.
+
+Component, backend, and Chrome regressions cover empty and existing threads,
+first send, failed-send retention, same-key retry, rapid duplicate submission,
+reactive replies, read mutations, older pagination, FR/EN copy, mobile overflow,
+role redirects, and plain-text safety. Privacy sentinels prove marketplace
+content does not enter the operational UI and operational content does not
+enter the marketplace inbox.
+
+OC2.5 still adds no operational notifications or Push delivery; those remain
+deferred to OC2.8. Attachments, internal Admin notes, Company status or
+suspension, assignment, ticketing, SLA, CRM, bulk messaging, and message
+editing/deletion also remain outside this UI step.

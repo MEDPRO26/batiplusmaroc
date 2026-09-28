@@ -75,12 +75,13 @@ describe("Admin companies UI", () => {
     expect(routing.pathnames[routes.adminCompany]).toEqual({ fr: "/admin/entreprises/[companyId]", en: "/admin/companies/[companyId]" });
   });
 
-  test.each([["en", "Overview", "Projects &amp; Deals", "View public profile"], ["fr", "Vue d’ensemble", "Projets et Deals", "Voir le profil public"]] as const)("renders all consolidated %s detail tabs", (locale, overview, projects, publicProfile) => {
+  test.each([["en", "Overview", "Projects &amp; Deals", "Messages", "View public profile"], ["fr", "Vue d’ensemble", "Projets et Deals", "Messages", "Voir le profil public"]] as const)("renders all consolidated %s detail tabs", (locale, overview, projects, messages, publicProfile) => {
     mocks.query = summary;
     const html = render(locale, <AdminCompanyDetailPanel companyId={companyId} />);
     expect(html).toContain("Atlas Build");
     expect(html).toContain(overview);
     expect(html).toContain(projects);
+    expect(html).toContain(messages);
     expect(html).toContain(publicProfile);
     expect(html).toContain('href="/entreprises/atlas-build"');
     expect(html).not.toContain("private message");

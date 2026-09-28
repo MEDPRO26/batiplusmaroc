@@ -6,7 +6,7 @@ type Translate = ReturnType<typeof useTranslations<"nav">>;
 
 /**
  * Company navigation architecture: acquisition (find work), delivery (manage
- * work), money (finances) and Messages. Built from existing routes only, so the
+ * work), money (finances), marketplace Messages, and Batiplus operations. Built from existing routes only, so the
  * menu never points at a page that does not exist.
  */
 export function buildCompanyNav(t: Translate, onboarded: boolean) {
@@ -77,6 +77,7 @@ export function buildCompanyNav(t: Translate, onboarded: boolean) {
       ],
     },
     { href: routes.messages, label: t("messages"), match: [routes.messages] },
+    { href: routes.companyBatiplus, label: t("company.batiplus"), match: [routes.companyBatiplus] },
   ];
 
   return items;

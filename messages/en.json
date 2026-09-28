@@ -85,7 +85,8 @@
       "activeProjects": "Active projects",
       "projectHistory": "Project history",
       "finances": "Finances",
-      "commissions": "Commissions"
+      "commissions": "Commissions",
+      "batiplus": "Batiplus"
     },
     "profileMenu": {
       "openMenu": "Open account menu",
@@ -104,6 +105,7 @@
         "workspace": "Company workspace",
         "viewPublicProfile": "View public profile",
         "editProfile": "Edit company profile",
+        "settings": "Profile settings",
         "verification": "Verification",
         "verificationStatus": {
           "draft": "Not submitted",
@@ -950,6 +952,10 @@
       "title": "Active projects — Batiplus",
       "description": "Follow the projects your Company has won on Batiplus."
     },
+    "companySettings": {
+      "title": "Company settings — Batiplus",
+      "description": "Manage your Company profile, contact information and verification."
+    },
     "companyCommissions": {
       "title": "Company commissions — Batiplus",
       "description": "Review your Company’s Batiplus commission obligations and payment status."
@@ -1589,6 +1595,61 @@
     "reviewCount": "{count, plural, one {# review} other {# reviews}}"
   },
   "companyProfileManager": {
+    "profileView": {
+      "settings": "Profile settings",
+      "about": "About the company",
+      "showMore": "Show more",
+      "showLess": "Show less",
+      "companyInfo": "Company information",
+      "notSpecified": "Not specified yet",
+      "verificationDetails": "Verification details",
+      "uploading": "Uploading…",
+      "published": "Published",
+      "drafts": "Drafts",
+      "portfolioEmpty": "No published projects yet. Published work is what clients see first.",
+      "draftsEmpty": "No drafts.",
+      "viewAllPortfolio": "View all {count} projects",
+      "reviews": "Completed projects & reviews",
+      "reviewsEmpty": "Client reviews appear here after completed Batiplus projects."
+    },
+    "dialogs": {
+      "save": "Save",
+      "selected": "Selected",
+      "noneSelected": "Nothing selected yet.",
+      "remove": "Remove {item}",
+      "noMatches": "No matches.",
+      "searchCities": "Search cities",
+      "identityTitle": "Company name & location",
+      "identityLead": "How clients find and recognise your company.",
+      "editIdentity": "Edit company name and location",
+      "editAbout": "Edit about the company",
+      "descriptionHelp": "Between 20 and 1,000 characters.",
+      "infoLead": "Key facts clients use to compare companies.",
+      "editInfo": "Edit company information",
+      "editLanguages": "Edit languages",
+      "servicesLead": "What services does your company provide?",
+      "editServices": "Edit services",
+      "areasLead": "Where does your company take on work?",
+      "editAreas": "Edit service areas",
+      "contactLead": "How Batiplus and clients can reach your company.",
+      "editContact": "Edit contact information"
+    },
+    "settings": {
+      "title": "Settings",
+      "navLabel": "Settings sections",
+      "profile": "Company profile",
+      "contact": "Contact information",
+      "verification": "Verification",
+      "openProfile": "Open my profile",
+      "viewAsClients": "View profile as clients see it",
+      "businessContact": "Business contact",
+      "businessContactLead": "Contact details for your company.",
+      "account": "Account",
+      "accountLead": "Your sign-in details are private and never shown on your profile.",
+      "email": "Sign-in email",
+      "status": "Status",
+      "verificationPublicNote": "Clients only see whether your company is verified. Legal details and documents stay private."
+    },
     "eyebrow": "Company workspace",
     "title": "Manage company profile",
     "lead": "Update the public information clients see when they discover your company.",
@@ -4397,7 +4458,7 @@
       "back": "Back to companies",
       "publicProfile": "View public profile",
       "tabsLabel": "Company sections",
-      "tabs": { "overview": "Overview", "verification": "Verification", "projectsDeals": "Projects & Deals", "commissions": "Commissions", "reviews": "Reviews", "activity": "Activity" }
+      "tabs": { "overview": "Overview", "verification": "Verification", "projectsDeals": "Projects & Deals", "commissions": "Commissions", "reviews": "Reviews", "activity": "Activity", "messages": "Messages" }
     },
     "overview": {
       "profile": "Company profile",
@@ -4444,6 +4505,48 @@
     "commissions": { "title": "Commissions", "empty": "No commission obligations for this company.", "view": "View", "status": { "due": "Due", "paid": "Paid" }, "close": "Close commission details", "reference": "Payment reference", "note": "Internal note", "paidAt": "Paid at", "markPaid": "Mark paid", "actionError": "The commission could not be updated." },
     "reviews": { "title": "Reviews", "empty": "No reviews for this company.", "hide": "Hide", "restore": "Restore", "actionError": "The review could not be updated." },
     "error": { "title": "Companies could not be loaded", "lead": "Try again. If the problem continues, return to the admin dashboard.", "retry": "Try again" }
+  },
+  "operationalMessaging": {
+    "metaTitle": "Batiplus support",
+    "metaDescription": "Contact the Batiplus team about your company operations.",
+    "company": {
+      "title": "Batiplus support",
+      "lead": "Contact the Batiplus team about your company account, verification, commissions or marketplace operations.",
+      "pageLabel": "Batiplus operational conversation",
+      "emptyTitle": "No conversation with Batiplus yet.",
+      "emptyLead": "Start a conversation when you need help with your company operations.",
+      "emptyAction": "Start a conversation"
+    },
+    "admin": {
+      "title": "Operational conversation",
+      "lead": "Messages between Batiplus and {company} are separate from marketplace Project conversations.",
+      "emptyTitle": "No operational conversation with this company yet.",
+      "emptyLead": "Send the first message to start this Company-level conversation.",
+      "emptyAction": "Send a message"
+    },
+    "thread": {
+      "messageList": "Operational message history",
+      "loading": "Loading conversation",
+      "loadOlder": "Load older messages",
+      "loadingOlder": "Loading older messages",
+      "composerLabel": "Message",
+      "composerPlaceholder": "Write an operational message…",
+      "send": "Send",
+      "sending": "Sending…",
+      "retry": "Retry",
+      "sendFailed": "The message could not be sent. Your text is still here—try again.",
+      "readFailed": "The conversation could not be marked as read.",
+      "characterCount": "{count} of {maximum} characters",
+      "senderAdmin": "Batiplus team",
+      "senderCompany": "Company member",
+      "yourMessage": "Your message",
+      "unreadBadge": "{count, plural, one {# unread operational message} other {# unread operational messages}}"
+    },
+    "access": {
+      "title": "Batiplus conversation unavailable",
+      "lead": "You no longer have access to this operational conversation.",
+      "retry": "Try again"
+    }
   },
   "companyWork": {
     "activeTitle": "Active projects",

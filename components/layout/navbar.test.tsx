@@ -200,6 +200,7 @@ describe("role navbar content", () => {
     expect(html).toContain("nav.company.manageWork");
     expect(html).toContain("nav.company.finances");
     expect(html).toContain(routes.messages);
+    expect(html).toContain(routes.companyBatiplus);
     expect(html).not.toContain("nav.myWorkspace");
     expect(html).toContain("nav.companySearchLabel");
     expect(html).toContain("nav.companySearchPlaceholder");
@@ -227,11 +228,13 @@ describe("role navbar content", () => {
         routes.companyWork,
         routes.companyCommissions,
         routes.messages,
+        routes.companyBatiplus,
       ]),
     );
     expect(hrefs(false)).not.toContain(routes.companyPortfolio);
     expect(hrefs(false)).not.toContain(routes.companyWork);
     expect(hrefs(false)).toContain(routes.companyOnboarding);
+    expect(hrefs(false)).toContain(routes.companyBatiplus);
   });
 
   test("the active group follows the current route, including the company home feed", () => {
@@ -247,6 +250,7 @@ describe("role navbar content", () => {
     expect(activeIds(routes.companyProject)).toEqual(["find-work"]);
     expect(activeIds(routes.companyWork)).toEqual(["manage-work"]);
     expect(activeIds(routes.messagesConversation)).toEqual([routes.messages]);
+    expect(activeIds(routes.companyBatiplus)).toEqual([routes.companyBatiplus]);
     expect(activeIds(routes.companyVerification)).toEqual([]);
   });
 

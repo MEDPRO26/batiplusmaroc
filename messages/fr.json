@@ -85,7 +85,8 @@
       "activeProjects": "Projets actifs",
       "projectHistory": "Historique des projets",
       "finances": "Finances",
-      "commissions": "Commissions"
+      "commissions": "Commissions",
+      "batiplus": "Batiplus"
     },
     "profileMenu": {
       "openMenu": "Ouvrir le menu du compte",
@@ -104,6 +105,7 @@
         "workspace": "Espace entreprise",
         "viewPublicProfile": "Voir le profil public",
         "editProfile": "Modifier le profil entreprise",
+        "settings": "Paramètres du profil",
         "verification": "Vérification",
         "verificationStatus": {
           "draft": "Non soumise",
@@ -942,6 +944,10 @@
       "title": "Invitations aux projets — Batiplus",
       "description": "Consultez et traitez les invitations directes envoyées par les clients Batiplus."
     },
+    "companySettings": {
+      "title": "Paramètres de l’entreprise — Batiplus",
+      "description": "Gérez le profil, les coordonnées et la vérification de votre entreprise."
+    },
     "companyProposals": {
       "title": "Mes propositions — Batiplus",
       "description": "Suivez les propositions envoyées par votre entreprise aux clients Batiplus."
@@ -1589,6 +1595,61 @@
     "reviewCount": "{count, plural, one {# avis} other {# avis}}"
   },
   "companyProfileManager": {
+    "profileView": {
+      "settings": "Paramètres du profil",
+      "about": "À propos de l’entreprise",
+      "showMore": "Voir plus",
+      "showLess": "Voir moins",
+      "companyInfo": "Informations de l’entreprise",
+      "notSpecified": "Pas encore renseigné",
+      "verificationDetails": "Détails de la vérification",
+      "uploading": "Téléversement…",
+      "published": "Publiées",
+      "drafts": "Brouillons",
+      "portfolioEmpty": "Aucune réalisation publiée. Les réalisations publiées sont ce que les clients voient en premier.",
+      "draftsEmpty": "Aucun brouillon.",
+      "viewAllPortfolio": "Voir les {count} réalisations",
+      "reviews": "Projets réalisés et avis",
+      "reviewsEmpty": "Les avis clients apparaissent ici après des projets Batiplus terminés."
+    },
+    "dialogs": {
+      "save": "Enregistrer",
+      "selected": "Sélection",
+      "noneSelected": "Aucune sélection pour le moment.",
+      "remove": "Retirer {item}",
+      "noMatches": "Aucun résultat.",
+      "searchCities": "Rechercher une ville",
+      "identityTitle": "Nom et localisation",
+      "identityLead": "Comment les clients trouvent et reconnaissent votre entreprise.",
+      "editIdentity": "Modifier le nom et la localisation",
+      "editAbout": "Modifier la présentation de l’entreprise",
+      "descriptionHelp": "Entre 20 et 1 000 caractères.",
+      "infoLead": "Les informations clés que les clients comparent.",
+      "editInfo": "Modifier les informations de l’entreprise",
+      "editLanguages": "Modifier les langues",
+      "servicesLead": "Quels services votre entreprise propose-t-elle ?",
+      "editServices": "Modifier les services",
+      "areasLead": "Où votre entreprise intervient-elle ?",
+      "editAreas": "Modifier les zones d’intervention",
+      "contactLead": "Comment Batiplus et les clients peuvent joindre votre entreprise.",
+      "editContact": "Modifier les coordonnées"
+    },
+    "settings": {
+      "title": "Paramètres",
+      "navLabel": "Sections des paramètres",
+      "profile": "Profil de l’entreprise",
+      "contact": "Coordonnées",
+      "verification": "Vérification",
+      "openProfile": "Ouvrir mon profil",
+      "viewAsClients": "Voir le profil comme les clients",
+      "businessContact": "Coordonnées professionnelles",
+      "businessContactLead": "Les coordonnées de votre entreprise.",
+      "account": "Compte",
+      "accountLead": "Vos identifiants de connexion restent privés et n’apparaissent jamais sur votre profil.",
+      "email": "E-mail de connexion",
+      "status": "Statut",
+      "verificationPublicNote": "Les clients voient uniquement si votre entreprise est vérifiée. Les informations légales et les documents restent privés."
+    },
     "eyebrow": "Espace entreprise",
     "title": "Gérer le profil entreprise",
     "lead": "Mettez à jour les informations publiques visibles par les clients.",
@@ -4397,7 +4458,7 @@
       "back": "Retour aux entreprises",
       "publicProfile": "Voir le profil public",
       "tabsLabel": "Sections de l’entreprise",
-      "tabs": { "overview": "Vue d’ensemble", "verification": "Vérification", "projectsDeals": "Projets et Deals", "commissions": "Commissions", "reviews": "Avis", "activity": "Activité" }
+      "tabs": { "overview": "Vue d’ensemble", "verification": "Vérification", "projectsDeals": "Projets et Deals", "commissions": "Commissions", "reviews": "Avis", "activity": "Activité", "messages": "Messages" }
     },
     "overview": {
       "profile": "Profil de l’entreprise",
@@ -4444,6 +4505,48 @@
     "commissions": { "title": "Commissions", "empty": "Aucune commission pour cette entreprise.", "view": "Voir", "status": { "due": "Due", "paid": "Payée" }, "close": "Fermer les détails de la commission", "reference": "Référence de paiement", "note": "Note interne", "paidAt": "Payée le", "markPaid": "Marquer comme payée", "actionError": "La commission n’a pas pu être mise à jour." },
     "reviews": { "title": "Avis", "empty": "Aucun avis pour cette entreprise.", "hide": "Masquer", "restore": "Restaurer", "actionError": "L’avis n’a pas pu être mis à jour." },
     "error": { "title": "Impossible de charger les entreprises", "lead": "Réessayez. Si le problème persiste, revenez au tableau de bord admin.", "retry": "Réessayer" }
+  },
+  "operationalMessaging": {
+    "metaTitle": "Assistance Batiplus",
+    "metaDescription": "Contactez l’équipe Batiplus au sujet des opérations de votre entreprise.",
+    "company": {
+      "title": "Assistance Batiplus",
+      "lead": "Contactez l’équipe Batiplus au sujet de votre compte entreprise, de la vérification, des commissions ou des opérations marketplace.",
+      "pageLabel": "Conversation opérationnelle avec Batiplus",
+      "emptyTitle": "Aucune conversation avec Batiplus pour le moment.",
+      "emptyLead": "Démarrez une conversation lorsque vous avez besoin d’aide concernant les opérations de votre entreprise.",
+      "emptyAction": "Démarrer une conversation"
+    },
+    "admin": {
+      "title": "Conversation opérationnelle",
+      "lead": "Les messages entre Batiplus et {company} sont séparés des conversations de Projets de la marketplace.",
+      "emptyTitle": "Aucune conversation opérationnelle avec cette entreprise pour le moment.",
+      "emptyLead": "Envoyez le premier message pour démarrer cette conversation au niveau de l’entreprise.",
+      "emptyAction": "Envoyer un message"
+    },
+    "thread": {
+      "messageList": "Historique des messages opérationnels",
+      "loading": "Chargement de la conversation",
+      "loadOlder": "Charger les messages précédents",
+      "loadingOlder": "Chargement des messages précédents",
+      "composerLabel": "Message",
+      "composerPlaceholder": "Rédigez un message opérationnel…",
+      "send": "Envoyer",
+      "sending": "Envoi…",
+      "retry": "Réessayer",
+      "sendFailed": "Le message n’a pas pu être envoyé. Votre texte est conservé — réessayez.",
+      "readFailed": "La conversation n’a pas pu être marquée comme lue.",
+      "characterCount": "{count} caractères sur {maximum}",
+      "senderAdmin": "Équipe Batiplus",
+      "senderCompany": "Membre de l’entreprise",
+      "yourMessage": "Votre message",
+      "unreadBadge": "{count, plural, one {# message opérationnel non lu} other {# messages opérationnels non lus}}"
+    },
+    "access": {
+      "title": "Conversation Batiplus indisponible",
+      "lead": "Vous n’avez plus accès à cette conversation opérationnelle.",
+      "retry": "Réessayer"
+    }
   },
   "companyWork": {
     "activeTitle": "Projets actifs",

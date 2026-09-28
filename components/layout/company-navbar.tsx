@@ -28,7 +28,7 @@ export function CompanyNavbar({ user }: { user: CompanyUser }) {
 
   const links = buildCompanyNav(t, onboarded);
   const profileHref = onboarded ? routes.companyProfileManagement : routes.companyOnboarding;
-  const verificationHref = onboarded ? routes.companyVerification : routes.companyOnboarding;
+  const settingsHref = onboarded ? routes.companySettings : routes.companyOnboarding;
 
   // The avatar menu answers "who am I and how do I manage my company?" —
   // marketplace destinations (portfolio, commissions, projects) live in the navbar.
@@ -41,11 +41,12 @@ export function CompanyNavbar({ user }: { user: CompanyUser }) {
           },
         ]
       : []),
-    { href: profileHref, label: tMenu("company.editProfile") },
+    { href: profileHref, label: tMenu("company.companyProfile") },
   ];
   const accountSection: ProfileMenuItem[] = [
+    { href: settingsHref, label: tMenu("company.settings") },
     {
-      href: verificationHref,
+      href: onboarded ? { pathname: routes.companySettings, query: { section: "verification" } } : routes.companyOnboarding,
       label: tMenu("company.verification"),
       meta: profile ? tMenu(`company.verificationStatus.${profile.verificationStatus}`) : undefined,
     },
@@ -60,7 +61,7 @@ export function CompanyNavbar({ user }: { user: CompanyUser }) {
         ariaLabel={t("companyMain")}
         cta={null}
         links={links}
-        accountLinks={[{ href: profileHref, label: tMenu("company.editProfile") }, { href: verificationHref, label: tMenu("company.verification") }]}
+        accountLinks={[{ href: profileHref, label: tMenu("company.companyProfile") }, { href: settingsHref, label: tMenu("company.settings") }]}
         logo={<NavbarLogo homeAria={tBrand("homeAria")} name={tBrand("name")} />}
         profile={
           <ProfileMenu

@@ -164,6 +164,10 @@ export const routing = defineRouting({
       fr: "/espace-entreprise/commissions",
       en: "/company/commissions",
     },
+    "/espace-entreprise/batiplus": {
+      fr: "/espace-entreprise/batiplus",
+      en: "/company/batiplus",
+    },
     "/espace-entreprise/propositions": {
       fr: "/espace-entreprise/propositions",
       en: "/company/proposals",
@@ -171,6 +175,10 @@ export const routing = defineRouting({
     "/espace-entreprise/chantiers": {
       fr: "/espace-entreprise/chantiers",
       en: "/company/work",
+    },
+    "/espace-entreprise/parametres": {
+      fr: "/espace-entreprise/parametres",
+      en: "/company/settings",
     },
     "/admin": "/admin",
     "/admin/projects": {

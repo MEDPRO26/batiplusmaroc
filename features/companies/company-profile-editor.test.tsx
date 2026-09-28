@@ -1,15 +1,19 @@
 import { useQuery } from "convex/react";
+import { getFunctionName } from "convex/server";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 
 vi.mock("next/image", () => ({ default: () => null }));
-vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+  useFormatter: () => ({ number: String, dateTime: String }),
+}));
 vi.mock("convex/react", () => ({ useAction: vi.fn(), useMutation: vi.fn(), useQuery: vi.fn() }));
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children }: { children?: React.ReactNode }) => <a href="#">{children}</a>,
-  useRouter: vi.fn(),
+  Link: ({ children, ...props }: { children?: React.ReactNode; href?: unknown }) => <a {...props} href="#">{children}</a>,
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
 }));
 vi.mock("@/features/shared/components/app-feedback", () => ({
   useToast: () => ({ showToast: vi.fn() }),
@@ -19,6 +23,7 @@ import {
   CompanyProfileEditor,
   CompanyProfileEditorSkeleton,
 } from "./components/company-profile-editor";
+import { CompanySettings } from "./components/profile/company-settings";
 
 function objectShape(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(objectShape);
@@ -48,7 +53,6 @@ describe("company profile management UX contract", () => {
     expect(html).toContain('role="status"');
     expect(html).toContain('aria-busy="true"');
     expect(html).toContain("Loading your company profile…");
-    expect(html).toContain("bg-[#f2f4f5]");
   });
 
   test("localizes every backend-provided profile option", () => {
@@ -62,57 +66,76 @@ describe("company profile management UX contract", () => {
     expect(Object.keys(en.companyProfileManager.serviceAreaOptions)).toHaveLength(10);
   });
 
-  test("renders the responsive Upwork-like editor with public fields and read-only legal fields", () => {
-    let queryIndex = 0;
-    vi.mocked(useQuery).mockImplementation(() => {
-      queryIndex += 1;
-      if (queryIndex === 1) {
-        return { accountType: "company", onboardingStatus: "completed" } as never;
-      }
-      return {
-        slug: "atlas-build",
-        name: "Atlas Build",
-        description: "Construction services for residential and commercial clients.",
-        city: "Rabat",
-        phone: "0612345678",
-        website: "https://atlas.example/",
-        yearsExperience: 12,
-        foundedYear: 2012,
-        companySize: "11to50",
-        languages: ["arabic", "french"],
-        serviceAreas: ["rabat", "sale"],
-        services: ["structural", "finishing"],
-        serviceOptions: Object.keys(en.companyProfileManager.serviceOptions),
-        serviceAreaOptions: Object.keys(en.companyProfileManager.serviceAreaOptions),
-        languageOptions: Object.keys(en.companyProfileManager.languages),
-        companySizeOptions: Object.keys(en.companyProfileManager.companySize),
-        logoUrl: null,
-        coverImageUrl: null,
-        legal: {
-          verificationStatus: "pending",
-          legalName: "Atlas Build SARL",
-          ice: "001122334455667",
-          rcNumber: "RC-123",
-          legalRepresentative: "Owner Name",
-          phone: "0522000000",
-          address: "Rabat",
-          documents: [{ documentType: "rc", fileName: "registre-commerce.pdf" }],
-        },
-      } as never;
-    });
-
+  test("the profile reads as display data with focused edit controls and no private legal data", () => {
+    mockQueries();
     const html = renderToStaticMarkup(<CompanyProfileEditor />);
-    expect(html).toContain("overview.title");
-    expect(html).toContain("serviceAreas.title");
-    expect(html).toContain("portfolio.manage");
-    expect(html).toContain("sidebar.stats");
-    expect(html).toContain('name="coverImage"');
-    expect(html).toContain('name="serviceAreas"');
-    expect(html).toContain('name="languages"');
-    expect(html).toContain("lg:grid-cols-[minmax(240px,28%)_minmax(0,1fr)]");
-    expect(html.match(/readonly/g)?.length).toBe(6);
+    expect(html).toContain("Atlas Build");
+    expect(html).toContain("profileView.about");
+    expect(html).toContain("serviceOptions.structural");
+    expect(html).toContain("serviceAreaOptions.sale");
+    for (const label of ["dialogs.editAbout", "dialogs.editServices", "dialogs.editAreas", "dialogs.editLanguages", "dialogs.editInfo", "dialogs.editIdentity", "dialogs.editContact"]) {
+      expect(html).toContain(`aria-label="${label}"`);
+    }
+    expect(html).toContain("profileView.settings");
+    expect(html).toContain("viewPublicProfile");
+    // Services and areas are display chips here, never a permanent checkbox form.
+    expect(html).not.toContain('type="checkbox"');
+    expect(html).not.toContain('name="services"');
+    expect(html).not.toContain(">save</button>");
+    // Legal verification data belongs to Settings › Verification only.
+    expect(html).not.toContain("001122334455667");
+    expect(html).not.toContain("registre-commerce.pdf");
+    expect(html).not.toContain("Atlas Build SARL");
+  });
+
+  test("settings verification shows legal data read-only and keeps the public trust note", () => {
+    mockQueries();
+    const html = renderToStaticMarkup(<CompanySettings section="verification" />);
+    expect(html).toContain("001122334455667");
     expect(html).toContain("registre-commerce.pdf");
-    expect(html).toContain("sm:grid-cols-2");
-    expect(html).toContain(">save</button>");
+    expect(html).toContain("legal.notice");
+    expect(html).toContain("settings.verificationPublicNote");
+    expect(html).toContain('aria-current="page"');
+    expect(html).not.toContain("<input");
   });
 });
+
+function mockQueries() {
+  vi.mocked(useQuery).mockImplementation(((ref: unknown) => {
+    const name = getFunctionName(ref as never);
+    if (name === "users:currentUser") return { accountType: "company", onboardingStatus: "completed", email: "owner@atlas.example" };
+    if (name === "companies/index:getProfileManager") return profileFixture;
+    return undefined;
+  }) as never);
+}
+
+const profileFixture = {
+  slug: "atlas-build",
+  name: "Atlas Build",
+  description: "Construction services for residential and commercial clients.",
+  city: "Rabat",
+  phone: "0612345678",
+  website: "https://atlas.example/",
+  yearsExperience: 12,
+  foundedYear: 2012,
+  companySize: "11to50",
+  languages: ["arabic", "french"],
+  serviceAreas: ["rabat", "sale"],
+  services: ["structural", "finishing"],
+  serviceOptions: Object.keys(en.companyProfileManager.serviceOptions),
+  serviceAreaOptions: Object.keys(en.companyProfileManager.serviceAreaOptions),
+  languageOptions: Object.keys(en.companyProfileManager.languages),
+  companySizeOptions: Object.keys(en.companyProfileManager.companySize),
+  logoUrl: null,
+  coverImageUrl: null,
+  legal: {
+    verificationStatus: "pending",
+    legalName: "Atlas Build SARL",
+    ice: "001122334455667",
+    rcNumber: "RC-123",
+    legalRepresentative: "Owner Name",
+    phone: "0522000000",
+    address: "Rabat",
+    documents: [{ documentType: "rc", fileName: "registre-commerce.pdf" }],
+  },
+};

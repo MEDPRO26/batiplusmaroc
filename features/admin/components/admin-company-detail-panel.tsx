@@ -9,20 +9,40 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ADMIN_PRESS, AdminPage } from "@/features/admin/components/admin-shell";
 import { CompanyActivityTimeline } from "@/features/admin/components/company-activity-timeline";
-import { Link } from "@/i18n/navigation";
+import { OperationalConversation } from "@/features/operations/components/operational-conversation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 
-type Tab = "overview" | "verification" | "projectsDeals" | "commissions" | "reviews" | "activity";
+export type AdminCompanyTab = "overview" | "verification" | "projectsDeals" | "commissions" | "reviews" | "activity" | "messages";
 type Summary = NonNullable<FunctionReturnType<typeof api.admin.companies.getCompanySummary>>;
 type Commission = FunctionReturnType<typeof api.admin.deals.listCommissionObligations>[number];
 type Review = FunctionReturnType<typeof api.admin.companies.listCompanyReviews>["page"][number];
 
-const TABS: Tab[] = ["overview", "verification", "projectsDeals", "commissions", "reviews", "activity"];
+const TABS: AdminCompanyTab[] = ["overview", "verification", "projectsDeals", "commissions", "reviews", "activity", "messages"];
 
-export function AdminCompanyDetailPanel({ companyId }: { companyId: Id<"companies"> }) {
+export function AdminCompanyDetailPanel({ companyId, initialTab = "overview" }: { companyId: Id<"companies">; initialTab?: AdminCompanyTab }) {
   const t = useTranslations("adminCompanies");
+  const tMessaging = useTranslations("operationalMessaging");
+  const router = useRouter();
   const summary = useQuery(api.admin.companies.getCompanySummary, { companyId });
-  const [tab, setTab] = useState<Tab>("overview");
+  const operationalSummary = useQuery(api.adminCompanyMessaging.getAdminConversation, { companyId });
+  const [tab, setTab] = useState<AdminCompanyTab>(initialTab);
+
+  function selectTab(nextTab: AdminCompanyTab) {
+    setTab(nextTab);
+    router.replace({
+      pathname: routes.adminCompany,
+      params: { companyId },
+      query: nextTab === "overview" ? {} : { tab: nextTab },
+    }, { scroll: false });
+  }
+
+  function moveTab(current: AdminCompanyTab, direction: -1 | 1) {
+    const currentIndex = TABS.indexOf(current);
+    const next = TABS[(currentIndex + direction + TABS.length) % TABS.length];
+    selectTab(next);
+    document.getElementById(`company-tab-${next}`)?.focus();
+  }
 
   if (summary === undefined) {
     return <AdminPage breadcrumb={t("detail.breadcrumb")} title={t("detail.loading")}><div aria-busy="true" className="h-56 animate-pulse rounded-[20px] bg-white" role="status"><span className="sr-only">{t("loading")}</span></div></AdminPage>;
@@ -43,11 +63,19 @@ export function AdminCompanyDetailPanel({ companyId }: { companyId: Id<"companie
               className={`min-h-11 rounded-[12px] px-4 text-sm font-semibold ${ADMIN_PRESS} ${tab === item ? "bg-[#2f6bff] text-white" : "text-[#626970] hover:bg-[#f4f6f8]"}`}
               id={`company-tab-${item}`}
               key={item}
-              onClick={() => setTab(item)}
+              onClick={() => selectTab(item)}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowLeft") { event.preventDefault(); moveTab(item, -1); }
+                if (event.key === "ArrowRight") { event.preventDefault(); moveTab(item, 1); }
+                if (event.key === "Home") { event.preventDefault(); selectTab(TABS[0]); document.getElementById(`company-tab-${TABS[0]}`)?.focus(); }
+                if (event.key === "End") { event.preventDefault(); selectTab(TABS.at(-1)!); document.getElementById(`company-tab-${TABS.at(-1)!}`)?.focus(); }
+              }}
               role="tab"
+              tabIndex={tab === item ? 0 : -1}
               type="button"
             >
               {t(`detail.tabs.${item}`)}
+              {item === "messages" && operationalSummary?.unreadCount ? <span aria-label={tMessaging("thread.unreadBadge", { count: operationalSummary.unreadCount })} className={`ml-2 inline-flex min-w-5 justify-center rounded-full px-1.5 py-0.5 text-[11px] ${tab === item ? "bg-white text-[#2456c7]" : "bg-[#2f6bff] text-white"}`}>{operationalSummary.unreadCount > 99 ? "99+" : operationalSummary.unreadCount}</span> : null}
             </button>
           ))}
         </div>
@@ -59,8 +87,32 @@ export function AdminCompanyDetailPanel({ companyId }: { companyId: Id<"companie
         {tab === "commissions" ? <Commissions companyId={companyId} /> : null}
         {tab === "reviews" ? <Reviews companyId={companyId} /> : null}
         {tab === "activity" ? <CompanyActivityTimeline companyId={companyId} /> : null}
+        {tab === "messages" ? operationalSummary === undefined ? <Loading /> : <AdminOperationalMessages companyId={companyId} companyName={summary.name} conversation={operationalSummary} /> : null}
       </section>
     </AdminPage>
+  );
+}
+
+function AdminOperationalMessages({ companyId, companyName, conversation }: {
+  companyId: Id<"companies">;
+  companyName: string;
+  conversation: FunctionReturnType<typeof api.adminCompanyMessaging.getAdminConversation> | null;
+}) {
+  const t = useTranslations("operationalMessaging");
+  const send = useMutation(api.adminCompanyMessaging.sendAdminMessage);
+  const markRead = useMutation(api.adminCompanyMessaging.markAdminConversationRead);
+  return (
+    <OperationalConversation
+      conversation={conversation}
+      emptyAction={t("admin.emptyAction")}
+      emptyLead={t("admin.emptyLead")}
+      emptyTitle={t("admin.emptyTitle")}
+      lead={t("admin.lead", { company: companyName })}
+      onMarkRead={(readThroughMessageId) => markRead({ conversationId: conversation!.id, readThroughMessageId })}
+      onSend={(body, idempotencyKey) => send({ companyId, body, idempotencyKey })}
+      role="admin"
+      title={t("admin.title")}
+    />
   );
 }
 

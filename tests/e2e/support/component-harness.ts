@@ -27,16 +27,29 @@ const mocks: Plugin = {
           export const api = ref([]);
         `,
         "convex-react": `
+          import { useEffect, useState } from "react";
+          function useHarnessVersion() {
+            const [, setVersion] = useState(0);
+            useEffect(() => {
+              const update = () => setVersion((value) => value + 1);
+              window.addEventListener("convex-harness-update", update);
+              return () => window.removeEventListener("convex-harness-update", update);
+            }, []);
+          }
           export function useQuery(query, args) {
+            useHarnessVersion();
             if (args === "skip") return undefined;
             return window.__queries[query.__path];
           }
           export function usePaginatedQuery(query) {
+            useHarnessVersion();
             const state = (window.__paginatedQueries || {})[query.__path] || { results: [], status: "Exhausted" };
             return {
               ...state,
               loadMore(numItems) {
                 window.__paginationCalls = [...(window.__paginationCalls || []), { path: query.__path, numItems }];
+                const handler = (window.__paginationHandlers || {})[query.__path];
+                if (handler) handler(numItems);
               },
             };
           }
@@ -45,6 +58,12 @@ const mocks: Plugin = {
           export function useMutation(mutation) {
             return async (args) => {
               window.__mutationCalls = [...(window.__mutationCalls || []), { path: mutation.__path, args }];
+              const delay = (window.__mutationDelays || {})[mutation.__path];
+              if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
+              const error = (window.__mutationErrors || {})[mutation.__path];
+              if (error) throw new Error(error);
+              const handler = (window.__mutationHandlers || {})[mutation.__path];
+              if (handler) return await handler(args);
               return (window.__mutationResults || {})[mutation.__path] ?? {};
             };
           }
