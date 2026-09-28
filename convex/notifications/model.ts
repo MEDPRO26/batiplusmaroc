@@ -36,6 +36,10 @@ const ENTITY_TYPE_BY_NOTIFICATION_TYPE: Record<NotificationType, NotificationEnt
   review_received: "review",
   company_verification_approved: "company_verification",
   company_verification_rejected: "company_verification",
+  admin_company_message_received: "admin_company_message",
+  company_admin_message_received: "admin_company_message",
+  company_suspended: "company_operational_status",
+  company_reactivated: "company_operational_status",
 };
 
 export type CreateNotificationArgs = {
@@ -164,6 +168,52 @@ export async function createNotificationForActiveCompanyMembers(
   }
   if (authorizedMemberCount === 0) {
     throw new ConvexError("COMPANY_NOTIFICATION_RECIPIENT_NOT_FOUND");
+  }
+  return { recipientCount };
+}
+
+/**
+ * Operational support remains available during Company onboarding, so this
+ * fan-out intentionally requires active membership but not completed onboarding.
+ */
+export async function createOperationalNotificationForActiveCompanyMembers(
+  ctx: MutationCtx,
+  args: CreateCompanyNotificationArgs,
+) {
+  const { companyId, ...notification } = args;
+  let recipientCount = 0;
+  for await (const membership of ctx.db
+    .query("companyMembers")
+    .withIndex("by_companyId_and_status", (q) =>
+      q.eq("companyId", companyId).eq("status", "active"),
+    )) {
+    const member = await ctx.db.get(membership.userId);
+    if (!member) throw new ConvexError("NOTIFICATION_RECIPIENT_NOT_FOUND");
+    if (member.accountType !== "company") continue;
+    const memberships = await ctx.db
+      .query("companyMembers")
+      .withIndex("by_userId", (q) => q.eq("userId", membership.userId))
+      .take(2);
+    if (memberships.length !== 1 || memberships[0]._id !== membership._id) continue;
+    if (membership.userId === notification.actorUserId) continue;
+    await createNotification(ctx, { ...notification, recipientUserId: membership.userId });
+    recipientCount += 1;
+  }
+  return { recipientCount };
+}
+
+/** V1 operational inbox fan-out: every Admin user, with no assignment model. */
+export async function createNotificationForAllAdmins(
+  ctx: MutationCtx,
+  args: Omit<CreateNotificationArgs, "recipientUserId">,
+) {
+  let recipientCount = 0;
+  for await (const admin of ctx.db
+    .query("users")
+    .withIndex("by_accountType", (q) => q.eq("accountType", "admin"))) {
+    if (admin._id === args.actorUserId) continue;
+    await createNotification(ctx, { ...args, recipientUserId: admin._id });
+    recipientCount += 1;
   }
   return { recipientCount };
 }

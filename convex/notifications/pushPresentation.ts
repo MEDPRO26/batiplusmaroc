@@ -32,6 +32,10 @@ const BODY_TEMPLATES = {
     review_received: "You received a {rating}-star review for {projectTitle}.",
     company_verification_approved: "{companyName} has been verified.",
     company_verification_rejected: "Verification for {companyName} needs your attention.",
+    admin_company_message_received: "Batiplus sent you a new operational message.",
+    company_admin_message_received: "{companyName} sent Batiplus a new operational message.",
+    company_suspended: "Marketplace access for {companyName} has been suspended. Open Batiplus support for next steps.",
+    company_reactivated: "Marketplace access for {companyName} has been restored.",
   },
   fr: {
     proposal_received: "{companyName} a envoyé une proposition pour {projectTitle}.",
@@ -52,6 +56,10 @@ const BODY_TEMPLATES = {
     review_received: "Vous avez reçu un avis de {rating} étoiles pour {projectTitle}.",
     company_verification_approved: "{companyName} est désormais vérifiée.",
     company_verification_rejected: "La vérification de {companyName} nécessite votre attention.",
+    admin_company_message_received: "Batiplus vous a envoyé un nouveau message opérationnel.",
+    company_admin_message_received: "{companyName} a envoyé un nouveau message opérationnel à Batiplus.",
+    company_suspended: "L’accès de {companyName} à la marketplace a été suspendu. Consultez l’assistance Batiplus pour connaître les prochaines étapes.",
+    company_reactivated: "L’accès de {companyName} à la marketplace a été rétabli.",
   },
 } as const satisfies Record<PushLocale, Record<ActiveNotificationType, string>>;
 

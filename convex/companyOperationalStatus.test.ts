@@ -86,6 +86,14 @@ describe("Company operational status administration", () => {
     const adminId = await user(t, "admin", "Admin");
     const clientId = await user(t, "client", "Client");
     const target = await company(t, "Atlas");
+    const inactiveMemberId = await user(t, "company", "Inactive");
+    await t.run((ctx) => ctx.db.insert("companyMembers", {
+      companyId: target.companyId,
+      userId: inactiveMemberId,
+      role: "staff",
+      status: "inactive",
+      createdAt: 1,
+    }));
 
     await expect(asUser(t, adminId).query(api.admin.companyOperationalStatus.get, { companyId: target.companyId }))
       .resolves.toEqual({ status: "normal" });
@@ -135,9 +143,23 @@ describe("Company operational status administration", () => {
       actor: expect.objectContaining({ type: "admin" }),
     }));
     expect(JSON.stringify(activity.page)).not.toContain("Repeated marketplace policy violations");
+    const notifications = await t.run((ctx) => ctx.db.query("notifications").collect());
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0].recipientUserId).not.toBe(inactiveMemberId);
+    expect(notifications[0]).toMatchObject({
+      recipientUserId: target.userId,
+      type: "company_suspended",
+      entity: { type: "company_operational_status", id: stored.history[0]._id },
+      payload: { companyId: target.companyId, companyName: "Atlas" },
+      actorUserId: adminId,
+    });
+    expect(JSON.stringify(notifications)).not.toContain("Repeated marketplace policy violations");
+    expect(JSON.stringify(notifications)).not.toContain("fromStatus");
+    expect(JSON.stringify(notifications)).not.toContain("toStatus");
+    expect(Object.keys(notifications[0].payload).sort()).toEqual(["companyId", "companyName"]);
   });
 
-  test("allows every distinct status transition and emits no notifications", async () => {
+  test("notifies only crossings into and out of suspension", async () => {
     const t = convexTest(schema, modules);
     const adminId = await user(t, "admin", "Admin");
     const target = await company(t, "Atlas", "normal");
@@ -170,7 +192,14 @@ describe("Company operational status administration", () => {
     const notifications = await asUser(t, target.userId).query(api.notifications.index.listMyNotifications, {
       paginationOpts: { numItems: 20, cursor: null },
     });
-    expect(notifications.page).toEqual([]);
+    expect(notifications.page.map((row) => row.type)).toEqual([
+      "company_reactivated",
+      "company_suspended",
+      "company_reactivated",
+      "company_suspended",
+    ]);
+    expect(notifications.page.every((row) => row.entity.type === "company_operational_status")).toBe(true);
+    expect(notifications.page.every((row) => row.payload.companyId === target.companyId)).toBe(true);
   });
 });
 

@@ -407,3 +407,45 @@ cards remain usable without horizontal overflow at desktop, 1024px, 768px, and
 OC2.6 does not implement operational Company status, suspension/reactivation,
 CRM, tickets, SLA, notifications, Push, Project/Deal linking, or note editing
 and deletion. Those remain outside this append-only V1 feature.
+
+## OC2.8 — Admin ↔ Company operational notifications
+
+Operational messages now use the shared notification pipeline without changing
+the operational conversation model. A newly inserted Admin message creates one
+`admin_company_message_received` notification for every active member of that
+Company, including members who are still completing onboarding. A newly
+inserted Company message creates one `company_admin_message_received`
+notification for every Admin user. In both directions the author is excluded,
+inactive memberships are excluded, and the immutable message ID supplies the
+per-recipient dedupe key. Retrying the same send idempotency key therefore
+returns the original message without creating another notification.
+
+The stored entity is the immutable `adminCompanyMessages` row. Its payload is
+locale-neutral and limited to the Company ID/name, a safe sender display name,
+and the existing normalized 140-character preview. In-app notifications may
+show that preview; browser Push follows the existing privacy precedent and
+uses generic message copy without the preview. Admin clicks resolve to the
+localized Company detail Messages tab, while Company clicks resolve to the
+localized Batiplus support page. Wrong-role opens fall back to the shared
+notifications page.
+
+Operational status notifications are tied to the immutable
+`companyOperationalStatusHistory` row. A transition into `suspended` emits
+`company_suspended`; a transition from `suspended` to either `normal` or
+`needs_attention` emits `company_reactivated`. Transitions between `normal`
+and `needs_attention` emit nothing. The payload contains only the Company
+ID/name: the private Admin reason and internal from/to status values are never
+copied into notification or Push presentation. Suspension opens Batiplus
+support for remediation; reactivation opens the existing Company dashboard.
+
+Both message types use the existing `messages` preference category and both
+status types use `account`. In-app creation remains mandatory and atomic with
+the domain mutation. Push is scheduled only after that transaction and remains
+subject to the global and category preferences, subscription ownership, and
+invalid-subscription cleanup. A provider failure cannot roll back an
+operational message or status transition. Notification read state remains
+independent from `adminCompanyConversationReads.readThroughSequence`.
+
+Internal Admin notes remain strictly separate and continue to create zero
+notifications. OC2.8 adds no assignment, ticketing, SLA, email, SMS, WhatsApp,
+bulk messaging, or new marketplace event rules.

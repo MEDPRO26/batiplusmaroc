@@ -20,6 +20,10 @@ export const NOTIFICATION_TYPES = [
   "review_received",
   "company_verification_approved",
   "company_verification_rejected",
+  "admin_company_message_received",
+  "company_admin_message_received",
+  "company_suspended",
+  "company_reactivated",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -44,6 +48,10 @@ export const ACTIVE_NOTIFICATION_TYPES = [
   "review_received",
   "company_verification_approved",
   "company_verification_rejected",
+  "admin_company_message_received",
+  "company_admin_message_received",
+  "company_suspended",
+  "company_reactivated",
 ] as const satisfies readonly NotificationType[];
 
 export type ActiveNotificationType = (typeof ACTIVE_NOTIFICATION_TYPES)[number];
@@ -68,6 +76,10 @@ export const notificationTypeValidator = v.union(
   v.literal("review_received"),
   v.literal("company_verification_approved"),
   v.literal("company_verification_rejected"),
+  v.literal("admin_company_message_received"),
+  v.literal("company_admin_message_received"),
+  v.literal("company_suspended"),
+  v.literal("company_reactivated"),
 );
 
 /**
@@ -84,6 +96,8 @@ export const notificationEntityValidator = v.union(
   v.object({ type: v.literal("deal"), id: v.id("deals") }),
   v.object({ type: v.literal("review"), id: v.id("reviews") }),
   v.object({ type: v.literal("company_verification"), id: v.id("companyVerifications") }),
+  v.object({ type: v.literal("admin_company_message"), id: v.id("adminCompanyMessages") }),
+  v.object({ type: v.literal("company_operational_status"), id: v.id("companyOperationalStatusHistory") }),
 );
 
 /**
@@ -98,4 +112,5 @@ export const notificationPayloadValidator = v.object({
   scheduledAt: v.optional(v.number()),
   amountMad: v.optional(v.number()),
   rating: v.optional(v.number()),
+  companyId: v.optional(v.id("companies")),
 });

@@ -4,7 +4,7 @@ import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import en from "../messages/en.json";
 import fr from "../messages/fr.json";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { ACTIVE_NOTIFICATION_TYPES } from "./notifications/constants";
 import { DEFAULT_NOTIFICATION_PREFERENCES } from "./notifications/deliveryPolicy";
@@ -303,6 +303,73 @@ describe("marketplace push delivery", () => {
     ]);
   });
 
+  test("an operational Push failure cannot roll back the Admin message or in-app notification", async () => {
+    const t = convexTest(schema, modules);
+    const { adminId, companyId, memberId } = await t.run(async (ctx) => {
+      const adminId = await ctx.db.insert("users", {
+        email: "admin-operational-push@example.test",
+        firstName: "Admin",
+        accountType: "admin",
+        onboardingStatus: "completed",
+        createdAt: 1,
+        updatedAt: 1,
+      });
+      const memberId = await ctx.db.insert("users", {
+        email: "company-operational-push@example.test",
+        firstName: "Company",
+        accountType: "company",
+        onboardingStatus: "completed",
+        createdAt: 1,
+        updatedAt: 1,
+      });
+      const companyId = await ctx.db.insert("companies", {
+        name: "Atlas Operations",
+        onboardingStatus: "completed",
+        verificationStatus: "verified",
+        createdAt: 1,
+        updatedAt: 1,
+      });
+      await ctx.db.insert("companyMembers", {
+        companyId,
+        userId: memberId,
+        role: "owner",
+        status: "active",
+        createdAt: 1,
+      });
+      return { adminId, companyId, memberId };
+    });
+    await enablePush(t, memberId);
+    await addSubscriptions(t, memberId, ["operational-temporary"]);
+    webPush.sendNotification.mockRejectedValue(
+      Object.assign(new Error("unavailable"), { statusCode: 503 }),
+    );
+
+    const sent = await t.withIdentity({
+      subject: `${adminId}|test`,
+      tokenIdentifier: `test|${adminId}`,
+    }).mutation(api.adminCompanyMessaging.sendAdminMessage, {
+      companyId,
+      body: "Please review the operational request.",
+      idempotencyKey: "operational-push-failure",
+    });
+    await t.finishAllScheduledFunctions(() => {});
+
+    const stored = await t.run(async (ctx) => ({
+      message: await ctx.db.get(sent.messageId),
+      notifications: await ctx.db.query("notifications").collect(),
+    }));
+    expect(stored.message?.body).toBe("Please review the operational request.");
+    expect(stored.notifications).toHaveLength(1);
+    expect(stored.notifications[0]).toMatchObject({
+      recipientUserId: memberId,
+      type: "admin_company_message_received",
+      pushDeliveryStatus: "completed",
+      pushDeliveredCount: 0,
+      pushRemovedCount: 0,
+      pushFailedCount: 1,
+    });
+  });
+
   test("a 404 removes only the claimed recipient's invalid device", async () => {
     const t = convexTest(schema, modules);
     const context = await seedMessageContext(t);
@@ -359,6 +426,10 @@ describe("marketplace push presentation", () => {
     ["deal_completed", "deal"],
     ["review_received", "review"],
     ["company_verification_approved", "company_verification"],
+    ["admin_company_message_received", "admin_company_message"],
+    ["company_admin_message_received", "admin_company_message"],
+    ["company_suspended", "company_operational_status"],
+    ["company_reactivated", "company_operational_status"],
   ] as const)("renders %s safely in both supported locales", (type, entityType) => {
     const notification = {
       _id: "notification-1" as Id<"notifications">,
@@ -387,8 +458,8 @@ describe("marketplace push presentation", () => {
       _id: "notification-1" as Id<"notifications">,
       payload: { projectTitle: "Villa Atlas", companyName: "Atlas Build", amountMad: 12_000, rating: 5 },
     };
-    const render = (type: string, entity: { type: string; id: string }, role: "client" | "company", locale: "fr" | "en") =>
-      marketplacePushPresentation({ ...base, type, entity } as Parameters<typeof marketplacePushPresentation>[0], role, locale);
+    const render = (type: string, entity: { type: string; id: string }, role: "client" | "company" | "admin", locale: "fr" | "en", companyId?: string) =>
+      marketplacePushPresentation({ ...base, payload: { ...base.payload, companyId }, type, entity } as Parameters<typeof marketplacePushPresentation>[0], role, locale);
 
     expect(render("proposal_received", { type: "proposal", id: "proposal-1" }, "client", "en")).toMatchObject({
       body: "Atlas Build sent a proposal for Villa Atlas.",
@@ -405,5 +476,9 @@ describe("marketplace push presentation", () => {
     expect(render("deal_completed", { type: "deal", id: "deal-1" }, "company", "en").url).toBe("/en/company");
     expect(render("review_received", { type: "review", id: "review-1" }, "company", "fr").url).toBe("/fr/espace-entreprise/profil");
     expect(render("company_verification_rejected", { type: "company_verification", id: "verification-1" }, "company", "en").url).toBe("/en/company/verification");
+    expect(render("admin_company_message_received", { type: "admin_company_message", id: "message-1" }, "company", "en").url).toBe("/en/company/batiplus");
+    expect(render("company_admin_message_received", { type: "admin_company_message", id: "message-2" }, "admin", "fr", "company-1").url).toBe("/fr/admin/entreprises/company-1?tab=messages");
+    expect(render("company_suspended", { type: "company_operational_status", id: "status-1" }, "company", "fr").url).toBe("/fr/espace-entreprise/batiplus");
+    expect(render("company_reactivated", { type: "company_operational_status", id: "status-2" }, "company", "en").url).toBe("/en/company");
   });
 });

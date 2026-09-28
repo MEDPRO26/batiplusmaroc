@@ -2541,6 +2541,10 @@
       "review_received": "You received a {rating}-star review for {projectTitle}.",
       "company_verification_approved": "{companyName} has been verified.",
       "company_verification_rejected": "Verification for {companyName} needs your attention.",
+      "admin_company_message_received": "Batiplus sent you a new operational message.",
+      "company_admin_message_received": "{companyName} sent Batiplus a new operational message.",
+      "company_suspended": "Marketplace access for {companyName} has been suspended. Open Batiplus support for next steps.",
+      "company_reactivated": "Marketplace access for {companyName} has been restored.",
       "fallback": "Marketplace update"
     }
   },

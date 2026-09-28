@@ -88,6 +88,7 @@ test.beforeAll(async () => {
               "/espace-entreprise/projets": "/company/projects",
               "/espace-entreprise/invitations": "/company/invitations",
               "/espace-entreprise/commissions": "/company/commissions",
+              "/espace-entreprise/batiplus": "/company/batiplus",
               "/espace-entreprise": "/company",
             };
             function destinationPath(destination) {
@@ -98,6 +99,10 @@ test.beforeAll(async () => {
               }
               if (destination.pathname === "/messages/[conversationId]") {
                 return "/" + state.locale + "/messages/" + encodeURIComponent(destination.params.conversationId);
+              }
+              if (destination.pathname === "/admin/companies/[companyId]") {
+                const companies = state.locale === "en" ? "companies" : "entreprises";
+                return "/" + state.locale + "/admin/" + companies + "/" + encodeURIComponent(destination.params.companyId) + "?tab=messages";
               }
               const area = destination.pathname === "/espace-client/projets/[projectId]"
                 ? state.locale === "en" ? "client" : "espace-client"
@@ -157,7 +162,7 @@ async function mountIntegratedBell(
   page: Page,
   options: {
     locale?: "en" | "fr";
-    accountType?: "client" | "company";
+    accountType?: "client" | "company" | "admin";
     notification?: Partial<IntegratedNotification>;
     failRead?: boolean;
   } = {},
@@ -276,5 +281,58 @@ test("FR Client and Company notification destinations remain localized and mobil
   await page.getByRole("button", { name: /Ouvrir les notifications/ }).click();
   await page.getByRole("button", { name: /Non lue.*Villa Atlas/ }).click();
   await expect(page).toHaveURL(/\/fr\/espace-entreprise\/invitations$/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+});
+
+test("operational notifications render safe previews and open role-localized destinations", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mountIntegratedBell(page, {
+    locale: "en",
+    accountType: "company",
+    notification: {
+      type: "admin_company_message_received",
+      entity: { type: "admin_company_message", id: "message-1" },
+      payload: {
+        companyId: "company-atlas",
+        companyName: "Atlas Build",
+        messagePreview: "Please review the compliance request.",
+      },
+    },
+  });
+  await page.getByRole("button", { name: /Open notifications/ }).click();
+  await expect(page.getByText("Please review the compliance request.")).toBeVisible();
+  await page.getByRole("button", { name: /Unread: Batiplus sent you/ }).click();
+  await expect(page).toHaveURL(/\/en\/company\/batiplus$/);
+
+  await mountIntegratedBell(page, {
+    locale: "fr",
+    accountType: "admin",
+    notification: {
+      type: "company_admin_message_received",
+      entity: { type: "admin_company_message", id: "message-2" },
+      payload: {
+        companyId: "company-atlas",
+        companyName: "Atlas Build",
+        messagePreview: "Le justificatif demandé est prêt.",
+      },
+    },
+  });
+  await page.getByRole("button", { name: /Ouvrir les notifications/ }).click();
+  await expect(page.getByText("Le justificatif demandé est prêt.")).toBeVisible();
+  await page.getByRole("button", { name: /Non lue.*Atlas Build/ }).click();
+  await expect(page).toHaveURL(/\/fr\/admin\/entreprises\/company-atlas\?tab=messages$/);
+
+  await mountIntegratedBell(page, {
+    locale: "fr",
+    accountType: "company",
+    notification: {
+      type: "company_reactivated",
+      entity: { type: "company_operational_status", id: "status-1" },
+      payload: { companyId: "company-atlas", companyName: "Atlas Build" },
+    },
+  });
+  await page.getByRole("button", { name: /Ouvrir les notifications/ }).click();
+  await page.getByRole("button", { name: /Non lue.*accès.*rétabli/ }).click();
+  await expect(page).toHaveURL(/\/fr\/espace-entreprise$/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 });

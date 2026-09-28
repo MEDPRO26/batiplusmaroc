@@ -213,6 +213,60 @@ describe("notification presentation", () => {
     expect(notificationDestination(notification("company_verification_rejected", { type: "company_verification", id: "verification-1" as Id<"companyVerifications"> }), "company")).toBe(routes.companyVerification);
   });
 
+  test("renders and routes operational notifications safely in both locales", () => {
+    const companyMessage = {
+      ...notification("company_admin_message_received", {
+        type: "admin_company_message",
+        id: "message-1" as Id<"adminCompanyMessages">,
+      }),
+      payload: {
+        companyId: "company-1" as Id<"companies">,
+        companyName: "Atlas Build",
+        messagePreview: "A safe operational preview.",
+      },
+    };
+    const adminMessage = {
+      ...notification("admin_company_message_received", {
+        type: "admin_company_message",
+        id: "message-2" as Id<"adminCompanyMessages">,
+      }),
+      payload: {
+        companyId: "company-1" as Id<"companies">,
+        companyName: "Atlas Build",
+        messagePreview: "Please review this request.",
+      },
+    };
+    expect(notificationDestination(companyMessage, "admin")).toEqual({
+      pathname: routes.adminCompany,
+      params: { companyId: "company-1" },
+      query: { tab: "messages" },
+    });
+    expect(localizedNotificationDestination("en", companyMessage, "admin"))
+      .toBe("/en/admin/companies/company-1?tab=messages");
+    expect(localizedNotificationDestination("fr", companyMessage, "admin"))
+      .toBe("/fr/admin/entreprises/company-1?tab=messages");
+    expect(notificationDestination(adminMessage, "company")).toBe(routes.companyBatiplus);
+    expect(localizedNotificationDestination("en", adminMessage, "company")).toBe("/en/company/batiplus");
+    expect(localizedNotificationDestination("fr", adminMessage, "company")).toBe("/fr/espace-entreprise/batiplus");
+    const statusNotification = {
+      ...notification("company_reactivated", {
+        type: "company_operational_status",
+        id: "status-1" as Id<"companyOperationalStatusHistory">,
+      }),
+      payload: { companyId: "company-1" as Id<"companies">, companyName: "Atlas Build" },
+    };
+    expect(localizedNotificationDestination("en", statusNotification, "company")).toBe("/en/company");
+    expect(localizedNotificationDestination("fr", statusNotification, "company")).toBe("/fr/espace-entreprise");
+    expect(notificationDestination(statusNotification, "admin")).toBe(routes.notifications);
+    expect(notificationDestination(companyMessage, "client")).toBe(routes.notifications);
+    expect(notificationDestination(adminMessage, "admin")).toBe(routes.notifications);
+
+    state.results = [adminMessage];
+    expect(renderPage("en")).toContain("Batiplus sent you a new operational message.");
+    expect(renderPage("en")).toContain("Please review this request.");
+    expect(renderPage("fr")).toContain("Batiplus vous a envoyé un nouveau message opérationnel.");
+  });
+
   test("resolves proposal notifications to the related role-safe Project route", async () => {
     const projectId = "project-1" as Id<"projects">;
     const received = { ...notification("proposal_received", { type: "proposal", id: "proposal-1" as Id<"projectQuotes"> }), projectId };

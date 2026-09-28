@@ -102,6 +102,78 @@ async function setup() {
 const firstPage = (numItems = 20) => ({ paginationOpts: { numItems, cursor: null } });
 
 describe("operational conversation creation and send", () => {
+  test("fans operational messages out to active Company members and every Admin exactly once", async () => {
+    const state = await setup();
+    const adminSend = await asUser(state.t, state.adminA).mutation(
+      api.adminCompanyMessaging.sendAdminMessage,
+      {
+        companyId: state.companyId,
+        body: "  Please\nreview\u0000the compliance document.  ",
+        idempotencyKey: "notification-admin-message",
+      },
+    );
+    const retry = await asUser(state.t, state.adminA).mutation(
+      api.adminCompanyMessaging.sendAdminMessage,
+      {
+        companyId: state.companyId,
+        body: "Please\nreview\u0000the compliance document.",
+        idempotencyKey: "notification-admin-message",
+      },
+    );
+    expect(retry).toEqual({ ...adminSend, duplicate: true });
+
+    const companySend = await asUser(state.t, state.owner).mutation(
+      api.adminCompanyMessaging.sendCompanyMessage,
+      { body: "The requested document is ready.", idempotencyKey: "notification-company-message" },
+    );
+    const notifications = await state.t.run((ctx) => ctx.db.query("notifications").collect());
+    const adminMessageNotifications = notifications.filter((row) =>
+      row.type === "admin_company_message_received");
+    expect(adminMessageNotifications).toHaveLength(2);
+    expect(adminMessageNotifications.map((row) => row.recipientUserId).sort()).toEqual(
+      [state.owner, state.staff].sort(),
+    );
+    expect(adminMessageNotifications.every((row) => row.recipientUserId !== state.inactive)).toBe(true);
+    expect(adminMessageNotifications.every((row) => row.actorUserId === state.adminA)).toBe(true);
+    expect(adminMessageNotifications[0]).toMatchObject({
+      entity: { type: "admin_company_message", id: adminSend.messageId },
+      payload: {
+        companyId: state.companyId,
+        companyName: "Atlas Operations",
+        messagePreview: "Please review the compliance document.",
+      },
+    });
+    expect(Object.keys(adminMessageNotifications[0].payload).sort()).toEqual([
+      "actorDisplayName",
+      "companyId",
+      "companyName",
+      "messagePreview",
+    ]);
+
+    const companyMessageNotifications = notifications.filter((row) =>
+      row.type === "company_admin_message_received");
+    expect(companyMessageNotifications).toHaveLength(2);
+    expect(companyMessageNotifications.map((row) => row.recipientUserId).sort()).toEqual(
+      [state.adminA, state.adminB].sort(),
+    );
+    expect(companyMessageNotifications.every((row) => row.actorUserId === state.owner)).toBe(true);
+    expect(companyMessageNotifications[0]).toMatchObject({
+      entity: { type: "admin_company_message", id: companySend.messageId },
+      payload: {
+        companyId: state.companyId,
+        companyName: "Atlas Operations",
+        messagePreview: "The requested document is ready.",
+      },
+    });
+    expect(Object.keys(companyMessageNotifications[0].payload).sort()).toEqual([
+      "actorDisplayName",
+      "companyId",
+      "companyName",
+      "messagePreview",
+    ]);
+    expect(JSON.stringify(notifications)).not.toContain("@operational.test");
+  });
+
   test("Admin and Company can each initiate while one conversation per Company is preserved", async () => {
     const state = await setup();
     const adminSend = await asUser(state.t, state.adminA).mutation(

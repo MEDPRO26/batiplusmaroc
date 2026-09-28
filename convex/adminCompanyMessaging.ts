@@ -5,6 +5,10 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { requireAdminUser } from "./admin/access";
 import { requireActiveCompanyMembership } from "./companies/access";
+import {
+  createNotificationForAllAdmins,
+  createOperationalNotificationForActiveCompanyMembers,
+} from "./notifications/model";
 
 const MAX_MESSAGE_LENGTH = 5_000;
 const MAX_IDEMPOTENCY_KEY_LENGTH = 100;
@@ -243,6 +247,39 @@ async function sendOperationalMessage(
   // Sending proves the author has viewed through the newly appended boundary.
   // Other participants' independent read records remain untouched.
   await upsertReadBoundary(ctx, conversation._id, args.senderUserId, sequence, now);
+  const [company, sender] = await Promise.all([
+    ctx.db.get(args.companyId),
+    ctx.db.get(args.senderUserId),
+  ]);
+  if (!company) throw new ConvexError("COMPANY_NOT_FOUND");
+  const companyName = company.name?.trim() || company.legalName?.trim() || "Company";
+  const preview = messagePreview(body);
+  const notification = {
+    entity: { type: "admin_company_message" as const, id: messageId },
+    payload: {
+      actorDisplayName: safeDisplayName(
+        sender,
+        args.senderType === "admin" ? "Batiplus" : "Company member",
+      ),
+      companyName,
+      companyId: company._id,
+      messagePreview: preview,
+    },
+    actorUserId: args.senderUserId,
+    dedupeKey: `admin-company-message:${messageId}`,
+  };
+  if (args.senderType === "admin") {
+    await createOperationalNotificationForActiveCompanyMembers(ctx, {
+      ...notification,
+      companyId: company._id,
+      type: "admin_company_message_received",
+    });
+  } else {
+    await createNotificationForAllAdmins(ctx, {
+      ...notification,
+      type: "company_admin_message_received",
+    });
+  }
   return {
     conversationId: conversation._id,
     messageId,

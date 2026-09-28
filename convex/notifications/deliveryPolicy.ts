@@ -90,6 +90,10 @@ export const NOTIFICATION_DELIVERY_POLICY = {
   review_received: active("commercial"),
   company_verification_approved: active("account"),
   company_verification_rejected: active("account"),
+  admin_company_message_received: active("messages"),
+  company_admin_message_received: active("messages"),
+  company_suspended: active("account"),
+  company_reactivated: active("account"),
 } as const satisfies Record<NotificationType, NotificationDeliveryPolicy>;
 
 const UNKNOWN_DELIVERY_POLICY: ReservedDeliveryPolicy = {

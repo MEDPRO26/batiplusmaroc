@@ -69,6 +69,10 @@ describe("notification delivery policy", () => {
       review_received: "commercial",
       company_verification_approved: "account",
       company_verification_rejected: "account",
+      admin_company_message_received: "messages",
+      company_admin_message_received: "messages",
+      company_suspended: "account",
+      company_reactivated: "account",
     };
 
     expect([...ACTIVE_NOTIFICATION_TYPES].sort()).toEqual(Object.keys(expectedCategories).sort());

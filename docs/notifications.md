@@ -838,6 +838,24 @@ Security findings after fixes:
 
 ## Boundaries and future phases
 
+### Admin ↔ Company operations integration (OC2.8)
+
+Four active types extend the existing delivery policy: operational messages in
+the `messages` category and Company suspension/reactivation in the `account`
+category. Message dedupe is derived from immutable `adminCompanyMessages` IDs;
+status dedupe is derived from immutable `companyOperationalStatusHistory` IDs.
+The corresponding constrained entity kinds are `admin_company_message` and
+`company_operational_status`.
+
+Admin messages fan out to active members of the target Company; Company
+messages fan out to every Admin in V1. Status notifications fan out only when
+crossing the suspended boundary. Private status reasons, internal notes, full
+message bodies, credentials, and Push subscription data never enter Push
+payloads. Company message and suspension links open Batiplus support,
+reactivation opens the Company dashboard, and Admin message links open the
+localized Company Messages tab. Notification watermarks and
+operational-conversation sequence watermarks are intentionally independent.
+
 Notifications answer “who needs to know?” and never replace marketplace audit
 or activity records, which answer “what happened?”. Steps 12.2.1–12.2.6 are
 audited and form the stable backend boundary for the Step 12.3 in-app UI,

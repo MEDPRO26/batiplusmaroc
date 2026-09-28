@@ -4,6 +4,7 @@ export type NotificationAccountType = "client" | "company" | "admin" | "seo_team
 export type NotificationDestinationInput = {
   type: string;
   entity: { type: string; id: string };
+  payload?: { companyId?: string };
 };
 
 export type NotificationDestination =
@@ -19,6 +20,7 @@ export type NotificationDestination =
     >
   | { pathname: typeof routes.clientProject; params: { projectId: string } }
   | { pathname: typeof routes.companyProject; params: { projectId: string } }
+  | { pathname: typeof routes.adminCompany; params: { companyId: string }; query: { tab: "messages" } }
   | { pathname: typeof routes.messagesConversation; params: { conversationId: string } };
 
 export type NotificationDestinationContext = {
@@ -30,6 +32,26 @@ export function notificationDestination(
   accountType: NotificationAccountType,
   context: NotificationDestinationContext = {},
 ): NotificationDestination {
+  if (
+    notification.type === "company_admin_message_received"
+    && accountType === "admin"
+    && notification.payload?.companyId
+  ) {
+    return {
+      pathname: routes.adminCompany,
+      params: { companyId: notification.payload.companyId },
+      query: { tab: "messages" },
+    };
+  }
+  if (
+    accountType === "company"
+    && ["admin_company_message_received", "company_suspended"].includes(notification.type)
+  ) {
+    return routes.companyBatiplus;
+  }
+  if (accountType === "company" && notification.type === "company_reactivated") {
+    return routes.companyDashboard;
+  }
   if (accountType === "admin" || accountType === "seo_team") return routes.notifications;
   if (notification.type === "message_received" && notification.entity.type === "conversation") {
     return {
@@ -87,6 +109,7 @@ const ENGLISH_PATHS: Partial<Record<string, string>> = {
   [routes.companySettings]: "/company/settings",
   [routes.companyProfileManagement]: "/company/profile",
   [routes.companyVerification]: "/company/verification",
+  [routes.companyBatiplus]: "/company/batiplus",
 };
 
 export function localizedNotificationDestination(
@@ -99,6 +122,9 @@ export function localizedNotificationDestination(
   if (typeof destination !== "string") {
     if (destination.pathname === routes.messagesConversation) {
       return `/${locale}/messages/${encodeURIComponent(destination.params.conversationId)}`;
+    }
+    if (destination.pathname === routes.adminCompany) {
+      return `/${locale}/admin/${locale === "en" ? "companies" : "entreprises"}/${encodeURIComponent(destination.params.companyId)}?tab=messages`;
     }
     const projectId = encodeURIComponent(destination.params.projectId);
     const area = destination.pathname === routes.clientProject

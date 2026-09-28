@@ -49,6 +49,10 @@ export const NOTIFICATION_PRESENTATION = {
   review_received: { translationKey: "events.review_received", iconCategory: "review" },
   company_verification_approved: { translationKey: "events.company_verification_approved", iconCategory: "verification" },
   company_verification_rejected: { translationKey: "events.company_verification_rejected", iconCategory: "verification" },
+  admin_company_message_received: { translationKey: "events.admin_company_message_received", iconCategory: "message" },
+  company_admin_message_received: { translationKey: "events.company_admin_message_received", iconCategory: "message" },
+  company_suspended: { translationKey: "events.company_suspended", iconCategory: "verification" },
+  company_reactivated: { translationKey: "events.company_reactivated", iconCategory: "verification" },
 } as const satisfies Record<NotificationType, {
   translationKey: `events.${NotificationType}`;
   iconCategory: NotificationIconCategory;

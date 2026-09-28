@@ -6,6 +6,7 @@ import {
   getCompanyOperationalStatus,
 } from "../companies/operationalStatus";
 import { requireAdminUser } from "./access";
+import { createOperationalNotificationForActiveCompanyMembers } from "../notifications/model";
 
 const historyItemValidator = v.object({
   id: v.id("companyOperationalStatusHistory"),
@@ -90,7 +91,7 @@ export const change = mutation({
     const reason = normalizeReason(args.reason);
     const now = Date.now();
     await ctx.db.patch(company._id, { operationalStatus: args.toStatus, updatedAt: now });
-    await ctx.db.insert("companyOperationalStatusHistory", {
+    const historyId = await ctx.db.insert("companyOperationalStatusHistory", {
       companyId: company._id,
       fromStatus,
       toStatus: args.toStatus,
@@ -98,6 +99,24 @@ export const change = mutation({
       changedByAdminUserId: admin._id,
       createdAt: now,
     });
+    const notificationType = args.toStatus === "suspended"
+      ? "company_suspended" as const
+      : fromStatus === "suspended"
+        ? "company_reactivated" as const
+        : null;
+    if (notificationType) {
+      await createOperationalNotificationForActiveCompanyMembers(ctx, {
+        companyId: company._id,
+        type: notificationType,
+        entity: { type: "company_operational_status", id: historyId },
+        payload: {
+          companyId: company._id,
+          companyName: company.name?.trim() || company.legalName?.trim() || "Company",
+        },
+        actorUserId: admin._id,
+        dedupeKey: `company-operational-status:${historyId}:${notificationType}`,
+      });
+    }
     return { status: args.toStatus };
   },
 });
