@@ -453,7 +453,7 @@ browser/device foundation described below.
 `convex/notifications/deliveryPolicy.ts` is the single Strategy boundary for
 notification delivery rules. Every currently wired marketplace event has
 `inApp: true`: user preferences never suppress the trusted domain mutation or
-its in-app notification record. Push is an additive future channel.
+its in-app notification record. Push is an additive channel.
 
 The active policy is:
 
@@ -503,13 +503,13 @@ five boolean category keys.
 
 The shared `/{locale}/notifications` surface contains the settings panel for
 all authenticated roles. Client and Company users see the five category
-controls. Admin and SEO users see only the master future-push preference because
+controls. Admin and SEO users see only the master push preference because
 their workspaces currently receive no marketplace event families. UI copy
 states that these choices never disable in-app notifications and that enabling
 the preference does not request browser permission.
 
-`resolveNotificationDelivery` currently evaluates policy plus the stored global
-and category preferences. A later delivery step may send push only when all of
+`resolveNotificationDelivery` evaluates policy plus the stored global and
+category preferences. Marketplace delivery sends Push only when all of
 the following are true:
 
 1. the event is push eligible;
@@ -518,8 +518,7 @@ the following are true:
 4. Step 12.5 has created a valid browser permission and push subscription.
 
 Messages remain individually eligible but are not throttled or grouped here.
-Step 12.6 may add delivery-time grouping or throttling without changing the
-in-app record. Final Quote acceptance and `commission_due` remain distinct,
+Final Quote acceptance and `commission_due` remain distinct,
 useful events; no `deal_created` event was wired.
 
 This preference step itself does not request browser permission. Step 12.5's
@@ -599,15 +598,15 @@ scope, creates or reuses a `PushSubscription` with the public VAPID key, and
 persists its endpoint and encryption keys under the authenticated user.
 Disabling first calls the browser subscription's `unsubscribe()`, then removes
 that exact owned endpoint from Convex. Global/category preference state remains
-separate: a valid device may exist while global push is off, but future
-marketplace delivery must require both preference approval and a valid device.
+separate: a valid device may exist while global push is off, but marketplace
+delivery requires both preference approval and a valid device.
 
 `public/push-sw.js` implements only `push` and `notificationclick`. It adds no
 offline cache, installability, fetch interception, background sync, or other
 PWA behavior. Payload text is type/length checked, malformed JSON falls back to
 safe Batiplus values, and click URLs must resolve to the current origin.
-External, protocol-relative, malformed, and missing URLs fall back to
-`/en/notifications`. A click focuses and navigates an existing Batiplus window
+External, protocol-relative, malformed, and missing URLs fall back to the app
+default, `/fr/notifications`. A click focuses and navigates an existing Batiplus window
 or opens a new same-origin window.
 
 ### Test delivery and invalid cleanup
@@ -661,10 +660,181 @@ persisted; it does not guess from browser endpoint data.
 
 Delivery fans out to every registered device. A `404` or `410` removes only
 the matching recipient-owned subscription. Network and 5xx failures preserve
-the subscription. Logs contain notification ID, constrained type, and status
-code only—never endpoints, keys, payload bodies, or message content. There is
+the subscription. Logs contain notification ID, constrained type, aggregate
+attempt/result counts, and status code only—never endpoints, keys, payload
+bodies, or message content. There is
 no retry queue, digest, batching, rate limiting, email, SMS, or WhatsApp in
 Step 12.6.
+
+## Step 12.7 delivery audit and launch hardening
+
+The end-to-end audit status is **PASS WITH FIXES APPLIED**. No Critical or High
+finding remains. The audit tightened VAPID subject validation, aligned the
+service-worker fallback with the French default locale, added aggregate safe
+delivery logging, and filled deterministic cleanup/device-cap/unread-state
+regression gaps. It added no event family or delivery channel.
+
+### Audited delivery matrix
+
+The Step 12.2.7 matrix above remains the canonical domain source, entity,
+recipient, actor, and dedupe inventory. The corresponding delivery controls
+and destinations are:
+
+| Notification type | Category | Push | Client destination | Company destination |
+| --- | --- | --- | --- | --- |
+| `proposal_received` | Projects | Eligible | Client dashboard | Company Projects |
+| `proposal_accepted` | Projects | Eligible | Client dashboard | Company Projects |
+| `invitation_received` | Projects | Eligible | Client dashboard | Company Invitations |
+| `invitation_accepted` | Projects | Eligible | Client dashboard | Company Projects |
+| `invitation_declined` | Projects | Eligible | Client dashboard | Company Projects |
+| `message_received` | Messages | Eligible | Referenced conversation | Referenced conversation |
+| `site_visit_proposed` | Site visits | Eligible | Messages | Messages |
+| `site_visit_confirmed` | Site visits | Eligible | Messages | Messages |
+| `site_visit_rescheduled` | Site visits | Eligible | Messages | Messages |
+| `site_visit_cancelled` | Site visits | Eligible | Messages | Messages |
+| `final_quote_submitted` | Commercial | Eligible | Messages | Messages |
+| `final_quote_accepted` | Commercial | Eligible | Messages | Messages |
+| `commission_due` | Commercial | Eligible | Client dashboard | Company Commissions |
+| `commission_paid` | Commercial | Eligible | Client dashboard | Company Commissions |
+| `deal_completed` | Commercial | Eligible | Client dashboard | Company dashboard |
+| `review_received` | Commercial | Eligible | Client dashboard | Company profile |
+| `company_verification_approved` | Account | Eligible | Client dashboard | Company Verification |
+| `company_verification_rejected` | Account | Eligible | Client dashboard | Company Verification |
+| `deal_created` | None (reserved) | Ineligible | Notifications fallback | Notifications fallback |
+
+Admin and SEO recipients always resolve to the shared Notifications page. The
+same pure destination resolver serves the in-app UI and Push renderer, so Push
+cannot introduce an external or cross-role URL. English paths are localized
+before delivery; French uses the app's canonical internal paths.
+
+### Scheduler, idempotency, and failure boundary
+
+`createNotification` writes the in-app row, schedules one internal action, and
+updates unread state in one Convex mutation. Convex commits all three or none;
+`runAfter(0)` becomes due only after the mutation completes. Dedupe hits return
+the existing notification before scheduling, so a domain retry creates neither
+a second in-app row nor another scheduled action.
+
+Convex scheduled actions are **at most once** and are not automatically retried.
+The internal action atomically changes an unclaimed notification to
+`processing`; any repeated/manual invocation then becomes a no-op. This favors
+duplicate prevention over guaranteed external delivery. There is an unavoidable
+external-side-effect ambiguity if the action or process fails after claiming—or
+after the push provider accepts a request but before completion is recorded.
+For V1, the explicit tradeoff is that such a notification may remain
+`processing` and its Push may be lost, but it is never automatically resent and
+can never damage its already-committed in-app/domain state. A retry queue or
+lease would trade loss for possible duplicate Push and remains intentionally
+out of scope.
+
+Successful, permanent-failure, temporary-failure, missing-configuration, and
+no-subscription paths never mutate `readAt`, `readThroughAt`, or `unreadCount`.
+The test-Push action remains separate: it authenticates the caller, targets only
+that caller's subscriptions, intentionally bypasses marketplace preferences for
+infrastructure testing, and creates no notification or recipient-state row.
+
+### Subscription, cleanup, performance, and observability
+
+Public subscription APIs accept no user ID and derive ownership through Convex
+Auth. Endpoint registration and removal use `by_endpoint`; fan-out uses
+`by_userId` and is bounded to 20 devices. Registration rejects device 21.
+Delivery attempts each returned subscription once. A `404` or `410` deletes
+only the exact endpoint when it is still owned by the claimed recipient; 5xx
+and network failures preserve it. Ownership is rechecked during cleanup, so an
+endpoint cannot be deleted after moving to another account.
+
+Each notification performs one indexed preference lookup and one bounded
+subscription lookup. Completion performs at most 20 indexed endpoint lookups.
+There are no unbounded notification/Push scans. One scheduled action is created
+per new recipient notification; Company fan-out therefore remains deliberately
+per recipient and per device.
+
+Logs contain only notification ID, constrained notification type, attempted
+device count, delivered count, permanent-failure count, temporary-failure
+count, and provider status code where available. Endpoints, encryption keys,
+payload bodies, message text, and VAPID secrets are never logged.
+
+### Push payload and locale privacy
+
+The serialized Push object has exactly four fields: `title`, `body`, `url`, and
+`tag`. Body interpolation may use only `actorDisplayName`, `projectTitle`,
+`companyName`, `amountMad`, and `rating`. The persisted `messagePreview` and
+`scheduledAt` values are deliberately not rendered into Push. Full Messages,
+contact details, exact addresses, Admin notes, payment references, Review
+comments, commission configuration, verification reasons/documents,
+subscriptions, and credentials are excluded.
+
+No reliable locale is stored on the V1 user record. Marketplace Push therefore
+uses the documented app default, French, rather than guessing from a device or
+endpoint. Both complete EN and FR template maps and localized routes are tested,
+so adding a reliable saved recipient locale later only changes locale selection,
+not the delivery architecture. Malformed service-worker payloads also fall back
+to `/fr/notifications`.
+
+### Service-worker lifecycle
+
+`/push-sw.js` has root scope and only `push` and `notificationclick` listeners.
+It has no fetch interception, cache, install, activate, offline, background-sync,
+or installability behavior. Same-origin URL reconstruction rejects absolute and
+protocol-relative external targets. Existing Batiplus windows are navigated and
+focused; otherwise a same-origin window opens.
+
+The browser registers the stable `/push-sw.js` URL. Browsers perform their
+standard service-worker update check for controlled navigations/registrations;
+the new worker activates through the standard lifecycle after old controlled
+clients release it. Batiplus deliberately uses neither `skipWaiting()` nor
+`clients.claim()`, avoiding forced mid-session replacement. There is no custom
+cache that can pin a stale worker.
+
+### Production environment and deployment order
+
+Use one matching VAPID key pair per environment. Required configuration:
+
+- **Vercel / Next.js build:** `NEXT_PUBLIC_VAPID_PUBLIC_KEY`.
+- **Convex server:** the same `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, its matching
+  `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT`.
+- `VAPID_SUBJECT` must be a valid contact URI such as
+  `mailto:notifications@batiplusmaroc.com` or an HTTPS contact page. Do not use
+  a developer's personal identity.
+
+Safe production order:
+
+1. Generate/approve the production VAPID pair outside the repository.
+2. Configure the three Convex server variables.
+3. Configure the matching public key in Vercel.
+4. Deploy the optional notification schema fields and Convex functions.
+5. Deploy Next.js, including `/push-sw.js` and the public key.
+6. Verify service-worker scope/update and subscribe a production-safe internal account.
+7. Send the authenticated infrastructure test, then one approved marketplace event.
+8. Verify the notification, click destination, in-app row, unread count, and safe logs.
+
+No production environment was read or changed during Step 12.7. The local
+development build did not have `NEXT_PUBLIC_VAPID_PUBLIC_KEY` configured, so a
+real browser delivery was not claimed; provider behavior is covered with
+deterministic mocked Web Push tests and the real service-worker browser test.
+
+### Emergency rollback and known limitations
+
+Removing `VAPID_PRIVATE_KEY` from Convex is the fastest configuration-only
+emergency stop: marketplace transactions and in-app notifications continue,
+while the delivery action records controlled failures without sending. If a
+quiet stop is required, deploy a policy change that makes all types Push
+ineligible; do not remove in-app notification creation. Restore the same key
+pair and redeploy only after validation.
+
+Known V1 limitations are the intentional French locale fallback, at-most-once
+scheduled action/crash window, sequential bounded fan-out, lack of provider
+delivery receipts, and no retry queue, digest, batching, analytics dashboard,
+email, SMS, or WhatsApp channel.
+
+Security findings after fixes:
+
+- **Critical:** none.
+- **High:** none.
+- **Medium:** none remaining. VAPID subjects now require a valid `mailto:` or
+  credential-free HTTPS contact URI.
+- **Low / accepted:** the documented at-most-once crash window and French
+  locale fallback; both preserve the authoritative in-app state.
 
 ## Boundaries and future phases
 

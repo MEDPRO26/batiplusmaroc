@@ -67,6 +67,14 @@ export const deliverMarketplacePush = internalAction({
         failedCount,
       },
     );
+    console.info("Marketplace push delivery completed", {
+      notificationId: args.notificationId,
+      type: claimed.notification.type,
+      attempted: claimed.subscriptions.length,
+      delivered: deliveredEndpoints.length,
+      permanentFailures: permanentFailureEndpoints.length,
+      temporaryFailures: failedCount,
+    });
     return null;
   },
 });

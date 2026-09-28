@@ -149,6 +149,7 @@ beforeEach(() => {
   process.env.VAPID_SUBJECT = "mailto:notifications@batiplusmaroc.com";
   webPush.sendNotification.mockReset().mockResolvedValue({ statusCode: 201 });
   webPush.setVapidDetails.mockReset();
+  vi.spyOn(console, "info").mockImplementation(() => undefined);
 });
 
 afterEach(() => {
@@ -160,6 +161,7 @@ afterEach(() => {
 
 describe("marketplace push delivery", () => {
   test("schedules once after creation, fans out to every device, and is idempotent", async () => {
+    const summaryLog = vi.mocked(console.info);
     const t = convexTest(schema, modules);
     const context = await seedMessageContext(t);
     await enablePush(t, context.recipientUserId);
@@ -185,17 +187,36 @@ describe("marketplace push delivery", () => {
     });
     expect(JSON.stringify(payload)).not.toContain("Private message text");
     expect(JSON.stringify(payload)).not.toContain("push.example.test");
+    expect(summaryLog).toHaveBeenCalledWith("Marketplace push delivery completed", {
+      notificationId: first.notificationId,
+      type: "message_received",
+      attempted: 2,
+      delivered: 2,
+      permanentFailures: 0,
+      temporaryFailures: 0,
+    });
 
     await t.action(internal.notifications.pushDelivery.deliverMarketplacePush, {
       notificationId: first.notificationId,
     });
     expect(webPush.sendNotification).toHaveBeenCalledTimes(2);
-    await expect(t.run((ctx) => ctx.db.get(first.notificationId))).resolves.toMatchObject({
-      pushDeliveryStatus: "completed",
-      pushDeliveredCount: 2,
-      pushRemovedCount: 0,
-      pushFailedCount: 0,
+    const deliveredState = await t.run(async (ctx) => ({
+      notification: await ctx.db.get(first.notificationId),
+      recipientState: await ctx.db
+        .query("notificationRecipientStates")
+        .withIndex("by_recipientUserId", (q) => q.eq("recipientUserId", context.recipientUserId))
+        .unique(),
+    }));
+    expect(deliveredState).toMatchObject({
+      notification: {
+        pushDeliveryStatus: "completed",
+        pushDeliveredCount: 2,
+        pushRemovedCount: 0,
+        pushFailedCount: 0,
+      },
+      recipientState: { unreadCount: 1 },
     });
+    expect(deliveredState.notification).not.toHaveProperty("readAt");
   });
 
   test("requires global preference, category preference, and a subscription", async () => {
@@ -220,10 +241,16 @@ describe("marketplace push delivery", () => {
       }
       const result = await createMessageNotification(t, context, `message:${blockedBy}:received`);
       await t.finishAllScheduledFunctions(() => {});
-      await expect(t.run((ctx) => ctx.db.get(result.notificationId))).resolves.toMatchObject({
+      const skippedNotification = await t.run((ctx) => ctx.db.get(result.notificationId));
+      expect(skippedNotification).toMatchObject({
         pushDeliveryStatus: "skipped",
         pushDeliveredCount: 0,
       });
+      expect(skippedNotification).not.toHaveProperty("readAt");
+      await expect(t.run(async (ctx) => await ctx.db
+        .query("notificationRecipientStates")
+        .withIndex("by_recipientUserId", (q) => q.eq("recipientUserId", context.recipientUserId))
+        .unique())).resolves.toMatchObject({ unreadCount: 1 });
     }
     expect(webPush.sendNotification).not.toHaveBeenCalled();
   });
@@ -270,9 +297,48 @@ describe("marketplace push delivery", () => {
       pushRemovedCount: 1,
       pushFailedCount: 1,
     });
+    expect(stored.notification).not.toHaveProperty("readAt");
     expect(stored.subscriptions.map((item) => item.endpoint).sort()).toEqual([
       subscription("ok").endpoint,
       subscription("temporary").endpoint,
+    ]);
+  });
+
+  test("a 404 removes only the claimed recipient's invalid device", async () => {
+    const t = convexTest(schema, modules);
+    const context = await seedMessageContext(t);
+    const otherUserId = await t.run((ctx) => ctx.db.insert("users", {
+      email: "other-push-recipient@example.test",
+      accountType: "client",
+      onboardingStatus: "completed",
+      countryCode: "MA",
+      createdAt: 1,
+      updatedAt: 1,
+    }));
+    await enablePush(t, context.recipientUserId);
+    await addSubscriptions(t, context.recipientUserId, ["not-found", "valid"]);
+    await addSubscriptions(t, otherUserId, ["other-user"]);
+    webPush.sendNotification.mockImplementation(async (value: { endpoint: string }) => {
+      if (value.endpoint.endsWith("not-found")) {
+        throw Object.assign(new Error("not found"), { statusCode: 404 });
+      }
+      return { statusCode: 201 };
+    });
+
+    const result = await createMessageNotification(t, context, "message:not-found:received");
+    await t.finishAllScheduledFunctions(() => {});
+    const stored = await t.run(async (ctx) => ({
+      notification: await ctx.db.get(result.notificationId),
+      subscriptions: await ctx.db.query("pushSubscriptions").collect(),
+    }));
+    expect(stored.notification).toMatchObject({
+      pushDeliveredCount: 1,
+      pushRemovedCount: 1,
+      pushFailedCount: 0,
+    });
+    expect(stored.subscriptions.map((item) => item.endpoint).sort()).toEqual([
+      subscription("other-user").endpoint,
+      subscription("valid").endpoint,
     ]);
   });
 });
@@ -329,11 +395,15 @@ describe("marketplace push presentation", () => {
       body: "Atlas Build sent a proposal for Villa Atlas.",
       url: "/en/client/dashboard",
     });
+    expect(render("invitation_received", { type: "invitation", id: "invitation-1" }, "company", "fr").url).toBe("/fr/espace-entreprise/invitations");
+    expect(render("message_received", { type: "conversation", id: "conversation-1" }, "client", "en").url).toBe("/en/messages/conversation-1");
     expect(render("site_visit_confirmed", { type: "site_visit", id: "visit-1" }, "company", "fr").url).toBe("/fr/messages");
+    expect(render("final_quote_submitted", { type: "final_quote", id: "quote-1" }, "client", "en").url).toBe("/en/messages");
     expect(render("commission_due", { type: "deal", id: "deal-1" }, "company", "en")).toMatchObject({
       body: "A commission of 12,000 MAD is due for Villa Atlas.",
       url: "/en/company/commissions",
     });
+    expect(render("deal_completed", { type: "deal", id: "deal-1" }, "company", "en").url).toBe("/en/company");
     expect(render("review_received", { type: "review", id: "review-1" }, "company", "fr").url).toBe("/fr/espace-entreprise/profil");
     expect(render("company_verification_rejected", { type: "company_verification", id: "verification-1" }, "company", "en").url).toBe("/en/company/verification");
   });

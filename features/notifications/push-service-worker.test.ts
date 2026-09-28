@@ -69,7 +69,7 @@ describe("push service worker", () => {
     expect(state.showNotification).toHaveBeenCalledWith("Batiplus Maroc", {
       body: "",
       tag: "batiplus-notification",
-      data: { url: "/en/notifications" },
+      data: { url: "/fr/notifications" },
     });
   });
 
@@ -92,13 +92,23 @@ describe("push service worker", () => {
     expect(state.openWindow).not.toHaveBeenCalled();
   });
 
-  test("rejects external click targets and opens the safe fallback", async () => {
+  test.each([
+    "https://evil.example/phish",
+    "//evil.example/phish",
+  ])("rejects external click target %s and opens the safe fallback", async (url) => {
     const state = worker();
     await dispatch(state.listeners.get("notificationclick")!, {
-      notification: { data: { url: "https://evil.example/phish" }, close: vi.fn() },
+      notification: { data: { url }, close: vi.fn() },
     });
     expect(state.openWindow).toHaveBeenCalledWith(
-      "https://batiplus.example/en/notifications",
+      "https://batiplus.example/fr/notifications",
     );
+  });
+
+  test("has no fetch interception, cache, install, or activation behavior", () => {
+    expect(source).not.toMatch(/addEventListener\(["']fetch["']/);
+    expect(source).not.toMatch(/addEventListener\(["']install["']/);
+    expect(source).not.toMatch(/addEventListener\(["']activate["']/);
+    expect(source).not.toContain("caches.");
   });
 });

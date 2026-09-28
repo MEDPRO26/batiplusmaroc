@@ -109,6 +109,24 @@ describe("push subscription API", () => {
     expect(stored[0].endpoint).toBe(laptop.endpoint);
   });
 
+  test("enforces the documented 20-device cap without disturbing registered devices", async () => {
+    const t = makeBackend();
+    const userId = await addUser(t);
+    const viewer = asUser(t, userId);
+    for (let index = 0; index < 20; index += 1) {
+      await viewer.mutation(
+        api.notifications.pushSubscriptions.registerMyPushSubscription,
+        subscription(`device-${index}`),
+      );
+    }
+    await expect(viewer.mutation(
+      api.notifications.pushSubscriptions.registerMyPushSubscription,
+      subscription("device-20"),
+    )).rejects.toThrow("PUSH_SUBSCRIPTION_LIMIT_REACHED");
+    await expect(t.run((ctx) => ctx.db.query("pushSubscriptions").collect()))
+      .resolves.toHaveLength(20);
+  });
+
   test("prevents cross-user endpoint registration, lookup, and removal", async () => {
     const t = makeBackend();
     const ownerId = await addUser(t);
@@ -189,9 +207,13 @@ describe("authenticated test push", () => {
       url: "/fr/notifications",
       tag: "batiplus-push-test",
     });
+    await expect(t.run(async (ctx) => ({
+      notifications: await ctx.db.query("notifications").collect(),
+      recipientStates: await ctx.db.query("notificationRecipientStates").collect(),
+    }))).resolves.toEqual({ notifications: [], recipientStates: [] });
   });
 
-  test("removes permanent 404/410 subscriptions", async () => {
+  test.each([404, 410])("removes permanent %s subscriptions", async (statusCode) => {
     const t = makeBackend();
     const userId = await addUser(t);
     const viewer = asUser(t, userId);
@@ -199,7 +221,7 @@ describe("authenticated test push", () => {
       api.notifications.pushSubscriptions.registerMyPushSubscription,
       subscription("expired"),
     );
-    webPush.sendNotification.mockRejectedValue(Object.assign(new Error("gone"), { statusCode: 410 }));
+    webPush.sendNotification.mockRejectedValue(Object.assign(new Error("gone"), { statusCode }));
 
     await expect(viewer.action(
       api.notifications.pushTest.sendMyTestPush,
@@ -225,6 +247,26 @@ describe("authenticated test push", () => {
     )).rejects.toThrow("PUSH_NOT_CONFIGURED");
     expect(webPush.sendNotification).not.toHaveBeenCalled();
   });
+
+  test.each(["mailto:", "not-a-uri", "http://notifications.example.com", "https://"])(
+    "rejects invalid VAPID subject %s before delivery",
+    async (subject) => {
+      const t = makeBackend();
+      const userId = await addUser(t);
+      const viewer = asUser(t, userId);
+      await viewer.mutation(
+        api.notifications.pushSubscriptions.registerMyPushSubscription,
+        subscription(`invalid-subject-${subject.length}`),
+      );
+      process.env.VAPID_SUBJECT = subject;
+
+      await expect(viewer.action(
+        api.notifications.pushTest.sendMyTestPush,
+        { locale: "fr" },
+      )).rejects.toThrow("PUSH_NOT_CONFIGURED");
+      expect(webPush.sendNotification).not.toHaveBeenCalled();
+    },
+  );
 
   test("preserves temporary failures and denies anonymous or cross-user targeting", async () => {
     const t = makeBackend();

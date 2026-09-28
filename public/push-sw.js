@@ -1,4 +1,4 @@
-const FALLBACK_URL = "/en/notifications";
+const FALLBACK_URL = "/fr/notifications";
 const FALLBACK_TITLE = "Batiplus Maroc";
 const MAX_TEXT_LENGTH = 240;
 

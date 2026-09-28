@@ -6,6 +6,22 @@ import { sendNotification, setVapidDetails } from "web-push";
 
 export type PushFailure = Error & { statusCode?: number };
 
+function validVapidSubject(subject: string) {
+  try {
+    const parsed = new URL(subject);
+    if (parsed.protocol === "https:") {
+      return Boolean(parsed.hostname) && !parsed.username && !parsed.password;
+    }
+    if (parsed.protocol === "mailto:") {
+      const address = parsed.pathname;
+      return /^[^@\s]+@[^@\s]+$/.test(address);
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export function configureWebPush() {
   const publicKey = env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim();
   const privateKey = env.VAPID_PRIVATE_KEY?.trim();
@@ -13,7 +29,7 @@ export function configureWebPush() {
   if (!publicKey || !privateKey || !subject) {
     throw new ConvexError("PUSH_NOT_CONFIGURED");
   }
-  if (!subject.startsWith("mailto:") && !subject.startsWith("https://")) {
+  if (!validVapidSubject(subject)) {
     throw new ConvexError("PUSH_NOT_CONFIGURED");
   }
   setVapidDetails(subject, publicKey, privateKey);
