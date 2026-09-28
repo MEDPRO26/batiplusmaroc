@@ -55,8 +55,12 @@ import type * as notifications_deliveryPolicy from "../notifications/deliveryPol
 import type * as notifications_index from "../notifications/index.js";
 import type * as notifications_model from "../notifications/model.js";
 import type * as notifications_preferences from "../notifications/preferences.js";
+import type * as notifications_pushDelivery from "../notifications/pushDelivery.js";
+import type * as notifications_pushDeliveryModel from "../notifications/pushDeliveryModel.js";
+import type * as notifications_pushPresentation from "../notifications/pushPresentation.js";
 import type * as notifications_pushSubscriptions from "../notifications/pushSubscriptions.js";
 import type * as notifications_pushTest from "../notifications/pushTest.js";
+import type * as notifications_webPush from "../notifications/webPush.js";
 import type * as portfolio_index from "../portfolio/index.js";
 import type * as projects_access from "../projects/access.js";
 import type * as projects_constants from "../projects/constants.js";
@@ -147,8 +151,12 @@ declare const fullApi: ApiFromModules<{
   "notifications/index": typeof notifications_index;
   "notifications/model": typeof notifications_model;
   "notifications/preferences": typeof notifications_preferences;
+  "notifications/pushDelivery": typeof notifications_pushDelivery;
+  "notifications/pushDeliveryModel": typeof notifications_pushDeliveryModel;
+  "notifications/pushPresentation": typeof notifications_pushPresentation;
   "notifications/pushSubscriptions": typeof notifications_pushSubscriptions;
   "notifications/pushTest": typeof notifications_pushTest;
+  "notifications/webPush": typeof notifications_webPush;
   "portfolio/index": typeof portfolio_index;
   "projects/access": typeof projects_access;
   "projects/constants": typeof projects_constants;

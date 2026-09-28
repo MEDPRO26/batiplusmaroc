@@ -4,7 +4,8 @@ Step 12.1 provides the backend contract for in-app notifications. Steps 12.2.1
 through 12.2.6 wire Proposal, Invitation, Message, Site Visit, Final Quote,
 Company Selection, Commission, Deal Completion, Review, and Company
 Verification events into that contract. Step 12.3 adds the in-app UI; the
-module still does not send email, SMS, or push messages.
+Step 12.6 delivery described below adds browser push without adding email or
+SMS delivery.
 
 ## Data model
 
@@ -20,6 +21,8 @@ module still does not send email, SMS, or push messages.
 - `dedupeKey`: optional retry key, unique in practice per recipient
 - `createdAt`: ordering timestamp
 - `readAt`: timestamp for an individual read
+- optional push-attempt status, timestamps, and aggregate device result counts;
+  these operational fields do not replace the in-app record
 
 `notificationRecipientStates` stores a recipient's exact transactional unread
 count and the optional `readThroughAt` watermark used by mark-all. A notification
@@ -398,8 +401,9 @@ for a future explicitly approved product event; it is deliberately unwired to
 avoid acceptance spam. The `project` entity variant is likewise reserved and
 has no currently mapped notification type. Verification submission, Site Visit
 decline/completion, Final Quote change/decline/withdrawal, and Review moderation
-are intentionally unwired. Notification creation remains database-only with no
-email, SMS, Web Push, service-worker, queue, or network-delivery dependency.
+are intentionally unwired. Notification creation remains the transactional
+source of truth; browser delivery is scheduled only after that transaction and
+has no email or SMS dependency.
 
 ## Step 12.3 in-app UI architecture
 
@@ -523,15 +527,15 @@ device control is the only explicit entry point into that browser flow.
 
 ## Step 12.5 browser push foundation
 
-Step 12.5 adds browser/device infrastructure without connecting any marketplace
-event to Web Push. The architecture remains:
+Step 12.5 added browser/device infrastructure before marketplace delivery was
+connected. The architecture remains:
 
 ```text
-domain event -> in-app notification -> delivery policy -> Step 12.6 delivery
+domain event -> in-app notification -> delivery policy -> browser push delivery
 ```
 
-The only delivery available in Step 12.5 is the authenticated infrastructure
-test notification.
+The authenticated infrastructure test notification remains available alongside
+Step 12.6 marketplace delivery.
 
 ### Subscription model and multiple devices
 
@@ -619,18 +623,53 @@ without endpoint or key material, counted in a controlled result, and preserve
 the subscription. There is no retry queue, batching, digest, email, SMS, or
 WhatsApp delivery in this phase.
 
-### Step 12.6 boundary
+## Step 12.6 marketplace browser push delivery
 
-No Proposal, Invitation, Message, Site Visit, Final Quote, commission, Deal,
-Review, or verification mutation calls the Web Push action. Step 12.6 must add
-an internal delivery boundary that requires all of: an approved event policy,
-global preference, category preference, and at least one valid subscription.
-It may then reuse the permanent-failure cleanup implemented here.
+Every newly inserted in-app notification schedules
+`deliverMarketplacePush` with only its notification ID. Dedupe hits do not
+schedule again. Convex commits the scheduler record with the domain mutation,
+but executes the internal Node action after the transaction, so a VAPID,
+network, or push-provider failure cannot roll back the marketplace command,
+audit history, unread count, or in-app notification.
+
+The action has no public API and accepts no recipient or arbitrary payload. Its
+internal claim mutation reloads the notification, derives the recipient only
+from `recipientUserId`, applies the Step 12.4 delivery resolver, and reads that
+recipient's bounded subscription set. Delivery requires all four gates:
+
+1. the event is an active push-eligible type;
+2. the recipient enabled global push;
+3. the recipient enabled the event's category; and
+4. at least one recipient-owned subscription exists.
+
+All 18 active marketplace types use this same path. Reserved `deal_created`
+and unknown future events fail closed. A notification is claimed once through
+its optional `pushDeliveryStatus`; duplicate scheduler/action execution becomes
+a no-op. Completion stores only aggregate delivered, removed, and temporary-
+failure counts plus timestamps. No endpoint, encryption key, rendered copy, or
+provider response is copied onto the notification.
+
+One safe server-side presentation map mirrors the existing in-app EN/FR event
+copy and derives role-safe destinations from the same shared destination
+function as Step 12.3. The payload contains only title, rendered safe summary,
+same-origin localized URL, and notification-specific tag. In particular,
+`messagePreview`, contact information, exact site addresses, internal notes,
+and arbitrary URLs are not sent. The current user model stores no reliable
+locale, so marketplace delivery uses the configured app default, French. The
+renderer and routes support English as soon as a reliable recipient locale is
+persisted; it does not guess from browser endpoint data.
+
+Delivery fans out to every registered device. A `404` or `410` removes only
+the matching recipient-owned subscription. Network and 5xx failures preserve
+the subscription. Logs contain notification ID, constrained type, and status
+code only—never endpoints, keys, payload bodies, or message content. There is
+no retry queue, digest, batching, rate limiting, email, SMS, or WhatsApp in
+Step 12.6.
 
 ## Boundaries and future phases
 
 Notifications answer “who needs to know?” and never replace marketplace audit
 or activity records, which answer “what happened?”. Steps 12.2.1–12.2.6 are
 audited and form the stable backend boundary for the Step 12.3 in-app UI,
-Step 12.4 preference policy, and Step 12.5 device foundation. Step 12.6 may add
-marketplace Web Push delivery without changing mandatory in-app behavior.
+Step 12.4 preference policy, Step 12.5 device foundation, and Step 12.6
+marketplace Web Push delivery. Mandatory in-app behavior remains unchanged.

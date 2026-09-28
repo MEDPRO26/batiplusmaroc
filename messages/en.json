@@ -2397,13 +2397,13 @@
     },
     "push": {
       "title": "Browser push notifications",
-      "description": "Choose whether eligible Batiplus updates may use browser push when marketplace delivery is added.",
+      "description": "Choose whether eligible Batiplus updates may use browser push.",
       "toggle": "Enable browser push preference",
       "previewNotice": "This preference does not request browser permission. Device permission is managed separately below."
     },
     "device": {
       "title": "This device",
-      "description": "Enable browser notifications only after an explicit permission request. Step 12.5 sends test notifications only.",
+      "description": "Enable browser notifications only after an explicit permission request. You can also send a test notification to this device.",
       "status": {
         "loading": "Checking browser notification support…",
         "unsupported": "Browser push is not supported on this device.",
@@ -2412,7 +2412,7 @@
         "enabled": "Enabled on this device.",
         "error": "Browser notification setup could not be completed."
       },
-      "globalPreferenceOff": "This device can be registered for testing, but future marketplace push will remain off until your global push preference is enabled.",
+      "globalPreferenceOff": "This device is registered, but marketplace push remains off until your global push preference is enabled.",
       "deniedHelp": "Change the notification permission in your browser settings if you want to enable this device. Batiplus will not prompt again while permission is denied.",
       "enable": "Enable on this device",
       "disable": "Disable on this device",
@@ -2423,32 +2423,32 @@
     },
     "categories": {
       "title": "Push categories",
-      "description": "These controls apply only to future marketplace push delivery. In-app notifications remain available.",
+      "description": "These controls apply only to marketplace push delivery. In-app notifications remain available.",
       "internalRoleNotice": "Category controls are hidden because this workspace does not currently receive marketplace event notifications.",
       "projects": {
         "title": "Projects",
         "description": "Proposals and invitations.",
-        "toggle": "Enable future push for projects"
+        "toggle": "Enable push for projects"
       },
       "messages": {
         "title": "Messages",
         "description": "New conversation messages.",
-        "toggle": "Enable future push for messages"
+        "toggle": "Enable push for messages"
       },
       "site_visits": {
         "title": "Site visits",
         "description": "Proposals, confirmations, rescheduling, and cancellations.",
-        "toggle": "Enable future push for site visits"
+        "toggle": "Enable push for site visits"
       },
       "commercial": {
         "title": "Commercial activity",
         "description": "Final quotes, commissions, completion, and reviews.",
-        "toggle": "Enable future push for commercial activity"
+        "toggle": "Enable push for commercial activity"
       },
       "account": {
         "title": "Account and verification",
         "description": "Company verification decisions.",
-        "toggle": "Enable future push for account and verification"
+        "toggle": "Enable push for account and verification"
       }
     },
     "save": "Save preferences",

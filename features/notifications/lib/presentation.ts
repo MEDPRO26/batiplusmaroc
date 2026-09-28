@@ -1,8 +1,12 @@
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import type { NotificationType } from "@/convex/notifications/constants";
-import { routes, type AppRoute } from "@/lib/routes";
+import {
+  notificationDestination,
+  type NotificationAccountType,
+  type NotificationDestination,
+} from "@/lib/notifications/destination";
 
-export type NotificationAccountType = "client" | "company" | "admin" | "seo_team";
+export type { NotificationAccountType, NotificationDestination };
 export type NotificationRecord = {
   id: Id<"notifications">;
   type: NotificationType;
@@ -12,10 +16,6 @@ export type NotificationRecord = {
   createdAt: number;
   readAt: number | null;
 };
-
-export type NotificationDestination =
-  | AppRoute
-  | { pathname: typeof routes.messagesConversation; params: { conversationId: string } };
 
 export type NotificationIconCategory =
   | "proposal"
@@ -64,48 +64,7 @@ export function notificationIconCategory(type: string): NotificationIconCategory
     : "marketplace";
 }
 
-export function notificationDestination(
-  notification: Pick<NotificationRecord, "type" | "entity">,
-  accountType: NotificationAccountType,
-): NotificationDestination {
-  if (accountType === "admin" || accountType === "seo_team") return routes.notifications;
-  if (notification.type === "message_received" && notification.entity.type === "conversation") {
-    return {
-      pathname: routes.messagesConversation,
-      params: { conversationId: notification.entity.id },
-    };
-  }
-  switch (notification.type) {
-    case "proposal_received":
-    case "invitation_accepted":
-    case "invitation_declined":
-      return accountType === "client" ? routes.clientDashboard : routes.companyProjects;
-    case "proposal_accepted":
-      return accountType === "company" ? routes.companyProjects : routes.clientDashboard;
-    case "invitation_received":
-      return accountType === "company" ? routes.companyInvitations : routes.clientDashboard;
-    case "site_visit_proposed":
-    case "site_visit_confirmed":
-    case "site_visit_rescheduled":
-    case "site_visit_cancelled":
-    case "final_quote_submitted":
-    case "final_quote_accepted":
-      return routes.messages;
-    case "commission_due":
-    case "commission_paid":
-      return accountType === "company" ? routes.companyCommissions : routes.clientDashboard;
-    case "deal_created":
-    case "deal_completed":
-      return accountType === "company" ? routes.companyDashboard : routes.clientDashboard;
-    case "review_received":
-      return accountType === "company" ? routes.companyProfileManagement : routes.clientDashboard;
-    case "company_verification_approved":
-    case "company_verification_rejected":
-      return accountType === "company" ? routes.companyVerification : routes.clientDashboard;
-    default:
-      return routes.notifications;
-  }
-}
+export { notificationDestination };
 
 export function notificationInterpolation(payload: NotificationRecord["payload"]) {
   return {

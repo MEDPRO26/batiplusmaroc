@@ -2,24 +2,14 @@
 
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
-import { sendNotification, setVapidDetails } from "web-push";
 import { internal } from "../_generated/api";
-import { action, env } from "../_generated/server";
-
-type PushFailure = Error & { statusCode?: number };
-
-function requireVapidConfiguration() {
-  const publicKey = env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim();
-  const privateKey = env.VAPID_PRIVATE_KEY?.trim();
-  const subject = env.VAPID_SUBJECT?.trim();
-  if (!publicKey || !privateKey || !subject) {
-    throw new ConvexError("PUSH_NOT_CONFIGURED");
-  }
-  if (!subject.startsWith("mailto:") && !subject.startsWith("https://")) {
-    throw new ConvexError("PUSH_NOT_CONFIGURED");
-  }
-  return { publicKey, privateKey, subject };
-}
+import { action } from "../_generated/server";
+import {
+  configureWebPush,
+  isPermanentPushFailure,
+  pushFailureStatus,
+  sendWebPush,
+} from "./webPush";
 
 export const sendMyTestPush = action({
   args: { locale: v.union(v.literal("en"), v.literal("fr")) },
@@ -40,8 +30,7 @@ export const sendMyTestPush = action({
       throw new ConvexError("PUSH_SUBSCRIPTION_NOT_FOUND");
     }
 
-    const vapid = requireVapidConfiguration();
-    setVapidDetails(vapid.subject, vapid.publicKey, vapid.privateKey);
+    configureWebPush();
     const payload = JSON.stringify({
       title: "Batiplus Maroc",
       body: args.locale === "fr"
@@ -56,18 +45,15 @@ export const sendMyTestPush = action({
     let failed = 0;
     for (const subscription of subscriptions) {
       try {
-        await sendNotification({
-          endpoint: subscription.endpoint,
-          keys: { p256dh: subscription.p256dh, auth: subscription.auth },
-        }, payload, { TTL: 60, urgency: "normal" });
+        await sendWebPush(subscription, payload);
         sent += 1;
         await ctx.runMutation(
           internal.notifications.pushSubscriptions.recordDeliveryResult,
           { userId, endpoint: subscription.endpoint, outcome: "delivered" },
         );
       } catch (error) {
-        const statusCode = (error as PushFailure).statusCode;
-        if (statusCode === 404 || statusCode === 410) {
+        const statusCode = pushFailureStatus(error);
+        if (isPermanentPushFailure(error)) {
           const deleted = await ctx.runMutation(
             internal.notifications.pushSubscriptions.recordDeliveryResult,
             { userId, endpoint: subscription.endpoint, outcome: "permanent_failure" },

@@ -88,13 +88,13 @@ async function mount(
   await page.addScriptTag({ content: harnessBundle });
 }
 
-test("marketplace user changes and saves future-push preferences without a permission request", async ({ page }) => {
+test("marketplace user changes and saves push preferences without a permission request", async ({ page }) => {
   await mount(page, "en", "company");
   await expect(page.getByText("Important Batiplus marketplace updates are always available", { exact: false })).toBeVisible();
   await expect(page.getByText("does not request browser permission", { exact: false })).toBeVisible();
 
   const master = page.getByRole("switch", { name: "Enable browser push preference" });
-  const messages = page.getByRole("switch", { name: "Enable future push for messages" });
+  const messages = page.getByRole("switch", { name: "Enable push for messages" });
   await expect(master).not.toBeChecked();
   await expect(messages).toBeDisabled();
 

@@ -1,5 +1,6 @@
 import { ConvexError, type Infer } from "convex/values";
 import type { Id } from "../_generated/dataModel";
+import { internal } from "../_generated/api";
 import type { MutationCtx } from "../_generated/server";
 import {
   notificationEntityValidator,
@@ -113,6 +114,12 @@ export async function createNotification(ctx: MutationCtx, args: CreateNotificat
     dedupeKey,
     createdAt: now,
   });
+
+  await ctx.scheduler.runAfter(
+    0,
+    internal.notifications.pushDelivery.deliverMarketplacePush,
+    { notificationId },
+  );
 
   if (state) {
     await ctx.db.patch(state._id, { unreadCount: state.unreadCount + 1, updatedAt: now });

@@ -259,7 +259,7 @@ describe("notification preferences UI", () => {
     expect(html).toContain("does not request browser permission");
     expect(html).toContain("Enable browser push preference");
     expect(html).toContain("aria-checked=\"true\"");
-    expect(html).toContain("Enable future push for messages");
+    expect(html).toContain("Enable push for messages");
     expect(html).toContain("aria-checked=\"false\"");
     expect(html).toContain("Save preferences");
   });
@@ -269,7 +269,7 @@ describe("notification preferences UI", () => {
     expect(html).toContain("Préférences de notification");
     expect(html).toContain("ne demande aucune autorisation au navigateur");
     expect(html).toContain("Les catégories sont masquées");
-    expect(html).not.toContain("Activer les futures notifications push pour les projets");
+    expect(html).not.toContain("Activer les notifications push pour les projets");
   });
 
   test("renders loading, success, and safe error states", () => {

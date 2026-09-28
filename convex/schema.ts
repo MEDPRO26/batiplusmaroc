@@ -136,6 +136,16 @@ export default defineSchema({
     dedupeKey: v.optional(v.string()),
     createdAt: v.number(),
     readAt: v.optional(v.number()),
+    pushDeliveryStatus: v.optional(v.union(
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("skipped"),
+    )),
+    pushAttemptedAt: v.optional(v.number()),
+    pushCompletedAt: v.optional(v.number()),
+    pushDeliveredCount: v.optional(v.number()),
+    pushRemovedCount: v.optional(v.number()),
+    pushFailedCount: v.optional(v.number()),
   })
     .index("by_recipientUserId_and_createdAt", ["recipientUserId", "createdAt"])
     .index("by_recipientUserId_and_dedupeKey", ["recipientUserId", "dedupeKey"]),
