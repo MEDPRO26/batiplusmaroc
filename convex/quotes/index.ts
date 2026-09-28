@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
-import { requireCompanyUser, requireVerifiedCompanyUser } from "../companies/access";
+import { requireCompanyUser, requireVerifiedCompanyMarketplaceUser } from "../companies/access";
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import {
   projectCategoryValidator,
@@ -367,7 +367,7 @@ export const submitInitialQuote = mutation({
     conversationId: v.union(v.id("conversations"), v.null()),
   }),
   handler: async (ctx, args) => {
-    const { company, userId } = await requireVerifiedCompanyUser(ctx);
+    const { company, userId } = await requireVerifiedCompanyMarketplaceUser(ctx);
     const project = await ctx.db.get(args.projectId);
     if (!project) throw new ConvexError("PROJECT_NOT_FOUND");
     const invitation = await invitationForPair(ctx, project._id, company._id);

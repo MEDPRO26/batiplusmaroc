@@ -7,6 +7,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { consumeVerifiedPublicMediaIntent } from "../storage/publicMediaModel";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { buildCompanyDirectorySearchText } from "./directory";
+import { getCompanyOperationalStatus } from "./operationalStatus";
 
 const companyServices = [
   "houseConstruction",
@@ -116,6 +117,7 @@ const onboardingProfileValidator = v.union(
       v.literal("verified"),
       v.literal("rejected"),
     ),
+    accountRestricted: v.boolean(),
   }),
 );
 
@@ -367,6 +369,7 @@ export const getOnboardingProfile = query({
       serviceOptions: [...companyServices],
       onboardingStatus: company.onboardingStatus,
       verificationStatus: company.verificationStatus,
+      accountRestricted: getCompanyOperationalStatus(company) === "suspended",
     };
   },
 });

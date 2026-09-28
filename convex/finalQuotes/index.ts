@@ -3,7 +3,8 @@ import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
-import { requireCompanyUser, requireVerifiedCompanyUser } from "../companies/access";
+import { requireCompanyUser, requireVerifiedCompanyMarketplaceUser } from "../companies/access";
+import { assertCompanyMarketplaceWriteAllowed, getCompanyOperationalStatus, requireCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
 import { createDealFromAcceptedFinalQuote } from "../deals/index";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import {
@@ -293,15 +294,17 @@ export const getForConversation = query({
     const parent = await parentForRelationship(ctx, context.project._id, context.company._id);
     const accepted = await ctx.db.query("finalQuotes").withIndex("by_projectId_and_status", (q) => q.eq("projectId", context.project._id).eq("status", "accepted")).take(1);
     const incompleteVisit = await hasIncompleteSiteVisitWorkflow(ctx, context.conversation._id);
+    const marketplaceAvailable = getCompanyOperationalStatus(context.company) !== "suspended";
     const completedVisit = parent || incompleteVisit ? null : await completedVisitForConversation(ctx, context.conversation._id);
     const canSubmit =
       viewer.viewerType === "company" &&
+      marketplaceAvailable &&
       !incompleteVisit &&
       parent !== null &&
       (parent.status === "draft" || parent.status === "changes_requested");
     return { viewerType: viewer.viewerType,
-      canRequest: viewer.viewerType === "client" && !parent && accepted.length === 0 && !incompleteVisit,
-      canPrepare: viewer.viewerType === "company" && !parent && accepted.length === 0 && !incompleteVisit && completedVisit !== null,
+      canRequest: viewer.viewerType === "client" && marketplaceAvailable && !parent && accepted.length === 0 && !incompleteVisit,
+      canPrepare: viewer.viewerType === "company" && marketplaceAvailable && !parent && accepted.length === 0 && !incompleteVisit && completedVisit !== null,
       finalQuote: parent ? await finalQuoteDto(ctx, parent, viewer.viewerType, canSubmit) : null };
   },
 });
@@ -312,6 +315,7 @@ export const request = mutation({
   handler: async (ctx, args) => {
     const client = await requireClientUser(ctx);
     const context = await contextForConversation(ctx, args.conversationId);
+    await requireCompanyMarketplaceWriteAllowed(ctx, context.company._id);
     await requireOwnedProject(ctx, client.userId, context.project._id);
     assertEligibleProject(context.project.status);
     if (context.project.status === "company_selected") throw new ConvexError("FINAL_QUOTE_PROJECT_ALREADY_SELECTED");
@@ -334,7 +338,7 @@ export const request = mutation({
 export const prepareAfterSiteVisit = mutation({
   args: { conversationId: v.id("conversations") }, returns: v.object({ finalQuoteId: v.id("finalQuotes"), duplicate: v.boolean() }),
   handler: async (ctx, args) => {
-    const access = await requireVerifiedCompanyUser(ctx);
+    const access = await requireVerifiedCompanyMarketplaceUser(ctx);
     const context = await contextForConversation(ctx, args.conversationId);
     if (access.company._id !== context.company._id) throw new ConvexError("CONVERSATION_NOT_FOUND");
     assertEligibleProject(context.project.status);
@@ -349,7 +353,7 @@ export const prepareAfterSiteVisit = mutation({
 export const generatePdfUploadUrl = mutation({
   args: { finalQuoteId: v.id("finalQuotes") }, returns: v.object({ uploadUrl: v.string(), uploadToken: v.string() }),
   handler: async (ctx, args) => {
-    const access = await requireVerifiedCompanyUser(ctx);
+    const access = await requireVerifiedCompanyMarketplaceUser(ctx);
     const parent = await ctx.db.get(args.finalQuoteId);
     if (!parent || parent.companyId !== access.company._id || (parent.status !== "draft" && parent.status !== "changes_requested")) throw new ConvexError("FINAL_QUOTE_NOT_FOUND");
     const token = `${crypto.randomUUID()}${crypto.randomUUID()}`; const now = Date.now();
@@ -364,7 +368,7 @@ export const submitRevision = mutation({
     pdf: v.optional(v.object({ storageId: v.id("_storage"), uploadToken: v.string(), fileName: v.string() })) },
   returns: v.object({ finalQuoteId: v.id("finalQuotes"), revisionId: v.id("finalQuoteRevisions"), revisionNumber: v.number() }),
   handler: async (ctx, args) => {
-    const access = await requireVerifiedCompanyUser(ctx); const context = await contextForConversation(ctx, args.conversationId);
+    const access = await requireVerifiedCompanyMarketplaceUser(ctx); const context = await contextForConversation(ctx, args.conversationId);
     if (access.company._id !== context.company._id) throw new ConvexError("CONVERSATION_NOT_FOUND");
     assertEligibleProject(context.project.status);
     if (context.project.status === "company_selected") throw new ConvexError("FINAL_QUOTE_PROJECT_ALREADY_SELECTED");
@@ -444,6 +448,7 @@ export const review = mutation({
       return { status: "accepted" as const, duplicate: true };
     }
     if (parent.status !== "submitted") throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");
+    if (args.action === "accept" && company) assertCompanyMarketplaceWriteAllowed(company);
     if (!initialQuote || !conversation || !company || initialQuote.projectId !== project._id || initialQuote.companyId !== parent.companyId || initialQuote.status !== "discussion_open" ||
       conversation.projectId !== project._id || conversation.quoteId !== initialQuote._id || conversation.companyId !== parent.companyId || conversation.clientId !== client.userId || conversation.status !== "active" ||
       company.verificationStatus !== "verified" || company.onboardingStatus !== "completed") throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");

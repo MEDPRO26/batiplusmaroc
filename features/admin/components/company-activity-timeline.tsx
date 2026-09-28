@@ -83,7 +83,7 @@ function TimelineRow({ item, locale }: { item: TimelineItem; locale: string }) {
     ? "/admin/deals"
     : item.category === "reviews"
       ? "/admin/reviews"
-      : item.category === "marketplace"
+      : item.category === "marketplace" && item.source === "marketplace_activity"
         ? "/admin/projects"
         : null;
 

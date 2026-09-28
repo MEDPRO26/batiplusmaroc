@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError } from "convex/values";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { assertCompanyMarketplaceWriteAllowed } from "./operationalStatus";
 
 type Ctx = QueryCtx | MutationCtx;
 
@@ -55,5 +56,12 @@ export async function requireVerifiedCompanyUser(ctx: Ctx) {
   if (access.company.verificationStatus !== "verified") {
     throw new ConvexError("COMPANY_VERIFICATION_REQUIRED");
   }
+  return access;
+}
+
+/** Verified Company access for new marketplace acquisition/progression writes. */
+export async function requireVerifiedCompanyMarketplaceUser(ctx: Ctx) {
+  const access = await requireVerifiedCompanyUser(ctx);
+  assertCompanyMarketplaceWriteAllowed(access.company);
   return access;
 }

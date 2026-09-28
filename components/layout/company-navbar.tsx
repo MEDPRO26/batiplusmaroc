@@ -9,7 +9,7 @@ import { buildCompanyNav } from "@/components/layout/company-nav";
 import { ProfileMenu, type ProfileMenuItem } from "@/components/layout/profile-menu";
 import { SignedInNavbarChrome } from "@/components/layout/signed-in-navbar-chrome";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
-import { useRouter } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 
 type CompanyUser = {
@@ -76,6 +76,16 @@ export function CompanyNavbar({ user }: { user: CompanyUser }) {
         }
         utilities={<CompanyNavbarUtilities />}
       />
+      {profile?.accountRestricted ? (
+        <div className="border-b border-amber-300 bg-amber-50 px-4 py-3 text-amber-950" role="status">
+          <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <p className="m-0 font-medium">{t("companySuspended.message")}</p>
+            <Link className="font-semibold underline underline-offset-4" href={routes.companyBatiplus}>
+              {t("companySuspended.support")}
+            </Link>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

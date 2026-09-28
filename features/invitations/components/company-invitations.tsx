@@ -165,7 +165,8 @@ export function CompanyInvitations() {
                     <>
                       <button
                         className="min-h-11 rounded-full bg-brand px-5 text-sm font-semibold text-white disabled:opacity-60"
-                        disabled={busyId === row.id}
+                        disabled={busyId === row.id || !row.canAccept}
+                        title={!row.canAccept ? t("suspended") : undefined}
                         onClick={() => void decide(row.id, "accept")}
                         type="button"
                       >

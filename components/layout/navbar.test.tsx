@@ -269,6 +269,23 @@ describe("role navbar content", () => {
     expect(html).toContain("https://cdn.example.test/company-logo.webp");
     expect(html).not.toContain(">SA<");
   });
+
+  test("CompanyNavbar shows only the safe suspension banner and support path", () => {
+    vi.mocked(useQuery).mockReturnValue({
+      accountRestricted: true,
+      name: "Atlas Build",
+      publicSlug: "atlas-build",
+      verificationStatus: "verified",
+      logoUrl: null,
+    });
+    const html = renderToStaticMarkup(
+      <CompanyNavbar user={{ firstName: "Sara", lastName: "Alaoui", email: "s@example.test", onboardingStatus: "completed" }} />,
+    );
+    expect(html).toContain("nav.companySuspended.message");
+    expect(html).toContain("nav.companySuspended.support");
+    expect(html).toContain(routes.companyBatiplus);
+    expect(html).not.toContain("needs_attention");
+  });
 });
 
 describe("SiteHeader selection", () => {

@@ -7,6 +7,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
 import { getPublicMediaUrl } from "../storage/publicUrl";
+import { getCompanyOperationalStatus } from "./operationalStatus";
 
 export const companyServices = [
   "houseConstruction",
@@ -125,6 +126,7 @@ async function resolvePublicMediaUrl(
 
 async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">) {
   if (
+    getCompanyOperationalStatus(company) === "suspended" ||
     company.onboardingStatus !== "completed" ||
     !company.slug ||
     !company.name ||

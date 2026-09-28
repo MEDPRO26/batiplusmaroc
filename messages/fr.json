@@ -73,6 +73,10 @@
     "portfolio": "Portfolio",
     "clientMain": "Navigation client",
     "companyMain": "Navigation entreprise",
+    "companySuspended": {
+      "message": "Votre accès à la marketplace est temporairement suspendu. Vous pouvez toujours gérer votre profil, vos documents, vos messages et vos obligations en cours.",
+      "support": "Contacter le support Batiplus"
+    },
     "company": {
       "findWork": "Trouver des projets",
       "findProjects": "Trouver des projets",
@@ -2919,6 +2923,7 @@
       "review_received": "Avis reçu",
       "review_hidden": "Avis masqué",
       "review_restored": "Avis restauré"
+      ,"operational_status_changed": "Statut opérationnel marketplace modifié"
     }
   },
   "adminProjects": {
@@ -4143,6 +4148,7 @@
       "lead": "Consultez les invitations directes des clients. La messagerie et le parcours de proposition s’ouvrent uniquement après acceptation.",
       "filterLabel": "Filtrer les invitations",
       "filter": { "all": "Toutes", "pending": "En attente", "accepted": "Acceptées", "declined": "Refusées" },
+      "suspended": "L’accès à la marketplace est temporairement suspendu. Contactez le support Batiplus.",
       "status": { "pending": "En attente", "accepted": "Acceptée", "declined": "Refusée" },
       "emptyTitle": "Aucune invitation à afficher",
       "emptyLead": "Les invitations directes aux projets apparaîtront ici.",
@@ -4196,6 +4202,7 @@
         "COMPANY_ACCOUNT_REQUIRED": "Un compte entreprise est requis pour cette action.",
         "COMPANY_MEMBERSHIP_REQUIRED": "Une adhésion active à une entreprise est requise.",
         "COMPANY_VERIFICATION_REQUIRED": "Vérifiez votre entreprise avant d’envoyer des propositions.",
+        "COMPANY_MARKETPLACE_SUSPENDED": "L’accès de cette entreprise à la marketplace est temporairement suspendu.",
         "COMPANY_OWNER_REQUIRED": "Seul le propriétaire de l’entreprise peut faire cette action.",
         "COMPANY_NOT_FOUND": "Cette entreprise n’existe pas ou n’est plus disponible.",
         "DUPLICATE_ACCOUNT_FOUNDATION": "Ce compte est déjà configuré.",
@@ -4478,6 +4485,24 @@
       "membersTitle": "Membres actifs de l’entreprise",
       "noMembers": "Aucun membre actif.",
       "memberRoles": { "owner": "Propriétaire", "staff": "Équipe" }
+    },
+    "operationalStatus": {
+      "title": "Statut opérationnel marketplace",
+      "lead": "Contrôle les nouvelles acquisitions tout en préservant le support, les corrections, la lecture et les obligations en cours.",
+      "status": { "normal": "Normal", "needs_attention": "Attention requise", "suspended": "Suspendue" },
+      "changeTo": "Passer à {status}",
+      "dialogTitle": "Passer au statut {status}",
+      "confirmation": "Confirmez ce changement de statut opérationnel et consignez le motif interne.",
+      "highImpactConfirmation": "Ce changement suspend ou rétablit l’accès à la marketplace. Confirmez son impact et consignez le motif interne.",
+      "reason": "Motif interne",
+      "reasonHelp": "10 à 1 000 caractères. Visible uniquement par les administrateurs.",
+      "confirm": "Confirmer le changement",
+      "cancel": "Annuler",
+      "saving": "Enregistrement…",
+      "actionError": "Le statut opérationnel n’a pas pu être modifié.",
+      "history": "Historique du statut",
+      "emptyHistory": "Aucun changement de statut opérationnel.",
+      "loadMore": "Charger plus"
     },
     "verification": {
       "title": "Dossier de vérification",

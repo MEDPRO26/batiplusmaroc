@@ -81,6 +81,7 @@ export async function ensureAccountFoundation(
   const companyId = await ctx.db.insert("companies", {
     onboardingStatus: "pending",
     verificationStatus: "draft",
+    operationalStatus: "normal",
     createdAt: args.now,
     updatedAt: args.now,
   });

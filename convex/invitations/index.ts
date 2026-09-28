@@ -3,6 +3,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
+import { assertCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import {
   createNotification,
@@ -51,6 +52,7 @@ const invitationValidator = v.object({
   updatedAt: v.number(),
   acceptedAt: v.union(v.number(), v.null()),
   declinedAt: v.union(v.number(), v.null()),
+  canAccept: v.boolean(),
 });
 
 type Ctx = QueryCtx | MutationCtx;
@@ -72,6 +74,7 @@ async function requireEligibleCompany(ctx: Ctx, companyId: Id<"companies">) {
   ) {
     throw new ConvexError("COMPANY_NOT_ELIGIBLE_FOR_INVITATION");
   }
+  assertCompanyMarketplaceWriteAllowed(company);
   const activeMembers = await ctx.db
     .query("companyMembers")
     .withIndex("by_companyId_and_status", (q) =>
@@ -154,6 +157,7 @@ async function toInvitationDto(ctx: Ctx, invitation: Doc<"invitations">) {
     updatedAt: invitation.updatedAt,
     acceptedAt: invitation.acceptedAt ?? null,
     declinedAt: invitation.declinedAt ?? null,
+    canAccept: company.operationalStatus !== "suspended",
   };
 }
 
@@ -325,6 +329,7 @@ async function decideInvitation(
     throw new ConvexError("INVITATION_NOT_FOUND");
   if (nextStatus === "accepted" && company.verificationStatus !== "verified")
     throw new ConvexError("COMPANY_NOT_ELIGIBLE_FOR_INVITATION");
+  if (nextStatus === "accepted") assertCompanyMarketplaceWriteAllowed(company);
   const project = await ctx.db.get(invitation.projectId);
   if (!project || project.clientId !== invitation.clientUserId)
     throw new ConvexError("INVITATION_NOT_FOUND");

@@ -15,6 +15,7 @@ import {
   notificationTypeValidator,
 } from "./notifications/constants";
 import { notificationPushCategoriesValidator } from "./notifications/deliveryPolicy";
+import { companyOperationalStatusValidator } from "./companies/operationalStatus";
 
 const accountType = v.union(
   v.literal("client"),
@@ -748,6 +749,7 @@ export default defineSchema({
       v.literal("verified"),
       v.literal("rejected"),
     ),
+    operationalStatus: v.optional(companyOperationalStatusValidator),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -863,6 +865,15 @@ export default defineSchema({
   })
     .index("by_companyId", ["companyId"])
     .index("by_companyId_and_changedAt", ["companyId", "changedAt"]),
+
+  companyOperationalStatusHistory: defineTable({
+    companyId: v.id("companies"),
+    fromStatus: companyOperationalStatusValidator,
+    toStatus: companyOperationalStatusValidator,
+    reason: v.string(),
+    changedByAdminUserId: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_companyId_and_createdAt", ["companyId", "createdAt"]),
 
   portfolioProjects: defineTable({
     companyId: v.id("companies"),

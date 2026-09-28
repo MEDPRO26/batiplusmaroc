@@ -142,6 +142,7 @@ function Overview({ summary }: { summary: Summary }) {
   const locale = useLocale();
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.6fr)]">
+      <CompanyOperationalStatus companyId={summary.companyId} />
       <section className="rounded-[16px] border border-[#eef1f4] bg-white p-5">
         <h2 className="font-semibold">{t("overview.profile")}</h2>
         <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#626970]">{summary.description || t("overview.noDescription")}</p>
@@ -157,6 +158,88 @@ function Overview({ summary }: { summary: Summary }) {
         {summary.members.length ? <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{summary.members.map((member) => <li className="rounded-[12px] bg-[#f8fafb] p-3 text-sm" key={member.userId}><span className="font-semibold">{member.displayName}</span><span className="ml-2 text-[#8b919a]">{t(`overview.memberRoles.${member.role}`)}</span></li>)}</ul> : <p className="mt-3 text-sm text-[#8b919a]">{t("overview.noMembers")}</p>}
       </section>
     </div>
+  );
+}
+
+type OperationalStatus = "normal" | "needs_attention" | "suspended";
+
+function CompanyOperationalStatus({ companyId }: { companyId: Id<"companies"> }) {
+  const t = useTranslations("adminCompanies.operationalStatus");
+  const locale = useLocale();
+  const current = useQuery(api.admin.companyOperationalStatus.get, { companyId });
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.admin.companyOperationalStatus.listHistory,
+    { companyId },
+    { initialNumItems: 10 },
+  );
+  const change = useMutation(api.admin.companyOperationalStatus.change);
+  const titleId = useId();
+  const [target, setTarget] = useState<OperationalStatus | null>(null);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const currentStatus = current?.status;
+  if (!currentStatus || !(["normal", "needs_attention", "suspended"] as const).includes(currentStatus)) {
+    return <section className="h-32 animate-pulse rounded-[16px] bg-white xl:col-span-2" aria-busy="true" />;
+  }
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!target) return;
+    setBusy(true);
+    setError("");
+    try {
+      await change({ companyId, toStatus: target, reason });
+      setTarget(null);
+      setReason("");
+    } catch {
+      setError(t("actionError"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const highImpact = target === "suspended" || currentStatus === "suspended";
+  return (
+    <section className="rounded-[16px] border border-[#eef1f4] bg-white p-5 xl:col-span-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-semibold">{t("title")}</h2>
+          <p className="mt-1 text-sm text-[#626970]">{t("lead")}</p>
+        </div>
+        <Pill text={t(`status.${currentStatus}`)} tone={currentStatus === "suspended" ? "red" : currentStatus === "needs_attention" ? "amber" : "green"} />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {(["normal", "needs_attention", "suspended"] as const).filter((item) => item !== currentStatus).map((item) => (
+          <button className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${ADMIN_PRESS}`} key={item} onClick={() => { setTarget(item); setError(""); }} type="button">
+            {t("changeTo", { status: t(`status.${item}`) })}
+          </button>
+        ))}
+      </div>
+      <h3 className="mt-6 font-semibold">{t("history")}</h3>
+      {status === "LoadingFirstPage" ? <Loading /> : results.length ? (
+        <ol className="mt-3 grid gap-2">
+          {results.map((item) => <li className="rounded-[12px] bg-[#f8fafb] p-3 text-sm" key={item.id}><span className="font-semibold">{t(`status.${item.fromStatus}`)} → {t(`status.${item.toStatus}`)}</span><p className="mt-1 whitespace-pre-wrap text-[#626970]">{item.reason}</p><span className="mt-1 block text-xs text-[#8b919a]">{item.changedByDisplayName} · {date(item.createdAt, locale)}</span></li>)}
+          {status === "CanLoadMore" ? <button className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${ADMIN_PRESS}`} onClick={() => loadMore(10)} type="button">{t("loadMore")}</button> : null}
+        </ol>
+      ) : <p className="mt-3 text-sm text-[#8b919a]">{t("emptyHistory")}</p>}
+      {target ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-6" role="presentation">
+          <section aria-labelledby={titleId} aria-modal="true" className="w-full max-w-lg rounded-t-[24px] bg-white p-5 sm:rounded-[24px]" role="dialog">
+            <h2 className="text-xl font-semibold" id={titleId}>{t("dialogTitle", { status: t(`status.${target}`) })}</h2>
+            <p className="mt-2 text-sm leading-6 text-[#626970]">{highImpact ? t("highImpactConfirmation") : t("confirmation")}</p>
+            <form className="mt-5" onSubmit={submit}>
+              <label className="block text-sm font-semibold" htmlFor="operational-status-reason">{t("reason")}</label>
+              <textarea autoFocus className="mt-2 min-h-28 w-full rounded-[12px] border p-3 text-sm outline-none focus-visible:outline-2 focus-visible:outline-[#2f6bff]" id="operational-status-reason" maxLength={1000} minLength={10} onChange={(event) => setReason(event.target.value)} required value={reason} />
+              <p className="mt-1 text-xs text-[#8b919a]">{t("reasonHelp")}</p>
+              {error ? <p className="mt-3 rounded-[12px] bg-red-50 p-3 text-sm text-red-800" role="alert">{error}</p> : null}
+              <div className="mt-5 flex flex-wrap justify-end gap-2"><button className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${ADMIN_PRESS}`} onClick={() => { setTarget(null); setReason(""); }} type="button">{t("cancel")}</button><button className={`min-h-11 rounded-full bg-[#2f6bff] px-5 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`} disabled={busy || reason.trim().length < 10} type="submit">{busy ? t("saving") : t("confirm")}</button></div>
+            </form>
+          </section>
+        </div>
+      ) : null}
+    </section>
   );
 }
 

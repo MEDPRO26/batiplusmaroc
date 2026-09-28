@@ -43,12 +43,14 @@ const timelineEventTypeValidator = v.union(
   v.literal("review_received"),
   v.literal("review_hidden"),
   v.literal("review_restored"),
+  v.literal("operational_status_changed"),
 );
 
 type TimelineEventType = typeof timelineEventTypeValidator.type;
 type TimelineCategory = "verification" | "marketplace" | "deals" | "reviews";
 
 const entityValidator = v.union(
+  v.object({ type: v.literal("company"), id: v.id("companies") }),
   v.object({ type: v.literal("company_verification"), id: v.id("companies") }),
   v.object({ type: v.literal("project"), id: v.id("projects") }),
   v.object({ type: v.literal("invitation"), id: v.id("invitations") }),
@@ -63,7 +65,7 @@ const entityValidator = v.union(
 
 const timelineItemValidator = v.object({
   id: v.string(),
-  source: v.union(v.literal("marketplace_activity"), v.literal("verification_history")),
+  source: v.union(v.literal("marketplace_activity"), v.literal("verification_history"), v.literal("operational_status_history")),
   eventType: timelineEventTypeValidator,
   category: v.union(
     v.literal("verification"),
@@ -115,9 +117,10 @@ type SourceCursor = {
   done: boolean;
 };
 type TimelineCursor = {
-  version: 1;
+  version: 2;
   marketplace: SourceCursor;
   verification: SourceCursor;
+  operational: SourceCursor;
 };
 
 const INITIAL_SOURCE_CURSOR: SourceCursor = {
@@ -131,9 +134,10 @@ const SOURCE_BATCH_MULTIPLIER = 3;
 
 function initialCursor(): TimelineCursor {
   return {
-    version: 1,
+    version: 2,
     marketplace: { ...INITIAL_SOURCE_CURSOR },
     verification: { ...INITIAL_SOURCE_CURSOR },
+    operational: { ...INITIAL_SOURCE_CURSOR },
   };
 }
 
@@ -153,9 +157,10 @@ function decodeCursor(cursor: string | null): TimelineCursor {
   try {
     const parsed = JSON.parse(cursor) as Partial<TimelineCursor>;
     if (
-      parsed.version !== 1 ||
+      parsed.version !== 2 ||
       !isSourceCursor(parsed.marketplace) ||
-      !isSourceCursor(parsed.verification)
+      !isSourceCursor(parsed.verification) ||
+      !isSourceCursor(parsed.operational)
     ) {
       throw new Error("invalid cursor");
     }
@@ -271,12 +276,21 @@ type VerificationCandidate = {
   rawIndex: number;
 };
 
-type Candidate = MarketplaceCandidate | VerificationCandidate;
+type OperationalCandidate = {
+  source: "operational_status_history";
+  row: Doc<"companyOperationalStatusHistory">;
+  eventType: "operational_status_changed";
+  rawIndex: number;
+};
+
+type Candidate = MarketplaceCandidate | VerificationCandidate | OperationalCandidate;
 
 function candidateTime(candidate: Candidate) {
   return candidate.source === "marketplace_activity"
     ? candidate.row.createdAt
-    : candidate.row.changedAt;
+    : candidate.source === "verification_history"
+      ? candidate.row.changedAt
+      : candidate.row.createdAt;
 }
 
 function candidateCreationTime(candidate: Candidate) {
@@ -284,10 +298,15 @@ function candidateCreationTime(candidate: Candidate) {
 }
 
 function compareCandidates(left: Candidate, right: Candidate) {
+  const sourceRank = {
+    marketplace_activity: 0,
+    verification_history: 1,
+    operational_status_history: 2,
+  } as const;
   return (
     candidateTime(right) - candidateTime(left) ||
     candidateCreationTime(right) - candidateCreationTime(left) ||
-    (left.source === right.source ? 0 : left.source === "marketplace_activity" ? -1 : 1) ||
+    sourceRank[left.source] - sourceRank[right.source] ||
     left.row._id.localeCompare(right.row._id)
   );
 }
@@ -368,6 +387,28 @@ async function loadVerificationBatch(
   return [...sameTimestamp, ...older];
 }
 
+async function loadOperationalBatch(
+  ctx: QueryCtx,
+  companyId: Id<"companies">,
+  cursor: SourceCursor,
+  batchSize: number,
+) {
+  if (cursor.done) return [];
+  if (cursor.beforeAt === null) {
+    return await ctx.db.query("companyOperationalStatusHistory")
+      .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId))
+      .order("desc").take(batchSize);
+  }
+  const sameTimestamp = await ctx.db.query("companyOperationalStatusHistory")
+    .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId).eq("createdAt", cursor.beforeAt!).lt("_creationTime", cursor.beforeCreationTime!))
+    .order("desc").take(batchSize);
+  if (sameTimestamp.length >= batchSize) return sameTimestamp;
+  const older = await ctx.db.query("companyOperationalStatusHistory")
+    .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId).lt("createdAt", cursor.beforeAt!))
+    .order("desc").take(batchSize - sameTimestamp.length);
+  return [...sameTimestamp, ...older];
+}
+
 function nextSourceCursor<T extends { _id: string; _creationTime: number }>(
   current: SourceCursor,
   rows: T[],
@@ -399,7 +440,9 @@ async function loadActorMap(ctx: QueryCtx, candidates: Candidate[]) {
   const actorIds = [...new Set(candidates.map((candidate) =>
     candidate.source === "marketplace_activity"
       ? candidate.row.actorUserId
-      : candidate.row.changedBy,
+      : candidate.source === "verification_history"
+        ? candidate.row.changedBy
+        : candidate.row.changedByAdminUserId,
   ))];
   const actors = await Promise.all(actorIds.map((id) => ctx.db.get(id)));
   return new Map(actorIds.map((id, index) => [id, actors[index] ?? null]));
@@ -439,9 +482,10 @@ export const listCompanyActivity = query({
     const batchSize = pageSize * SOURCE_BATCH_MULTIPLIER;
     const cursor = decodeCursor(args.paginationOpts.cursor);
 
-    const [marketplaceRows, verificationRows] = await Promise.all([
+    const [marketplaceRows, verificationRows, operationalRows] = await Promise.all([
       loadMarketplaceBatch(ctx, args.companyId, cursor.marketplace, batchSize),
       loadVerificationBatch(ctx, args.companyId, cursor.verification, batchSize),
+      loadOperationalBatch(ctx, args.companyId, cursor.operational, batchSize),
     ]);
 
     const marketplaceCandidates: MarketplaceCandidate[] = marketplaceRows
@@ -468,12 +512,19 @@ export const listCompanyActivity = query({
         rawIndex: candidate.rawIndex,
       }));
 
-    const selected = [...marketplaceCandidates, ...verificationCandidates]
+    const operationalCandidates: OperationalCandidate[] = operationalRows.map((row, rawIndex) => ({
+      source: "operational_status_history" as const,
+      row,
+      eventType: "operational_status_changed" as const,
+      rawIndex,
+    }));
+
+    const selected = [...marketplaceCandidates, ...verificationCandidates, ...operationalCandidates]
       .sort(compareCandidates)
       .slice(0, pageSize);
     const consumeWholeBatch = selected.length < pageSize;
     const nextCursor: TimelineCursor = {
-      version: 1,
+      version: 2,
       marketplace: nextSourceCursor(
         cursor.marketplace,
         marketplaceRows,
@@ -494,6 +545,14 @@ export const listCompanyActivity = query({
         batchSize,
         (row) => row.changedAt,
       ),
+      operational: nextSourceCursor(
+        cursor.operational,
+        operationalRows,
+        selected.filter((candidate): candidate is OperationalCandidate => candidate.source === "operational_status_history").map((candidate) => candidate.rawIndex),
+        consumeWholeBatch,
+        batchSize,
+        (row) => row.createdAt,
+      ),
     };
 
     const [actorById, projectById] = await Promise.all([
@@ -502,6 +561,23 @@ export const listCompanyActivity = query({
     ]);
 
     const page: TimelineItem[] = selected.map((candidate) => {
+      if (candidate.source === "operational_status_history") {
+        const actor = actorById.get(candidate.row.changedByAdminUserId) ?? null;
+        return {
+          id: `operational:${candidate.row._id}`,
+          source: candidate.source,
+          eventType: candidate.eventType,
+          category: "marketplace",
+          companyId: candidate.row.companyId,
+          project: null,
+          entity: { type: "company", id: candidate.row.companyId },
+          actor: { type: "admin", displayName: displayName(actor) },
+          occurredAt: candidate.row.createdAt,
+          oldStatus: candidate.row.fromStatus,
+          newStatus: candidate.row.toStatus,
+          context: { amountMad: null, commissionAmountMad: null, commissionRateBps: null, currency: null, rating: null, revisionNumber: null, proposedDate: null, proposedTime: null, timezone: null, scheduledEpoch: null },
+        };
+      }
       if (candidate.source === "verification_history") {
         const actor = actorById.get(candidate.row.changedBy) ?? null;
         return {
@@ -561,7 +637,7 @@ export const listCompanyActivity = query({
       };
     });
 
-    const isDone = nextCursor.marketplace.done && nextCursor.verification.done;
+    const isDone = nextCursor.marketplace.done && nextCursor.verification.done && nextCursor.operational.done;
     return {
       page,
       isDone,

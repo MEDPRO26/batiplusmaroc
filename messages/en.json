@@ -73,6 +73,10 @@
     "portfolio": "Portfolio",
     "clientMain": "Client navigation",
     "companyMain": "Company navigation",
+    "companySuspended": {
+      "message": "Your marketplace access is temporarily suspended. You can still manage your profile, documents, messages, and existing obligations.",
+      "support": "Contact Batiplus support"
+    },
     "company": {
       "findWork": "Find projects",
       "findProjects": "Find projects",
@@ -2919,6 +2923,7 @@
       "review_received": "Review received",
       "review_hidden": "Review hidden",
       "review_restored": "Review restored"
+      ,"operational_status_changed": "Marketplace operational status changed"
     }
   },
   "adminProjects": {
@@ -4143,6 +4148,7 @@
       "lead": "Review direct invitations from clients. Messaging and the proposal path open only after you accept.",
       "filterLabel": "Filter invitations",
       "filter": { "all": "All", "pending": "Pending", "accepted": "Accepted", "declined": "Declined" },
+      "suspended": "Marketplace access is temporarily suspended. Contact Batiplus support.",
       "status": { "pending": "Pending", "accepted": "Accepted", "declined": "Declined" },
       "emptyTitle": "No invitations to show",
       "emptyLead": "Direct project invitations will appear here.",
@@ -4196,6 +4202,7 @@
         "COMPANY_ACCOUNT_REQUIRED": "A company account is required for this action.",
         "COMPANY_MEMBERSHIP_REQUIRED": "An active company membership is required.",
         "COMPANY_VERIFICATION_REQUIRED": "Verify your company before submitting proposals.",
+        "COMPANY_MARKETPLACE_SUSPENDED": "This company’s marketplace access is temporarily suspended.",
         "COMPANY_OWNER_REQUIRED": "Only the company owner can do this.",
         "COMPANY_NOT_FOUND": "This company does not exist or is no longer available.",
         "DUPLICATE_ACCOUNT_FOUNDATION": "This account is already set up.",
@@ -4478,6 +4485,24 @@
       "membersTitle": "Active company members",
       "noMembers": "No active company members.",
       "memberRoles": { "owner": "Owner", "staff": "Staff" }
+    },
+    "operationalStatus": {
+      "title": "Marketplace operational status",
+      "lead": "Controls new marketplace acquisition while preserving support, remediation, reads, and existing obligations.",
+      "status": { "normal": "Normal", "needs_attention": "Needs attention", "suspended": "Suspended" },
+      "changeTo": "Change to {status}",
+      "dialogTitle": "Change status to {status}",
+      "confirmation": "Confirm this operational status change and record the internal reason.",
+      "highImpactConfirmation": "This change suspends or restores marketplace access. Confirm the impact and record the internal reason.",
+      "reason": "Internal reason",
+      "reasonHelp": "10–1,000 characters. Visible only to administrators.",
+      "confirm": "Confirm change",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "actionError": "The operational status could not be changed.",
+      "history": "Status history",
+      "emptyHistory": "No operational status changes yet.",
+      "loadMore": "Load more"
     },
     "verification": {
       "title": "Verification record",

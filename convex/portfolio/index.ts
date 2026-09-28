@@ -6,6 +6,7 @@ import { internal } from "../_generated/api";
 import { createUniqueCompanySlug, requireOwnerCompany } from "../companies/index";
 import { consumeVerifiedPublicMediaIntent } from "../storage/publicMediaModel";
 import { getPublicMediaUrl } from "../storage/publicUrl";
+import { getCompanyOperationalStatus } from "../companies/operationalStatus";
 
 const projectTypeValidator = v.union(
   v.literal("construction"),
@@ -145,6 +146,7 @@ export const getPublicCompanyProfile = query({
     logoUrl: v.union(v.string(), v.null()),
     coverImageUrl: v.union(v.string(), v.null()),
     isVerified: v.boolean(),
+    marketplaceAvailable: v.boolean(),
     city: v.string(),
     description: v.string(),
     services: v.array(v.string()),
@@ -208,6 +210,7 @@ export const getPublicCompanyProfile = query({
       logoUrl,
       coverImageUrl,
       isVerified: company.verificationStatus === "verified",
+      marketplaceAvailable: getCompanyOperationalStatus(company) !== "suspended",
       city: company.city,
       description: company.description,
       services: services.map((item) => item.service),

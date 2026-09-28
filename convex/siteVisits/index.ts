@@ -4,6 +4,10 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
+import {
+  getCompanyOperationalStatus,
+  requireCompanyMarketplaceWriteAllowed,
+} from "../companies/operationalStatus";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import {
   createNotification,
@@ -275,6 +279,7 @@ export const invite = mutation({
   handler: async (ctx, args) => {
     const client = await requireClientUser(ctx);
     const { conversation, project, quote } = await getConversationContext(ctx, args.conversationId);
+    await requireCompanyMarketplaceWriteAllowed(ctx, conversation.companyId);
     await requireOwnedProject(ctx, client.userId, project._id);
     if (quote.status !== "discussion_open") throw new ConvexError("SITE_ASSESSMENT_REQUIRES_DISCUSSION");
     if (project.status !== "published" && project.status !== "in_discussion") throw new ConvexError("PROJECT_NOT_ELIGIBLE_FOR_SITE_ASSESSMENT");
@@ -307,6 +312,7 @@ export const respond = mutation({
     if (context.project._id !== assessment.projectId || context.quote._id !== assessment.initialQuoteId) throw new ConvexError("SITE_ASSESSMENT_INTEGRITY_ERROR");
     if (context.quote.status !== "discussion_open") throw new ConvexError("SITE_ASSESSMENT_REQUIRES_DISCUSSION");
     const desired: "accepted" | "declined" = args.decision === "accept" ? "accepted" : "declined";
+    if (desired === "accepted") await requireCompanyMarketplaceWriteAllowed(ctx, assessment.companyId);
     if (assessment.status === desired) return { status: desired, duplicate: true };
     assertSiteAssessmentTransition(assessment.status, desired);
     const companyNote = normalizeOptionalText(args.companyNote, 1_000, "INVALID_SITE_ASSESSMENT_NOTE");
@@ -324,6 +330,7 @@ export const proposeVisit = mutation({
     const assessment = await ctx.db.get(args.assessmentId);
     if (!assessment) throw new ConvexError("SITE_ASSESSMENT_NOT_FOUND");
     const participant = await requireAssessmentParticipant(ctx, assessment);
+    await requireCompanyMarketplaceWriteAllowed(ctx, assessment.companyId);
     const now = Date.now();
     const scheduledEpoch = validateFutureSchedule(args.proposedDate, args.proposedTime, now);
     const siteAddress = normalizeAddress(args.siteAddress);
@@ -380,6 +387,7 @@ export const respondToVisit = mutation({
   handler: async (ctx, args) => {
     const { visit, assessment, participant } = await requireVisitParticipant(ctx, args.visitId);
     const desired = args.decision === "confirm" ? "confirmed" as const : "declined" as const;
+    if (desired === "confirmed") await requireCompanyMarketplaceWriteAllowed(ctx, visit.companyId);
     if (proposerActorType(visit) === participant.actorType) throw new ConvexError("SITE_VISIT_RESPONSE_REQUIRED_FROM_OTHER_PARTICIPANT");
     if (visit.status === desired) return { status: desired, duplicate: true };
     assertSiteVisitTransition(visit.status, desired);
@@ -433,6 +441,7 @@ export const completeVisit = mutation({
   returns: v.object({ status: v.literal("completed"), duplicate: v.boolean() }),
   handler: async (ctx, args) => {
     const { visit, assessment, participant } = await requireVisitParticipant(ctx, args.visitId);
+    await requireCompanyMarketplaceWriteAllowed(ctx, visit.companyId);
     if (visit.status === "completed") return { status: "completed" as const, duplicate: true };
     assertSiteVisitTransition(visit.status, "completed");
     const now = Date.now();
@@ -464,9 +473,10 @@ export const getForConversation = query({
     const active = await activeAssessmentForProject(ctx, context.project._id);
     const quotePathStarted = await finalQuotePathStarted(ctx, args.conversationId);
     const viewer = { userId, actorType: viewerType } satisfies Participant;
+    const marketplaceAvailable = getCompanyOperationalStatus(context.company) !== "suspended";
     return {
       viewerType,
-      canInvite: viewerType === "client" && !active && !quotePathStarted,
+      canInvite: viewerType === "client" && marketplaceAvailable && !active && !quotePathStarted,
       assessment: rows[0] ? await assessmentDto(ctx, rows[0], viewer) : null,
     };
   },
