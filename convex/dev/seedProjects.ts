@@ -11,7 +11,6 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { internalMutation, internalQuery } from "../_generated/server";
 import {
   budgetValues,
-  marketplaceBudgetRank,
   projectBudgetRanges,
   projectCategories,
   projectCities,
@@ -260,7 +259,6 @@ function projectDocument(project: SeedProject, clientId: Id<"users">, index: num
   return {
     ...document,
     marketplaceSearchText: buildProjectMarketplaceSearchText(document),
-    marketplaceBudgetRank: marketplaceBudgetRank(project.budgetRange),
   };
 }
 

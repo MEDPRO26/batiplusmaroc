@@ -216,7 +216,7 @@ export default defineSchema({
     timeline: v.optional(projectTimeline), visibility: v.union(v.literal("marketplace"), v.literal("invite_only")),
     /** Public-only denormalized text used by the authenticated company marketplace. */
     marketplaceSearchText: v.optional(v.string()),
-    /** Denormalized budget rank for marketplace sorting (0=unknown … 6=1M+). */
+    /** Legacy compatibility field. Current marketplace queries do not use project budgets. */
     marketplaceBudgetRank: v.optional(v.number()),
     status: projectStatus, lastCompletedStep: v.number(), createdAt: v.number(), updatedAt: v.number(),
     selectedCompanyId: v.optional(v.id("companies")),
@@ -232,19 +232,14 @@ export default defineSchema({
     .index("by_status_visibility_publishedAt", ["status", "visibility", "publishedAt"])
     .index("by_status_visibility_city_publishedAt", ["status", "visibility", "city", "publishedAt"])
     .index("by_status_visibility_category_publishedAt", ["status", "visibility", "primaryCategory", "publishedAt"])
-    .index("by_status_visibility_budget_publishedAt", ["status", "visibility", "budgetRange", "publishedAt"])
     .index("by_status_visibility_timeline_publishedAt", ["status", "visibility", "timeline", "publishedAt"])
     .index("by_status_visibility_propertyType_publishedAt", ["status", "visibility", "propertyType", "publishedAt"])
-    .index("by_status_visibility_budgetRank_publishedAt", ["status", "visibility", "marketplaceBudgetRank", "publishedAt"])
     .index("by_status_visibility_city_category_publishedAt", ["status", "visibility", "city", "primaryCategory", "publishedAt"])
-    .index("by_status_visibility_city_budget_publishedAt", ["status", "visibility", "city", "budgetRange", "publishedAt"])
-    .index("by_status_visibility_category_budget_publishedAt", ["status", "visibility", "primaryCategory", "budgetRange", "publishedAt"])
-    .index("by_status_visibility_city_category_budget_publishedAt", ["status", "visibility", "city", "primaryCategory", "budgetRange", "publishedAt"])
     .index("by_primaryCategory_and_status", ["primaryCategory", "status"])
     .index("by_createdAt", ["createdAt"])
     .searchIndex("search_marketplace", {
       searchField: "marketplaceSearchText",
-      filterFields: ["status", "visibility", "city", "primaryCategory", "budgetRange", "timeline", "propertyType"],
+      filterFields: ["status", "visibility", "city", "primaryCategory", "timeline", "propertyType"],
     }),
 
   projectStatusHistory: defineTable({

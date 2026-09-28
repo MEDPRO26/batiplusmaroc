@@ -550,6 +550,7 @@ describe("invitation decisions and isolation", () => {
       status: "accepted",
       projectId: state.projectId,
     });
+    expect(own[0]).not.toHaveProperty("budgetRange");
     expect(other).toEqual([]);
     expect(clientRows).toHaveLength(1);
     await expect(
@@ -862,18 +863,18 @@ describe("accepted invitation convergence", () => {
       api.invitations.index.acceptInvitation,
       { invitationId: created.invitationId },
     );
-    await expect(
-      asUser(state.t, state.company.userId).query(
-        api.quotes.index.getSubmissionContext,
-        { projectId: state.projectId },
-      ),
-    ).resolves.toMatchObject({ project: { id: state.projectId, budgetRange: null } });
-    await expect(
-      asUser(state.t, state.company.userId).query(
-        api.projects.marketplace.getCompanyMarketplaceProject,
-        { projectId: state.projectId },
-      ),
-    ).resolves.toMatchObject({ id: state.projectId, budgetRange: null, canSubmitQuote: true });
+    const quoteContext = await asUser(state.t, state.company.userId).query(
+      api.quotes.index.getSubmissionContext,
+      { projectId: state.projectId },
+    );
+    expect(quoteContext).toMatchObject({ project: { id: state.projectId } });
+    expect(quoteContext?.project).not.toHaveProperty("budgetRange");
+    const marketplaceProject = await asUser(state.t, state.company.userId).query(
+      api.projects.marketplace.getCompanyMarketplaceProject,
+      { projectId: state.projectId },
+    );
+    expect(marketplaceProject).toMatchObject({ id: state.projectId, canSubmitQuote: true });
+    expect(marketplaceProject).not.toHaveProperty("budgetRange");
     const submitted = await asUser(state.t, state.company.userId).mutation(
       api.quotes.index.submitInitialQuote,
       { projectId: state.projectId, ...validQuote },

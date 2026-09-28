@@ -136,9 +136,6 @@ function OpenProjectCard({ project }: { project: MarketplaceOpenProject }) {
         <span className="rounded-full bg-brand-soft px-3 py-1 text-[0.78rem] font-medium text-brand">
           {tMarket(`categories.${project.category}`)}
         </span>
-        <span className="rounded-full bg-surface-muted px-3 py-1 text-[0.78rem] font-medium text-ink">
-          {t(`projects.${project.id}.budget` as Parameters<typeof t>[0])}
-        </span>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-brand-border pt-4">

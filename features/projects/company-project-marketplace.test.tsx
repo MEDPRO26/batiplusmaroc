@@ -124,25 +124,26 @@ describe("company project feed", () => {
     expect(html).not.toContain("Load more");
   });
 
-  test("renders a no-budget Project without a missing translation key", () => {
-    state.results = [{ ...project, budgetRange: null }];
+  test("renders current Projects without any Client budget UI", () => {
+    state.results = [{ ...project }];
     const html = renderFeed();
     expect(html).toContain("Renovation appartement Agdal");
     expect(html).toContain("1–3 months");
-    expect(html).not.toContain("budgetOptions.null");
+    expect(html).not.toContain("100,000–250,000 MAD");
+    expect(html).not.toContain("Budget");
   });
 
   test("renders mobile filters, desktop filters, skeletons, and empty state", () => {
     let html = renderFeed();
     expect(html).toContain("lg:hidden");
     expect(html).toContain("lg:block");
-    expect(html.match(/<details/g)).toHaveLength(7);
+    expect(html.match(/<details/g)).toHaveLength(6);
     expect(html).toContain("<summary");
     expect(html).toContain('open=""');
     expect(html).toContain('id="desktop-city"');
     expect(html).toContain('type="search"');
     expect(html).toContain('id="desktop-category"');
-    expect(html).toContain('id="desktop-budget-under_50000"');
+    expect(html).not.toContain('id="desktop-budget-under_50000"');
     expect(html).toContain('id="desktop-timeline-asap"');
     expect(html).toContain('id="desktop-property-house"');
     expect(html).toContain('id="desktop-surface-under_100"');
@@ -162,8 +163,7 @@ describe("company project feed", () => {
     expect(html).toContain('aria-label="Sort by: Most recent"');
     expect(html).toContain('aria-haspopup="menu"');
     expect(en.companyProjects.sort.options.oldest).toBe("Oldest");
-    expect(en.companyProjects.sort.options.budgetHigh).toBe("Highest budget");
-    expect(en.companyProjects.sort.options.budgetLow).toBe("Lowest budget");
+    expect(Object.keys(en.companyProjects.sort.options)).toEqual(["newest", "oldest"]);
 
     state.status = "LoadingFirstPage";
     html = renderFeed();
@@ -175,7 +175,7 @@ describe("company project feed", () => {
     const html = renderFeed("fr");
     expect(html).toContain("Ville");
     expect(html).toContain("Catégorie");
-    expect(html).toContain("Budget");
+    expect(html).not.toContain("Budget");
     expect(html).toContain("Délai");
     expect(html).toContain("Type de bien");
     expect(html).toContain("Surface");
@@ -183,7 +183,7 @@ describe("company project feed", () => {
     expect(html).toContain("Plus récents");
     expect(html).toContain("Effacer les filtres");
     expect(fr.companyProjects.sort.options.oldest).toBe("Plus anciens");
-    expect(fr.companyProjects.sort.options.budgetHigh).toBe("Budget le plus élevé");
+    expect(Object.keys(fr.companyProjects.sort.options)).toEqual(["newest", "oldest"]);
     expect(fr.companyProjects.filters.postedOptions.last_24h).toBe("Dernières 24 heures");
   });
 });
@@ -229,7 +229,7 @@ describe("company project detail sheet", () => {
 });
 
 describe("company project detail", () => {
-  test("keeps a no-budget invited Project accessible without rendering a budget key", () => {
+  test("keeps an invited Project accessible without rendering a legacy budget", () => {
     state.queryResults = [companyUser, {
       ...project,
       budgetRange: null,
@@ -242,30 +242,30 @@ describe("company project detail", () => {
     }];
     state.queryIndex = 0;
     const html = renderToStaticMarkup(provider("en", <CompanyProjectDetails projectId="project-1" />));
-    expect(html).toContain("Send an initial quote");
-    expect(html).not.toContain("budgetOptions.null");
+    expect(html).toContain("Submit a proposal");
+    expect(html).not.toContain("Budget");
   });
 
   test("shows safe detail and verified-company proposal placeholder", () => {
     const html = renderDetail(true);
     expect(html).toContain("Renovation appartement Agdal");
     expect(html).toContain("Samir C.");
-    expect(html).toContain("Send an initial quote");
-    expect(html).toContain("Messaging stays locked until the client opens a discussion");
+    expect(html).toContain("Submit a proposal");
+    expect(html).toContain("Messaging unlocks only after the client opens a discussion");
     expect(html).not.toContain("company@example.test");
     expect(html).not.toContain("phone");
   });
 
   test("shows disabled verification guidance in French for an unverified company", () => {
     const html = renderDetail(false, "fr");
-    expect(html).toContain("Envoyer un devis estimatif");
-    expect(html).toContain("Vérifiez votre entreprise avant d’envoyer un devis.");
+    expect(html).toContain("Envoyer une proposition");
+    expect(html).toContain("Vérifiez votre entreprise avant d’envoyer une proposition.");
     expect(html).toContain("disabled");
   });
 
   test("shows the company quote link when a quote already exists", () => {
     const html = renderDetail(false, "en", "quote-1");
-    expect(html).toContain("View my quote");
+    expect(html).toContain("View my proposal");
     expect(html).not.toContain("disabled");
   });
 
@@ -281,7 +281,7 @@ describe("company project detail", () => {
     }];
     state.queryIndex = 0;
     const html = renderToStaticMarkup(provider("en", <ProjectDetailsSheet onClose={() => undefined} projectId="project-1" />));
-    expect(html).toContain("Send an initial quote");
+    expect(html).toContain("Submit a proposal");
     expect(html).not.toContain("cursor-not-allowed");
     expect(html).toContain("2 projects posted");
     expect(html).toContain("1 project completed");

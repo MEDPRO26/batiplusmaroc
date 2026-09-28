@@ -7,7 +7,7 @@ export const projectBudgetRanges = ["under_50000", "50000_100000", "100000_25000
 export const projectTimelines = ["asap", "within_1_month", "one_to_three_months", "three_to_six_months", "six_plus_months", "flexible"] as const;
 export const projectSurfaceRanges = ["under_100", "100_200", "200_500", "500_plus", "unknown"] as const;
 export const projectPostedWindows = ["last_24h", "last_3d", "last_7d", "last_30d"] as const;
-export const projectMarketplaceSortOptions = ["newest", "oldest", "budget_high", "budget_low"] as const;
+export const projectMarketplaceSortOptions = ["newest", "oldest"] as const;
 export const projectStatuses = ["draft", "pending_review", "needs_changes", "published", "in_discussion", "company_selected", "in_progress", "completed", "cancelled", "archived"] as const;
 
 export const projectCategoryValidator = v.union(...projectCategories.map((value) => v.literal(value)));
@@ -17,7 +17,12 @@ export const projectBudgetRangeValidator = v.union(...projectBudgetRanges.map((v
 export const projectTimelineValidator = v.union(...projectTimelines.map((value) => v.literal(value)));
 export const projectSurfaceRangeValidator = v.union(...projectSurfaceRanges.map((value) => v.literal(value)));
 export const projectPostedWindowValidator = v.union(...projectPostedWindows.map((value) => v.literal(value)));
-export const projectMarketplaceSortValidator = v.union(...projectMarketplaceSortOptions.map((value) => v.literal(value)));
+/** Legacy budget sort values remain accepted temporarily and are normalized to newest by current queries. */
+export const projectMarketplaceSortValidator = v.union(
+  ...projectMarketplaceSortOptions.map((value) => v.literal(value)),
+  v.literal("budget_high"),
+  v.literal("budget_low"),
+);
 export const projectStatusValidator = v.union(...projectStatuses.map((value) => v.literal(value)));
 
 export type ProjectStatus = (typeof projectStatuses)[number];
@@ -35,17 +40,6 @@ export const budgetValues = {
   "500000_1000000": { min: 500_000, max: 1_000_000, unknown: false },
   "1000000_plus": { min: 1_000_000, max: undefined, unknown: false },
   unknown: { min: undefined, max: undefined, unknown: true },
-} as const;
-
-/** Stable numeric ranks for marketplace budget sorting (unknown sorts lowest). */
-export const marketplaceBudgetRanks = {
-  unknown: 0,
-  under_50000: 1,
-  "50000_100000": 2,
-  "100000_250000": 3,
-  "250000_500000": 4,
-  "500000_1000000": 5,
-  "1000000_plus": 6,
 } as const;
 
 export const postedWindowMs = {
@@ -66,9 +60,4 @@ export function matchesProjectSurfaceRange(
   if (range === "100_200") return surface >= 100 && surface < 200;
   if (range === "200_500") return surface >= 200 && surface < 500;
   return surface >= 500;
-}
-
-export function marketplaceBudgetRank(budgetRange: (typeof projectBudgetRanges)[number] | undefined) {
-  if (!budgetRange) return marketplaceBudgetRanks.unknown;
-  return marketplaceBudgetRanks[budgetRange];
 }

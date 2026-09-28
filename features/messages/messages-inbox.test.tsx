@@ -119,7 +119,6 @@ describe("messages inbox", () => {
             title: "Villa build",
             primaryCategory: "houseConstruction",
             city: "casablanca",
-            budgetRange: "50000_100000",
             timeline: "one_to_three_months",
             status: "pending_review",
             createdAt: 1,

@@ -96,6 +96,8 @@ describe("direct invitation UI", () => {
       expect(html).toContain(accept);
       expect(html).toContain(continuation);
       expect(html).toContain(locale === "en" ? "Declined" : "Refusée");
+      expect(html).not.toContain(locale === "en" ? "100,000–250,000 MAD" : "100 000–250 000 MAD");
+      expect(html).not.toContain(locale === "en" ? ">Budget<" : ">Budget<");
       expect(html).toContain("flex flex-wrap");
       expect(html).toContain("sm:p-6");
     },

@@ -105,6 +105,8 @@ describe("public project browse", () => {
     expect(html).toContain("Renovation");
     expect(html).toContain("View project");
     expect(html).toContain("1 project");
+    expect(html).not.toContain("50,000–100,000 MAD");
+    expect(html).not.toContain(">Budget<");
     expect(html).not.toContain(publicProject.id);
   });
 

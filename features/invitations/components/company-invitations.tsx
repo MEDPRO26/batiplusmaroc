@@ -146,12 +146,6 @@ export function CompanyInvitations() {
                       <dd>{tWizard(`categoryOptions.${row.category}`)}</dd>
                     </div>
                   ) : null}
-                  {row.budgetRange ? (
-                    <div>
-                      <dt className="sr-only">{t("budget")}</dt>
-                      <dd>{tWizard(`budgetOptions.${row.budgetRange}`)}</dd>
-                    </div>
-                  ) : null}
                   <div>
                     <dt className="sr-only">{t("client")}</dt>
                     <dd>

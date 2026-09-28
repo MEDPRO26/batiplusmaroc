@@ -170,7 +170,7 @@
       "items": {
         "0": {
           "title": "A clear project from day one",
-          "text": "Describe the work, city, and budget so companies know exactly what you need.",
+          "text": "Describe the work, city, and timing so companies know exactly what you need.",
           "alt": "Contemporary villa ready to be posted as a project"
         },
         "1": {
@@ -271,37 +271,31 @@
       "projects": {
         "tab": "Open projects",
         "title": "Projects ready for proposals",
-        "description": "Need, city, and budget in one place. Reply to the jobs that match your trade.",
+        "description": "Need, city, and timing in one place. Reply to the jobs that match your trade.",
         "cta": "See all projects",
         "0": {
           "title": "180 m² villa — structure and shell",
-          "text": "New villa in Founty. Foundations, structure, and roof. Site access is already prepared.",
-          "budget": "MAD 850k – 1.2M"
+          "text": "New villa in Founty. Foundations, structure, and roof. Site access is already prepared."
         },
         "1": {
           "title": "Full renovation of a 120 m² apartment",
-          "text": "Finishes, electrical, and fit-out in Casablanca. The client wants a clear schedule before start.",
-          "budget": "MAD 220k – 310k"
+          "text": "Finishes, electrical, and fit-out in Casablanca. The client wants a clear schedule before start."
         },
         "2": {
           "title": "R+3 building — structural repair",
-          "text": "Reinforcement and structural work in Rabat. Plans available. Looking for an experienced company.",
-          "budget": "MAD 1.4 – 1.9M"
+          "text": "Reinforcement and structural work in Rabat. Plans available. Looking for an experienced company."
         },
         "3": {
           "title": "Electrical upgrade for a villa",
-          "text": "Board, wiring, and lighting in Marrakech. Occupied house — hours to be agreed.",
-          "budget": "MAD 45k – 70k"
+          "text": "Board, wiring, and lighting in Marrakech. Occupied house — hours to be agreed."
         },
         "4": {
           "title": "8 × 4 m pool and outdoor works",
-          "text": "Excavation, basin, and deck in Agadir. The client is comparing 2 to 3 verified companies.",
-          "budget": "MAD 180k – 260k"
+          "text": "Excavation, basin, and deck in Agadir. The client is comparing 2 to 3 verified companies."
         },
         "5": {
           "title": "Interior fit-out for a residence",
-          "text": "Kitchen, joinery, and finishes in Tangier. Moodboard provided. Start wanted in 6 weeks.",
-          "budget": "MAD 95k – 140k"
+          "text": "Kitchen, joinery, and finishes in Tangier. Moodboard provided. Start wanted in 6 weeks."
         }
       },
       "companies": {
@@ -697,7 +691,7 @@
       "cards": {
         "0": {
           "title": "Post your project (it’s free)",
-          "body": "Describe the work, the city, and the budget. Companies understand the job before they propose.",
+          "body": "Describe the work, the city, and the timing. Companies understand the job before they propose.",
           "cta": "Post a project"
         },
         "1": {
@@ -732,7 +726,7 @@
       "steps": {
         "0": {
           "title": "You post the project",
-          "body": "Work, city, and budget. Companies see a clear brief."
+          "body": "Work, city, and timing. Companies see a clear brief."
         },
         "1": {
           "title": "Proposal or invitation",
@@ -768,7 +762,7 @@
         },
         "3": {
           "question": "What kind of work can I post?",
-          "answer": "Structural work, finishing, renovation, house construction, electrical, plumbing, joinery, pools, and fit-out. Include the city, budget, and scope in the project.",
+          "answer": "Structural work, finishing, renovation, house construction, electrical, plumbing, joinery, pools, and fit-out. Include the city, timing, and scope in the project.",
           "more": "Browse companies"
         },
         "4": {
@@ -1295,7 +1289,7 @@
           "title": "3. Client obligations",
           "paragraphs": [
             "Clients may publish projects, invite companies, review proposals, open discussions after mutual interest, and select a company for a project.",
-            "Project descriptions must be truthful, lawful, and detailed enough for companies to understand the scope. Clients must not post misleading budgets, fake projects, or content that infringes third-party rights.",
+            "Project descriptions must be truthful, lawful, and detailed enough for companies to understand the scope. Clients must not post misleading project information, fake projects, or content that infringes third-party rights.",
             "Clients remain solely responsible for choosing a company, negotiating the works contract, site access, permits, and payments under any off-platform construction agreement."
           ]
         },
@@ -1486,7 +1480,6 @@
     "post": "Post a project",
     "title": "Project title",
     "description": "Description",
-    "budget": "Budget",
     "location": "Location",
     "category": "Category",
     "submit": "Publish",
@@ -1902,16 +1895,11 @@
         "lead": "A clear title and short description help companies understand your needs."
       },
       "4": {
-        "eyebrow": "Budget",
-        "title": "What is your estimated budget?",
-        "lead": "A range is enough. Choose “I don’t know yet” if you need guidance."
-      },
-      "5": {
         "eyebrow": "Timeline",
         "title": "When would you like to start?",
         "lead": "Choose the closest option. You can stay flexible."
       },
-      "6": {
+      "5": {
         "eyebrow": "Review",
         "title": "Review your project",
         "lead": "Check everything before publishing. You can edit any section."
@@ -1925,7 +1913,6 @@
       "propertyType": "Choose a property type.",
       "surface": "Enter a positive surface or select “I don’t know”.",
       "description": "Describe your project in at least 20 characters.",
-      "budget": "Choose a budget range.",
       "timeline": "Choose a timeline.",
       "image": "Choose JPG, PNG, or WebP images of 10 MB or less.",
       "document": "Choose PDF documents of 15 MB or less."
@@ -1981,15 +1968,6 @@
       "land": "Land",
       "other": "Other"
     },
-    "budgetOptions": {
-      "under_50000": "Under 50,000 MAD",
-      "50000_100000": "50,000–100,000 MAD",
-      "100000_250000": "100,000–250,000 MAD",
-      "250000_500000": "250,000–500,000 MAD",
-      "500000_1000000": "500,000–1,000,000 MAD",
-      "1000000_plus": "1,000,000+ MAD",
-      "unknown": "I don’t know yet"
-    },
     "timelineOptions": {
       "asap": "As soon as possible",
       "within_1_month": "Within 1 month",
@@ -2020,7 +1998,6 @@
       "surface": "Surface",
       "description": "Description",
       "details": "Details",
-      "budget": "Budget",
       "timeline": "Timeline",
       "files": "Files",
       "fileCount": "{images} images · {documents} documents"
@@ -2047,7 +2024,6 @@
     "untitled": "Untitled project",
     "locationPending": "Location not added yet",
     "notProvided": "Not provided",
-    "budget": "Budget",
     "timeline": "Timeline",
     "submitted": "Submitted {date}",
     "updated": "Updated {date}",
@@ -2087,7 +2063,7 @@
     "notFoundTitle": "Project unavailable",
     "images": "Project images",
     "imageAlt": "Project image {number} for {title}",
-    "description": "Description",
+    "description": "Project description",
     "documents": "Private documents",
     "documentsPrivate": "These document details are visible only to authorized viewers.",
     "fileSizeKb": "{count} KB",
@@ -2156,14 +2132,22 @@
       }
     },
     "history": {
-      "title": "Status history",
+      "title": "Project activity",
       "transition": "{from} → {to}",
       "meta": "{date} · {actor}",
       "actor": {
         "client": "Client",
         "staff": "Batiplus team"
-      }
-    }
+      },
+      "count": "{count, plural, one {# update} other {# updates}}"
+    },
+    "projectInformation": "Project information",
+    "publishedOn": "Published {date}",
+    "createdOn": "Created {date}",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "dates": "Key dates",
+    "publishedLabel": "Published"
   },
   "clientDashboard": {
     "eyebrow": "Client dashboard",
@@ -2739,7 +2723,6 @@
       "client": "Client",
       "city": "City",
       "category": "Category",
-      "budget": "Budget",
       "submitted": "Submitted",
       "status": "Status",
       "action": "Action"
@@ -2764,7 +2747,6 @@
       "propertyType": "Property type",
       "surface": "Surface",
       "description": "Description",
-      "budget": "Budget",
       "timeline": "Timeline",
       "status": "Current status"
     },
@@ -3038,10 +3020,8 @@
       "siteAddress": "Private site address",
       "visitStatus": "Visit status",
       "declinedBy": "Declined by",
-      "declinedAt": "Declined at",
       "cancellationReason": "Cancellation reason",
       "cancelledBy": "Cancelled by",
-      "cancelledAt": "Cancelled at",
       "completedBy": "Completed by",
       "completedAt": "Completed at",
       "finalQuoteStatus": "Final quote status"
@@ -3123,8 +3103,6 @@
       "selectCategories": "Select categories",
       "selectedCount": "{count} selected",
       "allCategories": "All categories",
-      "budget": "Budget",
-      "allBudgets": "All budgets",
       "timeline": "Timeline",
       "propertyType": "Property type",
       "surface": "Surface",
@@ -3150,9 +3128,7 @@
       "triggerAria": "Sort by: {option}",
       "options": {
         "newest": "Most recent",
-        "oldest": "Oldest",
-        "budgetHigh": "Highest budget",
-        "budgetLow": "Lowest budget"
+        "oldest": "Oldest"
       }
     },
     "loadedCount": "{count, plural, =0 {No projects loaded} one {# project loaded} other {# projects loaded}}",
@@ -3178,7 +3154,6 @@
       "back": "Back to projects",
       "close": "Close project details",
       "openFullPage": "Open full project page",
-      "budget": "Budget",
       "timeline": "Timeline",
       "propertyType": "Property type",
       "surface": "Surface",
@@ -3195,15 +3170,22 @@
       "clientPrivacy": "Contact details stay private until both sides agree to discuss the project.",
       "retry": "Try again",
       "unavailableTitle": "This project is no longer available.",
-      "unavailableLead": "It may have been removed from the marketplace or is no longer accepting interest."
+      "unavailableLead": "It may have been removed from the marketplace or is no longer accepting interest.",
+      "projectInformation": "Project information",
+      "location": "Location",
+      "servicesTitle": "Services requested",
+      "showMore": "Show more",
+      "showLess": "Show less"
     },
     "quote": {
       "title": "Interested in this project?",
-      "lead": "Send a clear first estimate. Messaging stays locked until the client opens a discussion.",
-      "submit": "Send an initial quote",
-      "view": "View my quote",
-      "verificationRequired": "Verify your company before sending a quote.",
-      "verifyAction": "Verify company"
+      "lead": "Introduce your company and send a proposal with a first estimate. This is not the final quote.",
+      "submit": "Submit a proposal",
+      "view": "View my proposal",
+      "verificationRequired": "Verify your company before submitting a proposal.",
+      "verifyAction": "Verify company",
+      "alreadySubmitted": "You already sent a proposal",
+      "messagingRule": "Messaging unlocks only after the client opens a discussion on your proposal."
     },
     "error": {
       "title": "Projects could not be loaded",
@@ -3212,26 +3194,34 @@
     }
   },
   "initialQuote": {
-    "eyebrow": "Initial quote",
-    "title": "Send an initial quote",
-    "lead": "Share a first commercial estimate with the client. This is not the final contractual quote.",
-    "loading": "Loading the quote workspace…",
-    "unavailableTitle": "This project is not accepting initial quotes.",
+    "eyebrow": "Proposal",
+    "title": "Submit a proposal",
+    "lead": "Share a first estimate with the client. It is not the final contractual quote — that comes after discussion and, if needed, a site visit.",
+    "loading": "Loading your proposal…",
+    "unavailableTitle": "This project is not accepting proposals.",
     "unavailableLead": "It may no longer be published or available on the marketplace.",
     "backToProject": "Back to project",
-    "projectSummary": "Project summary",
+    "projectSummary": "Project details",
     "form": {
-      "message": "Message to client",
-      "messageHint": "Introduce your company and explain why you are a good fit.",
-      "estimatedPrice": "Estimated price",
+      "message": "Proposal message",
+      "messageHint": "Introduce your company and explain how you would approach this project.",
+      "estimatedPrice": "Initial estimate",
       "currency": "MAD",
       "estimatedDuration": "Estimated duration",
       "durationUnit": "days",
       "availableStartDate": "Available start date",
       "scope": "Scope of work",
       "scopeHint": "Summarize the main work included in this estimate.",
-      "submit": "Send initial quote",
-      "submitting": "Sending quote…"
+      "submit": "Submit proposal",
+      "submitting": "Sending proposal…",
+      "estimateSection": "Your estimate",
+      "estimateLead": "A first, non-binding estimate. The client sees it with your proposal.",
+      "estimatedPriceHint": "Approximate total for the work, in dirhams.",
+      "estimatedDurationHint": "Expected length of the work once it starts.",
+      "availableStartDateHint": "The earliest date your team can start.",
+      "detailsSection": "Additional details",
+      "characterCount": "{count} / {max}",
+      "cancel": "Cancel"
     },
     "validation": {
       "required": "Complete all required fields.",
@@ -3241,12 +3231,12 @@
       "date": "Choose an available start date.",
       "scope": "Describe the scope in at least 20 characters."
     },
-    "success": "Your initial quote was sent successfully.",
+    "success": "Your proposal was sent successfully.",
     "verificationTitle": "Company verification required",
-    "verificationLead": "Verify your company before sending a quote.",
+    "verificationLead": "Verify your company before submitting a proposal.",
     "verifyAction": "Verify company",
     "detail": {
-      "title": "Your initial quote",
+      "title": "Your proposal",
       "status": "Status",
       "draft": "Draft",
       "submitted": "Submitted",
@@ -3256,12 +3246,12 @@
       "declined": "Declined",
       "withdrawn": "Withdrawn",
       "submittedAt": "Sent on {date}",
-      "estimatedPrice": "Estimated price",
+      "estimatedPrice": "Initial estimate",
       "estimatedDuration": "Estimated duration",
       "durationValue": "{count, plural, one {# day} other {# days}}",
       "availability": "Availability",
       "scope": "Scope of work",
-      "message": "Message to client",
+      "message": "Proposal message",
       "messagingLocked": "Messaging is still locked. It will only open if the client chooses to open a discussion.",
       "discussionOpenedTitle": "Discussion opened",
       "discussionPending": "The client opened a discussion about this project.",
@@ -3270,37 +3260,37 @@
       "conversationUnavailableTitle": "The conversation could not be loaded.",
       "conversationUnavailableLead": "Please try again. If the problem continues, contact support.",
       "retryConversation": "Try again",
-      "withdraw": "Withdraw quote",
+      "withdraw": "Withdraw proposal",
       "withdrawing": "Withdrawing…",
-      "withdrawnNotice": "This quote has been withdrawn and remains in your history."
-    }
+      "withdrawnNotice": "This proposal has been withdrawn and remains in your history."
+    },
+    "viewProject": "View full project"
   },
   "receivedQuotes": {
-    "eyebrow": "Commercial responses",
-    "title": "Received quotes",
-    "count": "{count, plural, =0 {No quotes} one {# quote} other {# quotes}}",
-    "loading": "Loading received quotes…",
-    "loadingDetail": "Loading quote details…",
+    "title": "Proposals",
+    "count": "{count, plural, =0 {None received yet} one {# received} other {# received}}",
+    "loading": "Loading proposals…",
+    "loadingDetail": "Loading proposal…",
     "empty": {
-      "title": "No quotes received yet.",
-      "description": "Verified companies can submit an initial estimate while your project is open. New quotes will appear here automatically."
+      "title": "No proposals yet.",
+      "description": "Verified companies can send a proposal while your project is open. New proposals will appear here automatically."
     },
     "verified": "Verified company",
     "cityUnavailable": "Location not provided",
-    "price": "Estimated price",
+    "price": "Initial estimate",
     "duration": "Estimated duration",
     "durationValue": "{count, plural, one {# day} other {# days}}",
     "availableStart": "Available start",
     "submittedAt": "Submitted {date}",
     "scope": "Scope of work",
     "message": "Message",
-    "openQuote": "Review quote",
+    "openQuote": "Review proposal",
     "viewProfile": "View company profile",
-    "close": "Close quote",
-    "unavailable": "This quote is no longer available.",
+    "close": "Close proposal",
+    "unavailable": "This proposal is no longer available.",
     "messagingNotice": "Opening a discussion creates a private project conversation with this company.",
     "discussionOpenedTitle": "Discussion opened",
-    "discussionOpenedNotice": "Your private project conversation is ready.",
+    "discussionOpenedNotice": "You can now continue the conversation with this company.",
     "continueInMessages": "Continue in Messages",
     "conversationLoading": "Preparing your conversation…",
     "conversationUnavailableTitle": "The conversation could not be loaded.",
@@ -3308,7 +3298,7 @@
     "retryConversation": "Try again",
     "status": {
       "draft": "Draft",
-      "submitted": "Submitted",
+      "submitted": "New",
       "viewed": "Viewed",
       "shortlisted": "Shortlisted",
       "discussion_open": "Discussion opened",
@@ -3316,9 +3306,11 @@
       "withdrawn": "Withdrawn"
     },
     "detail": {
-      "eyebrow": "Initial quote",
-      "title": "Quote details",
-      "aboutCompany": "About the company"
+      "eyebrow": "Proposal",
+      "title": "Proposal details",
+      "companyTitle": "Company",
+      "proposalTitle": "Proposal details",
+      "estimateNote": "This is an initial estimate, not a final quote. The final quote comes after discussion and, if needed, a site visit."
     },
     "actions": {
       "shortlist": "Shortlist",
@@ -3327,15 +3319,27 @@
       "working": "Updating…"
     },
     "declineConfirm": {
-      "title": "Decline this quote?",
-      "description": "This decision cannot be reversed. The company will see that its quote was declined.",
-      "confirm": "Decline quote",
-      "cancel": "Keep quote"
+      "title": "Decline this proposal?",
+      "description": "This decision cannot be reversed. The company will see that its proposal was declined.",
+      "confirm": "Decline proposal",
+      "cancel": "Keep proposal"
     },
     "success": {
-      "shortlist": "Quote shortlisted.",
-      "decline": "Quote declined.",
+      "shortlist": "Proposal shortlisted.",
+      "decline": "Proposal declined.",
       "open_discussion": "Discussion opened."
+    },
+    "opensInNewTab": "(opens in a new tab)",
+    "overview": {
+      "title": "Proposals",
+      "received": "Received",
+      "new": "New",
+      "shortlisted": "Shortlisted",
+      "discussions": "Discussions opened",
+      "nextEmpty": "Verified companies can send proposals while your project is published.",
+      "nextNew": "{count, plural, one {# new proposal is} other {# new proposals are}} waiting for your review.",
+      "nextReview": "Compare proposals, shortlist companies, and open a discussion when you are ready.",
+      "review": "Review proposals"
     }
   },
   "seoCms": {
@@ -3909,7 +3913,6 @@
       "invitedAt": "Invited {date}",
       "location": "Location",
       "category": "Category",
-      "budget": "Budget",
       "client": "Client",
       "fromClient": "From {name}",
       "clientFallback": "Client",

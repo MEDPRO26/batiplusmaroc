@@ -191,6 +191,8 @@ describe("admin projects interface", () => {
     expect(html).toContain("Agdal");
     expect(html).toContain("Approve");
     expect(html).toContain("Request changes");
+    expect(html).not.toContain("100,000–250,000 MAD");
+    expect(html).not.toContain(">Budget<");
     expect(html).toContain("Marketplace timeline");
     expect(html).toContain("Project submitted for review");
     expect(html).toContain("Site visit confirmed");
@@ -389,5 +391,7 @@ describe("admin projects interface", () => {
     expect(html).toContain("md:block");
     expect(html).toContain("<article");
     expect(html).toContain("<table");
+    expect(html).not.toContain("100,000–250,000 MAD");
+    expect(html).not.toContain(">Budget<");
   });
 });

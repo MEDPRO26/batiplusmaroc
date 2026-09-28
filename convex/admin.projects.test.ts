@@ -107,6 +107,7 @@ describe("marketplace project backfill", () => {
       status: "published",
       includeBudget: false,
     });
+    await t.run((ctx) => ctx.db.patch(projectIds[0], { marketplaceBudgetRank: 3 }));
 
     await expect(
       t.mutation(api.admin.projects.startMarketplaceBackfill, {}),
@@ -124,11 +125,10 @@ describe("marketplace project backfill", () => {
       Promise.all(projectIds.map((projectId) => ctx.db.get(projectId))),
     );
     expect(migrated).toHaveLength(55);
-    for (const project of migrated) {
-      expect(project).toMatchObject({
-        marketplaceSearchText: expect.stringContaining("renovation"),
-        marketplaceBudgetRank: 3,
-      });
+    for (const [index, project] of migrated.entries()) {
+      expect(project).toMatchObject({ marketplaceSearchText: expect.stringContaining("renovation") });
+      if (index === 0) expect(project).toHaveProperty("marketplaceBudgetRank", 3);
+      else expect(project).not.toHaveProperty("marketplaceBudgetRank");
     }
     expect(await t.run((ctx) => ctx.db.get(pendingProjectId))).not.toHaveProperty(
       "marketplaceSearchText",
@@ -143,13 +143,11 @@ describe("marketplace project backfill", () => {
       asUser(t, adminId).mutation(api.admin.projects.startMarketplaceBackfill, {}),
     ).resolves.toEqual({ scheduled: true });
     await t.finishAllScheduledFunctions(() => {});
-    expect(
-      await t.run(async (ctx) =>
-        (await Promise.all(projectIds.map((projectId) => ctx.db.get(projectId)))).filter(
-          (project) => project?.marketplaceBudgetRank !== 3,
-        ).length,
-      ),
-    ).toBe(0);
+    const afterSecondRun = await t.run(async (ctx) =>
+      Promise.all(projectIds.map((projectId) => ctx.db.get(projectId))),
+    );
+    expect(afterSecondRun[0]).toHaveProperty("marketplaceBudgetRank", 3);
+    expect(afterSecondRun.slice(1).every((project) => !("marketplaceBudgetRank" in (project ?? {})))).toBe(true);
   });
 });
 
@@ -172,6 +170,7 @@ describe("admin project list and review", () => {
     const row = (await admin.query(api.admin.projects.listProjects, { status: "all" }))[0] as Record<string, unknown>;
     expect(row).not.toHaveProperty("email");
     expect(row).not.toHaveProperty("phone");
+    expect(row).not.toHaveProperty("budgetRange");
   });
 
   test("returns project details and immutable actor history using safe client info", async () => {
@@ -197,6 +196,7 @@ describe("admin project list and review", () => {
       history: [expect.objectContaining({ oldStatus: "draft", newStatus: "pending_review", changedBy: { userId: clientId, displayName: "Samir Client", role: "client" } })],
     });
     expect(review?.client).not.toHaveProperty("email");
+    expect(review).not.toHaveProperty("budgetRange");
   });
 });
 
@@ -208,14 +208,11 @@ describe("admin project decisions", () => {
     const projectId = await seedProject(t, clientId, { includeBudget: false });
     const admin = asUser(t, adminId);
 
-    await expect(admin.query(api.admin.projects.getProjectReview, { projectId }))
-      .resolves.toMatchObject({
-        projectId,
-        budgetRange: null,
-        budgetMin: null,
-        budgetMax: null,
-        budgetUnknown: null,
-      });
+    const review = await admin.query(api.admin.projects.getProjectReview, { projectId });
+    expect(review).toMatchObject({ projectId });
+    for (const field of ["budgetRange", "budgetMin", "budgetMax", "budgetUnknown"] as const) {
+      expect(review).not.toHaveProperty(field);
+    }
     await expect(admin.mutation(api.admin.projects.approveProject, { projectId }))
       .resolves.toEqual({ status: "published" });
     const stored = await t.run((ctx) => ctx.db.get(projectId));
@@ -262,7 +259,7 @@ describe("admin project decisions", () => {
     expect(await t.query(api.projects.index.getPublicProject, { projectId })).toBeNull();
 
     await expect(client.query(api.projects.index.getWizard, { projectId })).resolves.toMatchObject({
-      draft: { id: projectId, surface: 95, lastCompletedStep: 6 },
+      draft: { id: projectId, surface: 95, resumeStep: 5 },
     });
     await expect(asUser(t, otherClientId).query(api.projects.index.getWizard, { projectId })).rejects.toThrow("PROJECT_NOT_FOUND");
 

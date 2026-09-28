@@ -263,6 +263,8 @@ test("company invitation list renders every state on desktop and remains respons
   await expect(
     page.getByText("Declined", { exact: true }).last(),
   ).toBeVisible();
+  await expect(page.getByText("Budget", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("100,000–250,000 MAD", { exact: true })).toHaveCount(0);
 
   for (const button of await page.getByRole("button").all()) {
     await expect(button).toHaveClass(/min-h-11/);
@@ -282,6 +284,8 @@ test("company invitation list renders every state on desktop and remains respons
   await expect(
     page.getByRole("heading", { name: "Invitations aux projets" }),
   ).toBeVisible();
+  await expect(page.getByText("Budget", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("100 000–250 000 MAD", { exact: true })).toHaveCount(0);
   const overflow = await page.evaluate(
     () =>
       document.documentElement.scrollWidth >

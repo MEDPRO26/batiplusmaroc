@@ -71,8 +71,8 @@ describe("company initial quote workspace", () => {
   });
 
   test.each([
-    ["en", "Send an initial quote", "Message to client", "Scope of work"],
-    ["fr", "Envoyer un devis estimatif", "Message au client", "Périmètre des travaux"],
+    ["en", "Submit a proposal", "Proposal message", "Scope of work"],
+    ["fr", "Envoyer une proposition", "Message de proposition", "Périmètre des travaux"],
   ] as const)("renders the localized %s submission form", (locale, title, message, scope) => {
     const html = render(locale, {
       project,
@@ -84,20 +84,22 @@ describe("company initial quote workspace", () => {
     expect(html).toContain(message);
     expect(html).toContain(scope);
     expect(html).toContain('type="date"');
-    expect(html).toContain("lg:grid-cols-[minmax(0,1fr)_320px]");
+    expect(html).toContain(locale === "en" ? "Your estimate" : "Votre estimation");
     expect(html).toContain("Renovation of a family apartment");
   });
 
-  test("renders the quote form for a no-budget Project without a missing translation key", () => {
+  test("ignores a legacy Client budget while preserving Company estimate inputs", () => {
     const html = render("en", {
-      project: { ...project, budgetRange: null },
+      project,
       verificationStatus: "verified",
       activeQuoteId: null,
       latestQuoteId: null,
     });
-    expect(html).toContain("Send an initial quote");
+    expect(html).toContain("Submit a proposal");
     expect(html).toContain("Renovation of a family apartment");
-    expect(html).not.toContain("budgetOptions.null");
+    expect(html).toContain("Initial estimate");
+    expect(html).not.toContain("100,000–250,000 MAD");
+    expect(html).not.toContain(">Budget<");
   });
 
   test("disables submission behind company verification", () => {
@@ -108,7 +110,7 @@ describe("company initial quote workspace", () => {
       latestQuoteId: null,
     });
     expect(html).toContain("Company verification required");
-    expect(html).toContain("Verify your company before sending a quote.");
+    expect(html).toContain("Verify your company before submitting a proposal.");
     expect(html).not.toContain("quote-message");
   });
 
@@ -141,11 +143,11 @@ describe("company initial quote workspace", () => {
         history: [{ oldStatus: "draft", newStatus: "submitted", changedAt: 100, reason: null }],
       },
     );
-    expect(html).toContain("Your initial quote");
+    expect(html).toContain("Your proposal");
     expect(html).toContain("185,000");
     expect(html).toContain("75 days");
     expect(html).toContain("Messaging is still locked");
-    expect(html).toContain("Withdraw quote");
+    expect(html).toContain("Withdraw proposal");
   });
 
   test.each([

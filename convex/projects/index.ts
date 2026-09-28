@@ -1,19 +1,20 @@
 import { ConvexError, v } from "convex/values";
+import type { Doc } from "../_generated/dataModel";
 import { mutation, query } from "../_generated/server";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { getProjectViewer, requireClientUser, requireOwnedEditableProject, requireOwnedProject } from "./access";
-import { budgetValues, marketplaceBudgetRank, PROJECT_DOCUMENT_MAX_BYTES, PROJECT_MAX_DOCUMENTS, PROJECT_MAX_IMAGES, PROJECT_UPLOAD_TTL_MS, projectBudgetRanges, projectBudgetRangeValidator, projectCategories, projectCategoryValidator, projectCities, projectCityValidator, projectPropertyTypes, projectPropertyTypeValidator, projectStatusValidator, projectTimelines, projectTimelineValidator } from "./constants";
+import { budgetValues, PROJECT_DOCUMENT_MAX_BYTES, PROJECT_MAX_DOCUMENTS, PROJECT_MAX_IMAGES, PROJECT_UPLOAD_TTL_MS, projectBudgetRangeValidator, projectCategories, projectCategoryValidator, projectCities, projectCityValidator, projectPropertyTypes, projectPropertyTypeValidator, projectStatusValidator, projectTimelines, projectTimelineValidator } from "./constants";
 import { assertProjectTransition, isProjectEditable } from "./state";
 
 const draftValidator = v.object({
-  id: v.id("projects"), primaryCategory: v.union(projectCategoryValidator, v.null()), customCategoryText: v.union(v.string(), v.null()), city: v.union(projectCityValidator, v.null()), neighborhood: v.union(v.string(), v.null()), title: v.union(v.string(), v.null()), propertyType: v.union(projectPropertyTypeValidator, v.null()), surface: v.union(v.number(), v.null()), surfaceUnknown: v.boolean(), description: v.union(v.string(), v.null()), budgetRange: v.union(projectBudgetRangeValidator, v.null()), budgetMin: v.union(v.number(), v.null()), budgetMax: v.union(v.number(), v.null()), budgetUnknown: v.union(v.boolean(), v.null()), timeline: v.union(projectTimelineValidator, v.null()), lastCompletedStep: v.number(), images: v.array(v.object({ id: v.id("projectMedia"), url: v.union(v.string(), v.null()), mimeType: v.string(), size: v.number() })), attachments: v.array(v.object({ id: v.id("projectAttachments"), fileName: v.string(), size: v.number() })), updatedAt: v.number(),
+  id: v.id("projects"), primaryCategory: v.union(projectCategoryValidator, v.null()), customCategoryText: v.union(v.string(), v.null()), city: v.union(projectCityValidator, v.null()), neighborhood: v.union(v.string(), v.null()), title: v.union(v.string(), v.null()), propertyType: v.union(projectPropertyTypeValidator, v.null()), surface: v.union(v.number(), v.null()), surfaceUnknown: v.boolean(), description: v.union(v.string(), v.null()), timeline: v.union(projectTimelineValidator, v.null()), resumeStep: v.union(v.literal(1), v.literal(2), v.literal(3), v.literal(4), v.literal(5)), images: v.array(v.object({ id: v.id("projectMedia"), url: v.union(v.string(), v.null()), mimeType: v.string(), size: v.number() })), attachments: v.array(v.object({ id: v.id("projectAttachments"), fileName: v.string(), size: v.number() })), updatedAt: v.number(),
 });
-const wizardValidator = v.object({ draft: v.union(draftValidator, v.null()), categoryOptions: v.array(projectCategoryValidator), cityOptions: v.array(projectCityValidator), propertyTypeOptions: v.array(projectPropertyTypeValidator), budgetOptions: v.array(projectBudgetRangeValidator), timelineOptions: v.array(projectTimelineValidator), limits: v.object({ maxImages: v.number(), maxDocuments: v.number() }) });
+const wizardValidator = v.object({ draft: v.union(draftValidator, v.null()), categoryOptions: v.array(projectCategoryValidator), cityOptions: v.array(projectCityValidator), propertyTypeOptions: v.array(projectPropertyTypeValidator), timelineOptions: v.array(projectTimelineValidator), limits: v.object({ maxImages: v.number(), maxDocuments: v.number() }) });
 const nullableString = v.union(v.string(), v.null());
 const projectListItemValidator = v.object({
   id: v.id("projects"), title: nullableString, primaryCategory: v.union(projectCategoryValidator, v.null()),
-  city: v.union(projectCityValidator, v.null()), budgetRange: v.union(projectBudgetRangeValidator, v.null()),
+  city: v.union(projectCityValidator, v.null()),
   timeline: v.union(projectTimelineValidator, v.null()), status: projectStatusValidator,
   createdAt: v.number(), submittedAt: v.union(v.number(), v.null()), updatedAt: v.number(),
   thumbnailUrl: nullableString, canResume: v.boolean(), canView: v.boolean(),
@@ -32,7 +33,7 @@ const projectDetailsValidator = v.object({
 });
 const publicProjectValidator = v.object({
   id: v.id("projects"), title: v.string(), description: v.string(), city: projectCityValidator,
-  primaryCategory: projectCategoryValidator, budgetRange: v.union(projectBudgetRangeValidator, v.null()),
+  primaryCategory: projectCategoryValidator,
   timeline: v.union(projectTimelineValidator, v.null()), publishedAt: v.union(v.number(), v.null()), thumbnailUrl: nullableString,
 });
 
@@ -40,7 +41,16 @@ function text(value: string, min: number, max: number, code: string) { const nor
 function optionalText(value: string | undefined, max: number, code: string) { return value?.trim() ? text(value, 1, max, code) : undefined; }
 function completed(current: number, step: number) { return Math.max(Math.min(current, 6), step); }
 async function draftFor(ctx: Parameters<typeof requireClientUser>[0], clientId: Parameters<typeof requireOwnedProject>[1]) { return await ctx.db.query("projects").withIndex("by_clientId_and_status", (q) => q.eq("clientId", clientId).eq("status", "draft")).order("desc").first(); }
-const options = () => ({ categoryOptions: [...projectCategories], cityOptions: [...projectCities], propertyTypeOptions: [...projectPropertyTypes], budgetOptions: [...projectBudgetRanges], timelineOptions: [...projectTimelines], limits: { maxImages: PROJECT_MAX_IMAGES, maxDocuments: PROJECT_MAX_DOCUMENTS } });
+const options = () => ({ categoryOptions: [...projectCategories], cityOptions: [...projectCities], propertyTypeOptions: [...projectPropertyTypes], timelineOptions: [...projectTimelines], limits: { maxImages: PROJECT_MAX_IMAGES, maxDocuments: PROJECT_MAX_DOCUMENTS } });
+
+/** Derive five-step resume state from required fields; never reinterpret legacy numeric progress. */
+export function projectWizardResumeStep(project: Pick<Doc<"projects">, "primaryCategory" | "customCategoryText" | "city" | "title" | "propertyType" | "surface" | "surfaceUnknown" | "description" | "timeline">) {
+  if (!project.primaryCategory || (project.primaryCategory === "other" && !project.customCategoryText)) return 1 as const;
+  if (!project.city) return 2 as const;
+  if (!project.title || !project.propertyType || !project.description || (!project.surfaceUnknown && project.surface === undefined)) return 3 as const;
+  if (!project.timeline) return 4 as const;
+  return 5 as const;
+}
 
 async function thumbnailFor(ctx: Parameters<typeof requireClientUser>[0], projectId: Parameters<typeof requireOwnedProject>[2]) {
   const media = await ctx.db.query("projectMedia").withIndex("by_projectId", (q) => q.eq("projectId", projectId)).first();
@@ -58,7 +68,6 @@ export const getMyProjects = query({
       title: project.title ?? null,
       primaryCategory: project.primaryCategory ?? null,
       city: project.city ?? null,
-      budgetRange: project.budgetRange ?? null,
       timeline: project.timeline ?? null,
       status: project.status,
       createdAt: project.createdAt,
@@ -95,7 +104,6 @@ export const getMyProject = query({
       propertyType: project.propertyType ?? null,
       surface: project.surface ?? null,
       surfaceUnknown: project.surfaceUnknown,
-      budgetRange: project.budgetRange ?? null,
       timeline: project.timeline ?? null,
       status: project.status,
       createdAt: project.createdAt,
@@ -123,7 +131,6 @@ export const listPublicProjects = query({
       description: project.description!,
       city: project.city!,
       primaryCategory: project.primaryCategory!,
-      budgetRange: project.budgetRange ?? null,
       timeline: project.timeline ?? null,
       publishedAt: project.publishedAt ?? null,
       thumbnailUrl: await thumbnailFor(ctx, project._id),
@@ -141,7 +148,7 @@ export const getWizard = query({ args: { projectId: v.optional(v.id("projects"))
     : await draftFor(ctx, userId);
   if (!draft) return { draft: null, ...options() };
   const [images, attachments] = await Promise.all([ctx.db.query("projectMedia").withIndex("by_projectId", (q) => q.eq("projectId", draft._id)).take(PROJECT_MAX_IMAGES), ctx.db.query("projectAttachments").withIndex("by_projectId", (q) => q.eq("projectId", draft._id)).take(PROJECT_MAX_DOCUMENTS)]);
-  return { draft: { id: draft._id, primaryCategory: draft.primaryCategory ?? null, customCategoryText: draft.customCategoryText ?? null, city: draft.city ?? null, neighborhood: draft.neighborhood ?? null, title: draft.title ?? null, propertyType: draft.propertyType ?? null, surface: draft.surface ?? null, surfaceUnknown: draft.surfaceUnknown, description: draft.description ?? null, budgetRange: draft.budgetRange ?? null, budgetMin: draft.budgetMin ?? null, budgetMax: draft.budgetMax ?? null, budgetUnknown: draft.budgetUnknown ?? null, timeline: draft.timeline ?? null, lastCompletedStep: draft.lastCompletedStep, images: images.map((item) => ({ id: item._id, url: getPublicMediaUrl(item.objectKey), mimeType: item.mimeType, size: item.size })), attachments: attachments.map((item) => ({ id: item._id, fileName: item.fileName, size: item.size })), updatedAt: draft.updatedAt }, ...options() };
+  return { draft: { id: draft._id, primaryCategory: draft.primaryCategory ?? null, customCategoryText: draft.customCategoryText ?? null, city: draft.city ?? null, neighborhood: draft.neighborhood ?? null, title: draft.title ?? null, propertyType: draft.propertyType ?? null, surface: draft.surface ?? null, surfaceUnknown: draft.surfaceUnknown, description: draft.description ?? null, timeline: draft.timeline ?? null, resumeStep: projectWizardResumeStep(draft), images: images.map((item) => ({ id: item._id, url: getPublicMediaUrl(item.objectKey), mimeType: item.mimeType, size: item.size })), attachments: attachments.map((item) => ({ id: item._id, fileName: item.fileName, size: item.size })), updatedAt: draft.updatedAt }, ...options() };
 } });
 
 export const initializeDraft = mutation({ args: {}, returns: v.object({ projectId: v.id("projects"), resumed: v.boolean() }), handler: async (ctx) => { const { userId } = await requireClientUser(ctx); const existing = await draftFor(ctx, userId); if (existing) return { projectId: existing._id, resumed: true }; const now = Date.now(); const projectId = await ctx.db.insert("projects", { clientId: userId, countryCode: "MA", surfaceUnknown: false, visibility: "marketplace", status: "draft", lastCompletedStep: 0, createdAt: now, updatedAt: now }); await appendMarketplaceActivity(ctx, { projectId, eventType: "project_created", actorUserId: userId, actorType: "client", newStatus: "draft", createdAt: now }); return { projectId, resumed: false }; } });
@@ -149,8 +156,8 @@ export const initializeDraft = mutation({ args: {}, returns: v.object({ projectI
 export const saveCategory = mutation({ args: { projectId: v.id("projects"), primaryCategory: projectCategoryValidator, customCategoryText: v.optional(v.string()) }, returns: v.null(), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); const p = await requireOwnedEditableProject(ctx, userId, args.projectId); const customCategoryText = args.primaryCategory === "other" ? text(args.customCategoryText ?? "", 3, 120, "INVALID_PROJECT_CATEGORY") : undefined; await ctx.db.patch(p._id, { primaryCategory: args.primaryCategory, customCategoryText, lastCompletedStep: completed(p.lastCompletedStep, 1), updatedAt: Date.now() }); return null; } });
 export const saveLocation = mutation({ args: { projectId: v.id("projects"), city: projectCityValidator, neighborhood: v.optional(v.string()) }, returns: v.null(), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); const p = await requireOwnedEditableProject(ctx, userId, args.projectId); await ctx.db.patch(p._id, { city: args.city, neighborhood: optionalText(args.neighborhood, 100, "INVALID_PROJECT_NEIGHBORHOOD"), countryCode: "MA", lastCompletedStep: completed(p.lastCompletedStep, 2), updatedAt: Date.now() }); return null; } });
 export const saveDetails = mutation({ args: { projectId: v.id("projects"), title: v.string(), propertyType: projectPropertyTypeValidator, surface: v.optional(v.number()), surfaceUnknown: v.boolean(), description: v.string() }, returns: v.null(), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); const p = await requireOwnedEditableProject(ctx, userId, args.projectId); if ((!args.surfaceUnknown && (args.surface === undefined || !Number.isFinite(args.surface) || args.surface <= 0 || args.surface > 100_000)) || (args.surfaceUnknown && args.surface !== undefined)) throw new ConvexError("INVALID_PROJECT_SURFACE"); await ctx.db.patch(p._id, { title: text(args.title, 5, 120, "INVALID_PROJECT_TITLE"), propertyType: args.propertyType, surface: args.surfaceUnknown ? undefined : args.surface, surfaceUnknown: args.surfaceUnknown, description: text(args.description, 20, 2_000, "INVALID_PROJECT_DESCRIPTION"), lastCompletedStep: completed(p.lastCompletedStep, 3), updatedAt: Date.now() }); return null; } });
-/** @deprecated Phase 1 compatibility for already-open legacy wizard bundles. */
-export const saveBudget = mutation({ args: { projectId: v.id("projects"), budgetRange: projectBudgetRangeValidator }, returns: v.null(), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); const p = await requireOwnedEditableProject(ctx, userId, args.projectId); const budget = budgetValues[args.budgetRange]; await ctx.db.patch(p._id, { budgetRange: args.budgetRange, budgetMin: budget.min, budgetMax: budget.max, budgetUnknown: budget.unknown, marketplaceBudgetRank: marketplaceBudgetRank(args.budgetRange), lastCompletedStep: completed(p.lastCompletedStep, 4), updatedAt: Date.now() }); return null; } });
+/** @deprecated Compatibility only for browser bundles opened before Phase 2. */
+export const saveBudget = mutation({ args: { projectId: v.id("projects"), budgetRange: projectBudgetRangeValidator }, returns: v.null(), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); const p = await requireOwnedEditableProject(ctx, userId, args.projectId); const budget = budgetValues[args.budgetRange]; await ctx.db.patch(p._id, { budgetRange: args.budgetRange, budgetMin: budget.min, budgetMax: budget.max, budgetUnknown: budget.unknown, lastCompletedStep: completed(p.lastCompletedStep, 4), updatedAt: Date.now() }); return null; } });
 export const saveTimeline = mutation({ args: { projectId: v.id("projects"), timeline: projectTimelineValidator }, returns: v.null(), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); const p = await requireOwnedEditableProject(ctx, userId, args.projectId); await ctx.db.patch(p._id, { timeline: args.timeline, lastCompletedStep: completed(p.lastCompletedStep, 5), updatedAt: Date.now() }); return null; } });
 
 export const generateAttachmentUploadUrl = mutation({ args: { projectId: v.id("projects") }, returns: v.object({ uploadUrl: v.string(), uploadToken: v.string() }), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); await requireOwnedEditableProject(ctx, userId, args.projectId); const uploadToken = `${crypto.randomUUID()}${crypto.randomUUID()}`; const now = Date.now(); await ctx.db.insert("projectAttachmentUploadIntents", { projectId: args.projectId, userId, token: uploadToken, expiresAt: now + PROJECT_UPLOAD_TTL_MS, createdAt: now }); return { uploadUrl: await ctx.storage.generateUploadUrl(), uploadToken }; } });

@@ -16,14 +16,13 @@ vi.mock("@/i18n/navigation", () => ({
 
 import {
   ProjectWizardSkeleton,
-  resumeWizardStep,
   shouldInitializeDraft,
 } from "./components/project-wizard";
 
 describe("project wizard contract", () => {
-  test("FR and EN contain the same six progressive steps without an upload step", () => {
+  test("FR and EN contain the same five progressive steps without budget or upload steps", () => {
     expect(Object.keys(fr.projectWizard).sort()).toEqual(Object.keys(en.projectWizard).sort());
-    expect(Object.keys(fr.projectWizard.steps)).toEqual(["1", "2", "3", "4", "5", "6"]);
+    expect(Object.keys(fr.projectWizard.steps)).toEqual(["1", "2", "3", "4", "5"]);
     expect(Object.keys(en.projectWizard.categoryOptions)).toEqual(
       Object.keys(fr.projectWizard.categoryOptions),
     );
@@ -31,12 +30,12 @@ describe("project wizard contract", () => {
     expect(fr.projectWizard.steps["1"].title).toContain("Quel type de projet");
     expect(en.projectWizard.steps["2"].title).toBe("Where is your project?");
     expect(fr.projectWizard.steps["2"].title).toContain("Où se situe");
-    expect(en.projectWizard.steps["5"].title).toBe("When would you like to start?");
-    expect(fr.projectWizard.steps["5"].title).toContain("Quand souhaitez-vous commencer");
-    expect(en.projectWizard.steps["6"].title).toBe("Review your project");
-    expect(fr.projectWizard.steps["6"].title).toContain("Vérifiez votre projet");
-    expect(en.projectWizard.steps["6"].title.toLowerCase()).not.toContain("photo");
-    expect(en.projectWizard.steps["6"].title.toLowerCase()).not.toContain("document");
+    expect(en.projectWizard.steps["4"].title).toBe("When would you like to start?");
+    expect(fr.projectWizard.steps["4"].title).toContain("Quand souhaitez-vous commencer");
+    expect(en.projectWizard.steps["5"].title).toBe("Review your project");
+    expect(fr.projectWizard.steps["5"].title).toContain("Vérifiez votre projet");
+    expect(JSON.stringify(en.projectWizard).toLowerCase()).not.toContain("budget");
+    expect(JSON.stringify(fr.projectWizard).toLowerCase()).not.toContain("budget");
     expect(en.projectWizard.publish).toBe("Publish project");
     expect(fr.projectWizard.publish).toBe("Publier le projet");
     expect(en.projectWizard.review).toMatchObject({
@@ -46,23 +45,11 @@ describe("project wizard contract", () => {
       propertyType: expect.any(String),
       surface: expect.any(String),
       description: expect.any(String),
-      budget: expect.any(String),
       timeline: expect.any(String),
     });
     expect(Object.keys(en.projectWizard.review).sort()).toEqual(
       Object.keys(fr.projectWizard.review).sort(),
     );
-  });
-
-  test("resume maps completed timeline and old files step to review", () => {
-    expect(resumeWizardStep(0)).toBe(1);
-    expect(resumeWizardStep(1)).toBe(2);
-    expect(resumeWizardStep(2)).toBe(3);
-    expect(resumeWizardStep(3)).toBe(4);
-    expect(resumeWizardStep(4)).toBe(5);
-    expect(resumeWizardStep(5)).toBe(6);
-    expect(resumeWizardStep(6)).toBe(6);
-    expect(resumeWizardStep(7)).toBe(6);
   });
 
   test("does not initialize another draft after project submission", () => {
@@ -81,7 +68,7 @@ describe("project wizard contract", () => {
 
   test("loading skeleton is announced", () => {
     const html = renderToStaticMarkup(
-      <ProjectWizardSkeleton label="Loading draft" progressLabel="Step 1 of 6" />,
+      <ProjectWizardSkeleton label="Loading draft" progressLabel="Step 1 of 5" />,
     );
     expect(html).toContain('role="progressbar"');
     expect(html).toContain("Loading draft");

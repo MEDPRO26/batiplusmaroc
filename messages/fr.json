@@ -170,7 +170,7 @@
       "items": {
         "0": {
           "title": "Un projet clair, dès le départ",
-          "text": "Décrivez les travaux, la ville et le budget. Les entreprises comprennent ce que vous attendez.",
+          "text": "Décrivez les travaux, la ville et le délai. Les entreprises comprennent ce que vous attendez.",
           "alt": "Villa contemporaine prête à être lancée comme projet"
         },
         "1": {
@@ -271,37 +271,31 @@
       "projects": {
         "tab": "Projets ouverts",
         "title": "Des projets prêts à recevoir des propositions",
-        "description": "Besoin, ville et budget au même endroit. Répondez à ceux qui correspondent à votre métier.",
+        "description": "Besoin, ville et délai au même endroit. Répondez à ceux qui correspondent à votre métier.",
         "cta": "Voir tous les projets",
         "0": {
           "title": "Villa 180 m² — gros œuvre et structure",
-          "text": "Construction d’une villa à Founty. Fondations, structure et toiture. Accès chantier déjà préparé.",
-          "budget": "850 000 – 1 200 000 DH"
+          "text": "Construction d’une villa à Founty. Fondations, structure et toiture. Accès chantier déjà préparé."
         },
         "1": {
           "title": "Rénovation complète d’un appartement 120 m²",
-          "text": "Second œuvre, électricité et finitions à Casablanca. Le client veut un planning clair avant de démarrer.",
-          "budget": "220 000 – 310 000 DH"
+          "text": "Second œuvre, électricité et finitions à Casablanca. Le client veut un planning clair avant de démarrer."
         },
         "2": {
           "title": "Immeuble R+3 — reprise structurelle",
-          "text": "Renforcement et gros œuvre à Rabat. Plans disponibles. Recherche d’une entreprise expérimentée.",
-          "budget": "1,4 – 1,9 M DH"
+          "text": "Renforcement et gros œuvre à Rabat. Plans disponibles. Recherche d’une entreprise expérimentée."
         },
         "3": {
           "title": "Mise aux normes électriques d’une villa",
-          "text": "Tableau, câblage et éclairage à Marrakech. Intervention sur maison occupée, créneaux à convenir.",
-          "budget": "45 000 – 70 000 DH"
+          "text": "Tableau, câblage et éclairage à Marrakech. Intervention sur maison occupée, créneaux à convenir."
         },
         "4": {
           "title": "Piscine 8 × 4 m et aménagement extérieur",
-          "text": "Terrassement, bassin et plage à Agadir. Le client compare 2 à 3 entreprises vérifiées.",
-          "budget": "180 000 – 260 000 DH"
+          "text": "Terrassement, bassin et plage à Agadir. Le client compare 2 à 3 entreprises vérifiées."
         },
         "5": {
           "title": "Aménagement intérieur d’une résidence",
-          "text": "Cuisine, menuiserie et finitions à Tanger. Moodboard fourni. Début souhaité dans 6 semaines.",
-          "budget": "95 000 – 140 000 DH"
+          "text": "Cuisine, menuiserie et finitions à Tanger. Moodboard fourni. Début souhaité dans 6 semaines."
         }
       },
       "companies": {
@@ -697,7 +691,7 @@
       "cards": {
         "0": {
           "title": "Publiez votre projet (c’est gratuit)",
-          "body": "Décrivez les travaux, la ville et le budget. Les entreprises comprennent le besoin avant de proposer.",
+          "body": "Décrivez les travaux, la ville et le délai. Les entreprises comprennent le besoin avant de proposer.",
           "cta": "Publier un projet"
         },
         "1": {
@@ -732,7 +726,7 @@
       "steps": {
         "0": {
           "title": "Vous publiez le projet",
-          "body": "Travaux, ville et budget. Le brief est clair pour les entreprises."
+          "body": "Travaux, ville et délai. Le brief est clair pour les entreprises."
         },
         "1": {
           "title": "Proposition ou invitation",
@@ -768,7 +762,7 @@
         },
         "3": {
           "question": "Quels travaux puis-je confier ?",
-          "answer": "Gros œuvre, second œuvre, rénovation, construction de maison, électricité, plomberie, menuiserie, piscine et aménagement. Indiquez la ville, le budget et le périmètre dans le projet.",
+          "answer": "Gros œuvre, second œuvre, rénovation, construction de maison, électricité, plomberie, menuiserie, piscine et aménagement. Indiquez la ville, le délai et le périmètre dans le projet.",
           "more": "Parcourir les entreprises"
         },
         "4": {
@@ -1295,7 +1289,7 @@
           "title": "3. Obligations des clients",
           "paragraphs": [
             "Les clients peuvent publier des projets, inviter des entreprises, consulter des propositions, ouvrir une discussion après intérêt mutuel, et sélectionner une entreprise.",
-            "Les descriptions de projet doivent être sincères, licites et suffisamment précises. Il est interdit de publier des budgets trompeurs, de faux projets ou des contenus portant atteinte aux droits de tiers.",
+            "Les descriptions de projet doivent être sincères, licites et suffisamment précises. Il est interdit de publier des informations trompeuses, de faux projets ou des contenus portant atteinte aux droits de tiers.",
             "Le client reste seul responsable du choix de l’entreprise, de la négociation du contrat de travaux, des accès chantier, des autorisations et des paiements dans le cadre de tout accord hors plateforme."
           ]
         },
@@ -1486,7 +1480,6 @@
     "post": "Publier un projet",
     "title": "Titre du projet",
     "description": "Description",
-    "budget": "Budget",
     "location": "Localisation",
     "category": "Catégorie",
     "submit": "Publier",
@@ -1902,16 +1895,11 @@
         "lead": "Un titre clair et une courte description aident les entreprises à comprendre vos besoins."
       },
       "4": {
-        "eyebrow": "Budget",
-        "title": "Quel est votre budget estimé ?",
-        "lead": "Une fourchette suffit. Choisissez « Je ne sais pas encore » si besoin."
-      },
-      "5": {
         "eyebrow": "Calendrier",
         "title": "Quand souhaitez-vous commencer ?",
         "lead": "Choisissez l’option la plus proche. Vous pouvez rester flexible."
       },
-      "6": {
+      "5": {
         "eyebrow": "Vérification",
         "title": "Vérifiez votre projet",
         "lead": "Relisez les informations avant de publier. Vous pouvez modifier chaque section."
@@ -1925,7 +1913,6 @@
       "propertyType": "Choisissez un type de bien.",
       "surface": "Saisissez une surface positive ou cochez « Je ne sais pas ».",
       "description": "Décrivez votre projet en au moins 20 caractères.",
-      "budget": "Choisissez une fourchette de budget.",
       "timeline": "Choisissez un délai.",
       "image": "Choisissez des images JPG, PNG ou WebP de 10 Mo maximum.",
       "document": "Choisissez des documents PDF de 15 Mo maximum."
@@ -1981,15 +1968,6 @@
       "land": "Terrain",
       "other": "Autre"
     },
-    "budgetOptions": {
-      "under_50000": "Moins de 50 000 MAD",
-      "50000_100000": "50 000–100 000 MAD",
-      "100000_250000": "100 000–250 000 MAD",
-      "250000_500000": "250 000–500 000 MAD",
-      "500000_1000000": "500 000–1 000 000 MAD",
-      "1000000_plus": "1 000 000+ MAD",
-      "unknown": "Je ne sais pas encore"
-    },
     "timelineOptions": {
       "asap": "Dès que possible",
       "within_1_month": "Dans le mois",
@@ -2020,7 +1998,6 @@
       "surface": "Surface",
       "description": "Description",
       "details": "Détails",
-      "budget": "Budget",
       "timeline": "Calendrier",
       "files": "Fichiers",
       "fileCount": "{images} images · {documents} documents"
@@ -2047,7 +2024,6 @@
     "untitled": "Projet sans titre",
     "locationPending": "Localisation non renseignée",
     "notProvided": "Non renseigné",
-    "budget": "Budget",
     "timeline": "Calendrier",
     "submitted": "Envoyé le {date}",
     "updated": "Mis à jour le {date}",
@@ -2087,7 +2063,7 @@
     "notFoundTitle": "Projet indisponible",
     "images": "Photos du projet",
     "imageAlt": "Photo {number} du projet {title}",
-    "description": "Description",
+    "description": "Description du projet",
     "documents": "Documents privés",
     "documentsPrivate": "Les informations de ces documents sont visibles uniquement par les personnes autorisées.",
     "fileSizeKb": "{count} Ko",
@@ -2156,14 +2132,22 @@
       }
     },
     "history": {
-      "title": "Historique du statut",
+      "title": "Activité du projet",
       "transition": "{from} → {to}",
       "meta": "{date} · {actor}",
       "actor": {
         "client": "Client",
         "staff": "Équipe Batiplus"
-      }
-    }
+      },
+      "count": "{count, plural, one {# mise à jour} other {# mises à jour}}"
+    },
+    "projectInformation": "Informations du projet",
+    "publishedOn": "Publié le {date}",
+    "createdOn": "Créé le {date}",
+    "showMore": "Afficher plus",
+    "showLess": "Afficher moins",
+    "dates": "Dates clés",
+    "publishedLabel": "Publié"
   },
   "clientDashboard": {
     "eyebrow": "Tableau de bord client",
@@ -2739,7 +2723,6 @@
       "client": "Client",
       "city": "Ville",
       "category": "Catégorie",
-      "budget": "Budget",
       "submitted": "Soumis le",
       "status": "Statut",
       "action": "Action"
@@ -2764,7 +2747,6 @@
       "propertyType": "Type de bien",
       "surface": "Surface",
       "description": "Description",
-      "budget": "Budget",
       "timeline": "Calendrier",
       "status": "Statut actuel"
     },
@@ -3038,10 +3020,8 @@
       "siteAddress": "Adresse privée du chantier",
       "visitStatus": "Statut de la visite",
       "declinedBy": "Refusée par",
-      "declinedAt": "Refusée le",
       "cancellationReason": "Motif d’annulation",
       "cancelledBy": "Annulée par",
-      "cancelledAt": "Annulée le",
       "completedBy": "Terminée par",
       "completedAt": "Terminée le",
       "finalQuoteStatus": "Statut du devis final"
@@ -3123,8 +3103,6 @@
       "selectCategories": "Sélectionner des catégories",
       "selectedCount": "{count} sélectionnées",
       "allCategories": "Toutes les catégories",
-      "budget": "Budget",
-      "allBudgets": "Tous les budgets",
       "timeline": "Délai",
       "propertyType": "Type de bien",
       "surface": "Surface",
@@ -3150,9 +3128,7 @@
       "triggerAria": "Trier par : {option}",
       "options": {
         "newest": "Plus récents",
-        "oldest": "Plus anciens",
-        "budgetHigh": "Budget le plus élevé",
-        "budgetLow": "Budget le plus bas"
+        "oldest": "Plus anciens"
       }
     },
     "loadedCount": "{count, plural, =0 {Aucun projet chargé} one {# projet chargé} other {# projets chargés}}",
@@ -3178,7 +3154,6 @@
       "back": "Retour aux projets",
       "close": "Fermer les détails du projet",
       "openFullPage": "Ouvrir la page complète du projet",
-      "budget": "Budget",
       "timeline": "Délai",
       "propertyType": "Type de bien",
       "surface": "Surface",
@@ -3195,15 +3170,22 @@
       "clientPrivacy": "Les coordonnées restent privées jusqu’à ce que les deux parties acceptent de discuter du projet.",
       "retry": "Réessayer",
       "unavailableTitle": "Ce projet n’est plus disponible.",
-      "unavailableLead": "Il a peut-être été retiré du marché ou n’accepte plus de marques d’intérêt."
+      "unavailableLead": "Il a peut-être été retiré du marché ou n’accepte plus de marques d’intérêt.",
+      "projectInformation": "Informations du projet",
+      "location": "Localisation",
+      "servicesTitle": "Services recherchés",
+      "showMore": "Afficher plus",
+      "showLess": "Afficher moins"
     },
     "quote": {
       "title": "Intéressé par ce projet ?",
-      "lead": "Envoyez une première estimation claire. La messagerie reste verrouillée jusqu’à ce que le client ouvre la discussion.",
-      "submit": "Envoyer un devis estimatif",
-      "view": "Voir mon devis",
-      "verificationRequired": "Vérifiez votre entreprise avant d’envoyer un devis.",
-      "verifyAction": "Vérifier l’entreprise"
+      "lead": "Présentez votre entreprise et envoyez une proposition avec une première estimation. Il ne s’agit pas du devis final.",
+      "submit": "Envoyer une proposition",
+      "view": "Voir ma proposition",
+      "verificationRequired": "Vérifiez votre entreprise avant d’envoyer une proposition.",
+      "verifyAction": "Vérifier l’entreprise",
+      "alreadySubmitted": "Vous avez déjà envoyé une proposition",
+      "messagingRule": "La messagerie s’ouvre uniquement lorsque le client ouvre une discussion sur votre proposition."
     },
     "error": {
       "title": "Impossible de charger les projets",
@@ -3212,26 +3194,34 @@
     }
   },
   "initialQuote": {
-    "eyebrow": "Devis estimatif",
-    "title": "Envoyer un devis estimatif",
-    "lead": "Partagez une première estimation commerciale avec le client. Il ne s’agit pas du devis contractuel final.",
-    "loading": "Chargement de l’espace devis…",
-    "unavailableTitle": "Ce projet n’accepte pas de devis estimatifs.",
+    "eyebrow": "Proposition",
+    "title": "Envoyer une proposition",
+    "lead": "Partagez une première estimation avec le client. Ce n’est pas le devis contractuel final : il vient après la discussion et, si besoin, une visite de chantier.",
+    "loading": "Chargement de votre proposition…",
+    "unavailableTitle": "Ce projet n’accepte pas de propositions.",
     "unavailableLead": "Il n’est peut-être plus publié ou disponible sur la place de marché.",
     "backToProject": "Retour au projet",
-    "projectSummary": "Résumé du projet",
+    "projectSummary": "Détails du projet",
     "form": {
-      "message": "Message au client",
-      "messageHint": "Présentez votre entreprise et expliquez pourquoi elle convient à ce projet.",
-      "estimatedPrice": "Prix estimé",
+      "message": "Message de proposition",
+      "messageHint": "Présentez votre entreprise et expliquez comment vous aborderiez ce projet.",
+      "estimatedPrice": "Estimation initiale",
       "currency": "MAD",
       "estimatedDuration": "Durée estimée",
       "durationUnit": "jours",
       "availableStartDate": "Disponibilité",
       "scope": "Périmètre des travaux",
       "scopeHint": "Résumez les principaux travaux inclus dans cette estimation.",
-      "submit": "Envoyer le devis estimatif",
-      "submitting": "Envoi du devis…"
+      "submit": "Envoyer la proposition",
+      "submitting": "Envoi de la proposition…",
+      "estimateSection": "Votre estimation",
+      "estimateLead": "Une première estimation sans engagement. Le client la voit avec votre proposition.",
+      "estimatedPriceHint": "Montant total approximatif des travaux, en dirhams.",
+      "estimatedDurationHint": "Durée prévue des travaux une fois commencés.",
+      "availableStartDateHint": "La date la plus proche à laquelle votre équipe peut démarrer.",
+      "detailsSection": "Informations complémentaires",
+      "characterCount": "{count} / {max}",
+      "cancel": "Annuler"
     },
     "validation": {
       "required": "Complétez tous les champs obligatoires.",
@@ -3241,12 +3231,12 @@
       "date": "Choisissez une date de disponibilité.",
       "scope": "Décrivez le périmètre en au moins 20 caractères."
     },
-    "success": "Votre devis estimatif a bien été envoyé.",
+    "success": "Votre proposition a bien été envoyée.",
     "verificationTitle": "Vérification de l’entreprise requise",
-    "verificationLead": "Vérifiez votre entreprise avant d’envoyer un devis.",
+    "verificationLead": "Vérifiez votre entreprise avant d’envoyer une proposition.",
     "verifyAction": "Vérifier l’entreprise",
     "detail": {
-      "title": "Votre devis estimatif",
+      "title": "Votre proposition",
       "status": "Statut",
       "draft": "Brouillon",
       "submitted": "Envoyé",
@@ -3256,12 +3246,12 @@
       "declined": "Refusé",
       "withdrawn": "Retiré",
       "submittedAt": "Envoyé le {date}",
-      "estimatedPrice": "Prix estimé",
+      "estimatedPrice": "Estimation initiale",
       "estimatedDuration": "Durée estimée",
       "durationValue": "{count, plural, one {# jour} other {# jours}}",
       "availability": "Disponibilité",
       "scope": "Périmètre des travaux",
-      "message": "Message au client",
+      "message": "Message de proposition",
       "messagingLocked": "La messagerie reste verrouillée. Elle s’ouvrira uniquement si le client choisit d’ouvrir la discussion.",
       "discussionOpenedTitle": "Discussion ouverte",
       "discussionPending": "Le client a ouvert une discussion concernant ce projet.",
@@ -3270,37 +3260,37 @@
       "conversationUnavailableTitle": "Impossible de charger la conversation.",
       "conversationUnavailableLead": "Veuillez réessayer. Si le problème persiste, contactez le support.",
       "retryConversation": "Réessayer",
-      "withdraw": "Retirer le devis",
+      "withdraw": "Retirer la proposition",
       "withdrawing": "Retrait…",
-      "withdrawnNotice": "Ce devis a été retiré et reste conservé dans votre historique."
-    }
+      "withdrawnNotice": "Cette proposition a été retirée et reste dans votre historique."
+    },
+    "viewProject": "Voir le projet complet"
   },
   "receivedQuotes": {
-    "eyebrow": "Réponses commerciales",
-    "title": "Devis reçus",
-    "count": "{count, plural, =0 {Aucun devis} one {# devis} other {# devis}}",
-    "loading": "Chargement des devis reçus…",
-    "loadingDetail": "Chargement du devis…",
+    "title": "Propositions",
+    "count": "{count, plural, =0 {Aucune reçue pour le moment} one {# reçue} other {# reçues}}",
+    "loading": "Chargement des propositions…",
+    "loadingDetail": "Chargement de la proposition…",
     "empty": {
-      "title": "Aucun devis reçu pour le moment.",
-      "description": "Les entreprises vérifiées peuvent envoyer une première estimation tant que votre projet est ouvert. Les nouveaux devis apparaîtront ici automatiquement."
+      "title": "Aucune proposition pour le moment.",
+      "description": "Les entreprises vérifiées peuvent envoyer une proposition tant que votre projet est ouvert. Les nouvelles propositions apparaîtront ici automatiquement."
     },
     "verified": "Entreprise vérifiée",
     "cityUnavailable": "Localisation non renseignée",
-    "price": "Prix estimé",
+    "price": "Estimation initiale",
     "duration": "Durée estimée",
     "durationValue": "{count, plural, one {# jour} other {# jours}}",
-    "availableStart": "Disponibilité",
-    "submittedAt": "Envoyé le {date}",
+    "availableStart": "Début disponible",
+    "submittedAt": "Envoyée le {date}",
     "scope": "Périmètre des travaux",
     "message": "Message",
-    "openQuote": "Examiner le devis",
-    "viewProfile": "Voir le profil",
-    "close": "Fermer le devis",
-    "unavailable": "Ce devis n’est plus disponible.",
-    "messagingNotice": "Ouvrir la discussion crée une conversation privée liée au projet avec cette entreprise.",
+    "openQuote": "Voir la proposition",
+    "viewProfile": "Voir le profil de l’entreprise",
+    "close": "Fermer la proposition",
+    "unavailable": "Cette proposition n’est plus disponible.",
+    "messagingNotice": "Ouvrir une discussion crée une conversation privée liée au projet avec cette entreprise.",
     "discussionOpenedTitle": "Discussion ouverte",
-    "discussionOpenedNotice": "Votre conversation privée liée au projet est prête.",
+    "discussionOpenedNotice": "Vous pouvez maintenant poursuivre la conversation avec cette entreprise.",
     "continueInMessages": "Continuer dans Messages",
     "conversationLoading": "Préparation de votre conversation…",
     "conversationUnavailableTitle": "Impossible de charger la conversation.",
@@ -3308,34 +3298,48 @@
     "retryConversation": "Réessayer",
     "status": {
       "draft": "Brouillon",
-      "submitted": "Envoyé",
-      "viewed": "Consulté",
-      "shortlisted": "Présélectionné",
+      "submitted": "Nouvelle",
+      "viewed": "Consultée",
+      "shortlisted": "Présélectionnée",
       "discussion_open": "Discussion ouverte",
-      "declined": "Refusé",
-      "withdrawn": "Retiré"
+      "declined": "Refusée",
+      "withdrawn": "Retirée"
     },
     "detail": {
-      "eyebrow": "Devis estimatif",
-      "title": "Détails du devis",
-      "aboutCompany": "À propos de l’entreprise"
+      "eyebrow": "Proposition",
+      "title": "Détails de la proposition",
+      "companyTitle": "Entreprise",
+      "proposalTitle": "Détails de la proposition",
+      "estimateNote": "Il s’agit d’une estimation initiale, pas d’un devis final. Le devis final vient après la discussion et, si besoin, une visite de chantier."
     },
     "actions": {
       "shortlist": "Présélectionner",
       "decline": "Refuser",
-      "openDiscussion": "Ouvrir la discussion",
+      "openDiscussion": "Ouvrir une discussion",
       "working": "Mise à jour…"
     },
     "declineConfirm": {
-      "title": "Refuser ce devis ?",
-      "description": "Cette décision est irréversible. L’entreprise verra que son devis a été refusé.",
-      "confirm": "Refuser le devis",
-      "cancel": "Conserver le devis"
+      "title": "Refuser cette proposition ?",
+      "description": "Cette décision est irréversible. L’entreprise verra que sa proposition a été refusée.",
+      "confirm": "Refuser la proposition",
+      "cancel": "Conserver la proposition"
     },
     "success": {
-      "shortlist": "Devis présélectionné.",
-      "decline": "Devis refusé.",
+      "shortlist": "Proposition présélectionnée.",
+      "decline": "Proposition refusée.",
       "open_discussion": "Discussion ouverte."
+    },
+    "opensInNewTab": "(s’ouvre dans un nouvel onglet)",
+    "overview": {
+      "title": "Propositions",
+      "received": "Reçues",
+      "new": "Nouvelles",
+      "shortlisted": "Présélectionnées",
+      "discussions": "Discussions ouvertes",
+      "nextEmpty": "Les entreprises vérifiées peuvent envoyer des propositions tant que votre projet est publié.",
+      "nextNew": "{count, plural, one {# nouvelle proposition attend} other {# nouvelles propositions attendent}} votre examen.",
+      "nextReview": "Comparez les propositions, présélectionnez des entreprises et ouvrez une discussion quand vous êtes prêt.",
+      "review": "Voir les propositions"
     }
   },
   "seoCms": {
@@ -3909,7 +3913,6 @@
       "invitedAt": "Invitation reçue le {date}",
       "location": "Localisation",
       "category": "Catégorie",
-      "budget": "Budget",
       "client": "Client",
       "fromClient": "De {name}",
       "clientFallback": "Client",

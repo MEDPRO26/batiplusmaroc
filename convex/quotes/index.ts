@@ -5,7 +5,6 @@ import { mutation, query } from "../_generated/server";
 import { requireCompanyUser, requireVerifiedCompanyUser } from "../companies/access";
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import {
-  projectBudgetRangeValidator,
   projectCategoryValidator,
   projectCityValidator,
   projectTimelineValidator,
@@ -43,7 +42,6 @@ const projectSummaryValidator = v.object({
   title: v.string(),
   city: projectCityValidator,
   primaryCategory: projectCategoryValidator,
-  budgetRange: v.union(projectBudgetRangeValidator, v.null()),
   timeline: projectTimelineValidator,
 });
 
@@ -161,7 +159,6 @@ function projectSummary(project: Doc<"projects">) {
     title: project.title,
     city: project.city,
     primaryCategory: project.primaryCategory,
-    budgetRange: project.budgetRange ?? null,
     timeline: project.timeline,
   };
 }

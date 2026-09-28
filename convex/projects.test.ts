@@ -12,12 +12,11 @@ type T = ReturnType<typeof convexTest>;
 async function user(t: T, accountType: "client" | "company" | "admin" = "client", onboardingStatus: "pending" | "completed" = "completed") { return t.run((ctx) => ctx.db.insert("users", { email: `${crypto.randomUUID()}@test.dev`, accountType, onboardingStatus, countryCode: "MA", createdAt: 1, updatedAt: 1 })); }
 function as(t: T, id: Id<"users">) { return t.withIdentity({ subject: `${id}|session` }); }
 async function draft(t: T, id: Id<"users">) { return (await as(t, id).mutation(api.projects.index.initializeDraft, {})).projectId; }
-async function complete(t: T, id: Id<"users">, projectId: Id<"projects">) { const c = as(t, id); await c.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "renovation" }); await c.mutation(api.projects.index.saveLocation, { projectId, city: "rabat" }); await c.mutation(api.projects.index.saveDetails, { projectId, title: "Rénovation appartement", propertyType: "apartment", surfaceUnknown: true, description: "Rénovation complète de l’appartement avec remise aux normes." }); await c.mutation(api.projects.index.saveBudget, { projectId, budgetRange: "unknown" }); await c.mutation(api.projects.index.saveTimeline, { projectId, timeline: "flexible" }); }
-async function completeWithoutBudget(t: T, id: Id<"users">, projectId: Id<"projects">) { const c = as(t, id); await c.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "renovation" }); await c.mutation(api.projects.index.saveLocation, { projectId, city: "rabat" }); await c.mutation(api.projects.index.saveDetails, { projectId, title: "Rénovation sans budget", propertyType: "apartment", surfaceUnknown: true, description: "Rénovation complète sans budget fourni par le Client." }); await c.mutation(api.projects.index.saveTimeline, { projectId, timeline: "flexible" }); }
+async function complete(t: T, id: Id<"users">, projectId: Id<"projects">) { const c = as(t, id); await c.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "renovation" }); await c.mutation(api.projects.index.saveLocation, { projectId, city: "rabat" }); await c.mutation(api.projects.index.saveDetails, { projectId, title: "Rénovation appartement", propertyType: "apartment", surfaceUnknown: true, description: "Rénovation complète de l’appartement avec remise aux normes." }); await c.mutation(api.projects.index.saveTimeline, { projectId, timeline: "flexible" }); }
 
 describe("project wizard", () => {
   test("only an onboarded client creates and resumes one MA draft", async () => { const t = convexTest(schema, modules); const client = await user(t); const company = await user(t, "company"); const pending = await user(t, "client", "pending"); await expect(t.mutation(api.projects.index.initializeDraft, {})).rejects.toThrow("NOT_AUTHENTICATED"); await expect(as(t, company).mutation(api.projects.index.initializeDraft, {})).rejects.toThrow("CLIENT_ACCOUNT_REQUIRED"); await expect(as(t, pending).mutation(api.projects.index.initializeDraft, {})).rejects.toThrow("CLIENT_ONBOARDING_REQUIRED"); const first = await as(t, client).mutation(api.projects.index.initializeDraft, {}); const second = await as(t, client).mutation(api.projects.index.initializeDraft, {}); expect(second).toEqual({ projectId: first.projectId, resumed: true }); const state = await t.run(async (ctx) => ({ projects: await ctx.db.query("projects").withIndex("by_clientId", (q) => q.eq("clientId", client)).collect(), activity: await ctx.db.query("marketplaceActivity").withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", first.projectId)).take(10) })); expect(state.projects).toHaveLength(1); expect(state.projects[0]).toMatchObject({ countryCode: "MA", status: "draft", visibility: "marketplace" }); expect(state.activity).toEqual([expect.objectContaining({ eventType: "project_created", actorUserId: client, actorType: "client", newStatus: "draft" })]); });
-  test("new drafts omit every legacy budget field and the wizard returns nullable compatibility values", async () => {
+  test("new drafts omit every legacy budget field and current wizard DTOs do not expose them", async () => {
     const t = convexTest(schema, modules);
     const client = await user(t);
     const caller = as(t, client);
@@ -26,18 +25,41 @@ describe("project wizard", () => {
     for (const field of ["budgetRange", "budgetMin", "budgetMax", "budgetUnknown", "marketplaceBudgetRank"] as const) {
       expect(stored).not.toHaveProperty(field);
     }
-    await expect(caller.query(api.projects.index.getWizard, {})).resolves.toMatchObject({
-      draft: {
-        id: projectId,
-        budgetRange: null,
-        budgetMin: null,
-        budgetMax: null,
-        budgetUnknown: null,
-      },
-    });
+    const wizard = await caller.query(api.projects.index.getWizard, {});
+    expect(wizard.draft).toMatchObject({ id: projectId, resumeStep: 1 });
+    for (const field of ["budgetRange", "budgetMin", "budgetMax", "budgetUnknown", "lastCompletedStep"] as const) {
+      expect(wizard.draft).not.toHaveProperty(field);
+    }
   });
   test("ownership protects edits and R2 upload permission", async () => { const t = convexTest(schema, modules); const owner = await user(t); const other = await user(t); const projectId = await draft(t, owner); await expect(as(t, other).mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "renovation" })).rejects.toThrow("PROJECT_NOT_FOUND"); await expect(as(t, other).action(api.projects.media.requestImageUpload, { projectId, contentType: "image/jpeg", size: 12 })).rejects.toThrow("PROJECT_NOT_FOUND"); });
-  test("validates stable category/city/surface/budget/timeline values and resumes fields", async () => { const t = convexTest(schema, modules); const id = await user(t); const c = as(t, id); const projectId = await draft(t, id); await expect(c.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "other" })).rejects.toThrow("INVALID_PROJECT_CATEGORY"); await expect(c.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "bad" as "other" })).rejects.toThrow(); await expect(c.mutation(api.projects.index.saveLocation, { projectId, city: "bad" as "rabat" })).rejects.toThrow(); await c.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "other", customCategoryText: "Tadelakt" }); await c.mutation(api.projects.index.saveLocation, { projectId, city: "agadir" }); await expect(c.mutation(api.projects.index.saveDetails, { projectId, title: "Projet valide", propertyType: "house", surface: -2, surfaceUnknown: false, description: "Description suffisamment longue pour le test du projet." })).rejects.toThrow("INVALID_PROJECT_SURFACE"); await c.mutation(api.projects.index.saveDetails, { projectId, title: "Projet valide", propertyType: "house", surfaceUnknown: true, description: "Description suffisamment longue pour le test du projet." }); await c.mutation(api.projects.index.saveBudget, { projectId, budgetRange: "unknown" }); await expect(c.mutation(api.projects.index.saveBudget, { projectId, budgetRange: "bad" as "unknown" })).rejects.toThrow(); await c.mutation(api.projects.index.saveTimeline, { projectId, timeline: "flexible" }); await expect(c.mutation(api.projects.index.saveTimeline, { projectId, timeline: "bad" as "flexible" })).rejects.toThrow(); expect((await c.query(api.projects.index.getWizard, {})).draft).toMatchObject({ primaryCategory: "other", city: "agadir", surfaceUnknown: true, budgetUnknown: true, timeline: "flexible", lastCompletedStep: 5 }); });
+  test("validates stable category, city, surface and timeline values", async () => { const t = convexTest(schema, modules); const id = await user(t); const c = as(t, id); const projectId = await draft(t, id); await expect(c.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "other" })).rejects.toThrow("INVALID_PROJECT_CATEGORY"); await expect(c.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "bad" as "other" })).rejects.toThrow(); await expect(c.mutation(api.projects.index.saveLocation, { projectId, city: "bad" as "rabat" })).rejects.toThrow(); await c.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "other", customCategoryText: "Tadelakt" }); await c.mutation(api.projects.index.saveLocation, { projectId, city: "agadir" }); await expect(c.mutation(api.projects.index.saveDetails, { projectId, title: "Projet valide", propertyType: "house", surface: -2, surfaceUnknown: false, description: "Description suffisamment longue pour le test du projet." })).rejects.toThrow("INVALID_PROJECT_SURFACE"); await c.mutation(api.projects.index.saveDetails, { projectId, title: "Projet valide", propertyType: "house", surfaceUnknown: true, description: "Description suffisamment longue pour le test du projet." }); await c.mutation(api.projects.index.saveTimeline, { projectId, timeline: "flexible" }); await expect(c.mutation(api.projects.index.saveTimeline, { projectId, timeline: "bad" as "flexible" })).rejects.toThrow(); expect((await c.query(api.projects.index.getWizard, {})).draft).toMatchObject({ primaryCategory: "other", city: "agadir", surfaceUnknown: true, timeline: "flexible", resumeStep: 5 }); });
+
+  test("keeps saveBudget as a validated legacy API without exposing it in the current wizard", async () => {
+    const t = convexTest(schema, modules);
+    const id = await user(t);
+    const caller = as(t, id);
+    const projectId = await draft(t, id);
+    await caller.mutation(api.projects.index.saveBudget, { projectId, budgetRange: "unknown" });
+    await expect(caller.mutation(api.projects.index.saveBudget, { projectId, budgetRange: "bad" as "unknown" })).rejects.toThrow();
+    const stored = await t.run((ctx) => ctx.db.get(projectId));
+    expect(stored).toMatchObject({ budgetRange: "unknown", budgetUnknown: true });
+    const wizard = await caller.query(api.projects.index.getWizard, {});
+    expect(wizard.draft).not.toHaveProperty("budgetRange");
+  });
+
+  test("derives five-step resume from required fields instead of legacy numeric progress", async () => {
+    const t = convexTest(schema, modules);
+    const id = await user(t);
+    const caller = as(t, id);
+    const projectId = await draft(t, id);
+    await complete(t, id, projectId);
+    await t.run((ctx) => ctx.db.patch(projectId, { timeline: undefined, lastCompletedStep: 6 }));
+    expect((await caller.query(api.projects.index.getWizard, {})).draft?.resumeStep).toBe(4);
+    await t.run((ctx) => ctx.db.patch(projectId, { timeline: "flexible", lastCompletedStep: 0 }));
+    expect((await caller.query(api.projects.index.getWizard, {})).draft?.resumeStep).toBe(5);
+    await t.run((ctx) => ctx.db.patch(projectId, { primaryCategory: "other", customCategoryText: undefined, lastCompletedStep: 6 }));
+    expect((await caller.query(api.projects.index.getWizard, {})).draft?.resumeStep).toBe(1);
+  });
   test("optional files work and a verified R2 image is owner-bound and single-use", async () => { const t = convexTest(schema, modules); const id = await user(t); const c = as(t, id); const projectId = await draft(t, id); await c.mutation(api.projects.index.saveFiles, { projectId, imageUploadTokens: [], documents: [] }); const intent = await c.action(api.projects.media.requestImageUpload, { projectId, contentType: "image/jpeg", size: 12 }); await c.action(api.projects.media.verifyImageUpload, { uploadToken: intent.uploadToken }); await c.mutation(api.projects.index.saveFiles, { projectId, imageUploadTokens: [intent.uploadToken], documents: [] }); await expect(c.mutation(api.projects.index.saveFiles, { projectId, imageUploadTokens: [intent.uploadToken], documents: [] })).rejects.toThrow("INVALID_PROJECT_IMAGE"); expect(await t.run((ctx) => ctx.db.query("projectMedia").withIndex("by_projectId", (q) => q.eq("projectId", projectId)).collect())).toHaveLength(1); });
   test("private document URL is owner-only", async () => { const t = convexTest(schema, modules); const owner = await user(t); const other = await user(t); const projectId = await draft(t, owner); const storageId = await t.run((ctx) => ctx.storage.store(new Blob(["pdf"]))); const attachmentId = await t.run((ctx) => ctx.db.insert("projectAttachments", { projectId, clientId: owner, storageId, fileName: "plan.pdf", contentType: "application/pdf", size: 3, createdAt: 1 })); await expect(as(t, owner).query(api.projects.index.getAttachmentDownloadUrl, { attachmentId })).resolves.toEqual(expect.any(String)); await expect(as(t, other).query(api.projects.index.getAttachmentDownloadUrl, { attachmentId })).rejects.toThrow("PROJECT_ATTACHMENT_NOT_FOUND"); });
   test("publish validates, transitions once, records history, and remains private pending review", async () => { const t = convexTest(schema, modules); const id = await user(t); const c = as(t, id); const projectId = await draft(t, id); await expect(c.mutation(api.projects.index.publishProject, { projectId })).rejects.toThrow("PROJECT_INCOMPLETE"); await complete(t, id, projectId); await expect(c.mutation(api.projects.index.publishProject, { projectId })).resolves.toEqual({ status: "pending_review", alreadySubmitted: false }); await expect(c.mutation(api.projects.index.publishProject, { projectId })).resolves.toEqual({ status: "pending_review", alreadySubmitted: true }); expect(await t.query(api.projects.index.getPublicProject, { projectId })).toBeNull(); const state = await t.run(async (ctx) => ({ history: await ctx.db.query("projectStatusHistory").withIndex("by_projectId", (q) => q.eq("projectId", projectId)).collect(), activity: await ctx.db.query("marketplaceActivity").withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId)).order("asc").take(10) })); expect(state.history).toHaveLength(1); expect(state.history[0]).toMatchObject({ oldStatus: "draft", newStatus: "pending_review", changedBy: id }); expect(state.activity.map((item) => item.eventType)).toEqual(["project_created", "project_submitted"]); });
@@ -49,7 +71,7 @@ describe("project wizard", () => {
     const projectId = await draft(t, id);
     await caller.mutation(api.projects.index.saveCategory, { projectId, primaryCategory: "renovation" });
     await expect(caller.mutation(api.projects.index.publishProject, { projectId })).rejects.toThrow("PROJECT_INCOMPLETE");
-    await completeWithoutBudget(t, id, projectId);
+    await complete(t, id, projectId);
     await expect(caller.mutation(api.projects.index.publishProject, { projectId })).resolves.toEqual({
       status: "pending_review",
       alreadySubmitted: false,
@@ -67,6 +89,7 @@ describe("project wizard", () => {
     const c = as(t, id);
     const projectId = await draft(t, id);
     await complete(t, id, projectId);
+    await c.mutation(api.projects.index.saveBudget, { projectId, budgetRange: "100000_250000" });
     const storageId = await t.run((ctx) => ctx.storage.store(new Blob(["pdf"])));
     await t.run(async (ctx) => {
       await ctx.db.insert("projectAttachments", {
@@ -92,7 +115,8 @@ describe("project wizard", () => {
     });
 
     const wizard = await c.query(api.projects.index.getWizard, {});
-    expect(wizard.draft?.lastCompletedStep).toBe(6);
+    expect(wizard.draft?.resumeStep).toBe(5);
+    expect(wizard.draft).not.toHaveProperty("budgetRange");
     expect(wizard.draft?.attachments).toHaveLength(1);
     expect(wizard.draft?.images).toHaveLength(1);
 
@@ -125,6 +149,7 @@ describe("project wizard", () => {
     const other = await user(t);
     const submittedId = await draft(t, owner);
     await complete(t, owner, submittedId);
+    await as(t, owner).mutation(api.projects.index.saveBudget, { projectId: submittedId, budgetRange: "50000_100000" });
     await as(t, owner).mutation(api.projects.index.publishProject, { projectId: submittedId });
     const draftId = await draft(t, owner);
     await as(t, owner).mutation(api.projects.index.saveCategory, { projectId: draftId, primaryCategory: "architecture" });
@@ -135,6 +160,7 @@ describe("project wizard", () => {
     expect(projects.map((project) => project.status)).toEqual(["draft", "pending_review"]);
     expect(projects[0]).toMatchObject({ canResume: true, canView: true });
     expect(projects[1]).toMatchObject({ canResume: false, canView: true });
+    expect(projects[1]).not.toHaveProperty("budgetRange");
   });
 
   test("owner and admin can inspect project details while other clients and companies receive the same not-found result", async () => {
@@ -150,6 +176,7 @@ describe("project wizard", () => {
     const ownerView = await as(t, owner).query(api.projects.index.getMyProject, { projectId });
     expect(ownerView).toMatchObject({ id: projectId, status: "pending_review", viewerRole: "owner" });
     expect(ownerView?.history).toEqual([expect.objectContaining({ oldStatus: "draft", newStatus: "pending_review", actor: "client" })]);
+    expect(ownerView).not.toHaveProperty("budgetRange");
     await expect(as(t, other).query(api.projects.index.getMyProject, { projectId })).resolves.toBeNull();
     await expect(as(t, company).query(api.projects.index.getMyProject, { projectId })).resolves.toBeNull();
     await expect(as(t, admin).query(api.projects.index.getMyProject, { projectId })).resolves.toMatchObject({ id: projectId, viewerRole: "admin" });
@@ -161,6 +188,7 @@ describe("project wizard", () => {
     const firstOwner = await user(t);
     const pendingId = await draft(t, firstOwner);
     await complete(t, firstOwner, pendingId);
+    await as(t, firstOwner).mutation(api.projects.index.saveBudget, { projectId: pendingId, budgetRange: "100000_250000" });
     await as(t, firstOwner).mutation(api.projects.index.publishProject, { projectId: pendingId });
     expect(await t.query(api.projects.index.listPublicProjects, {})).toEqual([]);
 
@@ -173,6 +201,7 @@ describe("project wizard", () => {
     const publicProjects = await t.query(api.projects.index.listPublicProjects, {});
     expect(publicProjects).toHaveLength(1);
     expect(publicProjects[0]).toMatchObject({ id: pendingId, title: "Rénovation appartement", city: "rabat" });
+    expect(publicProjects[0]).not.toHaveProperty("budgetRange");
     expect(publicProjects.some((project) => project.id === privateId)).toBe(false);
   });
 });

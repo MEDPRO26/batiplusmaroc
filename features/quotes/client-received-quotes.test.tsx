@@ -55,7 +55,7 @@ describe("client received quote UI", () => {
     expect(html).toContain("MAD");
     expect(html).toContain("75 days");
     expect(html).toContain("Available start");
-    expect(html).toContain("Review quote");
+    expect(html).toContain("Review proposal");
     expect(html).toContain("View company profile");
     expect(html).toContain("/entreprises/atlas-construction");
     expect(html).toContain("sm:grid-cols-3");
@@ -63,16 +63,16 @@ describe("client received quote UI", () => {
 
   test("renders the localized French card", () => {
     const html = render("fr", <ReceivedQuoteCard onOpen={vi.fn()} quote={{ ...quote, status: "shortlisted" }} />);
-    expect(html).toContain("Présélectionné");
+    expect(html).toContain("Présélectionnée");
     expect(html).toContain("75 jours");
-    expect(html).toContain("Examiner le devis");
+    expect(html).toContain("Voir la proposition");
     expect(html).toContain("Voir le profil");
   });
 
   test("shows all valid review actions and the no-messaging boundary", () => {
     const detail: ReceivedQuoteDetail = { ...quote, history: [{ oldStatus: "submitted", newStatus: "viewed", changedAt: quote.updatedAt, reason: null }] };
     const html = render("en", <QuoteReviewContent confirmDecline={false} error={null} onCancelDecline={vi.fn()} onConfirmDecline={vi.fn()} onReview={vi.fn()} pendingAction={null} quote={detail} success={null} />);
-    expect(html).toContain("About the company");
+    expect(html).toContain("Company");
     expect(html).toContain(quote.company.description);
     expect(html).toContain("Shortlist");
     expect(html).toContain("Open discussion");
@@ -83,9 +83,9 @@ describe("client received quote UI", () => {
   test("requires explicit confirmation before declining", () => {
     const detail: ReceivedQuoteDetail = { ...quote, history: [] };
     const html = render("en", <QuoteReviewContent confirmDecline error={null} onCancelDecline={vi.fn()} onConfirmDecline={vi.fn()} onReview={vi.fn()} pendingAction={null} quote={detail} success={null} />);
-    expect(html).toContain("Decline this quote?");
+    expect(html).toContain("Decline this proposal?");
     expect(html).toContain("This decision cannot be reversed");
-    expect(html).toContain("Keep quote");
+    expect(html).toContain("Keep proposal");
   });
 
   test.each([
@@ -112,7 +112,7 @@ describe("client received quote UI", () => {
   test("keeps received quote translation shapes aligned", () => {
     expect(Object.keys(en.receivedQuotes)).toEqual(Object.keys(fr.receivedQuotes));
     expect(Object.keys(en.receivedQuotes.status)).toEqual(Object.keys(fr.receivedQuotes.status));
-    expect(en.receivedQuotes.empty.title).toBe("No quotes received yet.");
-    expect(fr.receivedQuotes.empty.title).toBe("Aucun devis reçu pour le moment.");
+    expect(en.receivedQuotes.empty.title).toBe("No proposals yet.");
+    expect(fr.receivedQuotes.empty.title).toBe("Aucune proposition pour le moment.");
   });
 });

@@ -134,21 +134,17 @@ describe("initial quote submission", () => {
     const company = await seedCompany(t);
     const caller = asUser(t, company.userId);
 
-    await expect(caller.query(api.quotes.index.getSubmissionContext, { projectId }))
-      .resolves.toMatchObject({
-        project: { id: projectId, budgetRange: null },
-        verificationStatus: "verified",
-      });
+    const context = await caller.query(api.quotes.index.getSubmissionContext, { projectId });
+    expect(context).toMatchObject({ project: { id: projectId }, verificationStatus: "verified" });
+    expect(context?.project).not.toHaveProperty("budgetRange");
     const submitted = await caller.mutation(api.quotes.index.submitInitialQuote, {
       projectId,
       ...validQuote,
     });
     expect(submitted.status).toBe("submitted");
-    await expect(caller.query(api.quotes.index.getMyQuote, { quoteId: submitted.quoteId }))
-      .resolves.toMatchObject({
-        estimatedPrice: validQuote.estimatedPrice,
-        project: { id: projectId, budgetRange: null },
-      });
+    const quote = await caller.query(api.quotes.index.getMyQuote, { quoteId: submitted.quoteId });
+    expect(quote).toMatchObject({ estimatedPrice: validQuote.estimatedPrice, project: { id: projectId } });
+    expect(quote?.project).not.toHaveProperty("budgetRange");
   });
 
   test("verified company submits once and creates immutable submission history", async () => {

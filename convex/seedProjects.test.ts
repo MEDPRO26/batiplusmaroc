@@ -125,8 +125,8 @@ describe("development project seed", () => {
     expect(pool.page).toHaveLength(1);
     expect(pool.page[0]?.title).toBe("Swimming pool construction in Tangier");
     const budget = await filter({ budgetRange: "under_50000" });
-    expect(budget.page).toHaveLength(1);
-    expect(budget.page[0]?.budgetRange).toBe("under_50000");
+    expect(budget.page).toHaveLength(16);
+    expect(budget.page.every((project) => !("budgetRange" in project))).toBe(true);
   });
 
   test("cleanup removes only seed projects/history and preserves three existing projects", async () => {

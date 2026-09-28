@@ -5,7 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
-import { projectBudgetRanges, projectCategories, projectCities } from "@/convex/projects/constants";
+import { projectCategories, projectCities } from "@/convex/projects/constants";
 import { DashboardCardsSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
@@ -18,7 +18,6 @@ type Profile = NonNullable<FunctionReturnType<typeof api.companies.index.getOnbo
 type Project = FunctionReturnType<typeof api.projects.marketplace.listCompanyMarketplaceProjects>["page"][number];
 type City = (typeof projectCities)[number];
 type Category = (typeof projectCategories)[number];
-type Budget = (typeof projectBudgetRanges)[number];
 
 const PAGE_SIZE = 8;
 
@@ -83,7 +82,6 @@ export function CompanyDashboard() {
   const [search, setSearch] = useState("");
   const [city, setCity] = useState<City | "">("");
   const [category, setCategory] = useState<Category | "">("");
-  const [budgetRange, setBudgetRange] = useState<Budget | "">("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const debouncedSearch = useDebouncedValue(search, 250);
 
@@ -105,10 +103,9 @@ export function CompanyDashboard() {
             search: debouncedSearch.trim() || undefined,
             city: city || undefined,
             category: category || undefined,
-            budgetRange: budgetRange || undefined,
           }
         : ("skip" as const),
-    [budgetRange, canLoad, category, city, debouncedSearch],
+    [canLoad, category, city, debouncedSearch],
   );
   const { results, status, loadMore } = usePaginatedQuery(
     api.projects.marketplace.listCompanyMarketplaceProjects,
@@ -133,18 +130,15 @@ export function CompanyDashboard() {
     <div className="min-h-[calc(100dvh-4.5rem)] bg-white">
       <div className="mx-auto grid w-full max-w-[1120px] items-start gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6 lg:px-8">
         <ProjectFeed
-          budgetRange={budgetRange}
           category={category}
           city={city}
           filtersOpen={filtersOpen}
-          onBudgetChange={setBudgetRange}
           onCategoryChange={setCategory}
           onCityChange={setCity}
           onClearFilters={() => {
             setSearch("");
             setCity("");
             setCategory("");
-            setBudgetRange("");
           }}
           onSearchChange={setSearch}
           onToggleFilters={() => setFiltersOpen((open) => !open)}
@@ -167,10 +161,8 @@ function ProjectFeed({
   onToggleFilters,
   city,
   category,
-  budgetRange,
   onCityChange,
   onCategoryChange,
-  onBudgetChange,
   onClearFilters,
   projects,
   status,
@@ -183,10 +175,8 @@ function ProjectFeed({
   onToggleFilters: () => void;
   city: City | "";
   category: Category | "";
-  budgetRange: Budget | "";
   onCityChange: (value: City | "") => void;
   onCategoryChange: (value: Category | "") => void;
-  onBudgetChange: (value: Budget | "") => void;
   onClearFilters: () => void;
   projects: Project[];
   status: "LoadingFirstPage" | "LoadingMore" | "CanLoadMore" | "Exhausted";
@@ -250,10 +240,8 @@ function ProjectFeed({
       {filtersOpen ? (
         <div className="mt-3 rounded-xl border border-[#e4ebe6] bg-white p-4">
           <FilterFields
-            budgetRange={budgetRange}
             category={category}
             city={city}
-            onBudgetChange={onBudgetChange}
             onCategoryChange={onCategoryChange}
             onCityChange={onCityChange}
             onClear={onClearFilters}
@@ -338,12 +326,6 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
         </Link>
       </h2>
       <p className="mt-1 mb-0 text-sm text-ink/80">
-        {project.budgetRange ? (
-          <>
-            {tWizard(`budgetOptions.${project.budgetRange}`)}
-            <span aria-hidden> · </span>
-          </>
-        ) : null}
         {tWizard(`timelineOptions.${project.timeline}`)}
         <span aria-hidden> · </span>
         {tWizard(`cityOptions.${project.city}`)}
@@ -519,18 +501,14 @@ function SidebarLink({
 function FilterFields({
   city,
   category,
-  budgetRange,
   onCityChange,
   onCategoryChange,
-  onBudgetChange,
   onClear,
 }: {
   city: City | "";
   category: Category | "";
-  budgetRange: Budget | "";
   onCityChange: (value: City | "") => void;
   onCategoryChange: (value: Category | "") => void;
-  onBudgetChange: (value: Budget | "") => void;
   onClear: () => void;
 }) {
   const t = useTranslations("companyProjects");
@@ -543,7 +521,7 @@ function FilterFields({
           {t("clearFilters")}
         </button>
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <FilterSelect id="company-feed-city" label={t("filters.city")} onChange={(value) => onCityChange(value as City | "")} value={city}>
           <option value="">{t("filters.allCities")}</option>
           {projectCities.map((item) => (
@@ -562,19 +540,6 @@ function FilterFields({
           {projectCategories.map((item) => (
             <option key={item} value={item}>
               {tWizard(`categoryOptions.${item}`)}
-            </option>
-          ))}
-        </FilterSelect>
-        <FilterSelect
-          id="company-feed-budget"
-          label={t("filters.budget")}
-          onChange={(value) => onBudgetChange(value as Budget | "")}
-          value={budgetRange}
-        >
-          <option value="">{t("filters.allBudgets")}</option>
-          {projectBudgetRanges.map((item) => (
-            <option key={item} value={item}>
-              {tWizard(`budgetOptions.${item}`)}
             </option>
           ))}
         </FilterSelect>

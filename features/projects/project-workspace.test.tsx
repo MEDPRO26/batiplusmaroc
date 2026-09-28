@@ -32,7 +32,6 @@ const baseProject: Project = {
   title: "Villa build",
   primaryCategory: "houseConstruction",
   city: "casablanca",
-  budgetRange: "50000_100000",
   timeline: "one_to_three_months",
   status: "pending_review",
   createdAt: 1_790_000_000_000,
@@ -145,10 +144,13 @@ describe("client project workspace", () => {
       history: [{ oldStatus: "draft", newStatus: "pending_review", changedAt: 1_790_000_100_000, actor: "client", reason: null }],
       viewerRole: "owner",
     };
-    const html = render("en", <ClientProjectDetailsView project={details} />);
-    expect(html).toContain("Project summary");
+    const legacyDetails = { ...details, budgetRange: "50000_100000" as const };
+    const html = render("en", <ClientProjectDetailsView project={legacyDetails} />);
+    expect(html).toContain("Project information");
     expect(html).toContain("plan.pdf");
     expect(html).toContain("Draft → Pending review");
+    expect(html).not.toContain("50,000–100,000 MAD");
+    expect(html).not.toContain(">Budget<");
     expect(html).not.toContain(details.id);
   });
 
@@ -246,7 +248,7 @@ describe("client project workspace", () => {
   });
 
   test("renders discovery results and a translated loading state", () => {
-    const publicProject: PublicProject = { id: projectId, title: "Published villa", description: "A safe public project description.", city: "rabat", primaryCategory: "houseConstruction", budgetRange: null, timeline: null, publishedAt: 1, thumbnailUrl: null };
+    const publicProject: PublicProject = { id: projectId, title: "Published villa", description: "A safe public project description.", city: "rabat", primaryCategory: "houseConstruction", timeline: null, publishedAt: 1, thumbnailUrl: null };
     expect(render("en", <ProjectDiscoveryResults projects={[publicProject]} />)).toContain("Published villa");
     expect(render("en", <ProjectDiscoveryEmptyState />)).toContain("Loading available projects…");
   });
