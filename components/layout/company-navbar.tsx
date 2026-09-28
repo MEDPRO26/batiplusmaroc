@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "@/convex/_generated/api";
 import { NavbarLogo } from "@/components/layout/navbar-logo";
-import { ProfileMenu } from "@/components/layout/profile-menu";
+import { buildCompanyNav } from "@/components/layout/company-nav";
+import { ProfileMenu, type ProfileMenuItem } from "@/components/layout/profile-menu";
 import { SignedInNavbarChrome } from "@/components/layout/signed-in-navbar-chrome";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { useRouter } from "@/i18n/navigation";
@@ -22,39 +23,36 @@ export function CompanyNavbar({ user }: { user: CompanyUser }) {
   const t = useTranslations("nav");
   const tBrand = useTranslations("brand");
   const tMenu = useTranslations("nav.profileMenu");
-  const profile = useQuery(
-    api.companies.index.getOnboardingProfile,
-    user.onboardingStatus === "completed" ? {} : "skip",
-  );
+  const onboarded = user.onboardingStatus === "completed";
+  const profile = useQuery(api.companies.index.getOnboardingProfile, onboarded ? {} : "skip");
 
-  const workspaceHref =
-    user.onboardingStatus === "completed" ? routes.companyDashboard : routes.companyOnboarding;
-  const profileHref =
-    user.onboardingStatus === "completed"
-      ? routes.companyProfileManagement
-      : routes.companyOnboarding;
-  const portfolioHref =
-    user.onboardingStatus === "completed" ? routes.companyPortfolio : routes.companyOnboarding;
+  const links = buildCompanyNav(t, onboarded);
+  const profileHref = onboarded ? routes.companyProfileManagement : routes.companyOnboarding;
+  const verificationHref = onboarded ? routes.companyVerification : routes.companyOnboarding;
 
-  const links = [
-    { href: routes.companyProjects, label: t("findProjects") },
-    { href: portfolioHref, label: t("portfolio") },
-    { href: routes.messages, label: t("messages") },
-    { href: routes.companyCommissions, label: t("commissions") },
-    { href: workspaceHref, label: t("myWorkspace") },
+  // The avatar menu answers "who am I and how do I manage my company?" —
+  // marketplace destinations (portfolio, commissions, projects) live in the navbar.
+  const identitySection: ProfileMenuItem[] = [
+    ...(profile?.publicSlug
+      ? [
+          {
+            href: { pathname: "/entreprises/[slug]" as const, params: { slug: profile.publicSlug } },
+            label: tMenu("company.viewPublicProfile"),
+          },
+        ]
+      : []),
+    { href: profileHref, label: tMenu("company.editProfile") },
+  ];
+  const accountSection: ProfileMenuItem[] = [
+    {
+      href: verificationHref,
+      label: tMenu("company.verification"),
+      meta: profile ? tMenu(`company.verificationStatus.${profile.verificationStatus}`) : undefined,
+    },
   ];
 
-  const accountLinks = [
-    { href: profileHref, label: tMenu("company.companyProfile") },
-    { href: portfolioHref, label: tMenu("company.portfolio") },
-    { href: routes.companyCommissions, label: t("commissions") },
-    { href: workspaceHref, label: tMenu("company.workspace") },
-  ];
-
-  const displayName =
-    [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
-    user.email ||
-    tMenu("company.fallbackName");
+  const personName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
+  const displayName = profile?.name || personName || user.email || tMenu("company.fallbackName");
 
   return (
     <div data-navbar="company">
@@ -62,22 +60,17 @@ export function CompanyNavbar({ user }: { user: CompanyUser }) {
         ariaLabel={t("companyMain")}
         cta={null}
         links={links}
-        accountLinks={accountLinks}
+        accountLinks={[{ href: profileHref, label: tMenu("company.editProfile") }, { href: verificationHref, label: tMenu("company.verification") }]}
         logo={<NavbarLogo homeAria={tBrand("homeAria")} name={tBrand("name")} />}
         profile={
           <ProfileMenu
             displayName={displayName}
-            firstName={user.firstName}
-            items={[
-              { href: profileHref, label: tMenu("company.companyProfile") },
-              { href: portfolioHref, label: tMenu("company.portfolio") },
-              { href: routes.companyCommissions, label: t("commissions") },
-              { href: workspaceHref, label: tMenu("company.workspace") },
-            ]}
-            lastName={user.lastName}
+            firstName={profile?.name || user.firstName}
+            lastName={profile?.name ? null : user.lastName}
             profileImageUrl={profile?.logoUrl ?? null}
             role="company"
             roleLabel={tMenu("company.role")}
+            sections={[identitySection, accountSection]}
           />
         }
         utilities={<CompanyNavbarUtilities />}
@@ -131,7 +124,7 @@ export function CompanyNavbarUtilities() {
   return (
     <div className="flex items-center gap-1 sm:gap-1.5">
       <form
-        className="relative hidden min-w-0 lg:block lg:w-[clamp(14rem,22vw,22rem)]"
+        className="relative hidden min-w-0 xl:block xl:w-[clamp(15rem,20vw,20rem)]"
         onSubmit={submitSearch}
         role="search"
       >
@@ -164,14 +157,11 @@ export function CompanyNavbarUtilities() {
             </button>
           ) : null}
           <span aria-hidden className="mx-1 h-5 w-px shrink-0 bg-brand-border" />
-          <span className="mr-3.5 flex shrink-0 items-center gap-1 text-sm font-medium text-ink">
-            {t("searchScopeProjects")}
-            <ChevronIcon />
-          </span>
+          <span className="mr-4 shrink-0 text-sm font-medium text-muted">{t("searchScopeProjects")}</span>
         </div>
       </form>
 
-      <div className="relative lg:hidden">
+      <div className="relative xl:hidden">
         <button
           aria-controls="company-mobile-search"
           aria-expanded={searchOpen}
@@ -231,14 +221,6 @@ function ClearIcon() {
   return (
     <svg aria-hidden className="size-3.5" fill="none" viewBox="0 0 24 24">
       <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
-    </svg>
-  );
-}
-
-function ChevronIcon() {
-  return (
-    <svg aria-hidden className="size-3.5 text-muted" fill="none" viewBox="0 0 24 24">
-      <path d="m6 9 6 6 6-6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
     </svg>
   );
 }

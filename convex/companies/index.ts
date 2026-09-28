@@ -105,6 +105,8 @@ const onboardingProfileValidator = v.union(
     yearsExperience: v.union(v.number(), v.null()),
     website: v.string(),
     logoUrl: v.union(v.string(), v.null()),
+    /** Public profile slug, null until the Company's public page has been provisioned. */
+    publicSlug: v.union(v.string(), v.null()),
     services: v.array(companyServiceValidator),
     serviceOptions: v.array(companyServiceValidator),
     onboardingStatus: v.union(v.literal("pending"), v.literal("completed")),
@@ -360,6 +362,7 @@ export const getOnboardingProfile = query({
         : company.logoStorageId
           ? await ctx.storage.getUrl(company.logoStorageId)
           : null,
+      publicSlug: company.slug ?? null,
       services: selectedServices.map((item) => item.service),
       serviceOptions: [...companyServices],
       onboardingStatus: company.onboardingStatus,

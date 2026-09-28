@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
+import { WorkspacePage, WorkspacePageHeader } from "@/features/shared/components/workspace-page";
 
 type Obligation = FunctionReturnType<
   typeof api.deals.company.listMyCommissionObligations
@@ -28,15 +29,8 @@ export function CompanyCommissions() {
   const dueCount = obligations.filter((item) => item.commissionStatus === "due").length;
 
   return (
-    <main className="min-h-[calc(100dvh-4.5rem)] bg-[#f7f9fb] py-8 sm:py-10">
-      <div className="mx-auto w-[calc(100%-36px)] max-w-[1120px]">
-        <header>
-          <p className="m-0 text-sm font-semibold text-brand">{t("eyebrow")}</p>
-          <h1 className="mt-2 mb-0 text-3xl font-semibold tracking-[-0.03em] text-ink sm:text-4xl">
-            {t("title")}
-          </h1>
-          <p className="mt-3 mb-0 max-w-2xl text-sm leading-6 text-muted">{t("lead")}</p>
-        </header>
+    <WorkspacePage>
+        <WorkspacePageHeader lead={t("lead")} title={t("title")} />
 
         <section aria-label={t("summary.label")} className="mt-7 grid gap-3 sm:grid-cols-3">
           <SummaryCard label={t("summary.due")} value={money(totalDue, locale)} />
@@ -44,7 +38,8 @@ export function CompanyCommissions() {
           <SummaryCard label={t("summary.count")} value={String(dueCount)} />
         </section>
 
-        <section className="mt-6 overflow-hidden rounded-2xl border border-[#e4ebe6] bg-white">
+        <h2 className="mt-9 mb-3 text-base font-semibold text-ink">{t("historyTitle")}</h2>
+        <section className="overflow-hidden rounded-2xl border border-brand-border bg-white">
           {obligations.length === 0 ? (
             <div className="px-5 py-16 text-center">
               <h2 className="m-0 text-lg font-semibold text-ink">{t("empty.title")}</h2>
@@ -59,7 +54,7 @@ export function CompanyCommissions() {
               </div>
               <div className="hidden overflow-x-auto md:block">
                 <table className="min-w-full border-collapse text-left text-sm">
-                  <thead className="bg-[#f7faf8] text-xs font-semibold uppercase tracking-[0.06em] text-muted">
+                  <thead className="bg-[#f7f9fb] text-xs font-semibold uppercase tracking-[0.06em] text-muted">
                     <tr>
                       <th className="px-5 py-3">{t("columns.project")}</th>
                       <th className="px-5 py-3">{t("columns.dealAmount")}</th>
@@ -80,14 +75,13 @@ export function CompanyCommissions() {
             </>
           )}
         </section>
-      </div>
-    </main>
+    </WorkspacePage>
   );
 }
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <article className="rounded-2xl border border-[#e4ebe6] bg-white p-5">
+    <article className="rounded-2xl border border-brand-border bg-white p-5">
       <p className="m-0 text-sm text-muted">{label}</p>
       <p className="mt-2 mb-0 text-2xl font-semibold tracking-[-0.02em] text-ink">{value}</p>
     </article>
@@ -97,7 +91,7 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
 function CommissionCard({ item, locale }: { item: Obligation; locale: string }) {
   const t = useTranslations("companyCommissions");
   return (
-    <article className="rounded-xl border border-[#e4ebe6] p-4">
+    <article className="rounded-xl border border-brand-border p-4">
       <div className="flex items-start justify-between gap-3">
         <h2 className="m-0 text-base font-semibold text-ink">{item.projectTitle}</h2>
         <StatusBadge status={item.commissionStatus} />
@@ -116,7 +110,7 @@ function CommissionCard({ item, locale }: { item: Obligation; locale: string }) 
 function CommissionRow({ item, locale }: { item: Obligation; locale: string }) {
   const t = useTranslations("companyCommissions");
   return (
-    <tr className="border-t border-[#eef2f0] align-top">
+    <tr className="border-t border-brand-border align-top">
       <td className="px-5 py-4 font-semibold text-ink">{item.projectTitle}</td>
       <td className="px-5 py-4 text-ink">{amount(item.agreedAmountMad, locale, t("unavailable"))}</td>
       <td className="px-5 py-4 font-semibold text-ink">{amount(item.commissionAmountMad, locale, t("unavailable"))}</td>
@@ -133,7 +127,7 @@ function CommissionDetails({ item, locale }: { item: Obligation; locale: string 
   return (
     <details className="mt-4 md:mt-0">
       <summary className="cursor-pointer text-sm font-semibold text-brand">{t("details.open")}</summary>
-      <dl className="mt-3 grid gap-3 rounded-xl bg-[#f7faf8] p-3 text-sm md:min-w-56">
+      <dl className="mt-3 grid gap-3 rounded-xl bg-[#f7f9fb] p-3 text-sm md:min-w-56">
         <Field label={t("details.rate")} value={item.commissionRateBps === null ? t("unavailable") : rate(item.commissionRateBps, locale)} />
         <Field label={t("details.beneficiary")} value={t("beneficiary")} />
         <Field label={t("details.configVersion")} value={item.commissionConfigVersion === null ? t("unavailable") : String(item.commissionConfigVersion)} />

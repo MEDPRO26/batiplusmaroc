@@ -40,6 +40,8 @@ export type MetaNamespace =
   | "companyProjects"
   | "companyInvitations"
   | "companyCommissions"
+  | "companyProposals"
+  | "companyWork"
   | "companyProfileManagement"
   | "companyOnboarding"
   | "companyVerification"

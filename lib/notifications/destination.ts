@@ -80,6 +80,8 @@ const ENGLISH_PATHS: Partial<Record<string, string>> = {
   [routes.companyProjects]: "/company/projects",
   [routes.companyInvitations]: "/company/invitations",
   [routes.companyCommissions]: "/company/commissions",
+  [routes.companyProposals]: "/company/proposals",
+  [routes.companyWork]: "/company/work",
   [routes.companyProfileManagement]: "/company/profile",
   [routes.companyVerification]: "/company/verification",
 };

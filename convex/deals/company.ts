@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
-import { commissionStatusValidator } from "./constants";
+import { commissionStatusValidator, dealStatusValidator } from "./constants";
 
 const nullableNumber = v.union(v.number(), v.null());
 
@@ -76,5 +76,50 @@ export const listMyCommissionObligations = query({
       });
     }
     return rows;
+  },
+});
+
+const companyDealValidator = v.object({
+  dealId: v.id("deals"),
+  projectId: v.id("projects"),
+  projectTitle: v.string(),
+  city: v.union(v.string(), v.null()),
+  status: dealStatusValidator,
+  agreedAmountMad: v.number(),
+  conversationId: v.id("conversations"),
+  createdAt: v.number(),
+  completedAt: nullableNumber,
+});
+
+/**
+ * Read-only Company projection of won work (Deals) for the "Manage work" area.
+ * The authenticated membership determines the Company; no Company ID is accepted.
+ */
+export const listMyDeals = query({
+  args: {},
+  returns: v.array(companyDealValidator),
+  handler: async (ctx) => {
+    const { company } = await requireCompanyUser(ctx);
+    const deals = await ctx.db
+      .query("deals")
+      .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
+      .take(200);
+
+    const rows = [];
+    for (const deal of deals) {
+      const project = await ctx.db.get(deal.projectId);
+      rows.push({
+        dealId: deal._id,
+        projectId: deal.projectId,
+        projectTitle: project?.title ?? "—",
+        city: project?.city ?? null,
+        status: deal.status,
+        agreedAmountMad: deal.agreedAmountMad,
+        conversationId: deal.conversationId,
+        createdAt: deal.createdAt,
+        completedAt: deal.completedAt ?? null,
+      });
+    }
+    return rows.sort((a, b) => b.createdAt - a.createdAt);
   },
 });

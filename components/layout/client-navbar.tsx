@@ -61,7 +61,7 @@ export function ClientNavbar({ user }: { user: ClientUser }) {
           <ProfileMenu
             displayName={displayName}
             firstName={user.firstName}
-            items={accountLinks}
+            sections={[accountLinks]}
             lastName={user.lastName}
             profileImageUrl={profile?.profilePhotoUrl ?? null}
             role="client"

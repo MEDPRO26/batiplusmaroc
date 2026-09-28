@@ -64,7 +64,8 @@
 html { scroll-behavior: smooth; }
 body { margin: 0; overflow-x: hidden; background: var(--color-bg); color: var(--color-text); font-family: var(--font-site-sans), sans-serif; }
 img { max-width: 100%; }
-button, summary { font: inherit; }
+/* Layered so Tailwind text/font utilities on buttons win over the inherited default. */
+@layer base { button, summary { font: inherit; } }
 a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 4px; }
 a.bg-brand,
 button.bg-brand {

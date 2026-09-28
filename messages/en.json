@@ -73,6 +73,20 @@
     "portfolio": "Portfolio",
     "clientMain": "Client navigation",
     "companyMain": "Company navigation",
+    "company": {
+      "findWork": "Find projects",
+      "findProjects": "Find projects",
+      "proposals": "My proposals",
+      "invitations": "Invitations",
+      "growPresence": "Grow your presence",
+      "companyProfile": "Company profile",
+      "portfolio": "Portfolio",
+      "manageWork": "Manage work",
+      "activeProjects": "Active projects",
+      "projectHistory": "Project history",
+      "finances": "Finances",
+      "commissions": "Commissions"
+    },
     "profileMenu": {
       "openMenu": "Open account menu",
       "client": {
@@ -87,7 +101,16 @@
         "fallbackName": "Company account",
         "companyProfile": "Company profile",
         "portfolio": "Portfolio",
-        "workspace": "Company workspace"
+        "workspace": "Company workspace",
+        "viewPublicProfile": "View public profile",
+        "editProfile": "Edit company profile",
+        "verification": "Verification",
+        "verificationStatus": {
+          "draft": "Not submitted",
+          "pending": "Pending",
+          "verified": "Verified",
+          "rejected": "Rejected"
+        }
       }
     }
   },
@@ -918,6 +941,14 @@
     "companyInvitations": {
       "title": "Project invitations — Batiplus",
       "description": "Review and respond to direct project invitations from Batiplus clients."
+    },
+    "companyProposals": {
+      "title": "My proposals — Batiplus",
+      "description": "Track the proposals your Company has sent to Batiplus clients."
+    },
+    "companyWork": {
+      "title": "Active projects — Batiplus",
+      "description": "Follow the projects your Company has won on Batiplus."
     },
     "companyCommissions": {
       "title": "Company commissions — Batiplus",
@@ -1808,11 +1839,33 @@
   },
   "portfolioManager": {
     "eyebrow": "Company workspace",
-    "title": "Your portfolio",
-    "lead": "Showcase your best completed work on your public profile.",
+    "title": "Portfolio",
+    "lead": "Show clients your completed construction projects. Published work appears on your public profile.",
     "viewProfile": "View public profile",
-    "add": "Add completed work",
+    "add": "Add project",
     "listTitle": "Portfolio projects",
+    "addTileLead": "Clients judge construction work by photos. Add a project with a strong cover image.",
+    "surfaceValue": "{value} m²",
+    "photoCount": "{count} photos",
+    "moreActions": "More actions for {title}",
+    "sections": {
+      "basics": "Basic information",
+      "basicsLead": "What was built, and where.",
+      "details": "Project details",
+      "detailsLead": "Optional facts that help clients compare.",
+      "media": "Photos"
+    },
+    "placeholders": {
+      "title": "e.g. Contemporary villa in Agadir",
+      "description": "Describe the scope, the materials and the result."
+    },
+    "uploadCover": "Upload cover image",
+    "replaceCover": "Replace cover",
+    "fileRules": "JPG, PNG or WebP · 10 MB maximum",
+    "galleryCount": "{count} / {max} photos",
+    "addPhotos": "Add photos",
+    "clearNewPhotos": "Remove the photos you just added",
+    "draftHint": "New projects are saved as drafts. Publish them from the card when ready.",
     "empty": "Add your first completed project.",
     "imageAlt": "Photo of {title}",
     "previewAlt": "Selected cover image preview",
@@ -2278,6 +2331,61 @@
     "ctaCompanyAction": "Go to Find projects"
   },
   "messages": {
+    "context": {
+      "title": "Project details",
+      "open": "Show project details",
+      "close": "Hide project details",
+      "partyLabel": "Conversation contact",
+      "roleClient": "Client",
+      "roleCompany": "Company",
+      "viewProject": "View project",
+      "progressTitle": "Project progress",
+      "loading": "Loading project progress…",
+      "stages": {
+        "proposal": "Proposal submitted",
+        "discussion": "Discussion opened",
+        "siteVisit": "Site visit",
+        "finalQuote": "Final quote",
+        "selection": "Company selection",
+        "deal": "Deal"
+      },
+      "states": {
+        "done": "completed",
+        "current": "in progress",
+        "upcoming": "not started",
+        "skipped": "skipped",
+        "stopped": "stopped"
+      },
+      "detail": {
+        "siteVisit": {
+          "optional": "Optional — not requested",
+          "notRequired": "Not required",
+          "invited": "Visit requested",
+          "accepted": "Accepted — date to set",
+          "dateProposed": "Date proposed: {date}",
+          "scheduled": "Scheduled: {date}",
+          "completed": "Completed",
+          "declined": "Declined",
+          "cancelled": "Cancelled"
+        },
+        "finalQuote": {
+          "requested": "Requested by the client",
+          "submitted": "Submitted — awaiting client",
+          "changesRequested": "Changes requested",
+          "accepted": "Accepted",
+          "declined": "Declined",
+          "withdrawn": "Withdrawn"
+        },
+        "selection": {
+          "selected": "Company selected"
+        },
+        "deal": {
+          "inProgress": "In progress",
+          "completed": "Completed",
+          "cancelled": "Cancelled"
+        }
+      }
+    },
     "title": "Messages",
     "searchConversations": "Search conversations",
     "searchConversationsPlaceholder": "Search conversations",
@@ -2684,7 +2792,73 @@
     "confirmReject": "Confirm rejection",
     "cancel": "Cancel",
     "approved": "Company verification approved.",
-    "rejected": "Company verification rejected."
+    "rejected": "Company verification rejected.",
+    "error": {
+      "title": "Company verification is unavailable",
+      "description": "The verification review and Company activity could not be loaded. Please try again.",
+      "retry": "Try again"
+    }
+  },
+  "adminCompanyActivity": {
+    "title": "Company activity",
+    "lead": "Important verification and marketplace events, newest first.",
+    "loading": "Loading company activity…",
+    "loadingMore": "Loading more…",
+    "loadMore": "Load more activity",
+    "empty": "No activity recorded for this company yet.",
+    "projectContext": "Project: {project}",
+    "companyContext": "Company account",
+    "amount": "Amount: {amount}",
+    "rating": "Rating: {rating}/5",
+    "viewDetails": "View details",
+    "categories": {
+      "verification": "Verification",
+      "marketplace": "Marketplace",
+      "deals": "Deals & commission",
+      "reviews": "Reviews"
+    },
+    "actorTypes": {
+      "client": "Client",
+      "company": "Company member",
+      "admin": "Admin",
+      "system": "System"
+    },
+    "events": {
+      "verification_submitted": "Verification submitted",
+      "verification_approved": "Verification approved",
+      "verification_rejected": "Verification rejected",
+      "company_invited": "Company invited",
+      "company_invitation_accepted": "Invitation accepted",
+      "company_invitation_declined": "Invitation declined",
+      "initial_quote_submitted": "Initial quote submitted",
+      "discussion_opened": "Discussion opened",
+      "site_assessment_invited": "Site assessment invited",
+      "site_assessment_accepted": "Site assessment accepted",
+      "site_assessment_declined": "Site assessment declined",
+      "site_assessment_cancelled": "Site assessment cancelled",
+      "site_visit_scheduled": "Site visit scheduled",
+      "site_visit_proposed": "Site visit proposed",
+      "site_visit_rescheduled": "Site visit rescheduled",
+      "site_visit_confirmed": "Site visit confirmed",
+      "site_visit_declined": "Site visit declined",
+      "site_visit_completed": "Site visit completed",
+      "site_visit_cancelled": "Site visit cancelled",
+      "final_quote_requested": "Final quote requested",
+      "final_quote_submitted": "Final quote submitted",
+      "final_quote_changes_requested": "Final quote changes requested",
+      "final_quote_revised": "Final quote revised",
+      "final_quote_declined": "Final quote declined",
+      "final_quote_withdrawn": "Final quote withdrawn",
+      "final_quote_accepted": "Final quote accepted",
+      "company_selected": "Company selected",
+      "deal_created": "Deal created",
+      "commission_due": "Commission due",
+      "commission_paid": "Commission paid",
+      "deal_completed": "Deal completed",
+      "review_received": "Review received",
+      "review_hidden": "Review hidden",
+      "review_restored": "Review restored"
+    }
   },
   "adminProjects": {
     "metaTitle": "Project review",
@@ -3046,6 +3220,7 @@
     "home": "Back to Batiplus"
   },
   "companyCommissions": {
+    "historyTitle": "Commission history",
     "eyebrow": "Company workspace",
     "title": "Commissions",
     "lead": "Review the commission your Company owes Batiplus for each accepted Deal. Payment status is recorded by Batiplus Admins.",
@@ -4162,6 +4337,55 @@
       "company": "This company does not exist or is no longer available.",
       "project": "This project could not be found.",
       "portfolio": "This portfolio item is no longer available."
+    }
+  },
+  "companyProposals": {
+    "title": "My proposals",
+    "lead": "Every proposal your company has sent. A discussion opens once the client responds to your proposal.",
+    "findProjects": "Find projects",
+    "filtersLabel": "Filter proposals",
+    "filters": {
+      "all": "All",
+      "open": "Awaiting client",
+      "discussion": "In discussion",
+      "closed": "Closed"
+    },
+    "sentOn": "Sent {date}",
+    "estimate": "Initial estimate",
+    "openDiscussion": "Open discussion",
+    "viewProposal": "View proposal",
+    "empty": {
+      "title": "No proposals yet",
+      "lead": "Browse open projects and send your first proposal to a client.",
+      "action": "Find projects",
+      "filteredTitle": "Nothing here",
+      "filteredLead": "No proposals match this filter."
+    }
+  },
+  "companyWork": {
+    "activeTitle": "Active projects",
+    "historyTitle": "Project history",
+    "lead": "Projects your company has won. Each one keeps its discussion, site visit and final quote in one place.",
+    "tabsLabel": "Filter projects",
+    "tabs": {
+      "active": "Active",
+      "history": "History"
+    },
+    "status": {
+      "active": "In progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "startedOn": "Started {date}",
+    "completedOn": "Completed {date}",
+    "agreedAmount": "Agreed amount",
+    "openWorkspace": "Open project",
+    "empty": {
+      "activeTitle": "No active projects yet",
+      "activeLead": "When a client selects your company, the project appears here.",
+      "activeAction": "View my proposals",
+      "historyTitle": "No past projects yet",
+      "historyLead": "Completed and cancelled projects will appear here."
     }
   }
 }

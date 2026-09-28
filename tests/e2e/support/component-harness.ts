@@ -14,9 +14,12 @@ const mocks: Plugin = {
       "convex/react": "convex-react",
       "@/i18n/navigation": "navigation",
       "@/convex/_generated/api": "api",
+      "next/font/google": "next-font-google",
       "next/image": "image",
+      "next/navigation": "next-navigation",
+      "@convex-dev/auth/react": "convex-auth",
     };
-    builder.onResolve({ filter: /^(convex\/react|@\/i18n\/navigation|@\/convex\/_generated\/api|next\/image)$/ }, (args) => ({ path: mocked[args.path], namespace: "mock" }));
+    builder.onResolve({ filter: /^(convex\/react|@\/i18n\/navigation|@\/convex\/_generated\/api|next\/font\/google|next\/image|next\/navigation|@convex-dev\/auth\/react)$/ }, (args) => ({ path: mocked[args.path], namespace: "mock" }));
     builder.onLoad({ filter: /.*/, namespace: "mock" }, (args) => {
       const contents: Record<string, string> = {
         api: `
@@ -28,7 +31,17 @@ const mocks: Plugin = {
             if (args === "skip") return undefined;
             return window.__queries[query.__path];
           }
-          export function usePaginatedQuery() { return { results: [], status: "Exhausted", loadMore() {} }; }
+          export function usePaginatedQuery(query) {
+            const state = (window.__paginatedQueries || {})[query.__path] || { results: [], status: "Exhausted" };
+            return {
+              ...state,
+              loadMore(numItems) {
+                window.__paginationCalls = [...(window.__paginationCalls || []), { path: query.__path, numItems }];
+              },
+            };
+          }
+          export function useAction(action) { return useMutation(action); }
+          export function useConvexConnectionState() { return { isWebSocketConnected: true, hasEverConnected: true, connectionRetries: 0 }; }
           export function useMutation(mutation) {
             return async (args) => {
               window.__mutationCalls = [...(window.__mutationCalls || []), { path: mutation.__path, args }];
@@ -43,6 +56,20 @@ const mocks: Plugin = {
             return <a href={url} {...props}>{children}</a>;
           }
           export function useRouter() { return { replace() {}, push() {} }; }
+          export function usePathname() { return window.__pathname || "/admin/verification"; }
+          export function getPathname({ href, locale }) {
+            const pathname = typeof href === "string" ? href : href.pathname;
+            return "/" + locale + (pathname === "/" ? "" : pathname);
+          }
+        `,
+        "convex-auth": `
+          export function useAuthActions() { return { signIn: async () => undefined, signOut: async () => undefined }; }
+        `,
+        "next-navigation": `
+          export function useParams() { return { locale: window.__locale }; }
+        `,
+        "next-font-google": `
+          export function Outfit() { return { className: "font-outfit", variable: "--font-outfit", style: { fontFamily: "Outfit" } }; }
         `,
         image: `
           import React from "react";

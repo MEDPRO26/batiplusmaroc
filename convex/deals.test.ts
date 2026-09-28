@@ -1070,7 +1070,70 @@ describe("Company commission visibility", () => {
     });
   });
 
-  test("Company commission module exposes a query only and no payment mutation", () => {
-    expect(Object.keys(companyCommissionModule)).toEqual(["listMyCommissionObligations"]);
+  test("Company commission module exposes read-only queries and no payment mutation", () => {
+    expect(Object.keys(companyCommissionModule).sort()).toEqual([
+      "listMyCommissionObligations",
+      "listMyDeals",
+    ]);
+  });
+});
+
+describe("Company work and proposal projections", () => {
+  test("the selected Company sees its Deal and its proposal with safe links", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    await source.t.run((ctx) => ctx.db.patch(source.projectId, { title: "Villa Anfa" }));
+    const company = asUser(source.t, source.companyUserId);
+
+    const deals = await company.query(api.deals.company.listMyDeals, {});
+    expect(deals).toEqual([
+      expect.objectContaining({
+        dealId: created.dealId,
+        projectId: source.projectId,
+        projectTitle: "Villa Anfa",
+        status: "active",
+        agreedAmountMad: 395_000,
+        conversationId: source.conversationId,
+        completedAt: null,
+      }),
+    ]);
+    expect(deals[0]).not.toHaveProperty("commissionPaymentReference");
+    expect(deals[0]).not.toHaveProperty("clientUserId");
+
+    const proposals = await company.query(api.proposals.index.listMyProposals, {});
+    expect(proposals).toEqual([
+      expect.objectContaining({
+        quoteId: source.initialQuoteId,
+        projectTitle: "Villa Anfa",
+        status: "discussion_open",
+        conversationId: source.conversationId,
+        // The project moved past discussion, so the quote workspace no longer resolves.
+        canOpenQuoteWorkspace: false,
+      }),
+    ]);
+  });
+
+  test("another Company sees neither the Deal nor the proposal", async () => {
+    const source = await setupAcceptedSource();
+    await createDeal(source.t, source.finalQuoteId);
+    const other = asUser(source.t, source.otherCompanyUserId);
+    await expect(other.query(api.deals.company.listMyDeals, {})).resolves.toEqual([]);
+    await expect(other.query(api.proposals.index.listMyProposals, {})).resolves.toEqual([]);
+  });
+
+  test("non-Company, inactive member, and anonymous callers are denied", async () => {
+    const source = await setupAcceptedSource();
+    await createDeal(source.t, source.finalQuoteId);
+    for (const fn of [api.deals.company.listMyDeals, api.proposals.index.listMyProposals]) {
+      for (const userId of [source.clientUserId, source.adminUserId, source.seoUserId]) {
+        await expect(asUser(source.t, userId).query(fn, {})).rejects.toThrow(
+          "COMPANY_ACCOUNT_REQUIRED",
+        );
+      }
+      await expect(asUser(source.t, source.inactiveCompanyUserId).query(fn, {})).rejects.toThrow(
+        "COMPANY_MEMBERSHIP_REQUIRED",
+      );
+      await expect(source.t.query(fn, {})).rejects.toThrow("NOT_AUTHENTICATED");
+    }
   });
 });

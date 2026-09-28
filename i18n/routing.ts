@@ -164,6 +164,14 @@ export const routing = defineRouting({
       fr: "/espace-entreprise/commissions",
       en: "/company/commissions",
     },
+    "/espace-entreprise/propositions": {
+      fr: "/espace-entreprise/propositions",
+      en: "/company/proposals",
+    },
+    "/espace-entreprise/chantiers": {
+      fr: "/espace-entreprise/chantiers",
+      en: "/company/work",
+    },
     "/admin": "/admin",
     "/admin/projects": {
       fr: "/admin/projets",

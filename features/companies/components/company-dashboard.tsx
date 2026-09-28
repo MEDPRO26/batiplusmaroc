@@ -238,7 +238,7 @@ function ProjectFeed({
       </div>
 
       {filtersOpen ? (
-        <div className="mt-3 rounded-xl border border-[#e4ebe6] bg-white p-4">
+        <div className="mt-3 rounded-xl border border-brand-border bg-white p-4">
           <FilterFields
             category={category}
             city={city}
@@ -249,7 +249,7 @@ function ProjectFeed({
         </div>
       ) : null}
 
-      <div className="mt-5 border-b border-[#e4ebe6]">
+      <div className="mt-5 border-b border-brand-border">
         <p className="m-0 inline-flex border-b-2 border-[#B9563B] pb-3 text-sm font-semibold text-ink">
           {t("feed.tabRecent")}
         </p>
@@ -372,7 +372,7 @@ function CompanySidebar({ profile, verification }: { profile: Profile; verificat
 
   return (
     <aside className="grid gap-4 lg:sticky lg:top-24">
-      <section className="rounded-2xl border border-[#e4ebe6] bg-white px-5 py-5">
+      <section className="rounded-2xl border border-brand-border bg-white px-5 py-5">
         <div className="flex items-center gap-3">
           {profile.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -409,15 +409,15 @@ function CompanySidebar({ profile, verification }: { profile: Profile; verificat
         <div className="mt-4 border-t border-[#eef2f0] pt-4">
           <div className="flex items-center justify-between gap-3 text-sm">
             <p className="m-0 text-ink">{t("sidebar.completeProfile")}</p>
-            <p className="m-0 font-semibold text-[#108a00]">{t("sidebar.progress", { value: completion })}</p>
+            <p className="m-0 font-semibold text-brand">{t("sidebar.progress", { value: completion })}</p>
           </div>
           <div aria-hidden className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#e6eee8]">
-            <div className="h-full rounded-full bg-[#108a00]" style={{ width: `${completion}%` }} />
+            <div className="h-full rounded-full bg-brand" style={{ width: `${completion}%` }} />
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-[#e4ebe6] bg-white">
+      <section className="rounded-2xl border border-brand-border bg-white">
         <button
           aria-expanded={reachOpen}
           className="flex min-h-14 w-full items-center justify-between px-5 text-left text-[15px] font-semibold text-ink"
@@ -462,39 +462,7 @@ function CompanySidebar({ profile, verification }: { profile: Profile; verificat
         ) : null}
       </section>
 
-      <nav aria-label={t("sidebar.reachMore")} className="overflow-hidden rounded-2xl border border-[#e4ebe6] bg-white">
-        <SidebarLink href={routes.messages} label={t("sidebar.messages")} />
-        <SidebarLink href={routes.companyInvitations} label={t("sidebar.invitations")} />
-        <SidebarLink href={routes.companyCommissions} label={t("sidebar.commissions")} />
-        <SidebarLink href={routes.companyProjects} label={t("findWorkTitle")} />
-        <SidebarLink href={routes.contact} label={t("sidebar.contact")} />
-      </nav>
     </aside>
-  );
-}
-
-function SidebarLink({
-  href,
-  label,
-}: {
-  href:
-    | typeof routes.messages
-    | typeof routes.companyInvitations
-    | typeof routes.companyCommissions
-    | typeof routes.companyProjects
-    | typeof routes.contact;
-  label: string;
-}) {
-  return (
-    <Link
-      className="flex min-h-12 items-center justify-between border-b border-[#eef2f0] px-5 text-sm font-medium text-ink last:border-b-0 hover:bg-[#f7faf8]"
-      href={href}
-    >
-      {label}
-      <span aria-hidden className="text-muted">
-        ›
-      </span>
-    </Link>
   );
 }
 

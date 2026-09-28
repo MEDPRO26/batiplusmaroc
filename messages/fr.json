@@ -73,6 +73,20 @@
     "portfolio": "Portfolio",
     "clientMain": "Navigation client",
     "companyMain": "Navigation entreprise",
+    "company": {
+      "findWork": "Trouver des projets",
+      "findProjects": "Trouver des projets",
+      "proposals": "Mes propositions",
+      "invitations": "Invitations",
+      "growPresence": "Développer votre visibilité",
+      "companyProfile": "Profil entreprise",
+      "portfolio": "Portfolio",
+      "manageWork": "Gérer les projets",
+      "activeProjects": "Projets actifs",
+      "projectHistory": "Historique des projets",
+      "finances": "Finances",
+      "commissions": "Commissions"
+    },
     "profileMenu": {
       "openMenu": "Ouvrir le menu du compte",
       "client": {
@@ -87,7 +101,16 @@
         "fallbackName": "Compte entreprise",
         "companyProfile": "Profil entreprise",
         "portfolio": "Portfolio",
-        "workspace": "Espace entreprise"
+        "workspace": "Espace entreprise",
+        "viewPublicProfile": "Voir le profil public",
+        "editProfile": "Modifier le profil entreprise",
+        "verification": "Vérification",
+        "verificationStatus": {
+          "draft": "Non soumise",
+          "pending": "En cours",
+          "verified": "Vérifiée",
+          "rejected": "Refusée"
+        }
       }
     }
   },
@@ -918,6 +941,14 @@
     "companyInvitations": {
       "title": "Invitations aux projets — Batiplus",
       "description": "Consultez et traitez les invitations directes envoyées par les clients Batiplus."
+    },
+    "companyProposals": {
+      "title": "Mes propositions — Batiplus",
+      "description": "Suivez les propositions envoyées par votre entreprise aux clients Batiplus."
+    },
+    "companyWork": {
+      "title": "Projets actifs — Batiplus",
+      "description": "Suivez les projets remportés par votre entreprise sur Batiplus."
     },
     "companyCommissions": {
       "title": "Commissions de l’entreprise — Batiplus",
@@ -1809,10 +1840,32 @@
   "portfolioManager": {
     "eyebrow": "Espace entreprise",
     "title": "Vos réalisations",
-    "lead": "Présentez vos meilleurs travaux sur votre profil public.",
+    "lead": "Montrez à vos clients les chantiers que vous avez réalisés. Les réalisations publiées apparaissent sur votre profil public.",
     "viewProfile": "Voir le profil public",
     "add": "Ajouter une réalisation",
     "listTitle": "Liste des réalisations",
+    "addTileLead": "Les clients jugent un chantier sur photos. Ajoutez une réalisation avec une belle image de couverture.",
+    "surfaceValue": "{value} m²",
+    "photoCount": "{count} photos",
+    "moreActions": "Autres actions pour {title}",
+    "sections": {
+      "basics": "Informations principales",
+      "basicsLead": "Ce qui a été réalisé, et où.",
+      "details": "Détails du projet",
+      "detailsLead": "Informations facultatives qui aident les clients à comparer.",
+      "media": "Photos"
+    },
+    "placeholders": {
+      "title": "ex. Villa contemporaine à Agadir",
+      "description": "Décrivez les travaux, les matériaux et le résultat."
+    },
+    "uploadCover": "Téléverser l’image de couverture",
+    "replaceCover": "Remplacer la couverture",
+    "fileRules": "JPG, PNG ou WebP · 10 Mo maximum",
+    "galleryCount": "{count} / {max} photos",
+    "addPhotos": "Ajouter des photos",
+    "clearNewPhotos": "Retirer les photos ajoutées",
+    "draftHint": "Les nouvelles réalisations sont enregistrées en brouillon. Publiez-les depuis la carte.",
     "empty": "Ajoutez votre première réalisation.",
     "imageAlt": "Photo de {title}",
     "previewAlt": "Aperçu de l’image de couverture sélectionnée",
@@ -2278,6 +2331,61 @@
     "ctaCompanyAction": "Aller à Trouver des projets"
   },
   "messages": {
+    "context": {
+      "title": "Détails du projet",
+      "open": "Afficher les détails du projet",
+      "close": "Masquer les détails du projet",
+      "partyLabel": "Contact de la conversation",
+      "roleClient": "Client",
+      "roleCompany": "Entreprise",
+      "viewProject": "Voir le projet",
+      "progressTitle": "Avancement du projet",
+      "loading": "Chargement de l’avancement…",
+      "stages": {
+        "proposal": "Proposition envoyée",
+        "discussion": "Discussion ouverte",
+        "siteVisit": "Visite de site",
+        "finalQuote": "Devis final",
+        "selection": "Sélection de l’entreprise",
+        "deal": "Contrat"
+      },
+      "states": {
+        "done": "terminé",
+        "current": "en cours",
+        "upcoming": "pas commencé",
+        "skipped": "ignoré",
+        "stopped": "arrêté"
+      },
+      "detail": {
+        "siteVisit": {
+          "optional": "Facultative — non demandée",
+          "notRequired": "Non requise",
+          "invited": "Visite demandée",
+          "accepted": "Acceptée — date à fixer",
+          "dateProposed": "Date proposée : {date}",
+          "scheduled": "Planifiée : {date}",
+          "completed": "Effectuée",
+          "declined": "Refusée",
+          "cancelled": "Annulée"
+        },
+        "finalQuote": {
+          "requested": "Demandé par le client",
+          "submitted": "Envoyé — en attente du client",
+          "changesRequested": "Modifications demandées",
+          "accepted": "Accepté",
+          "declined": "Refusé",
+          "withdrawn": "Retiré"
+        },
+        "selection": {
+          "selected": "Entreprise sélectionnée"
+        },
+        "deal": {
+          "inProgress": "En cours",
+          "completed": "Terminé",
+          "cancelled": "Annulé"
+        }
+      }
+    },
     "title": "Messages",
     "searchConversations": "Rechercher des conversations",
     "searchConversationsPlaceholder": "Rechercher des conversations",
@@ -2684,7 +2792,73 @@
     "confirmReject": "Confirmer le refus",
     "cancel": "Annuler",
     "approved": "Vérification d’entreprise approuvée.",
-    "rejected": "Vérification d’entreprise refusée."
+    "rejected": "Vérification d’entreprise refusée.",
+    "error": {
+      "title": "La vérification des entreprises est indisponible",
+      "description": "Le dossier de vérification et l’activité de l’entreprise n’ont pas pu être chargés. Veuillez réessayer.",
+      "retry": "Réessayer"
+    }
+  },
+  "adminCompanyActivity": {
+    "title": "Activité de l’entreprise",
+    "lead": "Événements importants de vérification et de marketplace, du plus récent au plus ancien.",
+    "loading": "Chargement de l’activité de l’entreprise…",
+    "loadingMore": "Chargement…",
+    "loadMore": "Charger plus d’activité",
+    "empty": "Aucune activité enregistrée pour cette entreprise pour le moment.",
+    "projectContext": "Projet : {project}",
+    "companyContext": "Compte entreprise",
+    "amount": "Montant : {amount}",
+    "rating": "Note : {rating}/5",
+    "viewDetails": "Voir les détails",
+    "categories": {
+      "verification": "Vérification",
+      "marketplace": "Marketplace",
+      "deals": "Contrats et commission",
+      "reviews": "Avis"
+    },
+    "actorTypes": {
+      "client": "Client",
+      "company": "Membre de l’entreprise",
+      "admin": "Admin",
+      "system": "Système"
+    },
+    "events": {
+      "verification_submitted": "Vérification soumise",
+      "verification_approved": "Vérification approuvée",
+      "verification_rejected": "Vérification refusée",
+      "company_invited": "Entreprise invitée",
+      "company_invitation_accepted": "Invitation acceptée",
+      "company_invitation_declined": "Invitation refusée",
+      "initial_quote_submitted": "Proposition initiale soumise",
+      "discussion_opened": "Discussion ouverte",
+      "site_assessment_invited": "Évaluation sur site proposée",
+      "site_assessment_accepted": "Évaluation sur site acceptée",
+      "site_assessment_declined": "Évaluation sur site refusée",
+      "site_assessment_cancelled": "Évaluation sur site annulée",
+      "site_visit_scheduled": "Visite de chantier planifiée",
+      "site_visit_proposed": "Visite de chantier proposée",
+      "site_visit_rescheduled": "Visite de chantier replanifiée",
+      "site_visit_confirmed": "Visite de chantier confirmée",
+      "site_visit_declined": "Visite de chantier refusée",
+      "site_visit_completed": "Visite de chantier terminée",
+      "site_visit_cancelled": "Visite de chantier annulée",
+      "final_quote_requested": "Devis final demandé",
+      "final_quote_submitted": "Devis final soumis",
+      "final_quote_changes_requested": "Modifications du devis final demandées",
+      "final_quote_revised": "Devis final révisé",
+      "final_quote_declined": "Devis final refusé",
+      "final_quote_withdrawn": "Devis final retiré",
+      "final_quote_accepted": "Devis final accepté",
+      "company_selected": "Entreprise sélectionnée",
+      "deal_created": "Contrat créé",
+      "commission_due": "Commission due",
+      "commission_paid": "Commission payée",
+      "deal_completed": "Contrat terminé",
+      "review_received": "Avis reçu",
+      "review_hidden": "Avis masqué",
+      "review_restored": "Avis restauré"
+    }
   },
   "adminProjects": {
     "metaTitle": "Examen des projets",
@@ -3046,6 +3220,7 @@
     "home": "Retour à Batiplus"
   },
   "companyCommissions": {
+    "historyTitle": "Historique des commissions",
     "eyebrow": "Espace entreprise",
     "title": "Commissions",
     "lead": "Consultez la commission due à Batiplus par votre entreprise pour chaque transaction acceptée. Le statut du paiement est enregistré par les administrateurs Batiplus.",
@@ -4162,6 +4337,55 @@
       "company": "Cette entreprise n’existe pas ou n’est plus disponible.",
       "project": "Ce projet est introuvable.",
       "portfolio": "Cette réalisation n’est plus disponible."
+    }
+  },
+  "companyProposals": {
+    "title": "Mes propositions",
+    "lead": "Toutes les propositions envoyées par votre entreprise. Une discussion s’ouvre dès que le client répond à votre proposition.",
+    "findProjects": "Trouver des projets",
+    "filtersLabel": "Filtrer les propositions",
+    "filters": {
+      "all": "Toutes",
+      "open": "En attente du client",
+      "discussion": "En discussion",
+      "closed": "Clôturées"
+    },
+    "sentOn": "Envoyée le {date}",
+    "estimate": "Estimation initiale",
+    "openDiscussion": "Ouvrir la discussion",
+    "viewProposal": "Voir la proposition",
+    "empty": {
+      "title": "Aucune proposition pour le moment",
+      "lead": "Parcourez les projets ouverts et envoyez votre première proposition à un client.",
+      "action": "Trouver des projets",
+      "filteredTitle": "Rien à afficher",
+      "filteredLead": "Aucune proposition ne correspond à ce filtre."
+    }
+  },
+  "companyWork": {
+    "activeTitle": "Projets actifs",
+    "historyTitle": "Historique des projets",
+    "lead": "Les projets remportés par votre entreprise. Chacun regroupe sa discussion, sa visite de site et son devis final.",
+    "tabsLabel": "Filtrer les projets",
+    "tabs": {
+      "active": "Actifs",
+      "history": "Historique"
+    },
+    "status": {
+      "active": "En cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé"
+    },
+    "startedOn": "Démarré le {date}",
+    "completedOn": "Terminé le {date}",
+    "agreedAmount": "Montant convenu",
+    "openWorkspace": "Ouvrir le projet",
+    "empty": {
+      "activeTitle": "Aucun projet actif pour le moment",
+      "activeLead": "Lorsqu’un client sélectionne votre entreprise, le projet apparaît ici.",
+      "activeAction": "Voir mes propositions",
+      "historyTitle": "Aucun projet passé",
+      "historyLead": "Les projets terminés et annulés apparaîtront ici."
     }
   }
 }

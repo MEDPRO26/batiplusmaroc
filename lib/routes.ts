@@ -31,6 +31,8 @@ export const routes = {
   companyProjects: "/espace-entreprise/projets",
   companyInvitations: "/espace-entreprise/invitations",
   companyCommissions: "/espace-entreprise/commissions",
+  companyProposals: "/espace-entreprise/propositions",
+  companyWork: "/espace-entreprise/chantiers",
   companyProject: "/espace-entreprise/projets/[projectId]",
   companyInitialQuote: "/espace-entreprise/projets/[projectId]/devis",
   companyProfileManagement: "/espace-entreprise/profil",

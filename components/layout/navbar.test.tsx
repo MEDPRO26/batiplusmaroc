@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 import { resolveNavbarRole, userInitials } from "./navbar-role";
+import { buildCompanyNav } from "./company-nav";
+import { isGroupActive, isLinkActive } from "./signed-in-navbar-chrome";
 import { routes } from "@/lib/routes";
 
 vi.mock("next/font/google", () => ({
@@ -182,7 +184,7 @@ describe("role navbar content", () => {
     expect(html).not.toContain(">AB<");
   });
 
-  test("CompanyNavbar shows company links, search, notifications, and hides post-a-project", () => {
+  test("CompanyNavbar renders grouped triggers, search, notifications, and hides post-a-project", () => {
     const html = renderToStaticMarkup(
       <CompanyNavbar
         user={{
@@ -194,12 +196,11 @@ describe("role navbar content", () => {
       />,
     );
     expect(html).toContain('data-navbar="company"');
-    expect(html).toContain(routes.companyProjects);
-    expect(html).toContain(routes.companyPortfolio);
-    expect(html).toContain(routes.companyDashboard);
+    expect(html).toContain("nav.company.findWork");
+    expect(html).toContain("nav.company.manageWork");
+    expect(html).toContain("nav.company.finances");
     expect(html).toContain(routes.messages);
-    expect(html).toContain(routes.companyCommissions);
-    expect(html).toContain(routes.companyProfileManagement);
+    expect(html).not.toContain("nav.myWorkspace");
     expect(html).toContain("nav.companySearchLabel");
     expect(html).toContain("nav.companySearchPlaceholder");
     expect(html).toContain("nav.searchScopeProjects");
@@ -208,6 +209,45 @@ describe("role navbar content", () => {
     expect(html).not.toContain(routes.postProject);
     expect(html).not.toContain(routes.clientDashboard);
     expect(html).not.toContain(routes.clientProfile);
+  });
+
+  test("company navigation groups every existing destination and gates it behind onboarding", () => {
+    const t = ((key: string) => key) as Parameters<typeof buildCompanyNav>[0];
+    const hrefs = (onboarded: boolean) =>
+      buildCompanyNav(t, onboarded).flatMap((item) =>
+        "kind" in item ? item.sections.flatMap((section) => section.items.map((link) => link.href)) : [item.href],
+      );
+    expect(hrefs(true)).toEqual(
+      expect.arrayContaining([
+        routes.companyProjects,
+        routes.companyProposals,
+        routes.companyInvitations,
+        routes.companyProfileManagement,
+        routes.companyPortfolio,
+        routes.companyWork,
+        routes.companyCommissions,
+        routes.messages,
+      ]),
+    );
+    expect(hrefs(false)).not.toContain(routes.companyPortfolio);
+    expect(hrefs(false)).not.toContain(routes.companyWork);
+    expect(hrefs(false)).toContain(routes.companyOnboarding);
+  });
+
+  test("the active group follows the current route, including the company home feed", () => {
+    const t = ((key: string) => key) as Parameters<typeof buildCompanyNav>[0];
+    const nav = buildCompanyNav(t, true);
+    const activeIds = (pathname: string) =>
+      nav
+        .filter((item) => ("kind" in item ? isGroupActive(pathname, item) : isLinkActive(pathname, item)))
+        .map((item) => ("kind" in item ? item.id : item.href));
+    expect(activeIds(routes.companyCommissions)).toEqual(["finances"]);
+    expect(activeIds(routes.companyPortfolio)).toEqual(["find-work"]);
+    expect(activeIds(routes.companyDashboard)).toEqual(["find-work"]);
+    expect(activeIds(routes.companyProject)).toEqual(["find-work"]);
+    expect(activeIds(routes.companyWork)).toEqual(["manage-work"]);
+    expect(activeIds(routes.messagesConversation)).toEqual([routes.messages]);
+    expect(activeIds(routes.companyVerification)).toEqual([]);
   });
 
   test("CompanyNavbar renders the stored company logo when available", () => {

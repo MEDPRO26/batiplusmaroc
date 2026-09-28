@@ -10,6 +10,7 @@ import {
   AdminPage,
   ADMIN_PRESS,
 } from "@/features/admin/components/admin-shell";
+import { CompanyActivityTimeline } from "@/features/admin/components/company-activity-timeline";
 import { findKnownCodeInText } from "@/lib/errors/codes";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 
@@ -470,6 +471,8 @@ function ReviewDrawer({
                   </ul>
                 )}
               </Section>
+
+              <CompanyActivityTimeline companyId={companyId} />
 
               {review.status === "pending" ? (
                 <Section title={t("sections.actions")}>

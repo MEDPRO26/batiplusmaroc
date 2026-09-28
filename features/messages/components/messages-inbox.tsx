@@ -4,7 +4,7 @@ import { useAction, useMutation, usePaginatedQuery, useQuery } from "convex/reac
 import type { FunctionReturnType } from "convex/server";
 import Image from "next/image";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { PageSkeleton } from "@/features/shared/components/skeletons";
@@ -14,6 +14,7 @@ import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { ConversationMarketplaceWorkflow } from "@/features/marketplace/components/conversation-marketplace-workflow";
+import { ConversationContextPanel } from "@/features/messages/components/conversation-context-panel";
 
 type DashboardUser = {
   accountType: "client" | "company" | "admin" | "seo_team" | null;
@@ -125,10 +126,10 @@ export function MessagesInboxView({
     : { href: routes.companies, label: t("ctaClient") };
 
   return (
-    <div className="flex min-h-[calc(100dvh-4.5rem)] flex-1 flex-col bg-white lg:flex-row">
+    <div className="flex min-h-[calc(100dvh-4.5rem)] flex-1 flex-col bg-white lg:h-[calc(100dvh-4.5rem-1px)] lg:min-h-0 lg:flex-row lg:overflow-hidden">
       <aside
         aria-label={t("sidebarLabel")}
-        className={`relative z-10 flex w-full shrink-0 flex-col border-brand-border bg-white lg:w-[320px] lg:border-r ${initialConversationId ? "hidden lg:flex" : "flex"}`}
+        className={`relative z-10 flex w-full shrink-0 flex-col border-brand-border bg-white lg:min-h-0 lg:w-[340px] lg:border-r ${initialConversationId ? "hidden lg:flex" : "flex"}`}
       >
         <div className="flex items-center justify-between gap-2 border-b border-brand-border px-4 py-3.5">
           <h1 className="m-0 text-lg font-semibold tracking-[-0.02em] text-ink">{t("title")}</h1>
@@ -214,14 +215,13 @@ export function MessagesInboxView({
                             </time>
                           ) : null}
                         </div>
-                        <p className="mt-0.5 mb-0 truncate text-xs text-muted">
-                          {thread.projectTitle ?? t("untitledProject")}
-                          <span className="mx-1.5 text-[#c5ccd3]" aria-hidden>
-                            ·
-                          </span>
-                          <span className="uppercase tracking-[0.04em]">
-                            {thread.status === "active" ? t("statusActive") : t("statusClosed")}
-                          </span>
+                        <p className="mt-0.5 mb-0 flex min-w-0 items-center gap-2 text-[0.8125rem] font-medium text-ink/85">
+                          <span className="min-w-0 truncate">{thread.projectTitle ?? t("untitledProject")}</span>
+                          {thread.status === "closed" ? (
+                            <span className="shrink-0 rounded-full bg-surface-muted px-1.5 py-px text-[10px] font-semibold text-muted">
+                              {t("statusClosed")}
+                            </span>
+                          ) : null}
                         </p>
                         <div className="mt-1 flex items-center gap-2">
                           <p
@@ -294,6 +294,32 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
   const endRef = useRef<HTMLDivElement>(null);
   const newestMessageRef = useRef<string | null>(null);
   const ordered = useMemo(() => [...results].reverse(), [results]);
+  // "auto" shows the context column on wide screens only; below xl it opens as a slide-over.
+  const [contextPanel, setContextPanel] = useState<"auto" | "open" | "closed">("auto");
+  const wide = useWideScreen();
+  const contextVisible = contextPanel === "open" || (contextPanel === "auto" && wide);
+  const contextToggleRef = useRef<HTMLButtonElement>(null);
+  const contextCloseRef = useRef<HTMLButtonElement>(null);
+  const closeContext = () => {
+    setContextPanel(wide ? "closed" : "auto");
+    contextToggleRef.current?.focus();
+  };
+  const toggleContext = () => {
+    if (contextVisible) closeContext();
+    else setContextPanel(wide ? "auto" : "open");
+  };
+
+  useEffect(() => {
+    if (contextPanel !== "open" || wide) return;
+    contextCloseRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setContextPanel("auto");
+      contextToggleRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [contextPanel, wide]);
 
   useEffect(() => {
     if (conversation?.unread) void markRead({ conversationId });
@@ -409,10 +435,34 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
     ? { pathname: routes.clientProject, params: { projectId: conversation.projectId } } as const
     : { pathname: routes.companyProject, params: { projectId: conversation.projectId } } as const;
 
-  return <section aria-label={t("threadPane")} className="flex min-h-[70dvh] min-w-0 flex-1 flex-col">
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-border px-5 py-4 sm:px-7">
-      <div className="flex min-w-0 items-center gap-3"><Link aria-label={t("backToConversations")} className="grid size-11 shrink-0 place-items-center rounded-full border border-brand-border text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:hidden" href={routes.messages}>←</Link><div className="min-w-0"><div className="flex items-center gap-2"><h2 className="m-0 truncate text-lg font-semibold text-ink">{conversation.otherPartyName || t("unknownParty")}</h2><span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-dark">{conversation.status === "active" ? t("statusActive") : t("statusClosed")}</span></div><Link className="mt-1 block truncate text-sm text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={projectHref}>{conversation.projectTitle ?? t("untitledProject")}</Link></div></div>
-      {accountType === "client" && conversation.companySlug ? <Link className="text-sm font-semibold text-brand hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={{ pathname: "/entreprises/[slug]", params: { slug: conversation.companySlug } }}>{t("viewCompanyProfile")}</Link> : null}
+  return <div className="flex min-h-0 min-w-0 flex-1">
+  <section aria-label={t("threadPane")} className="flex min-h-[70dvh] min-w-0 flex-1 flex-col lg:min-h-0">
+    <header className="flex items-center justify-between gap-3 border-b border-brand-border px-4 py-3 sm:px-6">
+      <div className="flex min-w-0 items-center gap-3">
+        <Link aria-label={t("backToConversations")} className="grid size-11 shrink-0 place-items-center rounded-full border border-brand-border text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:hidden" href={routes.messages}>←</Link>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="m-0 truncate text-lg font-semibold tracking-[-0.01em] text-ink">{conversation.otherPartyName || t("unknownParty")}</h2>
+            {conversation.status === "closed" ? <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-semibold text-muted">{t("statusClosed")}</span> : null}
+          </div>
+          <Link className="mt-0.5 flex min-w-0 items-center gap-1.5 text-sm text-muted hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={projectHref}>
+            <ProjectIcon />
+            <span className="truncate">{conversation.projectTitle ?? t("untitledProject")}</span>
+          </Link>
+        </div>
+      </div>
+      <button
+        aria-controls="conversation-context"
+        aria-expanded={contextVisible}
+        aria-label={contextVisible ? t("context.close") : t("context.open")}
+        className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-muted transition-colors hover:bg-brand-soft hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand aria-expanded:bg-brand-soft aria-expanded:text-brand"
+        onClick={toggleContext}
+        ref={contextToggleRef}
+        title={contextVisible ? t("context.close") : t("context.open")}
+        type="button"
+      >
+        <SidebarIcon />
+      </button>
     </header>
     <ConversationMarketplaceWorkflow conversationId={conversationId} />
     <div aria-live="polite" aria-relevant="additions text" className="flex flex-1 flex-col overflow-y-auto bg-[#fbfcfd] px-4 py-5 sm:px-8" role="log">
@@ -428,7 +478,22 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
       <div className="flex items-end gap-2 sm:gap-3"><textarea className="max-h-40 min-h-12 min-w-0 flex-1 resize-y rounded-2xl border border-brand-border px-4 py-3 text-sm text-ink outline-none focus:border-brand focus-visible:shadow-[0_0_0_3px_rgb(5_79_132/0.14)]" id="message-composer" maxLength={4000} onChange={(event) => setBody(event.target.value)} placeholder={t("composerPlaceholder")} rows={1} value={body} />{accountType === "company" ? <><input accept="application/pdf,.pdf" className="sr-only" onChange={(event) => void onAttachmentChange(event)} ref={fileInputRef} type="file" /><button aria-label={t("attachPdf")} className="grid size-12 shrink-0 place-items-center rounded-full border border-brand-border text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50" disabled={sending || attachment?.status === "uploading"} onClick={() => fileInputRef.current?.click()} title={t("attachPdf")} type="button"><PaperclipIcon /></button></> : null}<button className="min-h-12 shrink-0 rounded-full bg-brand px-4 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 sm:px-5" disabled={sending || attachment?.status === "uploading" || (!body.trim() && attachment?.status !== "ready")} type="submit">{sending ? t("sending") : t("send")}</button></div>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-2"><div>{accountType === "company" ? <p className="m-0 text-xs text-muted">{t("finalQuoteNotice")}</p> : null}</div><p className="m-0 text-end text-xs text-muted">{t("characterCount", { count: body.length, max: 4000 })}</p></div>
     </form> : <p className="m-0 border-t border-brand-border bg-surface-muted px-5 py-4 text-sm text-muted">{t("closedNotice")}</p>}
-  </section>;
+  </section>
+  {contextPanel === "open" && !wide ? <div aria-hidden className="fixed inset-0 z-40 bg-[#0f1f2e]/30 xl:hidden" onClick={closeContext} /> : null}
+  <aside
+    aria-label={t("context.title")}
+    className={`${contextVisible ? "flex" : "hidden"} fixed inset-y-0 right-0 z-50 w-[min(360px,100vw)] flex-col overflow-y-auto border-l border-brand-border bg-white shadow-[0_0_60px_rgb(15_31_46/0.18)] xl:static xl:z-auto xl:w-[320px] xl:shrink-0 xl:shadow-none`}
+    id="conversation-context"
+  >
+    <div className="sticky top-0 z-10 flex items-center justify-between border-b border-brand-border bg-white px-5 py-3">
+      <h2 className="m-0 text-sm font-semibold text-ink">{t("context.title")}</h2>
+      <button aria-label={t("context.close")} className="grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-muted hover:bg-brand-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={closeContext} ref={contextCloseRef} type="button">
+        <svg aria-hidden className="size-4" fill="none" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" /></svg>
+      </button>
+    </div>
+    <ConversationContextPanel accountType={accountType} conversation={conversation} conversationId={conversationId} />
+  </aside>
+  </div>;
 }
 
 function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
@@ -617,6 +682,22 @@ function InboxMenu({ onReset }: { onReset: () => void }) {
     </div>
   );
 }
+const WIDE_QUERY = "(min-width: 1280px)";
+
+function useWideScreen() {
+  return useSyncExternalStore(
+    (onChange) => {
+      const media = window.matchMedia(WIDE_QUERY);
+      media.addEventListener("change", onChange);
+      return () => media.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(WIDE_QUERY).matches,
+    () => false,
+  );
+}
+
+function ProjectIcon() { return <svg aria-hidden className="size-3.5 shrink-0" fill="none" viewBox="0 0 16 16"><path d="M2.5 13.5v-7l5.5-4 5.5 4v7h-4v-4h-3v4h-4Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.3" /></svg>; }
+function SidebarIcon() { return <svg aria-hidden className="size-5" fill="none" viewBox="0 0 20 20"><rect height="13" rx="2.5" stroke="currentColor" strokeWidth="1.5" width="15" x="2.5" y="3.5" /><path d="M12.5 3.5v13" stroke="currentColor" strokeWidth="1.5" /></svg>; }
 function SearchIcon() { return <svg aria-hidden className="size-[18px]" fill="none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.7" /><path d="m16 16 4 4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.7" /></svg>; }
 function ChevronIcon() { return <svg aria-hidden className="size-3.5" fill="none" viewBox="0 0 12 12"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg>; }
 function MoreIcon() { return <svg aria-hidden className="size-5" fill="currentColor" viewBox="0 0 20 20"><circle cx="4.5" cy="10" r="1.4" /><circle cx="10" cy="10" r="1.4" /><circle cx="15.5" cy="10" r="1.4" /></svg>; }
