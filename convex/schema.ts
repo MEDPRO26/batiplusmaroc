@@ -426,7 +426,8 @@ export default defineSchema({
   })
     .index("by_projectId_and_companyId", ["projectId", "companyId"])
     .index("by_projectId_and_status", ["projectId", "status"])
-    .index("by_companyId_and_status", ["companyId", "status"]),
+    .index("by_companyId_and_status", ["companyId", "status"])
+    .index("by_companyId_and_createdAt", ["companyId", "createdAt"]),
 
   finalQuotes: defineTable({
     projectId: v.id("projects"),
@@ -530,6 +531,7 @@ export default defineSchema({
     .index("by_projectId", ["projectId"])
     .index("by_clientUserId", ["clientUserId"])
     .index("by_companyId", ["companyId"])
+    .index("by_companyId_and_status", ["companyId", "status"])
     .index("by_commissionDebtorCompanyId_and_createdAt", [
       "commissionDebtorCompanyId",
       "createdAt",
@@ -552,6 +554,7 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_dealId", ["dealId"])
+    .index("by_companyId_and_createdAt", ["companyId", "createdAt"])
     .index("by_companyId_and_moderationStatus_and_createdAt", [
       "companyId",
       "moderationStatus",
@@ -703,6 +706,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_slug", ["slug"])
+    .index("by_updatedAt", ["updatedAt"])
     .index("by_onboardingStatus", ["onboardingStatus"])
     .index("by_onboardingStatus_and_verificationStatus", [
       "onboardingStatus",

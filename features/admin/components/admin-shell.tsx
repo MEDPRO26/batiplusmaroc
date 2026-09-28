@@ -38,7 +38,7 @@ const ADMIN_NAVIGATION: { id: AdminNavId; label: AdminNavLabel; href?: AppRoute 
   { id: "home", label: "navHome", href: routes.admin },
   { id: "projects", label: "navProjects", href: routes.adminProjects },
   { id: "siteVisits", label: "navSiteVisits", href: routes.adminSiteVisits },
-  { id: "companies", label: "navCompanies" },
+  { id: "companies", label: "navCompanies", href: routes.adminCompanies },
   { id: "verification", label: "navVerification", href: routes.adminVerification },
   { id: "messages", label: "navMessages" },
   { id: "deals", label: "navDeals", href: routes.adminDeals },

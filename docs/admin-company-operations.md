@@ -6,9 +6,8 @@ operations work. It is intentionally limited to behavior that exists today.
 ## OC2.2 — Company activity timeline
 
 The Company activity timeline gives an authenticated Admin a compact,
-newest-first view of important Company operations. Until OC2.3 provides a
-consolidated Company detail route, the reusable timeline is shown in the
-existing Company verification review drawer.
+newest-first view of important Company operations. It is reused in both the
+Company verification review drawer and the consolidated Company detail route.
 
 ### Authoritative sources
 
@@ -107,11 +106,68 @@ The reusable `CompanyActivityTimeline` provides loading, empty, event, and
 load-more states in the current Admin visual language. All event titles,
 categories, actor fallbacks, context labels, and empty/loading copy live in
 `messages/en.json` and `messages/fr.json`. Existing Admin routes are used for
-optional Project, Deal/commission, and review links; no OC2.3 route is invented.
+optional Project, Deal/commission, and review links.
+
+## OC2.3 — Consolidated Admin Company detail
+
+Authenticated Admins can now use the locale-aware Company directory at
+`/admin/companies` (English) or `/admin/entreprises` (French), then open a
+Company-scoped detail route. The previously disabled Companies sidebar entry
+links to this directory.
+
+### Company directory
+
+`admin.companies.listCompanies` is a native paginated Convex query. It supports
+bounded search and indexed verification/onboarding filters. The unfiltered path
+uses `companies.by_updatedAt`; combined status filtering uses
+`by_onboardingStatus_and_verificationStatus`; text search reuses the existing
+`search_directory` search index. Rows contain only operational list data:
+Company identity, city, statuses, services, active-member count, visible-review
+aggregate, and latest recorded activity time.
+
+### Detail sections and authoritative sources
+
+- **Overview** uses `admin.companies.getCompanySummary` for safe profile data,
+  active member display names/roles, bounded Deal and commission counts, review
+  aggregates, and a small published-portfolio preview.
+- **Verification** reuses `admin.verification.getCompanyVerificationReview`,
+  `approveCompanyVerification`, and `rejectCompanyVerification`. Draft records
+  now load safely; queue filters remain limited to pending/verified/rejected.
+- **Projects & Deals** uses the bounded paginated
+  `admin.companies.listCompanyProjectsDeals` projection over the existing
+  Company quote and invitation indexes. A relationship that exists in both
+  sources is shown once, with the quote as the canonical source.
+- **Commissions** reuses `admin.deals.listCommissionObligations` with its
+  `companyId` filter and the existing `markCommissionPaid` command.
+- **Reviews** uses a Company/newest-first paginated projection and reuses the
+  existing `admin.reviews.setReviewVisibility` moderation command.
+- **Activity** mounts the unchanged OC2.2 `CompanyActivityTimeline`.
+
+No parallel verification, commission, review, or activity business rules were
+introduced.
+
+### Bounds, authorization, and privacy
+
+Every new query calls `requireAdminUser()` before reading Company data. Queries
+are Company-index constrained, use native pagination or bounded dual-source
+pagination, and return explicit DTO validators instead of raw documents.
+Anonymous, Client, Company, and SEO callers remain denied.
+
+The consolidated view never reads or returns Client↔Company message content,
+message attachments, private proposal messages/scope, authentication data, or
+Push subscription secrets. Verification document URLs are exposed only through
+the existing Admin-only verification query. General summary and list DTOs do
+not contain verification documents or private contact emails.
+
+Draft, pending, verified, and rejected verification states and pending/completed
+onboarding states are supported. Missing Companies return a translated safe
+not-found view. Tables collapse into cards on narrow screens, tabs remain
+keyboard-operable and horizontally scrollable, and all new copy is present in
+both locale catalogs.
 
 ### Future OC2 work
 
-OC2.3 should move the same component to the consolidated Admin Company detail
-page and may add simple category filters. Later steps may add operational
-messages, notes, and status events through their own authoritative models; they
-must not broaden the marketplace-message privacy boundary.
+Later steps may add operational messages, notes, and status events through their
+own authoritative models; they must not broaden the marketplace-message privacy
+boundary. OC2.3 deliberately does not implement OC2.4 messaging, internal notes,
+suspension/status workflows, notification rules, or CRM features.

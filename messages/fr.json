@@ -4362,6 +4362,89 @@
       "filteredLead": "Aucune proposition ne correspond à ce filtre."
     }
   },
+  "adminCompanies": {
+    "metaTitle": "Entreprises",
+    "metaDescription": "Gérer les entreprises de la marketplace.",
+    "title": "Entreprises",
+    "lead": "Recherchez les entreprises et consultez leurs dossiers de vérification, projets, commissions, avis et activités dans une vue opérationnelle unique.",
+    "loading": "Chargement des entreprises",
+    "loadingMore": "Chargement…",
+    "loadMore": "Charger plus",
+    "saving": "Enregistrement…",
+    "empty": "Aucune entreprise ne correspond à ces filtres.",
+    "viewCompany": "Voir l’entreprise",
+    "rating": "Note",
+    "filters": {
+      "searchLabel": "Rechercher des entreprises",
+      "searchPlaceholder": "Nom, ville ou service",
+      "verificationLabel": "Statut de vérification",
+      "onboardingLabel": "Statut d’intégration",
+      "options": { "all": "Tous les statuts", "draft": "Brouillon", "pending": "En attente", "verified": "Vérifiée", "rejected": "Refusée", "completed": "Terminée" }
+    },
+    "columns": { "company": "Entreprise", "status": "Vérification", "onboarding": "Intégration", "services": "Services", "members": "Membres", "activity": "Dernière activité", "action": "Action" },
+    "status": {
+      "verification": { "draft": "Brouillon", "pending": "En attente", "verified": "Vérifiée", "rejected": "Refusée" },
+      "onboarding": { "pending": "En attente", "completed": "Terminée" }
+    },
+    "services": { "houseConstruction": "Construction de maison", "renovation": "Rénovation", "structural": "Gros œuvre", "finishing": "Second œuvre", "architecture": "Architecture", "interior": "Aménagement intérieur", "electrical": "Électricité", "plumbing": "Plomberie", "joinery": "Menuiserie", "pool": "Piscines" },
+    "detail": {
+      "metaTitle": "Opérations de l’entreprise",
+      "metaDescription": "Vue consolidée des opérations d’une entreprise.",
+      "breadcrumb": "Entreprise",
+      "loading": "Chargement de l’entreprise",
+      "notFoundTitle": "Entreprise introuvable",
+      "notFoundLead": "Cette entreprise n’existe plus ou n’est pas disponible.",
+      "back": "Retour aux entreprises",
+      "publicProfile": "Voir le profil public",
+      "tabsLabel": "Sections de l’entreprise",
+      "tabs": { "overview": "Vue d’ensemble", "verification": "Vérification", "projectsDeals": "Projets et Deals", "commissions": "Commissions", "reviews": "Avis", "activity": "Activité" }
+    },
+    "overview": {
+      "profile": "Profil de l’entreprise",
+      "noDescription": "Aucune description pour le moment.",
+      "legalName": "Raison sociale",
+      "created": "Créée le",
+      "services": "Services",
+      "serviceAreas": "Zones d’intervention",
+      "operations": "Résumé opérationnel",
+      "members": "Membres actifs",
+      "reviews": "Avis",
+      "activeDeals": "Deals actifs",
+      "completedDeals": "Deals terminés",
+      "commissionsDue": "Commissions dues",
+      "amountDue": "Montant dû",
+      "boundedSummary": "Les compteurs sont plafonnés pour garder un résumé rapide.",
+      "membersTitle": "Membres actifs de l’entreprise",
+      "noMembers": "Aucun membre actif.",
+      "memberRoles": { "owner": "Propriétaire", "staff": "Équipe" }
+    },
+    "verification": {
+      "title": "Dossier de vérification",
+      "notFound": "Aucun dossier de vérification disponible.",
+      "submitted": "Soumis le {date}",
+      "reason": "Motif du refus",
+      "approveSuccess": "Vérification de l’entreprise approuvée.",
+      "rejectSuccess": "Vérification de l’entreprise refusée.",
+      "actionError": "L’action de vérification n’a pas pu être effectuée.",
+      "documents": "Documents",
+      "noDocuments": "Aucun document de vérification n’a été ajouté.",
+      "history": "Historique de vérification",
+      "noHistory": "Aucun historique de vérification."
+    },
+    "projects": {
+      "title": "Projets et Deals",
+      "empty": "Aucune relation de projet marketplace pour cette entreprise.",
+      "source": { "proposal": "Proposition", "invitation": "Invitation" },
+      "dealAmount": "Montant du Deal",
+      "commissionStatus": "Commission",
+      "completed": "Terminé",
+      "dealStatus": { "active": "Deal actif", "completed": "Deal terminé", "cancelled": "Deal annulé" },
+      "projectStatus": { "draft": "Brouillon", "pending_review": "En attente d’examen", "needs_changes": "Modifications requises", "published": "Publié", "in_discussion": "En discussion", "company_selected": "Entreprise sélectionnée", "in_progress": "En cours", "completed": "Terminé", "cancelled": "Annulé", "archived": "Archivé" }
+    },
+    "commissions": { "title": "Commissions", "empty": "Aucune commission pour cette entreprise.", "view": "Voir", "status": { "due": "Due", "paid": "Payée" }, "close": "Fermer les détails de la commission", "reference": "Référence de paiement", "note": "Note interne", "paidAt": "Payée le", "markPaid": "Marquer comme payée", "actionError": "La commission n’a pas pu être mise à jour." },
+    "reviews": { "title": "Avis", "empty": "Aucun avis pour cette entreprise.", "hide": "Masquer", "restore": "Restaurer", "actionError": "L’avis n’a pas pu être mis à jour." },
+    "error": { "title": "Impossible de charger les entreprises", "lead": "Réessayez. Si le problème persiste, revenez au tableau de bord admin.", "retry": "Réessayer" }
+  },
   "companyWork": {
     "activeTitle": "Projets actifs",
     "historyTitle": "Historique des projets",

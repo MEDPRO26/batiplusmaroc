@@ -16,6 +16,7 @@ export const routes = {
   categoryStructuralWork: "/category/gros-oeuvre",
   howItWorks: "/comment-ca-marche",
   companies: "/entreprises",
+  companyProfile: "/entreprises/[slug]",
   browseProjects: "/projets",
   postProject: "/publier-un-projet",
   signIn: "/connexion",
@@ -42,6 +43,8 @@ export const routes = {
   companyPortfolio: "/espace-entreprise/portfolio",
   admin: "/admin",
   adminProjects: "/admin/projects",
+  adminCompanies: "/admin/companies",
+  adminCompany: "/admin/companies/[companyId]",
   adminDeals: "/admin/deals",
   adminReviews: "/admin/reviews",
   adminSiteVisits: "/admin/site-visits",
@@ -64,12 +67,14 @@ export const routes = {
 
 export type AppRoute = Exclude<
   (typeof routes)[keyof typeof routes],
-  typeof routes.clientProject | typeof routes.companyProject | typeof routes.companyInitialQuote | typeof routes.messagesConversation | typeof routes.seoArticle
+  typeof routes.clientProject | typeof routes.companyProject | typeof routes.companyInitialQuote | typeof routes.companyProfile | typeof routes.adminCompany | typeof routes.messagesConversation | typeof routes.seoArticle
 >;
 export type DynamicAppRoute =
   | typeof routes.clientProject
   | typeof routes.companyProject
   | typeof routes.companyInitialQuote
+  | typeof routes.companyProfile
+  | typeof routes.adminCompany
   | typeof routes.messagesConversation
   | typeof routes.seoArticle;
 export type ProtectedRoute = AppRoute;

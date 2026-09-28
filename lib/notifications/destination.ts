@@ -12,6 +12,8 @@ export type NotificationDestination =
       typeof routes.clientProject
         | typeof routes.companyProject
         | typeof routes.companyInitialQuote
+        | typeof routes.companyProfile
+        | typeof routes.adminCompany
         | typeof routes.messagesConversation
         | typeof routes.seoArticle
     >

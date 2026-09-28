@@ -231,19 +231,21 @@ export function AdminVerificationPanel() {
   );
 }
 
-function StatusPill({ status }: { status: TabStatus }) {
+function StatusPill({ status }: { status: HistoryStatus }) {
   const t = useTranslations("adminVerification");
   const styles =
     status === "pending"
       ? "bg-[#fff4df] text-[#9a6700]"
       : status === "verified"
         ? "bg-[#e7f8ee] text-[#157a3e]"
-        : "bg-[#fdecec] text-[#b42318]";
+        : status === "rejected"
+          ? "bg-[#fdecec] text-[#b42318]"
+          : "bg-[#eef1f5] text-[#626970]";
   return (
     <span
       className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-semibold ${styles}`}
     >
-      {t(`tabs.${status}`)}
+      {t(`status.${status}`)}
     </span>
   );
 }

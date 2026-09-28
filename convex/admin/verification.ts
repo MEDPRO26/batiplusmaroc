@@ -3,7 +3,7 @@ import { mutation, query } from "../_generated/server";
 import { createNotificationForActiveCompanyMembers } from "../notifications/model";
 import { requireAdminUser } from "./access";
 
-const reviewStatusValidator = v.union(
+const queueStatusValidator = v.union(
   v.literal("pending"),
   v.literal("verified"),
   v.literal("rejected"),
@@ -32,7 +32,7 @@ const listItemValidator = v.object({
   legalRepresentative: v.string(),
   submittedAt: v.union(v.number(), v.null()),
   documentCount: v.number(),
-  status: reviewStatusValidator,
+  status: queueStatusValidator,
 });
 
 const documentValidator = v.object({
@@ -75,7 +75,7 @@ function normalizeRejectionReason(value: string) {
  */
 export const listCompanyVerifications = query({
   args: {
-    status: reviewStatusValidator,
+    status: queueStatusValidator,
     search: v.optional(v.string()),
     city: v.optional(v.string()),
   },
@@ -113,7 +113,7 @@ export const listCompanyVerifications = query({
       const documents = await ctx.db
         .query("companyVerificationDocuments")
         .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
-        .collect();
+        .take(101);
 
       rows.push({
         companyId: company._id,
@@ -123,7 +123,7 @@ export const listCompanyVerifications = query({
         rcNumber: verification?.rcNumber ?? "",
         legalRepresentative: verification?.legalRepresentative ?? "",
         submittedAt: verification?.submittedAt ?? null,
-        documentCount: documents.length,
+        documentCount: Math.min(documents.length, 100),
         status: company.verificationStatus as "pending" | "verified" | "rejected",
       });
     }
@@ -151,7 +151,7 @@ export const getCompanyVerificationReview = query({
       phone: v.string(),
       address: v.string(),
       submittedAt: v.union(v.number(), v.null()),
-      status: reviewStatusValidator,
+      status: historyStatusValidator,
       latestRejectionReason: v.union(v.string(), v.null()),
       documents: v.array(documentValidator),
       history: v.array(historyItemValidator),
@@ -162,14 +162,6 @@ export const getCompanyVerificationReview = query({
 
     const company = await ctx.db.get(args.companyId);
     if (!company) return null;
-    if (
-      company.verificationStatus !== "pending" &&
-      company.verificationStatus !== "verified" &&
-      company.verificationStatus !== "rejected"
-    ) {
-      return null;
-    }
-
     const verification = await ctx.db
       .query("companyVerifications")
       .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
@@ -178,13 +170,13 @@ export const getCompanyVerificationReview = query({
     const documents = await ctx.db
       .query("companyVerificationDocuments")
       .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
-      .collect();
+      .take(10);
 
     const historyRows = await ctx.db
       .query("companyVerificationHistory")
       .withIndex("by_companyId_and_changedAt", (q) => q.eq("companyId", company._id))
       .order("desc")
-      .collect();
+      .take(100);
 
     const history = [];
     for (const row of historyRows) {

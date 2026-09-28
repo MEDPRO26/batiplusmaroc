@@ -4362,6 +4362,89 @@
       "filteredLead": "No proposals match this filter."
     }
   },
+  "adminCompanies": {
+    "metaTitle": "Companies",
+    "metaDescription": "Manage marketplace companies.",
+    "title": "Companies",
+    "lead": "Search companies and inspect verification, marketplace, commission, review and activity records in one operational view.",
+    "loading": "Loading companies",
+    "loadingMore": "Loading more…",
+    "loadMore": "Load more",
+    "saving": "Saving…",
+    "empty": "No companies match these filters.",
+    "viewCompany": "View company",
+    "rating": "Rating",
+    "filters": {
+      "searchLabel": "Search companies",
+      "searchPlaceholder": "Search by name, city or service",
+      "verificationLabel": "Verification status",
+      "onboardingLabel": "Onboarding status",
+      "options": { "all": "All statuses", "draft": "Draft", "pending": "Pending", "verified": "Verified", "rejected": "Rejected", "completed": "Completed" }
+    },
+    "columns": { "company": "Company", "status": "Verification", "onboarding": "Onboarding", "services": "Services", "members": "Members", "activity": "Latest activity", "action": "Action" },
+    "status": {
+      "verification": { "draft": "Draft", "pending": "Pending", "verified": "Verified", "rejected": "Rejected" },
+      "onboarding": { "pending": "Pending", "completed": "Completed" }
+    },
+    "services": { "houseConstruction": "House construction", "renovation": "Renovation", "structural": "Structural work", "finishing": "Finishing", "architecture": "Architecture", "interior": "Interior design", "electrical": "Electrical", "plumbing": "Plumbing", "joinery": "Joinery", "pool": "Pools" },
+    "detail": {
+      "metaTitle": "Company operations",
+      "metaDescription": "Consolidated admin company operations.",
+      "breadcrumb": "Company",
+      "loading": "Loading company",
+      "notFoundTitle": "Company not found",
+      "notFoundLead": "This company no longer exists or is not available.",
+      "back": "Back to companies",
+      "publicProfile": "View public profile",
+      "tabsLabel": "Company sections",
+      "tabs": { "overview": "Overview", "verification": "Verification", "projectsDeals": "Projects & Deals", "commissions": "Commissions", "reviews": "Reviews", "activity": "Activity" }
+    },
+    "overview": {
+      "profile": "Company profile",
+      "noDescription": "No company description yet.",
+      "legalName": "Legal name",
+      "created": "Created",
+      "services": "Services",
+      "serviceAreas": "Service areas",
+      "operations": "Operational summary",
+      "members": "Active members",
+      "reviews": "Reviews",
+      "activeDeals": "Active deals",
+      "completedDeals": "Completed deals",
+      "commissionsDue": "Commissions due",
+      "amountDue": "Amount due",
+      "boundedSummary": "Counts are capped for a fast operational summary.",
+      "membersTitle": "Active company members",
+      "noMembers": "No active company members.",
+      "memberRoles": { "owner": "Owner", "staff": "Staff" }
+    },
+    "verification": {
+      "title": "Verification record",
+      "notFound": "No verification record is available.",
+      "submitted": "Submitted {date}",
+      "reason": "Rejection reason",
+      "approveSuccess": "Company verification approved.",
+      "rejectSuccess": "Company verification rejected.",
+      "actionError": "The verification action could not be completed.",
+      "documents": "Documents",
+      "noDocuments": "No verification documents were uploaded.",
+      "history": "Verification history",
+      "noHistory": "No verification history yet."
+    },
+    "projects": {
+      "title": "Projects and Deals",
+      "empty": "No marketplace project relationship is recorded for this company.",
+      "source": { "proposal": "Proposal", "invitation": "Invitation" },
+      "dealAmount": "Deal amount",
+      "commissionStatus": "Commission",
+      "completed": "Completed",
+      "dealStatus": { "active": "Active Deal", "completed": "Completed Deal", "cancelled": "Cancelled Deal" },
+      "projectStatus": { "draft": "Draft", "pending_review": "Pending review", "needs_changes": "Needs changes", "published": "Published", "in_discussion": "In discussion", "company_selected": "Company selected", "in_progress": "In progress", "completed": "Completed", "cancelled": "Cancelled", "archived": "Archived" }
+    },
+    "commissions": { "title": "Commissions", "empty": "No commission obligations for this company.", "view": "View", "status": { "due": "Due", "paid": "Paid" }, "close": "Close commission details", "reference": "Payment reference", "note": "Internal note", "paidAt": "Paid at", "markPaid": "Mark paid", "actionError": "The commission could not be updated." },
+    "reviews": { "title": "Reviews", "empty": "No reviews for this company.", "hide": "Hide", "restore": "Restore", "actionError": "The review could not be updated." },
+    "error": { "title": "Companies could not be loaded", "lead": "Try again. If the problem continues, return to the admin dashboard.", "retry": "Try again" }
+  },
   "companyWork": {
     "activeTitle": "Active projects",
     "historyTitle": "Project history",
