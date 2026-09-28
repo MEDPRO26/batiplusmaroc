@@ -171,3 +171,106 @@ Later steps may add operational messages, notes, and status events through their
 own authoritative models; they must not broaden the marketplace-message privacy
 boundary. OC2.3 deliberately does not implement OC2.4 messaging, internal notes,
 suspension/status workflows, notification rules, or CRM features.
+
+## OC2.4 — Admin ↔ Company operational messaging backend
+
+Operational messaging is a separate, backend-only channel between Batiplus
+Admins and the active members of one Company. It does not reuse or broaden the
+Project/quote-bound Client ↔ Company conversation model.
+
+### Data model and invariants
+
+- `adminCompanyConversations` stores one lazily created conversation per
+  Company, a monotonic message count, and the bounded last-message summary used
+  by the future Admin inbox.
+- `adminCompanyMessages` stores immutable, text-only messages with their target
+  Company, server-derived sender identity/type, exact trimmed body, client
+  idempotency key, creation time, and a conversation-local sequence.
+- `adminCompanyConversationReads` stores one monotonic read-through sequence per
+  conversation and authenticated user.
+
+Conversation lookup and creation use the `by_companyId` equality range in the
+same mutation that inserts the first message. Convex's optimistic transaction
+conflict detection serializes competing first sends over that indexed range, so
+retries converge on one Company conversation. Read-state creation uses the same
+indexed get-or-create pattern for `(conversationId, userId)`.
+
+### Authorization
+
+Admin endpoints always use the canonical `requireAdminUser()` guard. Every
+authenticated Admin may list, read, send, and maintain an independent read
+position for any Company conversation.
+
+Company endpoints derive the Company from the caller's current membership;
+they never accept a caller-supplied Company as proof of access. Exactly one
+active membership is required. All active owners and staff may initiate, read,
+and reply in their Company's shared conversation while retaining independent
+per-user read positions. Inactive, cross-Company, ambiguous-membership, Client,
+SEO, and anonymous callers are denied. Cross-Company access uses an
+indistinguishable operational-conversation-not-found response.
+
+Operational support access deliberately does not depend on onboarding or
+verification eligibility. This keeps the channel compatible with the future
+OC2.7 suspension policy, where marketplace writes may be restricted while a
+Company still needs to contact Batiplus. OC2.4 does not itself implement
+suspension or reactivation.
+
+### Sending, idempotency, and summaries
+
+Either an Admin or an active Company member may create the conversation by
+sending the first message. A send validates and trims a 1–5,000 character plain
+text body and validates a bounded client idempotency key. Sender identity and
+sender type are always derived server-side.
+
+Idempotency is scoped globally to the authenticated sender. Repeating the same
+key with the same normalized body and Company context returns the original
+message without changing its conversation summary. Reusing that key with a
+different body, Company, or sender type is rejected. Insertion, conversation
+creation, sequence allocation, summary update, and sender read advancement all
+occur in one Convex mutation transaction. The persisted preview is whitespace-
+normalized plain text capped at 140 characters.
+
+### Read state and same-millisecond safety
+
+The authoritative read boundary is `readThroughSequence`, not a timestamp.
+Every message receives the next monotonic sequence in its conversation, and
+unread count is computed in constant time as `messageCount -
+readThroughSequence`. A caller marks through a concrete message ID; the server
+verifies that message belongs to the conversation and resolves its sequence.
+Read positions only move forward.
+
+Sending advances only the sender's own read boundary. It never writes every
+participant's state, so another Admin, owner, or staff member continues to see
+the message as unread. Because a message appended after a mark-read always has
+a greater sequence, it remains unread even when both operations share the exact
+same millisecond timestamp.
+
+### Queries, pagination, and realtime
+
+The Admin inbox is a bounded native cursor query ordered by latest conversation
+activity. Company users receive a compact summary for their single Company
+conversation. Message queries use the compound conversation/sequence index,
+read newest pages first so the cursor loads older history, and return each page
+in oldest-to-newest display order. Callers must prepend each older continuation
+page. Page sizes are bounded at 50 messages and 30 conversations; no full
+message-history collection is used.
+
+All public reads are ordinary Convex queries, so OC2.5 can subscribe reactively
+without polling or separate socket infrastructure. Returned DTOs are explicit
+and contain only safe Company summary data or message display fields.
+
+### Privacy and deferred work
+
+Operational tables and APIs never read or return marketplace conversation IDs,
+Client details, proposal content, marketplace message bodies or attachments,
+emails, auth data, or internal Admin notes. IDs from operational and marketplace
+tables are not interchangeable. Messages are immutable: edit, delete, unsend,
+reactions, and conversation deletion are not implemented.
+
+OC2.4 adds no UI, notification delivery, Push integration, attachment/storage
+reuse, activity-timeline duplication, Admin assignment, tickets, SLA, CRM,
+internal notes, or Company status workflow. Notifications belong to OC2.8,
+attachments to V1.5, and the full Admin/Company messaging UI and browser
+coverage to OC2.5. External rate limiting remains a launch/security
+consideration; V1 currently relies on bounded inputs, authenticated role checks,
+and deterministic retry protection.

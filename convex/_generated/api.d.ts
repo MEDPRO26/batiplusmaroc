@@ -18,6 +18,7 @@ import type * as admin_projects from "../admin/projects.js";
 import type * as admin_reviews from "../admin/reviews.js";
 import type * as admin_siteVisits from "../admin/siteVisits.js";
 import type * as admin_verification from "../admin/verification.js";
+import type * as adminCompanyMessaging from "../adminCompanyMessaging.js";
 import type * as auth from "../auth.js";
 import type * as clientAvatarMedia from "../clientAvatarMedia.js";
 import type * as clientAvatarMediaModel from "../clientAvatarMediaModel.js";
@@ -117,6 +118,7 @@ declare const fullApi: ApiFromModules<{
   "admin/reviews": typeof admin_reviews;
   "admin/siteVisits": typeof admin_siteVisits;
   "admin/verification": typeof admin_verification;
+  adminCompanyMessaging: typeof adminCompanyMessaging;
   auth: typeof auth;
   clientAvatarMedia: typeof clientAvatarMedia;
   clientAvatarMediaModel: typeof clientAvatarMediaModel;

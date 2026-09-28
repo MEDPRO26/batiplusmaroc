@@ -648,6 +648,44 @@ export default defineSchema({
       "clientMessageId",
     ]),
 
+  /**
+   * Batiplus operations channel. This is intentionally unrelated to the
+   * project-bound `conversations` table above.
+   */
+  adminCompanyConversations: defineTable({
+    companyId: v.id("companies"),
+    messageCount: v.number(),
+    lastMessageId: v.optional(v.id("adminCompanyMessages")),
+    lastMessageAt: v.optional(v.number()),
+    lastMessagePreview: v.optional(v.string()),
+    lastSenderType: v.optional(v.union(v.literal("admin"), v.literal("company"))),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_companyId", ["companyId"])
+    .index("by_updatedAt", ["updatedAt"]),
+
+  adminCompanyMessages: defineTable({
+    conversationId: v.id("adminCompanyConversations"),
+    companyId: v.id("companies"),
+    senderUserId: v.id("users"),
+    senderType: v.union(v.literal("admin"), v.literal("company")),
+    body: v.string(),
+    idempotencyKey: v.string(),
+    /** Monotonic within one conversation; the authoritative read boundary. */
+    sequence: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_conversationId_and_sequence", ["conversationId", "sequence"])
+    .index("by_senderUserId_and_idempotencyKey", ["senderUserId", "idempotencyKey"]),
+
+  adminCompanyConversationReads: defineTable({
+    conversationId: v.id("adminCompanyConversations"),
+    userId: v.id("users"),
+    readThroughSequence: v.number(),
+    updatedAt: v.number(),
+  }).index("by_conversationId_and_userId", ["conversationId", "userId"]),
+
   messageAttachments: defineTable({
     conversationId: v.id("conversations"),
     messageId: v.id("messages"),

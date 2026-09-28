@@ -4,15 +4,22 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 
 type Ctx = QueryCtx | MutationCtx;
 
-/** Resolve an active, fully-onboarded company membership from server-side identity. */
-export async function requireCompanyUser(ctx: Ctx) {
+/**
+ * Resolve the caller's one active Company membership without applying
+ * marketplace eligibility rules. Operational support must remain available
+ * independently of verification and future suspension state.
+ */
+export async function requireActiveCompanyMembership(
+  ctx: Ctx,
+  options: { requireCompletedOnboarding?: boolean } = {},
+) {
   const userId = await getAuthUserId(ctx);
   if (!userId) throw new ConvexError("NOT_AUTHENTICATED");
 
   const user = await ctx.db.get(userId);
   if (!user) throw new ConvexError("USER_NOT_FOUND");
   if (user.accountType !== "company") throw new ConvexError("COMPANY_ACCOUNT_REQUIRED");
-  if (user.onboardingStatus !== "completed") {
+  if (options.requireCompletedOnboarding && user.onboardingStatus !== "completed") {
     throw new ConvexError("COMPANY_ONBOARDING_REQUIRED");
   }
 
@@ -30,11 +37,16 @@ export async function requireCompanyUser(ctx: Ctx) {
   if (membership.status !== "active") throw new ConvexError("COMPANY_MEMBERSHIP_REQUIRED");
   const company = await ctx.db.get(membership.companyId);
   if (!company) throw new ConvexError("COMPANY_NOT_FOUND");
-  if (company.onboardingStatus !== "completed") {
+  if (options.requireCompletedOnboarding && company.onboardingStatus !== "completed") {
     throw new ConvexError("COMPANY_ONBOARDING_REQUIRED");
   }
 
   return { user, userId, membership, company };
+}
+
+/** Resolve an active, fully-onboarded company membership from server-side identity. */
+export async function requireCompanyUser(ctx: Ctx) {
+  return await requireActiveCompanyMembership(ctx, { requireCompletedOnboarding: true });
 }
 
 /** Reusable guard for the future proposal mutation. */
