@@ -99,7 +99,7 @@ const reviewValidator = v.object({
   budgetRange: v.union(projectBudgetRangeValidator, v.null()),
   budgetMin: nullableNumber,
   budgetMax: nullableNumber,
-  budgetUnknown: v.boolean(),
+  budgetUnknown: v.union(v.boolean(), v.null()),
   timeline: v.union(projectTimelineValidator, v.null()),
   submittedAt: nullableNumber,
   publishedAt: nullableNumber,
@@ -237,7 +237,7 @@ export const getProjectReview = query({
       budgetRange: project.budgetRange ?? null,
       budgetMin: project.budgetMin ?? null,
       budgetMax: project.budgetMax ?? null,
-      budgetUnknown: project.budgetUnknown,
+      budgetUnknown: project.budgetUnknown ?? null,
       timeline: project.timeline ?? null,
       submittedAt: project.submittedAt ?? null,
       publishedAt: project.publishedAt ?? null,
@@ -318,7 +318,9 @@ export const approveProject = mutation({
       publishedAt: now,
       updatedAt: now,
       marketplaceSearchText: buildProjectMarketplaceSearchText(project),
-      marketplaceBudgetRank: marketplaceBudgetRank(project.budgetRange),
+      ...(project.budgetRange
+        ? { marketplaceBudgetRank: marketplaceBudgetRank(project.budgetRange) }
+        : {}),
     });
     await ctx.db.insert("projectStatusHistory", {
       projectId: project._id,

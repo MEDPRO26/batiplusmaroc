@@ -289,7 +289,9 @@ function ProjectSummary({ project }: { project: NonNullable<FunctionReturnType<t
       <dl className="mt-5 space-y-4 text-sm">
         <SummaryRow label={tProject("city")} value={tWizard(`cityOptions.${project.city}`)} />
         <SummaryRow label={tProject("category")} value={tWizard(`categoryOptions.${project.primaryCategory}`)} />
-        <SummaryRow label={tProject("budget")} value={tWizard(`budgetOptions.${project.budgetRange}`)} />
+        {project.budgetRange ? (
+          <SummaryRow label={tProject("budget")} value={tWizard(`budgetOptions.${project.budgetRange}`)} />
+        ) : null}
         <SummaryRow label={tProject("timeline")} value={tWizard(`timelineOptions.${project.timeline}`)} />
       </dl>
     </aside>

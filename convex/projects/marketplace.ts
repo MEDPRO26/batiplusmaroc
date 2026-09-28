@@ -61,7 +61,7 @@ const marketplaceCardValidator = v.object({
   city: projectCityValidator,
   primaryCategory: projectCategoryValidator,
   customCategoryText: nullableString,
-  budgetRange: projectBudgetRangeValidator,
+  budgetRange: v.union(projectBudgetRangeValidator, v.null()),
   timeline: projectTimelineValidator,
   propertyType: v.union(projectPropertyTypeValidator, v.null()),
   surface: nullableNumber,
@@ -75,7 +75,7 @@ const marketplaceDetailsValidator = marketplaceCardValidator.omit("client").exte
   neighborhood: nullableString,
   budgetMin: nullableNumber,
   budgetMax: nullableNumber,
-  budgetUnknown: v.boolean(),
+  budgetUnknown: v.union(v.boolean(), v.null()),
   canSubmitQuote: v.boolean(),
   myQuoteId: v.union(v.id("projectQuotes"), v.null()),
   client: v.union(safeClientDetailValidator, v.null()),
@@ -194,7 +194,6 @@ function isCompleteMarketplaceProject(project: Doc<"projects">) {
       project.description &&
       project.city &&
       project.primaryCategory &&
-      project.budgetRange &&
       project.timeline,
   );
 }
@@ -208,7 +207,7 @@ async function toMarketplaceCard(ctx: QueryCtx, project: Doc<"projects">) {
     city: project.city!,
     primaryCategory: project.primaryCategory!,
     customCategoryText: project.customCategoryText ?? null,
-    budgetRange: project.budgetRange!,
+    budgetRange: project.budgetRange ?? null,
     timeline: project.timeline!,
     propertyType: project.propertyType ?? null,
     surface: project.surface ?? null,
@@ -589,7 +588,7 @@ export const getCompanyMarketplaceProject = query({
       neighborhood: project.neighborhood ?? null,
       budgetMin: project.budgetMin ?? null,
       budgetMax: project.budgetMax ?? null,
-      budgetUnknown: project.budgetUnknown,
+      budgetUnknown: project.budgetUnknown ?? null,
       canSubmitQuote: company.verificationStatus === "verified" && activeQuote === null,
       myQuoteId: recentQuotes[0]?._id ?? null,
     };
@@ -615,7 +614,9 @@ export const backfillMarketplaceSearchText = internalMutation({
     let updated = 0;
     for (const project of page.page) {
       const marketplaceSearchText = buildProjectMarketplaceSearchText(project);
-      const rank = marketplaceBudgetRank(project.budgetRange);
+      const rank = project.budgetRange
+        ? marketplaceBudgetRank(project.budgetRange)
+        : undefined;
       const patch: {
         marketplaceSearchText?: string;
         marketplaceBudgetRank?: number;
@@ -623,7 +624,7 @@ export const backfillMarketplaceSearchText = internalMutation({
       if (project.marketplaceSearchText !== marketplaceSearchText) {
         patch.marketplaceSearchText = marketplaceSearchText;
       }
-      if (project.marketplaceBudgetRank !== rank) {
+      if (rank !== undefined && project.marketplaceBudgetRank !== rank) {
         patch.marketplaceBudgetRank = rank;
       }
       if (Object.keys(patch).length > 0) {

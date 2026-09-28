@@ -43,7 +43,7 @@ const projectSummaryValidator = v.object({
   title: v.string(),
   city: projectCityValidator,
   primaryCategory: projectCategoryValidator,
-  budgetRange: projectBudgetRangeValidator,
+  budgetRange: v.union(projectBudgetRangeValidator, v.null()),
   timeline: projectTimelineValidator,
 });
 
@@ -152,7 +152,6 @@ function projectSummary(project: Doc<"projects">) {
     !project.title ||
     !project.city ||
     !project.primaryCategory ||
-    !project.budgetRange ||
     !project.timeline
   ) {
     throw new ConvexError("PROJECT_INCOMPLETE");
@@ -162,7 +161,7 @@ function projectSummary(project: Doc<"projects">) {
     title: project.title,
     city: project.city,
     primaryCategory: project.primaryCategory,
-    budgetRange: project.budgetRange,
+    budgetRange: project.budgetRange ?? null,
     timeline: project.timeline,
   };
 }

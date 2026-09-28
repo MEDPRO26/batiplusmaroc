@@ -66,7 +66,16 @@ async function seedProject(
   clientId: Id<"users">,
   status: ProjectStatus = "published",
   visibility: "marketplace" | "invite_only" = "marketplace",
+  includeBudget = true,
 ) {
+  const budgetFields = includeBudget
+    ? {
+        budgetRange: "100000_250000" as const,
+        budgetMin: 100_000,
+        budgetMax: 250_000,
+        budgetUnknown: false,
+      }
+    : {};
   return await t.run((ctx) =>
     ctx.db.insert("projects", {
       clientId,
@@ -78,10 +87,7 @@ async function seedProject(
       surface: 120,
       surfaceUnknown: false,
       description: "Complete apartment renovation with plumbing and electrical work.",
-      budgetRange: "100000_250000",
-      budgetMin: 100_000,
-      budgetMax: 250_000,
-      budgetUnknown: false,
+      ...budgetFields,
       timeline: "one_to_three_months",
       visibility,
       status,
@@ -121,6 +127,30 @@ async function setup(status: ProjectStatus = "published") {
 }
 
 describe("initial quote submission", () => {
+  test("a verified Company can inspect and quote a marketplace Project with no Client budget", async () => {
+    const t = convexTest(schema, modules);
+    const clientId = await seedUser(t, "client");
+    const projectId = await seedProject(t, clientId, "published", "marketplace", false);
+    const company = await seedCompany(t);
+    const caller = asUser(t, company.userId);
+
+    await expect(caller.query(api.quotes.index.getSubmissionContext, { projectId }))
+      .resolves.toMatchObject({
+        project: { id: projectId, budgetRange: null },
+        verificationStatus: "verified",
+      });
+    const submitted = await caller.mutation(api.quotes.index.submitInitialQuote, {
+      projectId,
+      ...validQuote,
+    });
+    expect(submitted.status).toBe("submitted");
+    await expect(caller.query(api.quotes.index.getMyQuote, { quoteId: submitted.quoteId }))
+      .resolves.toMatchObject({
+        estimatedPrice: validQuote.estimatedPrice,
+        project: { id: projectId, budgetRange: null },
+      });
+  });
+
   test("verified company submits once and creates immutable submission history", async () => {
     const { t, clientId, projectId, company } = await setup();
     const otherClientId = await seedUser(t, "client");

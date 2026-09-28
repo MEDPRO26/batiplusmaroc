@@ -276,7 +276,9 @@ function ProjectCard({ project, selected, onOpen }: { project: Project; selected
           {project.title}
         </h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          <MetaPill>{tWizard(`budgetOptions.${project.budgetRange}`)}</MetaPill>
+          {project.budgetRange ? (
+            <MetaPill>{tWizard(`budgetOptions.${project.budgetRange}`)}</MetaPill>
+          ) : null}
           <MetaPill>{tWizard(`timelineOptions.${project.timeline}`)}</MetaPill>
           {property ? <MetaPill>{property}</MetaPill> : null}
           {surface ? <MetaPill>{surface}</MetaPill> : null}
@@ -456,7 +458,9 @@ function ProjectSheetContent({ project }: { project: Details }) {
           <section className="mt-9 border-t border-[#e4e8eb] pt-8">
             <h3 className="m-0 text-[1.05rem] font-semibold tracking-[-0.02em] text-ink">{t("detail.projectDetails")}</h3>
             <dl className="mt-5 grid gap-x-8 gap-y-6 sm:grid-cols-2">
-              <SheetDetail label={t("detail.budget")} value={tWizard(`budgetOptions.${project.budgetRange}`)} />
+              {project.budgetRange ? (
+                <SheetDetail label={t("detail.budget")} value={tWizard(`budgetOptions.${project.budgetRange}`)} />
+              ) : null}
               <SheetDetail label={t("detail.timeline")} value={tWizard(`timelineOptions.${project.timeline}`)} />
               <SheetDetail
                 label={t("detail.propertyType")}

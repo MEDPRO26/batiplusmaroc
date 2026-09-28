@@ -36,7 +36,7 @@ async function setup(options: { visibility?: "marketplace" | "invite_only" } = {
     updatedAt: 1,
     updatedByUserId: adminId,
   }));
-  const projectId = await t.run((ctx) => ctx.db.insert("projects", { clientId, primaryCategory: "renovation", city: "rabat", countryCode: "MA", title: "Villa renovation", propertyType: "house", surface: 200, surfaceUnknown: false, description: "Complete renovation project with structural and finishing work.", budgetRange: "250000_500000", budgetMin: 250000, budgetMax: 500000, budgetUnknown: false, timeline: "one_to_three_months", visibility: options.visibility ?? "marketplace", status: "published", lastCompletedStep: 6, createdAt: 1, updatedAt: 1, submittedAt: 1, publishedAt: 1 }));
+  const projectId = await t.run((ctx) => ctx.db.insert("projects", { clientId, primaryCategory: "renovation", city: "rabat", countryCode: "MA", title: "Villa renovation", propertyType: "house", surface: 200, surfaceUnknown: false, description: "Complete renovation project with structural and finishing work.", timeline: "one_to_three_months", visibility: options.visibility ?? "marketplace", status: "published", lastCompletedStep: 6, createdAt: 1, updatedAt: 1, submittedAt: 1, publishedAt: 1 }));
   const initialQuoteId = await t.run((ctx) => ctx.db.insert("projectQuotes", { projectId, companyId, submittedByUserId: companyUserId, message: "We are ready to deliver this complete project.", estimatedPrice: 400000, currency: "MAD", estimatedDuration: 90, availableStartDate: "2099-01-01", scope: "Complete construction and finishing scope for the property.", quoteType: "initial", status: "discussion_open", createdAt: 2, updatedAt: 2, submittedAt: 2 }));
   const conversationId = await t.run((ctx) => ctx.db.insert("conversations", { projectId, quoteId: initialQuoteId, clientId, companyId, status: "active", createdBy: clientId, createdAt: 3, updatedAt: 3 }));
   return { t, clientId, otherClientId, companyUserId, competitorUserId, seoId, adminId, companyId, competitorId, projectId, initialQuoteId, conversationId };
@@ -333,6 +333,7 @@ describe("immutable revision state machine", () => {
     await client.mutation(api.finalQuotes.index.review, { finalQuoteId: requested.finalQuoteId, revisionId: second.revisionId, action: "accept" });
     const state = await s.t.run(async (ctx) => ({
       project: await ctx.db.get(s.projectId),
+      initialQuote: await ctx.db.get(s.initialQuoteId),
       parent: await ctx.db.get(requested.finalQuoteId),
       first: await ctx.db.get(first.revisionId),
       second: await ctx.db.get(second.revisionId),
@@ -340,6 +341,10 @@ describe("immutable revision state machine", () => {
       events: await ctx.db.query("marketplaceActivity").withIndex("by_finalQuoteId_and_createdAt", (q) => q.eq("finalQuoteId", requested.finalQuoteId)).order("asc").take(20),
     }));
     expect(state.first).toMatchObject({ revisionNumber: 1, price: 380000 }); expect(state.second).toMatchObject({ revisionNumber: 2, price: 350000 });
+    expect(state.initialQuote).toMatchObject({ estimatedPrice: 400_000 });
+    for (const field of ["budgetRange", "budgetMin", "budgetMax", "budgetUnknown", "marketplaceBudgetRank"] as const) {
+      expect(state.project).not.toHaveProperty(field);
+    }
     expect(state.parent).toMatchObject({ status: "accepted", currentRevisionId: second.revisionId, acceptedRevisionId: second.revisionId });
     expect(state.project).toMatchObject({ status: "company_selected", selectedCompanyId: s.companyId, selectedFinalQuoteId: requested.finalQuoteId });
     expect(state.deal).toMatchObject({

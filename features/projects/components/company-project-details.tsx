@@ -46,7 +46,9 @@ export function ProjectDetailsView({ project }: { project: Details }) {
             <h1 className="mt-3 mb-0 text-[1.8rem] leading-9 font-semibold tracking-[-0.04em] text-ink sm:text-[2.25rem] sm:leading-[2.8rem]">{project.title}</h1>
             <div className="mt-4 flex flex-wrap gap-x-3 gap-y-2 text-sm text-muted"><span>{tWizard(`cityOptions.${project.city}`)}</span>{project.neighborhood ? <><span aria-hidden>·</span><span>{project.neighborhood}</span></> : null}{project.publishedAt ? <><span aria-hidden>·</span><time dateTime={new Date(project.publishedAt).toISOString()}>{t("card.published", { date: formatMarketplaceDateTime(project.publishedAt, locale, { dateStyle: "medium" }) })}</time></> : null}</div>
             <dl className="mt-7 grid gap-3 sm:grid-cols-2">
-              <DetailField label={t("detail.budget")} value={tWizard(`budgetOptions.${project.budgetRange}`)} />
+              {project.budgetRange ? (
+                <DetailField label={t("detail.budget")} value={tWizard(`budgetOptions.${project.budgetRange}`)} />
+              ) : null}
               <DetailField label={t("detail.timeline")} value={tWizard(`timelineOptions.${project.timeline}`)} />
               <DetailField label={t("detail.propertyType")} value={project.propertyType ? tWizard(`propertyTypeOptions.${project.propertyType}`) : t("notSpecified")} />
               <DetailField label={t("detail.surface")} value={project.surface !== null && !project.surfaceUnknown ? t("card.surface", { value: format.number(project.surface) }) : t("notSpecified")} />

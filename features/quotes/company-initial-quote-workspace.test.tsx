@@ -88,6 +88,18 @@ describe("company initial quote workspace", () => {
     expect(html).toContain("Renovation of a family apartment");
   });
 
+  test("renders the quote form for a no-budget Project without a missing translation key", () => {
+    const html = render("en", {
+      project: { ...project, budgetRange: null },
+      verificationStatus: "verified",
+      activeQuoteId: null,
+      latestQuoteId: null,
+    });
+    expect(html).toContain("Send an initial quote");
+    expect(html).toContain("Renovation of a family apartment");
+    expect(html).not.toContain("budgetOptions.null");
+  });
+
   test("disables submission behind company verification", () => {
     const html = render("en", {
       project,

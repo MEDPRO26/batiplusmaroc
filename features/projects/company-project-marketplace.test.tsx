@@ -124,6 +124,14 @@ describe("company project feed", () => {
     expect(html).not.toContain("Load more");
   });
 
+  test("renders a no-budget Project without a missing translation key", () => {
+    state.results = [{ ...project, budgetRange: null }];
+    const html = renderFeed();
+    expect(html).toContain("Renovation appartement Agdal");
+    expect(html).toContain("1–3 months");
+    expect(html).not.toContain("budgetOptions.null");
+  });
+
   test("renders mobile filters, desktop filters, skeletons, and empty state", () => {
     let html = renderFeed();
     expect(html).toContain("lg:hidden");
@@ -221,6 +229,23 @@ describe("company project detail sheet", () => {
 });
 
 describe("company project detail", () => {
+  test("keeps a no-budget invited Project accessible without rendering a budget key", () => {
+    state.queryResults = [companyUser, {
+      ...project,
+      budgetRange: null,
+      neighborhood: "Agdal",
+      budgetMin: null,
+      budgetMax: null,
+      budgetUnknown: null,
+      canSubmitQuote: true,
+      myQuoteId: null,
+    }];
+    state.queryIndex = 0;
+    const html = renderToStaticMarkup(provider("en", <CompanyProjectDetails projectId="project-1" />));
+    expect(html).toContain("Send an initial quote");
+    expect(html).not.toContain("budgetOptions.null");
+  });
+
   test("shows safe detail and verified-company proposal placeholder", () => {
     const html = renderDetail(true);
     expect(html).toContain("Renovation appartement Agdal");

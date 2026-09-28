@@ -108,7 +108,6 @@ async function setupAcceptedSource(
       title: "Riad restoration",
       countryCode: "MA",
       surfaceUnknown: false,
-      budgetUnknown: false,
       visibility: "marketplace",
       status: "published",
       lastCompletedStep: 6,

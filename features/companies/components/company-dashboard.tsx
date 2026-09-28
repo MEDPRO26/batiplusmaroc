@@ -338,8 +338,12 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
         </Link>
       </h2>
       <p className="mt-1 mb-0 text-sm text-ink/80">
-        {tWizard(`budgetOptions.${project.budgetRange}`)}
-        <span aria-hidden> · </span>
+        {project.budgetRange ? (
+          <>
+            {tWizard(`budgetOptions.${project.budgetRange}`)}
+            <span aria-hidden> · </span>
+          </>
+        ) : null}
         {tWizard(`timelineOptions.${project.timeline}`)}
         <span aria-hidden> · </span>
         {tWizard(`cityOptions.${project.city}`)}

@@ -53,6 +53,7 @@ async function seedProject(t: TestBackend, clientId: Id<"users">, options?: {
   city?: "rabat" | "agadir";
   category?: "renovation" | "architecture";
   budgetRange?: "under_50000" | "100000_250000" | "500000_1000000";
+  includeBudget?: boolean;
   timeline?: "asap" | "one_to_three_months" | "flexible";
   propertyType?: "apartment" | "house" | "building";
   surface?: number;
@@ -60,6 +61,14 @@ async function seedProject(t: TestBackend, clientId: Id<"users">, options?: {
   publishedAt?: number;
 }) {
   const budgetRange = options?.budgetRange ?? "100000_250000" as const;
+  const budgetFields = options?.includeBudget === false ? {} : {
+    budgetRange,
+    budgetMin: budgetRange === "under_50000" ? 0 : budgetRange === "500000_1000000" ? 500_000 : 100_000,
+    budgetMax: budgetRange === "under_50000" ? 50_000 : budgetRange === "500000_1000000" ? 1_000_000 : 250_000,
+    budgetUnknown: false,
+    marketplaceBudgetRank:
+      budgetRange === "under_50000" ? 1 : budgetRange === "500000_1000000" ? 5 : 3,
+  };
   const project = {
     clientId,
     primaryCategory: options?.category ?? "renovation" as const,
@@ -71,10 +80,7 @@ async function seedProject(t: TestBackend, clientId: Id<"users">, options?: {
     surface: options?.surfaceUnknown ? undefined : (options?.surface ?? 95),
     surfaceUnknown: options?.surfaceUnknown ?? false,
     description: "Renovation complete with electrical and plumbing work.",
-    budgetRange,
-    budgetMin: budgetRange === "under_50000" ? 0 : budgetRange === "500000_1000000" ? 500_000 : 100_000,
-    budgetMax: budgetRange === "under_50000" ? 50_000 : budgetRange === "500000_1000000" ? 1_000_000 : 250_000,
-    budgetUnknown: false,
+    ...budgetFields,
     timeline: options?.timeline ?? "one_to_three_months" as const,
     visibility: options?.visibility ?? "marketplace" as const,
     status: options?.status ?? "published" as ProjectStatus,
@@ -83,8 +89,6 @@ async function seedProject(t: TestBackend, clientId: Id<"users">, options?: {
     updatedAt: options?.publishedAt ?? 100,
     submittedAt: 50,
     publishedAt: options?.publishedAt ?? 100,
-    marketplaceBudgetRank:
-      budgetRange === "under_50000" ? 1 : budgetRange === "500000_1000000" ? 5 : 3,
   };
   return await t.run((ctx) => ctx.db.insert("projects", {
     ...project,
@@ -132,6 +136,43 @@ describe("company project marketplace authorization and visibility", () => {
 });
 
 describe("company project marketplace discovery", () => {
+  test("discovers and opens a published Project with no legacy budget fields", async () => {
+    const t = convexTest(schema, modules);
+    const clientId = await seedUser(t, "client", "no-budget-client");
+    const company = await seedCompany(t);
+    const projectId = await seedProject(t, clientId, {
+      title: "No-budget renovation",
+      includeBudget: false,
+      publishedAt: 400,
+    });
+    const caller = asUser(t, company.userId);
+
+    const listing = await caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, firstPage);
+    expect(listing.page).toEqual([
+      expect.objectContaining({ id: projectId, budgetRange: null }),
+    ]);
+    await expect(caller.query(api.projects.marketplace.getCompanyMarketplaceProject, { projectId }))
+      .resolves.toMatchObject({
+        id: projectId,
+        budgetRange: null,
+        budgetMin: null,
+        budgetMax: null,
+        budgetUnknown: null,
+        canSubmitQuote: true,
+      });
+    await expect(caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, {
+      ...firstPage,
+      budgetRange: "100000_250000",
+    })).resolves.toMatchObject({ page: [] });
+    for (const sortBy of ["budget_high", "budget_low"] as const) {
+      const sorted = await caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, {
+        ...firstPage,
+        sortBy,
+      });
+      expect(sorted.page.map((project) => project.id)).toContain(projectId);
+    }
+  });
+
   test("filters by city, category, budget and search while keeping newest-first order", async () => {
     const t = convexTest(schema, modules);
     const clientId = await seedUser(t, "client", "client");

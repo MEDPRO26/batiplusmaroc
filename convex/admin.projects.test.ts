@@ -31,8 +31,16 @@ async function seedUser(t: TestBackend, accountType: "client" | "company" | "adm
 async function seedProject(
   t: TestBackend,
   clientId: Id<"users">,
-  options?: { title?: string; city?: "rabat" | "agadir"; status?: "pending_review" | "published" | "needs_changes" | "cancelled"; submittedAt?: number },
+  options?: { title?: string; city?: "rabat" | "agadir"; status?: "pending_review" | "published" | "needs_changes" | "cancelled"; submittedAt?: number; includeBudget?: boolean },
 ) {
+  const budgetFields = options?.includeBudget === false
+    ? {}
+    : {
+        budgetRange: "100000_250000" as const,
+        budgetMin: 100_000,
+        budgetMax: 250_000,
+        budgetUnknown: false,
+      };
   return await t.run((ctx) => ctx.db.insert("projects", {
     clientId,
     primaryCategory: "renovation",
@@ -44,10 +52,7 @@ async function seedProject(
     surface: 95,
     surfaceUnknown: false,
     description: "Renovation complete with electrical and plumbing work.",
-    budgetRange: "100000_250000",
-    budgetMin: 100_000,
-    budgetMax: 250_000,
-    budgetUnknown: false,
+    ...budgetFields,
     timeline: "one_to_three_months",
     visibility: "marketplace",
     status: options?.status ?? "pending_review",
@@ -97,6 +102,11 @@ describe("marketplace project backfill", () => {
       title: "Pending project",
       status: "pending_review",
     });
+    const noBudgetProjectId = await seedProject(t, clientId, {
+      title: "No-budget marketplace project",
+      status: "published",
+      includeBudget: false,
+    });
 
     await expect(
       t.mutation(api.admin.projects.startMarketplaceBackfill, {}),
@@ -123,6 +133,11 @@ describe("marketplace project backfill", () => {
     expect(await t.run((ctx) => ctx.db.get(pendingProjectId))).not.toHaveProperty(
       "marketplaceSearchText",
     );
+    const noBudgetProject = await t.run((ctx) => ctx.db.get(noBudgetProjectId));
+    expect(noBudgetProject).toMatchObject({
+      marketplaceSearchText: expect.stringContaining("renovation"),
+    });
+    expect(noBudgetProject).not.toHaveProperty("marketplaceBudgetRank");
 
     await expect(
       asUser(t, adminId).mutation(api.admin.projects.startMarketplaceBackfill, {}),
@@ -186,6 +201,31 @@ describe("admin project list and review", () => {
 });
 
 describe("admin project decisions", () => {
+  test("reviews and publishes a no-budget Project without inventing a budget rank", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "admin@example.test");
+    const clientId = await seedUser(t, "client", "client@example.test");
+    const projectId = await seedProject(t, clientId, { includeBudget: false });
+    const admin = asUser(t, adminId);
+
+    await expect(admin.query(api.admin.projects.getProjectReview, { projectId }))
+      .resolves.toMatchObject({
+        projectId,
+        budgetRange: null,
+        budgetMin: null,
+        budgetMax: null,
+        budgetUnknown: null,
+      });
+    await expect(admin.mutation(api.admin.projects.approveProject, { projectId }))
+      .resolves.toEqual({ status: "published" });
+    const stored = await t.run((ctx) => ctx.db.get(projectId));
+    expect(stored).toMatchObject({
+      status: "published",
+      marketplaceSearchText: expect.stringContaining("renovation"),
+    });
+    expect(stored).not.toHaveProperty("marketplaceBudgetRank");
+  });
+
   test("approves only pending review, publishes atomically, and exposes the project publicly", async () => {
     const t = convexTest(schema, modules);
     const adminId = await seedUser(t, "admin", "admin@example.test");

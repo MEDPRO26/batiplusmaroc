@@ -212,7 +212,7 @@ export default defineSchema({
     city: v.optional(companyServiceArea), neighborhood: v.optional(v.string()), countryCode: v.literal("MA"),
     title: v.optional(v.string()), propertyType: v.optional(projectPropertyType), surface: v.optional(v.number()),
     surfaceUnknown: v.boolean(), description: v.optional(v.string()), budgetRange: v.optional(projectBudgetRange),
-    budgetMin: v.optional(v.number()), budgetMax: v.optional(v.number()), budgetUnknown: v.boolean(),
+    budgetMin: v.optional(v.number()), budgetMax: v.optional(v.number()), budgetUnknown: v.optional(v.boolean()),
     timeline: v.optional(projectTimeline), visibility: v.union(v.literal("marketplace"), v.literal("invite_only")),
     /** Public-only denormalized text used by the authenticated company marketplace. */
     marketplaceSearchText: v.optional(v.string()),

@@ -72,7 +72,16 @@ async function seedProject(
     | "cancelled"
     | "archived" = "published",
   visibility: "marketplace" | "invite_only" = "invite_only",
+  includeBudget = true,
 ) {
+  const budgetFields = includeBudget
+    ? {
+        budgetRange: "100000_250000" as const,
+        budgetMin: 100_000,
+        budgetMax: 250_000,
+        budgetUnknown: false,
+      }
+    : {};
   return await t.run((ctx) =>
     ctx.db.insert("projects", {
       clientId,
@@ -85,10 +94,7 @@ async function seedProject(
       surfaceUnknown: false,
       description:
         "A complete apartment renovation with plumbing and electrical work.",
-      budgetRange: "100000_250000",
-      budgetMin: 100_000,
-      budgetMax: 250_000,
-      budgetUnknown: false,
+      ...budgetFields,
       timeline: "one_to_three_months",
       visibility,
       status,
@@ -108,13 +114,13 @@ function asUser(t: Backend, userId: Id<"users">) {
   });
 }
 
-async function setup() {
+async function setup(includeBudget = true) {
   const t = convexTest(schema, modules);
   const clientId = await seedUser(t, "client");
   const otherClientId = await seedUser(t, "client");
   const company = await seedCompany(t);
   const otherCompany = await seedCompany(t);
-  const projectId = await seedProject(t, clientId);
+  const projectId = await seedProject(t, clientId, "published", "invite_only", includeBudget);
   return { t, clientId, otherClientId, company, otherCompany, projectId };
 }
 
@@ -828,7 +834,7 @@ describe("accepted invitation convergence", () => {
   });
 
   test("pending is locked; accepted direct proposal opens the existing conversation and quote pipeline", async () => {
-    const state = await setup();
+    const state = await setup(false);
     const created = await asUser(state.t, state.clientId).mutation(
       api.invitations.index.inviteCompanyToProject,
       { companyId: state.company.companyId, projectId: state.projectId },
@@ -861,13 +867,13 @@ describe("accepted invitation convergence", () => {
         api.quotes.index.getSubmissionContext,
         { projectId: state.projectId },
       ),
-    ).resolves.toMatchObject({ project: { id: state.projectId } });
+    ).resolves.toMatchObject({ project: { id: state.projectId, budgetRange: null } });
     await expect(
       asUser(state.t, state.company.userId).query(
         api.projects.marketplace.getCompanyMarketplaceProject,
         { projectId: state.projectId },
       ),
-    ).resolves.toMatchObject({ id: state.projectId, canSubmitQuote: true });
+    ).resolves.toMatchObject({ id: state.projectId, budgetRange: null, canSubmitQuote: true });
     const submitted = await asUser(state.t, state.company.userId).mutation(
       api.quotes.index.submitInitialQuote,
       { projectId: state.projectId, ...validQuote },
@@ -936,5 +942,29 @@ describe("accepted invitation convergence", () => {
         companyId: state.company.companyId,
       }),
     ]);
+
+    const requested = await asUser(state.t, state.clientId).mutation(
+      api.finalQuotes.index.request,
+      { conversationId: submitted.conversationId },
+    );
+    const revision = await asUser(state.t, state.company.userId).mutation(
+      api.finalQuotes.index.submitRevision,
+      {
+        conversationId: submitted.conversationId,
+        price: 210_000,
+        duration: 80,
+        plannedStartDate: "2099-02-01",
+        validUntil: "2099-12-31",
+        scope: "Complete renovation, coordination, finishes, and final site cleanup.",
+        inclusions: "Labour, materials, supervision, cleanup, and final handover.",
+        exclusions: "Municipal fees and owner-supplied appliances.",
+        paymentTerms: "Twenty percent on signature and the balance at agreed milestones.",
+      },
+    );
+    expect(requested.finalQuoteId).toEqual(expect.any(String));
+    expect(revision).toMatchObject({
+      finalQuoteId: requested.finalQuoteId,
+      revisionNumber: 1,
+    });
   });
 });
