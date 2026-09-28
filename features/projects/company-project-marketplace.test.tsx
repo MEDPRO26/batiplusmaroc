@@ -43,7 +43,6 @@ const project = {
   city: "rabat",
   primaryCategory: "renovation",
   customCategoryText: null,
-  budgetRange: "100000_250000",
   timeline: "one_to_three_months",
   propertyType: "apartment",
   surface: 95,
@@ -74,7 +73,7 @@ function renderFeed(locale: "en" | "fr" = "en") {
 }
 
 function renderDetail(canSubmitQuote: boolean, locale: "en" | "fr" = "en", myQuoteId: string | null = null) {
-  state.queryResults = [companyUser, { ...project, neighborhood: "Agdal", budgetMin: 100000, budgetMax: 250000, budgetUnknown: false, canSubmitQuote, myQuoteId }];
+  state.queryResults = [companyUser, { ...project, neighborhood: "Agdal", canSubmitQuote, myQuoteId }];
   state.queryIndex = 0;
   return renderToStaticMarkup(provider(locale, <CompanyProjectDetails projectId="project-1" />));
 }
@@ -196,9 +195,6 @@ describe("company project detail sheet", () => {
     state.queryResults = [{
       ...project,
       neighborhood: "Agdal",
-      budgetMin: 100000,
-      budgetMax: 250000,
-      budgetUnknown: false,
       canSubmitQuote: true,
       myQuoteId: null,
     }];
@@ -229,14 +225,10 @@ describe("company project detail sheet", () => {
 });
 
 describe("company project detail", () => {
-  test("keeps an invited Project accessible without rendering a legacy budget", () => {
+  test("keeps an invited Project accessible", () => {
     state.queryResults = [companyUser, {
       ...project,
-      budgetRange: null,
       neighborhood: "Agdal",
-      budgetMin: null,
-      budgetMax: null,
-      budgetUnknown: null,
       canSubmitQuote: true,
       myQuoteId: null,
     }];
@@ -273,9 +265,6 @@ describe("company project detail", () => {
     state.queryResults = [{
       ...project,
       neighborhood: "Agdal",
-      budgetMin: 100000,
-      budgetMax: 250000,
-      budgetUnknown: false,
       canSubmitQuote: true,
       myQuoteId: null,
     }];

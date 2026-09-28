@@ -63,7 +63,6 @@ async function seedMessageContext(t: Backend) {
       countryCode: "MA",
       title: "Villa Atlas",
       surfaceUnknown: true,
-      budgetUnknown: true,
       visibility: "marketplace",
       status: "published",
       lastCompletedStep: 6,

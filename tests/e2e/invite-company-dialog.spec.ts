@@ -238,7 +238,6 @@ test("company invitation list renders every state on desktop and remains respons
         "A complete renovation project with plumbing and electrical work.",
       city: "rabat",
       category: "renovation",
-      budgetRange: "100000_250000",
       companyId: "company-1",
       companyName: "Atlas Build",
       clientDisplayName: "Khadija C.",

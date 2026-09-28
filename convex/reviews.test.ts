@@ -42,7 +42,7 @@ async function setup(
   }));
   const projectId = await t.run((ctx) => ctx.db.insert("projects", {
     clientId: clientUserId, title: `Completed project ${crypto.randomUUID()}`,
-    countryCode: "MA", surfaceUnknown: false, budgetUnknown: false, visibility: "marketplace",
+    countryCode: "MA", surfaceUnknown: false, visibility: "marketplace",
     status: status === "completed" ? "completed" : "company_selected", lastCompletedStep: 6,
     createdAt: 1, updatedAt: 1,
   }));

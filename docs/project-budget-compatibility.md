@@ -1,14 +1,36 @@
-# Project budget compatibility
+# Project budget removal
 
 ## Product rule
 
-Clients no longer need to provide a budget for a Project. A Project describes the construction need; Companies provide pricing later through the Initial Quote and Final Quote flow.
+Clients do not provide a budget for a Project. A Project describes the construction need; Companies provide pricing through the Initial Quote and Final Quote flow.
 
-The accepted Final Quote revision remains the source of the Deal's `agreedAmountMad`. Commission tiers and immutable Deal commission snapshots continue to use that accepted Deal amount. Legacy Project budget values are never converted into Proposal, Final Quote, Deal, or commission amounts.
+The accepted Final Quote revision remains the source of the Deal's `agreedAmountMad`. Commission tiers and immutable Deal commission snapshots continue to use that accepted Deal amount. No removed Project field is converted into Proposal, Final Quote, Deal, or commission pricing.
 
-## Phase 1 storage compatibility
+## Phase 1 and Phase 2
 
-New Project drafts may omit all legacy budget fields:
+Phase 1 made new no-budget Projects schema-compatible and removed Project-budget requirements from publication and downstream marketplace flows.
+
+Phase 2 removed the Budget step and all Client Project budget display, filtering, sorting, DTO exposure, and Project-specific FR/EN copy. The wizard remains Category → Location → Details → Timeline → Review, and draft resume position is derived from current required fields rather than legacy numeric progress.
+
+## Phase 3 code cleanup
+
+Phase 3 removed the remaining compatibility implementation:
+
+- the public `projects.index.saveBudget` mutation;
+- Project budget range constants, value mappings, and validators;
+- ignored `budgetRange` and `budgetRanges` marketplace arguments;
+- legacy `budget_high` and `budget_low` sort literals;
+- development seed generation of Project budget values;
+- stale budget fields in current test/UI fixtures;
+- the five obsolete fields from the `projects` schema.
+
+Budget-specific marketplace indexes and search-index filters had already been removed in Phase 2. Phase 3 confirmed that no current query or migration depends on such an index. Category, city, timeline, property type, surface, posted-date, text search, and newest/oldest behavior remain unchanged.
+
+General construction-budget editorial/SEO content remains intentionally available. Company `estimatedPrice`, Final Quote revision price, Deal `agreedAmountMad`, and commission fields are unrelated and remain unchanged.
+
+## Development migration
+
+The development-only migration `migrations:clearLegacyProjectBudgetFields` uses `@convex-dev/migrations` with batches of 10. For any Project that contains at least one obsolete field, it unsets exactly:
 
 - `budgetRange`
 - `budgetMin`
@@ -16,29 +38,27 @@ New Project drafts may omit all legacy budget fields:
 - `budgetUnknown`
 - `marketplaceBudgetRank`
 
-Project publication, Company marketplace access, Direct Invitations, and Initial Quote submission do not require those fields.
+The migration does not patch ownership, status, required Project details, publication fields, Company Selection references, search text, timestamps, or pricing-chain records. Clean Projects are no-ops, and the component records completion so an ordinary rerun is also a no-op.
 
-## Phase 2 product and query behavior
+Development deployment `hip-gnat-222` was audited before mutation:
 
-The current five-step Project wizard is Category → Location → Details → Timeline → Review. It does not ask for, validate, summarize, or save a Client budget. Resume position is derived from the current required Project fields, so legacy six-step `lastCompletedStep` values cannot skip an incomplete Timeline or incorrectly jump to Review.
+- 33 total Projects; 33 contained at least one legacy field;
+- field counts were 32 / 32 / 28 / 33 / 26 in the order listed above;
+- affected statuses were 20 published, 4 company selected, 3 draft, 3 pending review, 1 needs changes, 1 in discussion, and 1 completed.
 
-Current Client, Company, Invitation, Initial Quote, Admin, public Project, and homepage DTO/UI paths do not expose Project budget values. Marketplace filtering and sorting use scope fields and publication time only. Budget query arguments and budget sort literals remain accepted temporarily for stale browser bundles, but are ignored and normalize to current newest-first behavior.
+A development snapshot was exported before execution. The dry run processed one 10-row batch and committed nothing. The tracked migration then completed successfully with 33 processed rows. Post-migration verification found all five field counts at zero, with 33 Projects and the same status distribution. A normal rerun returned `Migration already done`.
 
-The current runtime does not read or write `marketplaceBudgetRank`. Budget-specific marketplace indexes and the budget search-index filter were removed because no current query references them. The search-text backfill now updates search text only and leaves any stored legacy rank untouched.
+After verification, the five fields and their validator were removed from `convex/schema.ts`. Convex codegen and `npx convex dev --once` accepted the cleaned development data against the narrowed schema.
 
-The legacy `saveBudget` mutation remains authenticated and validated only for browser bundles opened before Phase 2. Current source code does not call it.
+## Production safety and rollout
 
-## Legacy data
+Production data was not inspected, exported, migrated, or deployed during Phase 3. No command used `--prod`.
 
-All five budget fields remain optional in the Convex schema. Existing documents retain their stored values, but current APIs and UI ignore them. Phase 2 performs no data migration, rewrite, unset, or conversion operation.
+The final narrowed schema must not be deployed directly to production until a separately approved production migration is performed. That rollout must repeat the proven sequence:
 
-## Remaining Phase 3 cleanup
+1. deploy the migration while the five fields are still optional;
+2. export a production snapshot and document the restore window;
+3. audit counts, dry-run, execute, and verify zero remaining fields;
+4. only then deploy the narrowed schema.
 
-A later, separately owner-approved phase may:
-
-1. remove the legacy `saveBudget` API after its compatibility window;
-2. remove accepted-but-ignored legacy marketplace query arguments and sort literals;
-3. decide whether to unset stored legacy values with a bounded migration; and
-4. remove the five legacy schema fields and their validators only after stored data is compatible.
-
-Any physical data cleanup must be bounded, rehearsed in development, and separately authorized before production.
+A snapshot restore replaces deployment data and can discard writes made after the snapshot. Keep any future production migration window short, preserve the snapshot as sensitive data, and require fresh explicit production approval for every production read or write.

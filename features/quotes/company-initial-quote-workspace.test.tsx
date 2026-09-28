@@ -32,7 +32,6 @@ const project = {
   title: "Renovation of a family apartment",
   city: "rabat" as const,
   primaryCategory: "renovation" as const,
-  budgetRange: "100000_250000" as const,
   timeline: "one_to_three_months" as const,
 };
 

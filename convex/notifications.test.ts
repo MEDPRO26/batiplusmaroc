@@ -45,7 +45,6 @@ async function setup() {
     title: "Riad renovation",
     countryCode: "MA",
     surfaceUnknown: true,
-    budgetUnknown: true,
     visibility: "marketplace",
     status: "published",
     lastCompletedStep: 6,

@@ -144,8 +144,7 @@ describe("client project workspace", () => {
       history: [{ oldStatus: "draft", newStatus: "pending_review", changedAt: 1_790_000_100_000, actor: "client", reason: null }],
       viewerRole: "owner",
     };
-    const legacyDetails = { ...details, budgetRange: "50000_100000" as const };
-    const html = render("en", <ClientProjectDetailsView project={legacyDetails} />);
+    const html = render("en", <ClientProjectDetailsView project={details} />);
     expect(html).toContain("Project information");
     expect(html).toContain("plan.pdf");
     expect(html).toContain("Draft → Pending review");

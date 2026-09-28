@@ -32,9 +32,8 @@ async function createExistingProject(t: TestBackend, clientId: Id<"users">, inde
     neighborhood: "Agdal", countryCode: "MA" as const, title: `Existing project ${index}`,
     propertyType: "apartment" as const, surface: 80 + index, surfaceUnknown: false,
     description: "A normal development project that must remain untouched by seed commands.",
-    budgetRange: "100000_250000" as const, budgetMin: 100_000, budgetMax: 250_000,
-    budgetUnknown: false, timeline: "one_to_three_months" as const,
-    visibility: "marketplace" as const, status: "published" as const, lastCompletedStep: 6,
+    timeline: "one_to_three_months" as const,
+    visibility: "marketplace" as const, status: "published" as const, lastCompletedStep: 5,
     createdAt: 100 + index, updatedAt: 200 + index, submittedAt: 150 + index, publishedAt: 200 + index,
   };
   return await t.run((ctx) => ctx.db.insert("projects", {
@@ -114,7 +113,7 @@ describe("development project seed", () => {
     const hiddenTitles = new Set(SEED_PROJECTS.filter((project) => project.status !== "published").map((project) => project.title));
     expect(visible.some((project) => hiddenTitles.has(project.title))).toBe(false);
 
-    const filter = async (args: { city?: "agadir"; category?: "pool"; budgetRange?: "under_50000" }) =>
+    const filter = async (args: { city?: "agadir"; category?: "pool" }) =>
       await caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, {
         paginationOpts: { numItems: 20, cursor: null }, ...args,
       });
@@ -124,9 +123,6 @@ describe("development project seed", () => {
     const pool = await filter({ category: "pool" });
     expect(pool.page).toHaveLength(1);
     expect(pool.page[0]?.title).toBe("Swimming pool construction in Tangier");
-    const budget = await filter({ budgetRange: "under_50000" });
-    expect(budget.page).toHaveLength(16);
-    expect(budget.page.every((project) => !("budgetRange" in project))).toBe(true);
   });
 
   test("cleanup removes only seed projects/history and preserves three existing projects", async () => {

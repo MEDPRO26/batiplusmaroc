@@ -115,18 +115,17 @@ test.beforeAll(async () => {
   harnessBundle = result.outputFiles[0].text;
 });
 
-const noBudgetProject = {
-  id: "project-no-budget",
-  title: "Budget-free compatibility project",
+const firstProject = {
+  id: "project-first",
+  title: "Rabat renovation project",
   city: "rabat",
   primaryCategory: "renovation",
   customCategoryText: null,
-  budgetRange: null,
   timeline: "one_to_three_months",
   propertyType: "apartment",
   surface: 95,
   surfaceUnknown: false,
-  description: "A complete renovation project published without legacy client-budget fields.",
+  description: "A complete renovation project published for company discovery.",
   publishedAt: 1_790_000_000_000,
   client: {
     displayName: "Samir C.",
@@ -141,11 +140,10 @@ const noBudgetProject = {
   },
 };
 
-const legacyBudgetProject = {
-  ...noBudgetProject,
-  id: "project-legacy-budget",
-  title: "Legacy renovation compatibility project",
-  budgetRange: "100000_250000",
+const secondProject = {
+  ...firstProject,
+  id: "project-second",
+  title: "Second renovation project",
   publishedAt: 1_790_000_100_000,
 };
 
@@ -161,14 +159,11 @@ async function mount(page: Page, locale: "en" | "fr") {
       target.__projectDetails = {
         ...projectDetails,
         neighborhood: "Agdal",
-        budgetMin: 100_000,
-        budgetMax: 250_000,
-        budgetUnknown: false,
         canSubmitQuote: true,
         myQuoteId: null,
       };
     },
-    { locale, projects: [legacyBudgetProject, noBudgetProject], projectDetails: legacyBudgetProject },
+    { locale, projects: [secondProject, firstProject], projectDetails: secondProject },
   );
   await page.addScriptTag({ content: harnessBundle });
 }
@@ -209,18 +204,18 @@ async function mountWizard(page: Page, locale: "en" | "fr") {
   await page.addScriptTag({ content: harnessBundle });
 }
 
-test("current marketplace hides both missing and stored legacy Client budgets", async ({ page }) => {
+test("current marketplace contains no Client budget controls or display", async ({ page }) => {
   await mount(page, "en");
 
-  await expect(page.getByRole("heading", { name: noBudgetProject.title })).toBeVisible();
-  await expect(page.getByRole("heading", { name: legacyBudgetProject.title })).toBeVisible();
+  await expect(page.getByRole("heading", { name: firstProject.title })).toBeVisible();
+  await expect(page.getByRole("heading", { name: secondProject.title })).toBeVisible();
   await expect(
     page.getByRole("region", { name: "Available projects" }).getByText("1–3 months", { exact: true }).first(),
   ).toBeVisible();
   await expect(page.getByText("Budget", { exact: true })).toHaveCount(0);
   await expect(page.getByText("100,000–250,000 MAD", { exact: true })).toHaveCount(0);
 
-  await page.getByRole("button", { name: `View project: ${legacyBudgetProject.title}` }).click();
+  await page.getByRole("button", { name: `View project: ${secondProject.title}` }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByRole("link", { name: "Submit a proposal" }).first()).toBeVisible();
   await expect(page.getByText("Budget", { exact: true })).toHaveCount(0);
@@ -237,7 +232,7 @@ test("the no-budget marketplace remains usable in French on mobile", async ({ pa
   await page.setViewportSize({ width: 375, height: 812 });
   await mount(page, "fr");
 
-  await expect(page.getByRole("heading", { name: noBudgetProject.title })).toBeVisible();
+  await expect(page.getByRole("heading", { name: firstProject.title })).toBeVisible();
   await expect(page.getByText("Budget", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Filtres" }).click();
   await expect(page.getByRole("dialog", { name: "Filtres" })).toBeVisible();
@@ -252,7 +247,7 @@ test("the no-budget marketplace remains usable in French on mobile", async ({ pa
 test("the budget-free marketplace layout remains stable on tablet", async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 });
   await mount(page, "en");
-  await expect(page.getByRole("heading", { name: legacyBudgetProject.title })).toBeVisible();
+  await expect(page.getByRole("heading", { name: secondProject.title })).toBeVisible();
   await page.getByRole("button", { name: "Filters" }).click();
   await expect(page.getByRole("dialog", { name: "Filters" })).toBeVisible();
   await expect(page.getByText("Budget", { exact: true })).toHaveCount(0);

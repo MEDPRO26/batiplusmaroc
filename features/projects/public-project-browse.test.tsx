@@ -36,7 +36,6 @@ const publicProject = {
   description: "A safe public project description for marketplace browsing.",
   city: "casablanca" as const,
   primaryCategory: "renovation" as const,
-  budgetRange: "50000_100000" as const,
   timeline: "one_to_three_months" as const,
   publishedAt: Date.now() - 86_400_000,
   thumbnailUrl: null,

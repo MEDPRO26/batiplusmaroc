@@ -55,7 +55,6 @@ const projectCategory = v.union(
   v.literal("pool"), v.literal("electrical"), v.literal("plumbing"), v.literal("painting"), v.literal("other"),
 );
 const projectPropertyType = v.union(v.literal("house"), v.literal("apartment"), v.literal("building"), v.literal("office"), v.literal("shop"), v.literal("land"), v.literal("other"));
-const projectBudgetRange = v.union(v.literal("under_50000"), v.literal("50000_100000"), v.literal("100000_250000"), v.literal("250000_500000"), v.literal("500000_1000000"), v.literal("1000000_plus"), v.literal("unknown"));
 const projectTimeline = v.union(v.literal("asap"), v.literal("within_1_month"), v.literal("one_to_three_months"), v.literal("three_to_six_months"), v.literal("six_plus_months"), v.literal("flexible"));
 const projectStatus = v.union(v.literal("draft"), v.literal("pending_review"), v.literal("needs_changes"), v.literal("published"), v.literal("in_discussion"), v.literal("company_selected"), v.literal("in_progress"), v.literal("completed"), v.literal("cancelled"), v.literal("archived"));
 const initialQuoteStatus = v.union(
@@ -211,13 +210,10 @@ export default defineSchema({
     clientId: v.id("users"), primaryCategory: v.optional(projectCategory), customCategoryText: v.optional(v.string()),
     city: v.optional(companyServiceArea), neighborhood: v.optional(v.string()), countryCode: v.literal("MA"),
     title: v.optional(v.string()), propertyType: v.optional(projectPropertyType), surface: v.optional(v.number()),
-    surfaceUnknown: v.boolean(), description: v.optional(v.string()), budgetRange: v.optional(projectBudgetRange),
-    budgetMin: v.optional(v.number()), budgetMax: v.optional(v.number()), budgetUnknown: v.optional(v.boolean()),
+    surfaceUnknown: v.boolean(), description: v.optional(v.string()),
     timeline: v.optional(projectTimeline), visibility: v.union(v.literal("marketplace"), v.literal("invite_only")),
     /** Public-only denormalized text used by the authenticated company marketplace. */
     marketplaceSearchText: v.optional(v.string()),
-    /** Legacy compatibility field. Current marketplace queries do not use project budgets. */
-    marketplaceBudgetRank: v.optional(v.number()),
     status: projectStatus, lastCompletedStep: v.number(), createdAt: v.number(), updatedAt: v.number(),
     selectedCompanyId: v.optional(v.id("companies")),
     selectedFinalQuoteId: v.optional(v.id("finalQuotes")),

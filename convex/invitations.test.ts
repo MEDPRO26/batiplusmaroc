@@ -72,16 +72,7 @@ async function seedProject(
     | "cancelled"
     | "archived" = "published",
   visibility: "marketplace" | "invite_only" = "invite_only",
-  includeBudget = true,
 ) {
-  const budgetFields = includeBudget
-    ? {
-        budgetRange: "100000_250000" as const,
-        budgetMin: 100_000,
-        budgetMax: 250_000,
-        budgetUnknown: false,
-      }
-    : {};
   return await t.run((ctx) =>
     ctx.db.insert("projects", {
       clientId,
@@ -94,7 +85,6 @@ async function seedProject(
       surfaceUnknown: false,
       description:
         "A complete apartment renovation with plumbing and electrical work.",
-      ...budgetFields,
       timeline: "one_to_three_months",
       visibility,
       status,
@@ -114,13 +104,13 @@ function asUser(t: Backend, userId: Id<"users">) {
   });
 }
 
-async function setup(includeBudget = true) {
+async function setup() {
   const t = convexTest(schema, modules);
   const clientId = await seedUser(t, "client");
   const otherClientId = await seedUser(t, "client");
   const company = await seedCompany(t);
   const otherCompany = await seedCompany(t);
-  const projectId = await seedProject(t, clientId, "published", "invite_only", includeBudget);
+  const projectId = await seedProject(t, clientId, "published", "invite_only");
   return { t, clientId, otherClientId, company, otherCompany, projectId };
 }
 
@@ -550,7 +540,6 @@ describe("invitation decisions and isolation", () => {
       status: "accepted",
       projectId: state.projectId,
     });
-    expect(own[0]).not.toHaveProperty("budgetRange");
     expect(other).toEqual([]);
     expect(clientRows).toHaveLength(1);
     await expect(
@@ -835,7 +824,7 @@ describe("accepted invitation convergence", () => {
   });
 
   test("pending is locked; accepted direct proposal opens the existing conversation and quote pipeline", async () => {
-    const state = await setup(false);
+    const state = await setup();
     const created = await asUser(state.t, state.clientId).mutation(
       api.invitations.index.inviteCompanyToProject,
       { companyId: state.company.companyId, projectId: state.projectId },
@@ -868,13 +857,11 @@ describe("accepted invitation convergence", () => {
       { projectId: state.projectId },
     );
     expect(quoteContext).toMatchObject({ project: { id: state.projectId } });
-    expect(quoteContext?.project).not.toHaveProperty("budgetRange");
     const marketplaceProject = await asUser(state.t, state.company.userId).query(
       api.projects.marketplace.getCompanyMarketplaceProject,
       { projectId: state.projectId },
     );
     expect(marketplaceProject).toMatchObject({ id: state.projectId, canSubmitQuote: true });
-    expect(marketplaceProject).not.toHaveProperty("budgetRange");
     const submitted = await asUser(state.t, state.company.userId).mutation(
       api.quotes.index.submitInitialQuote,
       { projectId: state.projectId, ...validQuote },

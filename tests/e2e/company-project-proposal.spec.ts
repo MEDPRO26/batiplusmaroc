@@ -145,7 +145,7 @@ test("the proposal form uses marketplace sections and submits the existing field
   if (shots) await page.screenshot({ path: `${shots}/proposal-desktop-en.png`, fullPage: true });
 
   await page.getByRole("button", { name: "Submit proposal" }).click();
-  await expect(page.getByRole("alert")).toHaveText("Complete all required fields.");
+  await expect(page.getByRole("alert").filter({ hasText: "Complete all required fields." })).toBeVisible();
 
   await page.getByLabel("Initial estimate").fill("350000");
   await page.getByLabel("Estimated duration").fill("60");

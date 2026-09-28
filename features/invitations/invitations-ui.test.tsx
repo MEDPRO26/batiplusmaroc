@@ -50,7 +50,6 @@ const rows = (["pending", "accepted", "declined"] as const).map(
       "A complete renovation project with a safe public summary.",
     city: "rabat",
     category: "renovation",
-    budgetRange: "100000_250000",
     companyId: "company-1" as Id<"companies">,
     companyName: "Atlas Build",
     clientDisplayName: "Khadija C.",

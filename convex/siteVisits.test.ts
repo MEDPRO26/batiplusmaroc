@@ -40,7 +40,6 @@ async function seedProject(t: Backend, clientId: Id<"users">) {
   return await t.run((ctx) => ctx.db.insert("projects", {
     clientId, primaryCategory: "renovation", city: "rabat", countryCode: "MA", title: "Riad renovation",
     propertyType: "house", surface: 180, surfaceUnknown: false, description: "Complete renovation.",
-    budgetRange: "250000_500000", budgetMin: 250_000, budgetMax: 500_000, budgetUnknown: false,
     timeline: "one_to_three_months", visibility: "marketplace", status: "published", lastCompletedStep: 6,
     createdAt: 1, updatedAt: 1, submittedAt: 1, publishedAt: 1,
   }));

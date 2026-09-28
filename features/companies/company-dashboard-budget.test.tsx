@@ -28,7 +28,6 @@ vi.mock("convex/react", () => ({
       city: "rabat",
       primaryCategory: "renovation",
       customCategoryText: null,
-      budgetRange: "100000_250000",
       timeline: "one_to_three_months",
       propertyType: "apartment",
       surface: 95,

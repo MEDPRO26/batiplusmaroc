@@ -342,9 +342,6 @@ describe("immutable revision state machine", () => {
     }));
     expect(state.first).toMatchObject({ revisionNumber: 1, price: 380000 }); expect(state.second).toMatchObject({ revisionNumber: 2, price: 350000 });
     expect(state.initialQuote).toMatchObject({ estimatedPrice: 400_000 });
-    for (const field of ["budgetRange", "budgetMin", "budgetMax", "budgetUnknown", "marketplaceBudgetRank"] as const) {
-      expect(state.project).not.toHaveProperty(field);
-    }
     expect(state.parent).toMatchObject({ status: "accepted", currentRevisionId: second.revisionId, acceptedRevisionId: second.revisionId });
     expect(state.project).toMatchObject({ status: "company_selected", selectedCompanyId: s.companyId, selectedFinalQuoteId: requested.finalQuoteId });
     expect(state.deal).toMatchObject({
@@ -559,7 +556,6 @@ describe("atomic Deal creation at Final Quote acceptance", () => {
         clientId: s.clientId,
         countryCode: "MA",
         surfaceUnknown: true,
-        budgetUnknown: true,
         visibility: "marketplace",
         status: "published",
         lastCompletedStep: 6,
@@ -589,7 +585,6 @@ describe("atomic Deal creation at Final Quote acceptance", () => {
         clientId: s.clientId,
         countryCode: "MA",
         surfaceUnknown: true,
-        budgetUnknown: true,
         visibility: "marketplace",
         status: "published",
         lastCompletedStep: 6,

@@ -13,7 +13,6 @@ import { invitationForPair } from "../invitations/index";
 import { toPublicClientProfile } from "../lib/clientPublicShape";
 import {
   postedWindowMs,
-  projectBudgetRangeValidator,
   projectCategories,
   projectCategoryValidator,
   projectCities,
@@ -379,12 +378,10 @@ export const listCompanyMarketplaceProjects = query({
     search: v.optional(v.string()),
     city: v.optional(projectCityValidator),
     category: v.optional(projectCategoryValidator),
-    budgetRange: v.optional(projectBudgetRangeValidator),
     timeline: v.optional(projectTimelineValidator),
     propertyType: v.optional(projectPropertyTypeValidator),
     cities: v.optional(v.array(projectCityValidator)),
     categories: v.optional(v.array(projectCategoryValidator)),
-    budgetRanges: v.optional(v.array(projectBudgetRangeValidator)),
     timelines: v.optional(v.array(projectTimelineValidator)),
     propertyTypes: v.optional(v.array(projectPropertyTypeValidator)),
     surfaceRanges: v.optional(v.array(projectSurfaceRangeValidator)),
@@ -414,8 +411,7 @@ export const listCompanyMarketplaceProjects = query({
       timeline: singleOrUndefined(selections.timelines),
       propertyType: singleOrUndefined(selections.propertyTypes),
     };
-    // Stale browser bundles may still send budget arguments. They are deliberately ignored.
-    const sortBy: MarketplaceSort = args.sortBy === "oldest" ? "oldest" : "newest";
+    const sortBy: MarketplaceSort = args.sortBy ?? "newest";
     const postedWindow = postedSinceMs(selections.postedWindows);
     const publishedAfter =
       postedWindow === undefined ? undefined : Math.max(0, (args.now ?? 0) - postedWindow);

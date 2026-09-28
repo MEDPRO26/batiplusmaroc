@@ -50,6 +50,7 @@ import type * as messages_attachmentRules from "../messages/attachmentRules.js";
 import type * as messages_attachments from "../messages/attachments.js";
 import type * as messages_download from "../messages/download.js";
 import type * as messages_index from "../messages/index.js";
+import type * as migrations from "../migrations.js";
 import type * as notifications_constants from "../notifications/constants.js";
 import type * as notifications_deliveryPolicy from "../notifications/deliveryPolicy.js";
 import type * as notifications_index from "../notifications/index.js";
@@ -146,6 +147,7 @@ declare const fullApi: ApiFromModules<{
   "messages/attachments": typeof messages_attachments;
   "messages/download": typeof messages_download;
   "messages/index": typeof messages_index;
+  migrations: typeof migrations;
   "notifications/constants": typeof notifications_constants;
   "notifications/deliveryPolicy": typeof notifications_deliveryPolicy;
   "notifications/index": typeof notifications_index;
@@ -220,4 +222,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
+};
