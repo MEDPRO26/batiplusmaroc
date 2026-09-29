@@ -24,7 +24,7 @@
     "seed:projects:clear": "node scripts/seed-projects.mjs --clear"
   },
   "dependencies": {
-    "@auth/core": "^0.41.1",
+    "@auth/core": "^0.41.3",
     "@aws-sdk/client-s3": "^3.1136.0",
     "@aws-sdk/s3-request-presigner": "^3.1136.0",
     "@convex-dev/auth": "^0.0.95",
@@ -35,7 +35,7 @@
     "jose": "^6.2.12",
     "lucide-react": "^1.47.0",
     "moment-timezone": "^0.6.4",
-    "next": "16.3.1",
+    "next": "16.3.6",
     "next-intl": "^4.14.5",
     "radix-ui": "^1.6.7",
     "react": "19.2.8",
@@ -58,6 +58,6 @@
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.11"
   }
 }
