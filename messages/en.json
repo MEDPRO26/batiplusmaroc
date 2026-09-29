@@ -2521,6 +2521,8 @@
     "error": "We couldn’t update your notifications. Please try again.",
     "retry": "Try again",
     "dismiss": "Dismiss",
+    "fallbackCompany": "Company",
+    "fallbackCompanyMember": "Company member",
     "events": {
       "proposal_received": "{companyName} sent a proposal for {projectTitle}.",
       "proposal_accepted": "Discussion opened for your proposal on {projectTitle}.",

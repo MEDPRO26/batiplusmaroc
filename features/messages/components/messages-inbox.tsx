@@ -464,7 +464,7 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
         <SidebarIcon />
       </button>
     </header>
-    <ConversationMarketplaceWorkflow conversationId={conversationId} />
+    {conversation.quoteId ? <ConversationMarketplaceWorkflow conversationId={conversationId} /> : null}
     <div aria-live="polite" aria-relevant="additions text" className="flex flex-1 flex-col overflow-y-auto bg-[#fbfcfd] px-4 py-5 sm:px-8" role="log">
       {status === "CanLoadMore" ? <button className="mx-auto mb-5 min-h-11 rounded-full border border-brand-border bg-white px-4 text-sm font-semibold text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={() => loadMore(30)} type="button">{t("loadOlder")}</button> : null}
       {status === "LoadingMore" ? <p className="mb-5 text-center text-sm text-muted">{t("loadingOlder")}</p> : null}

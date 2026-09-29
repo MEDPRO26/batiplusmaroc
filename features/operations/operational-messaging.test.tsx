@@ -116,6 +116,16 @@ describe("operational messaging UI", () => {
     expect(html).toContain("<time");
   });
 
+  test.each([
+    ["en", "Company member"],
+    ["fr", "Membre de l’entreprise"],
+  ] as const)("localizes an unnamed Company sender in %s", (locale, fallback) => {
+    const unnamed = { ...message(1, "Operational update", true), senderDisplayName: "" };
+    const html = provider(locale, <ol><OperationalMessageBubble locale={locale} message={unnamed} /></ol>);
+    expect(html).toContain(fallback);
+    if (locale === "fr") expect(html).not.toContain("Company member");
+  });
+
   test("composer exposes no attachment or rich-text controls", () => {
     const html = provider("en", <OperationalComposer onSend={vi.fn(async () => undefined)} />);
     expect(html).not.toContain('type="file"');

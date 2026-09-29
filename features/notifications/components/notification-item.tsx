@@ -34,7 +34,15 @@ export function NotificationItem({
   const now = useNow({ updateInterval: 60_000 });
   const Icon = ICONS[notificationIconCategory(notification.type)];
   const unread = notification.readAt === null;
-  const label = t(notificationTranslationKey(notification.type), notificationInterpolation(notification.payload));
+  const label = t(notificationTranslationKey(notification.type), notificationInterpolation(
+    notification.payload,
+    {
+      actorDisplayName: notification.type === "company_admin_message_received"
+        ? t("fallbackCompanyMember")
+        : "",
+      companyName: t("fallbackCompany"),
+    },
+  ));
 
   return (
     <button

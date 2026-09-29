@@ -267,6 +267,26 @@ describe("notification presentation", () => {
     expect(renderPage("fr")).toContain("Batiplus vous a envoyé un nouveau message opérationnel.");
   });
 
+  test("localizes an unnamed Company in operational notifications", () => {
+    state.results = [{
+      ...notification("company_admin_message_received", {
+        type: "admin_company_message",
+        id: "message-unnamed" as Id<"adminCompanyMessages">,
+      }),
+      payload: {
+        actorDisplayName: "",
+        companyId: "company-unnamed" as Id<"companies">,
+        companyName: "",
+        messagePreview: "Operational update.",
+      },
+    }];
+
+    expect(renderPage("en")).toContain("Company sent Batiplus a new operational message.");
+    const french = renderPage("fr");
+    expect(french).toContain("Entreprise a envoyé un nouveau message opérationnel à Batiplus.");
+    expect(french).not.toContain("Company sent");
+  });
+
   test("resolves proposal notifications to the related role-safe Project route", async () => {
     const projectId = "project-1" as Id<"projects">;
     const received = { ...notification("proposal_received", { type: "proposal", id: "proposal-1" as Id<"projectQuotes"> }), projectId };

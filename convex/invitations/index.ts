@@ -5,6 +5,7 @@ import { mutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
 import { assertCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
+import { ensureConversationForAcceptedInvitation } from "../messages/index";
 import {
   createNotification,
   createNotificationForActiveCompanyMembers,
@@ -354,6 +355,20 @@ async function decideInvitation(
     actorUserId: userId,
     createdAt: now,
   });
+  const conversationId =
+    nextStatus === "accepted"
+      ? await ensureConversationForAcceptedInvitation(
+          ctx,
+          {
+            ...invitation,
+            status: "accepted",
+            acceptedAt: now,
+            updatedAt: now,
+          },
+          project,
+          userId,
+        )
+      : undefined;
   if (nextStatus === "accepted" && project.status === "published") {
     assertProjectTransition(project.status, "in_discussion");
     await ctx.db.patch(project._id, {
@@ -378,6 +393,7 @@ async function decideInvitation(
     actorType: "company",
     companyId: company._id,
     invitationId: invitation._id,
+    conversationId,
     oldStatus: invitation.status,
     newStatus: nextStatus,
     createdAt: now,

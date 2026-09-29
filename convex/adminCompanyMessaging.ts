@@ -128,7 +128,8 @@ async function summaryFor(
   return {
     id: conversation._id,
     companyId: conversation.companyId,
-    companyName: company.name?.trim() || company.legalName?.trim() || "Company",
+    // Display fallbacks are locale-sensitive and belong in the client.
+    companyName: company.name?.trim() || company.legalName?.trim() || "",
     messageCount: conversation.messageCount,
     readThroughSequence,
     unreadCount: unread,
@@ -252,16 +253,17 @@ async function sendOperationalMessage(
     ctx.db.get(args.senderUserId),
   ]);
   if (!company) throw new ConvexError("COMPANY_NOT_FOUND");
-  const companyName = company.name?.trim() || company.legalName?.trim() || "Company";
+  const companyName = company.name?.trim() || company.legalName?.trim() || "";
+  const actorDisplayName = safeDisplayName(
+    sender,
+    args.senderType === "admin" ? "Batiplus" : "",
+  );
   const preview = messagePreview(body);
   const notification = {
     entity: { type: "admin_company_message" as const, id: messageId },
     payload: {
-      actorDisplayName: safeDisplayName(
-        sender,
-        args.senderType === "admin" ? "Batiplus" : "Company member",
-      ),
-      companyName,
+      ...(actorDisplayName ? { actorDisplayName } : {}),
+      ...(companyName ? { companyName } : {}),
       companyId: company._id,
       messagePreview: preview,
     },
@@ -310,7 +312,7 @@ async function messageDto(
     senderType: message.senderType,
     senderDisplayName: safeDisplayName(
       sender,
-      message.senderType === "admin" ? "Batiplus" : "Company member",
+      message.senderType === "admin" ? "Batiplus" : "",
     ),
     body: message.body,
     sequence: message.sequence,

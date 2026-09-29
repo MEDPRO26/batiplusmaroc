@@ -74,8 +74,10 @@ function dateValue(value: string, now: number, allowToday: boolean, code: string
 async function contextForConversation(ctx: Ctx, conversationId: Id<"conversations">) {
   const conversation = await ctx.db.get(conversationId);
   if (!conversation) throw new ConvexError("CONVERSATION_NOT_FOUND");
+  const quoteId = conversation.quoteId;
+  if (!quoteId) throw new ConvexError("CONVERSATION_LOCKED");
   const [project, initialQuote, company] = await Promise.all([
-    ctx.db.get(conversation.projectId), ctx.db.get(conversation.quoteId), ctx.db.get(conversation.companyId),
+    ctx.db.get(conversation.projectId), ctx.db.get(quoteId), ctx.db.get(conversation.companyId),
   ]);
   if (!project || !initialQuote || !company || conversation.status !== "active" || project.clientId !== conversation.clientId ||
     initialQuote.projectId !== project._id || initialQuote.companyId !== company._id || initialQuote.status !== "discussion_open") {

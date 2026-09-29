@@ -6,8 +6,8 @@ import { routes } from "@/lib/routes";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 
-const convex = vi.hoisted(() => ({ result: [] as unknown }));
-vi.mock("convex/react", () => ({ useQuery: () => convex.result }));
+const convex = vi.hoisted(() => ({ results: [] as unknown[] }));
+vi.mock("convex/react", () => ({ useQuery: () => convex.results.shift() }));
 
 import { CompanyCommissions } from "./components/company-commissions";
 
@@ -45,7 +45,9 @@ const paid = {
 };
 
 describe("Company commission visibility UI", () => {
-  beforeEach(() => { convex.result = []; });
+  beforeEach(() => {
+    convex.results = [[], { totalDueMad: 0, totalPaidMad: 0, dueCount: 0 }];
+  });
 
   test("maps the localized Company commissions route", () => {
     expect(routing.pathnames[routes.companyCommissions]).toEqual({
@@ -64,7 +66,10 @@ describe("Company commission visibility UI", () => {
   });
 
   test("renders due and paid badges with safe read-only details", () => {
-    convex.result = [due, paid];
+    convex.results = [
+      [due, paid],
+      { totalDueMad: 19_750, totalPaidMad: 19_750, dueCount: 1 },
+    ];
     const html = render("en");
     expect(html).toContain("Villa Anfa");
     expect(html).toContain("Riad Medina");
@@ -79,16 +84,30 @@ describe("Company commission visibility UI", () => {
   });
 
   test("includes both card and table responsive presentations", () => {
-    convex.result = [due];
+    convex.results = [
+      [due],
+      { totalDueMad: 19_750, totalPaidMad: 0, dueCount: 1 },
+    ];
     const html = render("en");
     expect(html).toContain("md:hidden");
     expect(html).toContain("hidden overflow-x-auto md:block");
   });
 
   test("renders an accessible loading skeleton", () => {
-    convex.result = undefined;
+    convex.results = [undefined, undefined];
     const html = render("fr");
     expect(html).toContain('aria-busy="true"');
     expect(html).toContain("Chargement des obligations de commission");
+  });
+
+  test("renders authoritative totals instead of summing the bounded history", () => {
+    convex.results = [
+      [due],
+      { totalDueMad: 4_147_500, totalPaidMad: 2_370_000, dueCount: 210 },
+    ];
+    const html = render("en");
+    expect(html).toContain("MAD\u00a04,147,500");
+    expect(html).toContain("MAD\u00a02,370,000");
+    expect(html).toContain(">210<");
   });
 });

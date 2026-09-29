@@ -7,6 +7,11 @@ import {
 
 export type PushLocale = "fr" | "en";
 
+const GENERIC_NAMES = {
+  en: { company: "Company", companyMember: "Company member" },
+  fr: { company: "Entreprise", companyMember: "Membre de l’entreprise" },
+} as const satisfies Record<PushLocale, { company: string; companyMember: string }>;
+
 type PushNotificationRecord = Pick<
   Doc<"notifications">,
   "type" | "entity" | "payload"
@@ -65,10 +70,12 @@ const BODY_TEMPLATES = {
 
 function bodyFor(notification: PushNotificationRecord, locale: PushLocale) {
   const template = BODY_TEMPLATES[locale][notification.type as ActiveNotificationType];
+  const generic = GENERIC_NAMES[locale];
   const values: Record<string, string> = {
-    actorDisplayName: notification.payload.actorDisplayName ?? "",
+    actorDisplayName: notification.payload.actorDisplayName?.trim()
+      || (notification.type === "company_admin_message_received" ? generic.companyMember : ""),
     projectTitle: notification.payload.projectTitle ?? "",
-    companyName: notification.payload.companyName ?? "",
+    companyName: notification.payload.companyName?.trim() || generic.company,
     amountMad: notification.payload.amountMad === undefined
       ? ""
       : new Intl.NumberFormat(locale).format(notification.payload.amountMad),
@@ -85,6 +92,7 @@ export function marketplacePushPresentation(
   return {
     title: "Batiplus Maroc",
     body: bodyFor(notification, locale),
+    locale,
     url: localizedNotificationDestination(locale, notification, accountType),
     tag: `batiplus-notification-${notification._id}`,
   };

@@ -13,6 +13,7 @@ const MAX_ENDPOINT_LENGTH = 2_048;
 const MAX_KEY_LENGTH = 512;
 const MAX_SUBSCRIPTIONS_PER_USER = 20;
 const BASE64_URL_PATTERN = /^[A-Za-z0-9_-]+={0,2}$/;
+const pushLocaleValidator = v.union(v.literal("fr"), v.literal("en"));
 
 const subscriptionStateValidator = v.object({
   registered: v.boolean(),
@@ -85,6 +86,7 @@ export const registerMyPushSubscription = mutation({
     endpoint: v.string(),
     p256dh: v.string(),
     auth: v.string(),
+    locale: pushLocaleValidator,
   },
   returns: v.object({ created: v.boolean(), updatedAt: v.number() }),
   handler: async (ctx, args) => {
@@ -97,16 +99,30 @@ export const registerMyPushSubscription = mutation({
       .query("pushSubscriptions")
       .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
       .unique();
-    if (existing && existing.userId !== userId) {
-      throw new ConvexError("PUSH_SUBSCRIPTION_NOT_FOUND");
-    }
 
     const now = Date.now();
     if (existing) {
+      if (existing.userId !== userId) {
+        // The auth secret proves this caller controls the same browser subscription.
+        // Never transfer an endpoint based on its URL alone.
+        if (existing.p256dh !== args.p256dh || existing.auth !== args.auth) {
+          throw new ConvexError("PUSH_SUBSCRIPTION_NOT_FOUND");
+        }
+        const current = await ctx.db
+          .query("pushSubscriptions")
+          .withIndex("by_userId", (q) => q.eq("userId", userId))
+          .take(MAX_SUBSCRIPTIONS_PER_USER);
+        if (current.length >= MAX_SUBSCRIPTIONS_PER_USER) {
+          throw new ConvexError("PUSH_SUBSCRIPTION_LIMIT_REACHED");
+        }
+      }
       await ctx.db.patch(existing._id, {
+        userId,
         p256dh: args.p256dh,
         auth: args.auth,
+        locale: args.locale,
         updatedAt: now,
+        ...(existing.userId !== userId ? { lastUsedAt: undefined } : {}),
       });
       return { created: false, updatedAt: now };
     }
@@ -124,6 +140,7 @@ export const registerMyPushSubscription = mutation({
       endpoint: args.endpoint,
       p256dh: args.p256dh,
       auth: args.auth,
+      locale: args.locale,
       createdAt: now,
       updatedAt: now,
     });

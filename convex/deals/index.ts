@@ -9,6 +9,7 @@ import { createNotificationForActiveCompanyMembers } from "../notifications/mode
 import { requireClientUser } from "../projects/access";
 import { assertProjectTransition } from "../projects/state";
 import { commissionStatusValidator, dealStatusValidator } from "./constants";
+import { recordCommissionDue } from "./commissionSummary";
 import { assertDealCompletable, isDealReviewEligible } from "./state";
 
 const dealValidator = v.object({
@@ -369,6 +370,12 @@ export async function createDealFromAcceptedFinalQuote(
     status: "active",
     createdAt: now,
   });
+  await recordCommissionDue(
+    ctx,
+    finalQuote.companyId,
+    commission.commissionAmountMad,
+    now,
+  );
   await ctx.db.insert("dealStatusHistory", {
     dealId,
     toStatus: "active",

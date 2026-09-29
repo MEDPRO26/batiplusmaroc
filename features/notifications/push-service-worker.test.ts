@@ -50,6 +50,7 @@ describe("push service worker", () => {
       data: { json: () => ({
         title: "Batiplus Maroc",
         body: "Les notifications Batiplus sont activées.",
+        locale: "fr",
         url: "/fr/notifications",
         tag: "test",
       }) },
@@ -57,52 +58,117 @@ describe("push service worker", () => {
     expect(state.showNotification).toHaveBeenCalledWith("Batiplus Maroc", {
       body: "Les notifications Batiplus sont activées.",
       tag: "test",
-      data: { url: "/fr/notifications" },
+      data: { locale: "fr", url: "/fr/notifications" },
     });
   });
 
-  test("handles malformed payloads with safe fallbacks", async () => {
-    const state = worker();
+  test("derives an English fallback from an existing client for a malformed payload", async () => {
+    const englishClient = {
+      url: "https://batiplus.example/en/client/dashboard",
+      navigate: vi.fn(async () => undefined),
+      focus: vi.fn(async () => undefined),
+    };
+    const state = worker({ windows: [englishClient] });
     await dispatch(state.listeners.get("push")!, {
       data: { json: () => { throw new Error("malformed"); } },
     });
     expect(state.showNotification).toHaveBeenCalledWith("Batiplus Maroc", {
       body: "",
       tag: "batiplus-notification",
-      data: { url: "/fr/notifications" },
+      data: { locale: "en", url: "/en/notifications" },
     });
   });
 
-  test("focuses and navigates an existing Batiplus window for a safe local click", async () => {
-    const existing = {
+  test("uses the payload locale for a URL-less push", async () => {
+    const state = worker();
+    await dispatch(state.listeners.get("push")!, {
+      data: { json: () => ({ title: "Batiplus Maroc", locale: "en" }) },
+    });
+    expect(state.showNotification).toHaveBeenCalledWith("Batiplus Maroc", {
+      body: "",
+      tag: "batiplus-notification",
+      data: { locale: "en", url: "/en/notifications" },
+    });
+  });
+
+  test("focuses only an existing window that already matches the target URL", async () => {
+    const unrelated = {
       url: "https://batiplus.example/en",
       navigate: vi.fn(async () => undefined),
       focus: vi.fn(async () => undefined),
     };
-    const state = worker({ windows: [existing] });
+    const matching = {
+      url: "https://batiplus.example/fr/notifications?source=push",
+      navigate: vi.fn(async () => undefined),
+      focus: vi.fn(async () => undefined),
+    };
+    const state = worker({ windows: [unrelated, matching] });
     const close = vi.fn();
     await dispatch(state.listeners.get("notificationclick")!, {
       notification: { data: { url: "/fr/notifications?source=push" }, close },
     });
     expect(close).toHaveBeenCalled();
-    expect(existing.navigate).toHaveBeenCalledWith(
-      "https://batiplus.example/fr/notifications?source=push",
-    );
-    expect(existing.focus).toHaveBeenCalled();
+    expect(matching.focus).toHaveBeenCalled();
+    expect(matching.navigate).not.toHaveBeenCalled();
+    expect(unrelated.focus).not.toHaveBeenCalled();
+    expect(unrelated.navigate).not.toHaveBeenCalled();
     expect(state.openWindow).not.toHaveBeenCalled();
+  });
+
+  test("opens a new window instead of navigating an unrelated Batiplus tab", async () => {
+    const unrelated = {
+      url: "https://batiplus.example/en/client/projects/new",
+      navigate: vi.fn(async () => undefined),
+      focus: vi.fn(async () => undefined),
+    };
+    const state = worker({ windows: [unrelated] });
+    await dispatch(state.listeners.get("notificationclick")!, {
+      notification: {
+        data: { url: "/en/notifications" },
+        close: vi.fn(),
+      },
+    });
+    expect(unrelated.navigate).not.toHaveBeenCalled();
+    expect(unrelated.focus).not.toHaveBeenCalled();
+    expect(state.openWindow).toHaveBeenCalledWith(
+      "https://batiplus.example/en/notifications",
+    );
   });
 
   test.each([
     "https://evil.example/phish",
     "//evil.example/phish",
-  ])("rejects external click target %s and opens the safe fallback", async (url) => {
+  ])("rejects external click target %s and preserves its validated locale", async (url) => {
     const state = worker();
     await dispatch(state.listeners.get("notificationclick")!, {
-      notification: { data: { url }, close: vi.fn() },
+      notification: { data: { locale: "en", url }, close: vi.fn() },
     });
     expect(state.openWindow).toHaveBeenCalledWith(
-      "https://batiplus.example/fr/notifications",
+      "https://batiplus.example/en/notifications",
     );
+  });
+
+  test("derives a URL-less click fallback from an existing localized client", async () => {
+    const englishClient = {
+      url: "https://batiplus.example/en/client/projects/new",
+      navigate: vi.fn(async () => undefined),
+      focus: vi.fn(async () => undefined),
+    };
+    const state = worker({ windows: [englishClient] });
+    await dispatch(state.listeners.get("notificationclick")!, {
+      notification: { data: {}, close: vi.fn() },
+    });
+    expect(state.openWindow).toHaveBeenCalledWith(
+      "https://batiplus.example/en/notifications",
+    );
+  });
+
+  test("does not invent a French fallback when no locale can be recovered", async () => {
+    const state = worker();
+    await dispatch(state.listeners.get("notificationclick")!, {
+      notification: { data: {}, close: vi.fn() },
+    });
+    expect(state.openWindow).not.toHaveBeenCalled();
   });
 
   test("has no fetch interception, cache, install, or activation behavior", () => {

@@ -56,6 +56,8 @@ const projectCategory = v.union(
   v.literal("pool"), v.literal("electrical"), v.literal("plumbing"), v.literal("painting"), v.literal("other"),
 );
 const projectPropertyType = v.union(v.literal("house"), v.literal("apartment"), v.literal("building"), v.literal("office"), v.literal("shop"), v.literal("land"), v.literal("other"));
+/** Deploy-1 compatibility only. Remove after the production cleanup migration verifies zero legacy fields. */
+const legacyProjectBudgetRange = v.union(v.literal("under_50000"), v.literal("50000_100000"), v.literal("100000_250000"), v.literal("250000_500000"), v.literal("500000_1000000"), v.literal("1000000_plus"), v.literal("unknown"));
 const projectTimeline = v.union(v.literal("asap"), v.literal("within_1_month"), v.literal("one_to_three_months"), v.literal("three_to_six_months"), v.literal("six_plus_months"), v.literal("flexible"));
 const projectStatus = v.union(v.literal("draft"), v.literal("pending_review"), v.literal("needs_changes"), v.literal("published"), v.literal("in_discussion"), v.literal("company_selected"), v.literal("in_progress"), v.literal("completed"), v.literal("cancelled"), v.literal("archived"));
 const initialQuoteStatus = v.union(
@@ -141,6 +143,8 @@ export default defineSchema({
       v.literal("completed"),
       v.literal("skipped"),
     )),
+    /** Identifies the currently active delivery attempt; cleared on terminal states. */
+    pushDeliveryLeaseId: v.optional(v.string()),
     pushAttemptedAt: v.optional(v.number()),
     pushCompletedAt: v.optional(v.number()),
     pushDeliveredCount: v.optional(v.number()),
@@ -171,6 +175,8 @@ export default defineSchema({
     endpoint: v.string(),
     p256dh: v.string(),
     auth: v.string(),
+    /** Locale selected on this device; optional while legacy subscriptions refresh. */
+    locale: v.optional(v.union(v.literal("fr"), v.literal("en"))),
     createdAt: v.number(),
     updatedAt: v.number(),
     lastUsedAt: v.optional(v.number()),
@@ -212,9 +218,14 @@ export default defineSchema({
     city: v.optional(companyServiceArea), neighborhood: v.optional(v.string()), countryCode: v.literal("MA"),
     title: v.optional(v.string()), propertyType: v.optional(projectPropertyType), surface: v.optional(v.number()),
     surfaceUnknown: v.boolean(), description: v.optional(v.string()),
+    /** Deploy-1 compatibility fields. Current product code must not read or write them. */
+    budgetRange: v.optional(legacyProjectBudgetRange), budgetMin: v.optional(v.number()),
+    budgetMax: v.optional(v.number()), budgetUnknown: v.optional(v.boolean()),
     timeline: v.optional(projectTimeline), visibility: v.union(v.literal("marketplace"), v.literal("invite_only")),
     /** Public-only denormalized text used by the authenticated company marketplace. */
     marketplaceSearchText: v.optional(v.string()),
+    /** Deploy-1 compatibility field. Current marketplace queries do not use budget ranking. */
+    marketplaceBudgetRank: v.optional(v.number()),
     status: projectStatus, lastCompletedStep: v.number(), createdAt: v.number(), updatedAt: v.number(),
     selectedCompanyId: v.optional(v.id("companies")),
     selectedFinalQuoteId: v.optional(v.id("finalQuotes")),
@@ -542,6 +553,15 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_acceptedFinalQuoteId", ["acceptedFinalQuoteId"]),
 
+  /** Transactional totals for Company commission dashboards. */
+  companyCommissionSummaries: defineTable({
+    companyId: v.id("companies"),
+    dueCount: v.number(),
+    dueAmountCentimes: v.number(),
+    paidAmountCentimes: v.number(),
+    updatedAt: v.number(),
+  }).index("by_companyId", ["companyId"]),
+
   reviews: defineTable({
     dealId: v.id("deals"),
     projectId: v.id("projects"),
@@ -616,7 +636,8 @@ export default defineSchema({
 
   conversations: defineTable({
     projectId: v.id("projects"),
-    quoteId: v.id("projectQuotes"),
+    quoteId: v.optional(v.id("projectQuotes")),
+    invitationId: v.optional(v.id("invitations")),
     clientId: v.id("users"),
     companyId: v.id("companies"),
     status: v.union(v.literal("active"), v.literal("closed")),
@@ -750,6 +771,8 @@ export default defineSchema({
       v.literal("rejected"),
     ),
     operationalStatus: v.optional(companyOperationalStatusValidator),
+    /** Materialized directory eligibility; optional until legacy rows are backfilled. */
+    directoryListed: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -760,12 +783,27 @@ export default defineSchema({
       "onboardingStatus",
       "verificationStatus",
     ])
+    .index("by_onboardingStatus_and_directoryListed", [
+      "onboardingStatus",
+      "directoryListed",
+    ])
+    .index("by_onboardingStatus_and_verificationStatus_and_directoryListed", [
+      "onboardingStatus",
+      "verificationStatus",
+      "directoryListed",
+    ])
     .index("by_verificationStatus", ["verificationStatus"])
+    .index("by_directoryListed", ["directoryListed"])
     /** Admin operations filter; a missing value means "normal". */
     .index("by_operationalStatus", ["operationalStatus"])
     .searchIndex("search_directory", {
       searchField: "directorySearchText",
-      filterFields: ["onboardingStatus", "verificationStatus", "operationalStatus"],
+      filterFields: [
+        "onboardingStatus",
+        "verificationStatus",
+        "operationalStatus",
+        "directoryListed",
+      ],
     }),
 
   companyMembers: defineTable({

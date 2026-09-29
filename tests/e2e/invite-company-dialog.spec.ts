@@ -22,13 +22,31 @@ test.beforeAll(async () => {
               loader: "jsx",
               resolveDir: process.cwd(),
               contents: `
+          import { useSyncExternalStore } from "react";
+          function subscribe(callback) {
+            window.addEventListener("invitation-harness-update", callback);
+            return () => window.removeEventListener("invitation-harness-update", callback);
+          }
+          function getSnapshot() { return window.__harnessVersion; }
           export function useQuery(_query, args) {
+            useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
             if (args === "skip") return undefined;
             if (args === undefined) return window.__user;
             return args && args.companyId ? window.__projects : window.__invitations;
           }
           export function useMutation() {
-            return async (args) => { window.__submission = args; };
+            return async (args) => {
+              window.__submission = args;
+              if (window.__reactAfterInvite && args.projectId) {
+                window.__projects = window.__projects.map((project) =>
+                  project.id === args.projectId
+                    ? { ...project, invitationId: "invitation-new", invitationStatus: "pending" }
+                    : project
+                );
+                window.__harnessVersion += 1;
+                window.dispatchEvent(new Event("invitation-harness-update"));
+              }
+            };
           }
         `,
             }
@@ -78,10 +96,15 @@ test.beforeAll(async () => {
   harnessBundle = result.outputFiles[0].text;
 });
 
-async function mount(page: Page, locale: "en" | "fr", projects: unknown[]) {
+async function mount(
+  page: Page,
+  locale: "en" | "fr",
+  projects: unknown[],
+  { reactAfterInvite = false }: { reactAfterInvite?: boolean } = {},
+) {
   await page.setContent('<main><div id="root"></div></main>');
   await page.evaluate(
-    ({ locale, projects }) => {
+    ({ locale, projects, reactAfterInvite }) => {
       const target = window as unknown as Record<string, unknown>;
       target.__locale = locale;
       target.__user = { accountType: "client", onboardingStatus: "completed" };
@@ -89,8 +112,10 @@ async function mount(page: Page, locale: "en" | "fr", projects: unknown[]) {
       target.__invitations = [];
       target.__view = "invite";
       target.__submission = null;
+      target.__reactAfterInvite = reactAfterInvite;
+      target.__harnessVersion = 0;
     },
-    { locale, projects },
+    { locale, projects, reactAfterInvite },
   );
   await page.addScriptTag({ content: harnessBundle });
 }
@@ -139,7 +164,7 @@ const projects = [
 test("client selects an owned project, writes a full message, and sends the invitation", async ({
   page,
 }) => {
-  await mount(page, "en", projects);
+  await mount(page, "en", projects, { reactAfterInvite: true });
   await page.getByRole("button", { name: "Invite to a project" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   const selector = page.getByLabel("Choose a project");
@@ -152,6 +177,12 @@ test("client selects an owned project, writes a full message, and sends the invi
   await page.locator("#invitation-message").fill(message);
   await page.getByRole("button", { name: "Send invitation" }).click();
   await expect(page.getByRole("status")).toContainText("Invitation sent");
+  await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
+  await expect(
+    page.getByText(
+      "This company already has an invitation for each of your eligible projects.",
+    ),
+  ).toHaveCount(0);
   const submission = await page.evaluate(
     () => (window as unknown as Record<string, unknown>).__submission,
   );

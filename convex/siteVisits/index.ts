@@ -167,7 +167,9 @@ function validateFutureSchedule(proposedDate: string, proposedTime: string, now:
 async function getConversationContext(ctx: Ctx, conversationId: Id<"conversations">) {
   const conversation = await ctx.db.get(conversationId);
   if (!conversation) throw new ConvexError("CONVERSATION_NOT_FOUND");
-  const [project, quote, company] = await Promise.all([ctx.db.get(conversation.projectId), ctx.db.get(conversation.quoteId), ctx.db.get(conversation.companyId)]);
+  const quoteId = conversation.quoteId;
+  if (!quoteId) throw new ConvexError("CONVERSATION_LOCKED");
+  const [project, quote, company] = await Promise.all([ctx.db.get(conversation.projectId), ctx.db.get(quoteId), ctx.db.get(conversation.companyId)]);
   if (!project || !quote || !company || project.clientId !== conversation.clientId || quote.projectId !== project._id || quote.companyId !== company._id || conversation.status !== "active") throw new ConvexError("CONVERSATION_INTEGRITY_ERROR");
   return { conversation, project, quote, company };
 }

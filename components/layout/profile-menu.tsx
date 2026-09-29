@@ -1,9 +1,9 @@
 "use client";
 
-import { useAuthActions } from "@convex-dev/auth/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Fragment, useEffect, useId, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { useSafeSignOut } from "@/features/auth/hooks/use-safe-sign-out";
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 import { userInitials } from "./navbar-role";
@@ -34,7 +34,7 @@ export function ProfileMenu({
 }) {
   const t = useTranslations("nav.profileMenu");
   const tAuth = useTranslations("auth");
-  const { signOut } = useAuthActions();
+  const signOut = useSafeSignOut();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -135,7 +135,9 @@ export function ProfileMenu({
               className="flex min-h-11 w-full cursor-pointer items-center rounded-xl border-0 bg-transparent px-3 text-start text-sm font-medium text-ink transition-colors hover:bg-brand-soft/70 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               onClick={() => {
                 setOpen(false);
-                void signOut().then(() => router.push(routes.signIn));
+                void signOut().then((signedOut) => {
+                  if (signedOut) router.push(routes.signIn);
+                });
               }}
               role="menuitem"
               type="button"

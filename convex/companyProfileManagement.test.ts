@@ -44,6 +44,8 @@ async function seedCompany(
       directorySearchText: `${label} company rabat servicestructural structural work gros oeuvre gros œuvre`,
       onboardingStatus: "completed",
       verificationStatus: "verified",
+      operationalStatus: "normal",
+      directoryListed: true,
       createdAt: now,
       updatedAt: now,
     });

@@ -365,7 +365,12 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
                 </div>
                 <p className="mt-5 mb-0 text-sm leading-6 text-ink/85">{profile.description}</p>
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                  <InviteCompanyButton companyEligible={profile.isVerified} companyId={profile.id} />
+                  <InviteCompanyButton
+                    companyEligible={
+                      profile.isVerified && profile.marketplaceAvailable
+                    }
+                    companyId={profile.id}
+                  />
                   <button className="button w-full cursor-not-allowed border border-brand-border bg-white text-ink opacity-70" disabled type="button">{tProfile("quote")}</button>
                 </div>
                 <p className="mt-2 mb-0 text-center text-xs leading-5 text-muted">{tProfile("quoteSoon")}</p>

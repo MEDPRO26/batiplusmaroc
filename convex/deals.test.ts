@@ -6,6 +6,7 @@ import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import type { CommissionTier } from "./marketplaceSettings/constants";
 import * as companyCommissionModule from "./deals/company";
+import { isCentimePrecisionMadAmount } from "./deals/money";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -374,6 +375,36 @@ describe("Deal creation and immutable commercial truth", () => {
       commissionAmountMad: 3_703.7,
       commissionTierMinAmountMad: 0,
       commissionTierMaxAmountMad: 300_000,
+    });
+  });
+
+  test("centime-precision snapshots remain visible and payable", async () => {
+    expect(isCentimePrecisionMadAmount(0.29)).toBe(true);
+    expect(isCentimePrecisionMadAmount(0)).toBe(false);
+    expect(isCentimePrecisionMadAmount(0, true)).toBe(true);
+    expect(isCentimePrecisionMadAmount(-0.01, true)).toBe(false);
+    expect(isCentimePrecisionMadAmount(0.001)).toBe(false);
+
+    const source = await setupAcceptedSource(658.29);
+    const created = await createDeal(source.t, source.finalQuoteId);
+    const companyRows = await asUser(source.t, source.companyUserId).query(
+      api.deals.company.listMyCommissionObligations,
+      {},
+    );
+    expect(companyRows).toEqual([
+      expect.objectContaining({
+        agreedAmountMad: 658.29,
+        commissionAmountMad: 19.75,
+        snapshotComplete: true,
+      }),
+    ]);
+
+    await expect(asUser(source.t, source.adminUserId).mutation(
+      api.admin.deals.markCommissionPaid,
+      { dealId: created.dealId },
+    )).resolves.toMatchObject({
+      dealId: created.dealId,
+      commissionStatus: "paid",
     });
   });
 
@@ -848,6 +879,39 @@ describe("Deal completion lifecycle", () => {
 });
 
 describe("Admin commission payment tracking", () => {
+  test("incomplete commission snapshots cannot be recorded as paid", async () => {
+    const corruptions = [
+      { agreedAmountMad: 395_000.001 },
+      { commissionRateBps: -1 },
+      { commissionRateBps: 3_001 },
+      { commissionRateBps: 2.5 },
+      { commissionConfigVersion: 0 },
+      { commissionConfigVersion: -1 },
+    ];
+
+    for (const corruption of corruptions) {
+      const source = await setupAcceptedSource();
+      const created = await createDeal(source.t, source.finalQuoteId);
+      await source.t.run((ctx) => ctx.db.patch(created.dealId, corruption));
+
+      await expect(asUser(source.t, source.adminUserId).mutation(
+        api.admin.deals.markCommissionPaid,
+        { dealId: created.dealId },
+      )).rejects.toThrow("COMMISSION_SNAPSHOT_INCOMPLETE");
+
+      const state = await source.t.run(async (ctx) => ({
+        deal: await ctx.db.get(created.dealId),
+        history: await ctx.db
+          .query("commissionStatusHistory")
+          .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId))
+          .take(1),
+      }));
+      expect(state.deal).toMatchObject({ commissionStatus: "due" });
+      expect(state.deal?.commissionPaidAt).toBeUndefined();
+      expect(state.history).toHaveLength(0);
+    }
+  });
+
   test("commission payment notifies all active debtor-Company members without private payment data", async () => {
     const source = await setupAcceptedSource();
     const teammateUserId = await addActiveCompanyTeammate(source);
@@ -1001,6 +1065,16 @@ describe("Company commission visibility", () => {
     expect(rows[0]).not.toHaveProperty("commissionPaidByAdminUserId");
     expect(rows[0]).not.toHaveProperty("clientUserId");
     expect(rows[0]).not.toHaveProperty("projectId");
+    await expect(
+      asUser(source.t, source.companyUserId).query(
+        api.deals.company.getMyCommissionSummary,
+        {},
+      ),
+    ).resolves.toEqual({
+      totalDueMad: 19_750,
+      totalPaidMad: 0,
+      dueCount: 1,
+    });
   });
 
   test("another Company gets no rows and cannot probe with a Company ID", async () => {
@@ -1051,6 +1125,16 @@ describe("Company commission visibility", () => {
     expect(rows[0]).toMatchObject({ commissionStatus: "paid", paidAt: paid.paidAt });
     expect(JSON.stringify(rows[0])).not.toContain("BANK-PRIVATE-42");
     expect(JSON.stringify(rows[0])).not.toContain("Internal reconciliation note");
+    await expect(
+      asUser(source.t, source.companyUserId).query(
+        api.deals.company.getMyCommissionSummary,
+        {},
+      ),
+    ).resolves.toEqual({
+      totalDueMad: 0,
+      totalPaidMad: 19_750,
+      dueCount: 0,
+    });
   });
 
   test("incomplete snapshots are read-only and never recalculated", async () => {
@@ -1072,6 +1156,7 @@ describe("Company commission visibility", () => {
 
   test("Company commission module exposes read-only queries and no payment mutation", () => {
     expect(Object.keys(companyCommissionModule).sort()).toEqual([
+      "getMyCommissionSummary",
       "listMyCommissionObligations",
       "listMyDeals",
     ]);
@@ -1079,6 +1164,48 @@ describe("Company commission visibility", () => {
 });
 
 describe("Company work and proposal projections", () => {
+  test("the work list applies its cap to the newest Deals", async () => {
+    const source = await setupAcceptedSource();
+    const dealIds = await source.t.run(async (ctx) => {
+      const ids: Id<"deals">[] = [];
+      for (let index = 1; index <= 201; index += 1) {
+        ids.push(await ctx.db.insert("deals", {
+          projectId: source.projectId,
+          clientUserId: source.clientUserId,
+          companyId: source.companyId,
+          createdByUserId: source.clientUserId,
+          acceptedFinalQuoteId: source.finalQuoteId,
+          acceptedFinalQuoteRevisionId: source.acceptedRevisionId,
+          conversationId: source.conversationId,
+          initialQuoteId: source.initialQuoteId,
+          agreedAmountMad: 395_000,
+          currency: "MAD",
+          commissionRateBps: 500,
+          commissionAmountMad: 19_750,
+          commissionTierMinAmountMad: 300_001,
+          commissionTierMaxAmountMad: 500_000,
+          commissionConfigVersion: 1,
+          commissionDebtorCompanyId: source.companyId,
+          commissionBeneficiary: "batiplus",
+          commissionStatus: "due",
+          status: "active",
+          createdAt: index,
+        }));
+      }
+      return ids;
+    });
+
+    const deals = await asUser(source.t, source.companyUserId).query(
+      api.deals.company.listMyDeals,
+      {},
+    );
+
+    expect(deals).toHaveLength(200);
+    expect(deals[0]).toMatchObject({ dealId: dealIds[200], createdAt: 201 });
+    expect(deals.at(-1)).toMatchObject({ dealId: dealIds[1], createdAt: 2 });
+    expect(deals.map((deal) => deal.dealId)).not.toContain(dealIds[0]);
+  });
+
   test("the selected Company sees its Deal and its proposal with safe links", async () => {
     const source = await setupAcceptedSource();
     const created = await createDeal(source.t, source.finalQuoteId);

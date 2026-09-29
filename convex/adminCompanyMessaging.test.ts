@@ -174,6 +174,41 @@ describe("operational conversation creation and send", () => {
     expect(JSON.stringify(notifications)).not.toContain("@operational.test");
   });
 
+  test("returns semantic empty fallbacks for unnamed companies and members", async () => {
+    const state = await setup();
+    await state.t.run(async (ctx) => {
+      await ctx.db.patch(state.companyId, { name: undefined, legalName: undefined });
+      await ctx.db.patch(state.owner, {
+        firstName: undefined,
+        lastName: undefined,
+        name: undefined,
+      });
+    });
+    const sent = await asUser(state.t, state.owner).mutation(
+      api.adminCompanyMessaging.sendCompanyMessage,
+      { body: "Unnamed sender", idempotencyKey: "unnamed-operational-sender" },
+    );
+    const admin = asUser(state.t, state.adminA);
+    const summary = await admin.query(
+      api.adminCompanyMessaging.getAdminConversation,
+      { companyId: state.companyId },
+    );
+    const messages = await admin.query(api.adminCompanyMessaging.listAdminMessages, {
+      conversationId: sent.conversationId,
+      ...firstPage(),
+    });
+    const notifications = await state.t.run((ctx) => ctx.db
+      .query("notifications")
+      .withIndex("by_recipientUserId_and_createdAt", (q) => q.eq("recipientUserId", state.adminA))
+      .take(10));
+
+    expect(summary?.companyName).toBe("");
+    expect(messages.page[0].senderDisplayName).toBe("");
+    expect(notifications[0].payload).not.toHaveProperty("actorDisplayName");
+    expect(notifications[0].payload).not.toHaveProperty("companyName");
+    expect(JSON.stringify({ summary, messages, notifications })).not.toContain("Company member");
+  });
+
   test("Admin and Company can each initiate while one conversation per Company is preserved", async () => {
     const state = await setup();
     const adminSend = await asUser(state.t, state.adminA).mutation(

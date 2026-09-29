@@ -14,28 +14,18 @@ export function CompanyCommissions() {
   const t = useTranslations("companyCommissions");
   const locale = useLocale();
   const obligations = useQuery(api.deals.company.listMyCommissionObligations);
+  const summary = useQuery(api.deals.company.getMyCommissionSummary);
 
-  if (obligations === undefined) return <CommissionsSkeleton />;
-
-  const complete = obligations.filter(
-    (item) => item.snapshotComplete && item.commissionAmountMad !== null,
-  );
-  const totalDue = complete
-    .filter((item) => item.commissionStatus === "due")
-    .reduce((sum, item) => sum + (item.commissionAmountMad ?? 0), 0);
-  const totalPaid = complete
-    .filter((item) => item.commissionStatus === "paid")
-    .reduce((sum, item) => sum + (item.commissionAmountMad ?? 0), 0);
-  const dueCount = obligations.filter((item) => item.commissionStatus === "due").length;
+  if (obligations === undefined || summary === undefined) return <CommissionsSkeleton />;
 
   return (
     <WorkspacePage>
         <WorkspacePageHeader lead={t("lead")} title={t("title")} />
 
         <section aria-label={t("summary.label")} className="mt-7 grid gap-3 sm:grid-cols-3">
-          <SummaryCard label={t("summary.due")} value={money(totalDue, locale)} />
-          <SummaryCard label={t("summary.paid")} value={money(totalPaid, locale)} />
-          <SummaryCard label={t("summary.count")} value={String(dueCount)} />
+          <SummaryCard label={t("summary.due")} value={money(summary.totalDueMad, locale)} />
+          <SummaryCard label={t("summary.paid")} value={money(summary.totalPaidMad, locale)} />
+          <SummaryCard label={t("summary.count")} value={String(summary.dueCount)} />
         </section>
 
         <h2 className="mt-9 mb-3 text-base font-semibold text-ink">{t("historyTitle")}</h2>

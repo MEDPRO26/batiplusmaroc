@@ -3,9 +3,11 @@
 import { build } from "esbuild";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
+  detachBrowserPushBeforeSignOut,
   disableBrowserPush,
   enableBrowserPush,
   inspectBrowserPush,
+  reconcileExistingBrowserPushLocale,
 } from "./lib/browser-push";
 
 function installBrowser({
@@ -108,6 +110,42 @@ describe("browser push API", () => {
     expect(browser.subscribe).not.toHaveBeenCalled();
   });
 
+  test("silently reconciles an existing subscription with the active English locale", async () => {
+    const current = {
+      endpoint: "https://push.example.test/legacy-english-device",
+      getKey: (name: PushEncryptionKeyName) => new Uint8Array(
+        name === "p256dh" ? [1, 2, 3, 4] : [5, 6, 7, 8],
+      ).buffer,
+      unsubscribe: vi.fn(async () => true),
+    } as unknown as PushSubscription;
+    const browser = installBrowser({ permission: "granted", existing: current });
+    const registerSubscription = vi.fn(async () => undefined);
+
+    await expect(reconcileExistingBrowserPushLocale("en", registerSubscription))
+      .resolves.toBe(true);
+    expect(registerSubscription).toHaveBeenCalledWith({
+      endpoint: current.endpoint,
+      p256dh: "AQIDBA",
+      auth: "BQYHCA",
+      locale: "en",
+    });
+    expect(browser.requestPermission).not.toHaveBeenCalled();
+    expect(browser.register).not.toHaveBeenCalled();
+    expect(browser.subscribe).not.toHaveBeenCalled();
+  });
+
+  test("does not create or register a subscription during passive locale reconciliation", async () => {
+    const browser = installBrowser({ permission: "default" });
+    const registerSubscription = vi.fn(async () => undefined);
+
+    await expect(reconcileExistingBrowserPushLocale("en", registerSubscription))
+      .resolves.toBe(false);
+    expect(registerSubscription).not.toHaveBeenCalled();
+    expect(browser.requestPermission).not.toHaveBeenCalled();
+    expect(browser.register).not.toHaveBeenCalled();
+    expect(browser.subscribe).not.toHaveBeenCalled();
+  });
+
   test("stops after denial and does not register a service worker", async () => {
     const browser = installBrowser({ permission: "default", requestResult: "denied" });
     await expect(enableBrowserPush("AQIDBA")).rejects.toThrow("PUSH_PERMISSION_DENIED");
@@ -126,6 +164,70 @@ describe("browser push API", () => {
     installBrowser({ permission: "granted", existing: current });
     await expect(disableBrowserPush()).resolves.toMatchObject({ endpoint: current.endpoint });
     expect(current.unsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  test("removes the authenticated binding before unsubscribing on sign-out", async () => {
+    const events: string[] = [];
+    const current = {
+      endpoint: "https://push.example.test/sign-out",
+      getKey: (name: PushEncryptionKeyName) => new Uint8Array(
+        name === "p256dh" ? [1, 2, 3, 4] : [5, 6, 7, 8],
+      ).buffer,
+      unsubscribe: vi.fn(async () => {
+        events.push("browser");
+        return true;
+      }),
+    } as unknown as PushSubscription;
+    installBrowser({ permission: "granted", existing: current });
+
+    await expect(detachBrowserPushBeforeSignOut(async (endpoint) => {
+      events.push("server");
+      expect(endpoint).toBe(current.endpoint);
+      return { removed: true };
+    })).resolves.toBeUndefined();
+    expect(events).toEqual(["server", "browser"]);
+  });
+
+  test("allows sign-out when either server removal or browser unsubscribe protects the device", async () => {
+    const browserFallback = {
+      endpoint: "https://push.example.test/browser-fallback",
+      getKey: (name: PushEncryptionKeyName) => new Uint8Array(
+        name === "p256dh" ? [1, 2, 3, 4] : [5, 6, 7, 8],
+      ).buffer,
+      unsubscribe: vi.fn(async () => true),
+    } as unknown as PushSubscription;
+    installBrowser({ permission: "granted", existing: browserFallback });
+    await expect(detachBrowserPushBeforeSignOut(async () => {
+      throw new Error("network unavailable");
+    })).resolves.toBeUndefined();
+
+    const serverFallback = {
+      endpoint: "https://push.example.test/server-fallback",
+      getKey: (name: PushEncryptionKeyName) => new Uint8Array(
+        name === "p256dh" ? [1, 2, 3, 4] : [5, 6, 7, 8],
+      ).buffer,
+      unsubscribe: vi.fn(async () => {
+        throw new Error("browser refused");
+      }),
+    } as unknown as PushSubscription;
+    installBrowser({ permission: "granted", existing: serverFallback });
+    await expect(detachBrowserPushBeforeSignOut(async () => ({ removed: true })))
+      .resolves.toBeUndefined();
+  });
+
+  test("blocks sign-out cleanup when both protections fail", async () => {
+    const current = {
+      endpoint: "https://push.example.test/unsafe",
+      getKey: (name: PushEncryptionKeyName) => new Uint8Array(
+        name === "p256dh" ? [1, 2, 3, 4] : [5, 6, 7, 8],
+      ).buffer,
+      unsubscribe: vi.fn(async () => {
+        throw new Error("browser refused");
+      }),
+    } as unknown as PushSubscription;
+    installBrowser({ permission: "granted", existing: current });
+    await expect(detachBrowserPushBeforeSignOut(async () => ({ removed: false })))
+      .rejects.toThrow("PUSH_SIGN_OUT_CLEANUP_FAILED");
   });
 });
 

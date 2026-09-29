@@ -36,6 +36,7 @@ export const sendMyTestPush = action({
       body: args.locale === "fr"
         ? "Les notifications Batiplus sont activées."
         : "Batiplus notifications are enabled.",
+      locale: args.locale,
       url: `/${args.locale}/notifications`,
       tag: "batiplus-push-test",
     });

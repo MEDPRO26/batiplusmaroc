@@ -39,10 +39,11 @@ async function addUser(t: Backend, isAnonymous = false) {
   }));
 }
 
-const subscription = (suffix: string) => ({
+const subscription = (suffix: string, locale: "fr" | "en" = "fr") => ({
   endpoint: `https://push.example.test/subscriptions/${suffix}`,
   p256dh: "A".repeat(87),
   auth: "B".repeat(22),
+  locale,
 });
 
 beforeEach(() => {
@@ -73,7 +74,7 @@ describe("push subscription API", () => {
     )).resolves.toMatchObject({ created: true });
     await expect(viewer.mutation(
       api.notifications.pushSubscriptions.registerMyPushSubscription,
-      { ...device, auth: "E".repeat(22) },
+      { ...device, auth: "E".repeat(22), locale: "en" },
     )).resolves.toMatchObject({ created: false });
 
     await expect(viewer.query(
@@ -83,11 +84,35 @@ describe("push subscription API", () => {
 
     const stored = await t.run((ctx) => ctx.db.query("pushSubscriptions").collect());
     expect(stored).toHaveLength(1);
-    expect(stored[0]).toMatchObject({ userId, endpoint: device.endpoint, auth: "E".repeat(22) });
+    expect(stored[0]).toMatchObject({
+      userId,
+      endpoint: device.endpoint,
+      auth: "E".repeat(22),
+      locale: "en",
+    });
     expect(Object.keys(await viewer.query(
       api.notifications.pushSubscriptions.getMyPushSubscriptionState,
       { endpoint: device.endpoint },
     ))).toEqual(["registered", "updatedAt"]);
+  });
+
+  test("requires every new registration to declare its device locale", async () => {
+    const t = makeBackend();
+    const userId = await addUser(t);
+    const viewer = asUser(t, userId);
+    const currentDevice = subscription("legacy-client");
+    const device = {
+      endpoint: currentDevice.endpoint,
+      p256dh: currentDevice.p256dh,
+      auth: currentDevice.auth,
+    };
+
+    await expect(viewer.mutation(
+      api.notifications.pushSubscriptions.registerMyPushSubscription,
+      device as never,
+    )).rejects.toThrow();
+    await expect(t.run((ctx) => ctx.db.query("pushSubscriptions").collect()))
+      .resolves.toEqual([]);
   });
 
   test("supports multiple devices and unregisters only the current endpoint", async () => {
@@ -127,7 +152,7 @@ describe("push subscription API", () => {
       .resolves.toHaveLength(20);
   });
 
-  test("prevents cross-user endpoint registration, lookup, and removal", async () => {
+  test("allows proof-of-possession rebinding but rejects endpoint-only cross-user claims", async () => {
     const t = makeBackend();
     const ownerId = await addUser(t);
     const otherId = await addUser(t);
@@ -135,6 +160,14 @@ describe("push subscription API", () => {
     const other = asUser(t, otherId);
     const device = subscription("owner");
     await owner.mutation(api.notifications.pushSubscriptions.registerMyPushSubscription, device);
+    await t.run(async (ctx) => {
+      const stored = await ctx.db
+        .query("pushSubscriptions")
+        .withIndex("by_endpoint", (q) => q.eq("endpoint", device.endpoint))
+        .unique();
+      if (!stored) throw new Error("Expected stored subscription");
+      await ctx.db.patch(stored._id, { lastUsedAt: 123 });
+    });
 
     await expect(other.query(
       api.notifications.pushSubscriptions.getMyPushSubscriptionState,
@@ -146,10 +179,52 @@ describe("push subscription API", () => {
     )).resolves.toEqual({ removed: false });
     await expect(other.mutation(
       api.notifications.pushSubscriptions.registerMyPushSubscription,
-      device,
+      { ...device, auth: "C".repeat(22) },
     )).rejects.toThrow("PUSH_SUBSCRIPTION_NOT_FOUND");
-    await expect(t.run((ctx) => ctx.db.query("pushSubscriptions").collect()))
-      .resolves.toHaveLength(1);
+    await expect(other.mutation(
+      api.notifications.pushSubscriptions.registerMyPushSubscription,
+      device,
+    )).resolves.toMatchObject({ created: false });
+
+    await expect(owner.query(
+      api.notifications.pushSubscriptions.getMyPushSubscriptionState,
+      { endpoint: device.endpoint },
+    )).resolves.toEqual({ registered: false, updatedAt: null });
+    await expect(other.query(
+      api.notifications.pushSubscriptions.getMyPushSubscriptionState,
+      { endpoint: device.endpoint },
+    )).resolves.toEqual({ registered: true, updatedAt: expect.any(Number) });
+    const stored = await t.run((ctx) => ctx.db.query("pushSubscriptions").collect());
+    expect(stored).toEqual([expect.objectContaining({ userId: otherId, ...device })]);
+    expect(stored[0]).not.toHaveProperty("lastUsedAt");
+  });
+
+  test("does not bypass the device cap when rebinding a shared-browser endpoint", async () => {
+    const t = makeBackend();
+    const ownerId = await addUser(t);
+    const fullAccountId = await addUser(t);
+    const owner = asUser(t, ownerId);
+    const fullAccount = asUser(t, fullAccountId);
+    const sharedBrowser = subscription("shared-browser");
+    await owner.mutation(
+      api.notifications.pushSubscriptions.registerMyPushSubscription,
+      sharedBrowser,
+    );
+    for (let index = 0; index < 20; index += 1) {
+      await fullAccount.mutation(
+        api.notifications.pushSubscriptions.registerMyPushSubscription,
+        subscription(`full-account-${index}`),
+      );
+    }
+
+    await expect(fullAccount.mutation(
+      api.notifications.pushSubscriptions.registerMyPushSubscription,
+      sharedBrowser,
+    )).rejects.toThrow("PUSH_SUBSCRIPTION_LIMIT_REACHED");
+    await expect(owner.query(
+      api.notifications.pushSubscriptions.getMyPushSubscriptionState,
+      { endpoint: sharedBrowser.endpoint },
+    )).resolves.toEqual({ registered: true, updatedAt: expect.any(Number) });
   });
 
   test("rejects unauthenticated, anonymous, malformed, and caller-targeted requests", async () => {
@@ -204,6 +279,7 @@ describe("authenticated test push", () => {
     expect(JSON.parse(webPush.sendNotification.mock.calls[0][1] as string)).toEqual({
       title: "Batiplus Maroc",
       body: "Les notifications Batiplus sont activées.",
+      locale: "fr",
       url: "/fr/notifications",
       tag: "batiplus-push-test",
     });

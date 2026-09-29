@@ -15,9 +15,10 @@ export const deliverMarketplacePush = internalAction({
   args: { notificationId: v.id("notifications") },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const leaseId = crypto.randomUUID();
     const claimed = await ctx.runMutation(
       internal.notifications.pushDeliveryModel.claimMarketplacePush,
-      args,
+      { ...args, leaseId },
     );
     if (!claimed) return null;
 
@@ -26,14 +27,15 @@ export const deliverMarketplacePush = internalAction({
     let failedCount = 0;
     try {
       configureWebPush();
-      const payload = JSON.stringify(marketplacePushPresentation(
-        claimed.notification,
-        claimed.accountType,
-        claimed.locale,
-      ));
       for (const subscription of claimed.subscriptions) {
         try {
-          await sendWebPush(subscription, payload);
+          const { locale, ...webPushSubscription } = subscription;
+          const payload = JSON.stringify(marketplacePushPresentation(
+            claimed.notification,
+            claimed.accountType,
+            locale,
+          ));
+          await sendWebPush(webPushSubscription, payload);
           deliveredEndpoints.push(subscription.endpoint);
         } catch (error) {
           if (isPermanentPushFailure(error)) {
@@ -62,6 +64,7 @@ export const deliverMarketplacePush = internalAction({
       {
         notificationId: args.notificationId,
         recipientUserId: claimed.recipientUserId,
+        leaseId,
         deliveredEndpoints,
         permanentFailureEndpoints,
         failedCount,

@@ -1,10 +1,10 @@
 "use client";
 
-import { useAuthActions } from "@convex-dev/auth/react";
 import { useTranslations } from "next-intl";
 import { DropdownMenu } from "radix-ui";
 import { Fragment, useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { useSafeSignOut } from "@/features/auth/hooks/use-safe-sign-out";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import type { AppRoute } from "@/lib/routes";
 import { routes } from "@/lib/routes";
@@ -201,7 +201,7 @@ function RoleMobileMenu({
   const tCommon = useTranslations("common");
   const t = useTranslations("nav");
   const tAuth = useTranslations("auth");
-  const { signOut } = useAuthActions();
+  const signOut = useSafeSignOut();
   const router = useRouter();
 
   useEffect(() => {
@@ -298,7 +298,9 @@ function RoleMobileMenu({
             className={`${itemClass} mt-1 w-full cursor-pointer border-0 bg-transparent text-start`}
             onClick={() => {
               setOpen(false);
-              void signOut().then(() => router.push(routes.signIn));
+              void signOut().then((signedOut) => {
+                if (signedOut) router.push(routes.signIn);
+              });
             }}
             type="button"
           >

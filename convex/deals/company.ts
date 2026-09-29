@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import { query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
 import { commissionStatusValidator, dealStatusValidator } from "./constants";
+import { readCommissionSummary } from "./commissionSummary";
+import { hasCompleteCommissionSnapshot } from "./money";
 
 const nullableNumber = v.union(v.number(), v.null());
 
@@ -19,24 +21,18 @@ const companyCommissionValidator = v.object({
   snapshotComplete: v.boolean(),
 });
 
-function hasCompleteCommissionSnapshot(deal: {
-  agreedAmountMad: number;
-  commissionRateBps: number;
-  commissionAmountMad: number;
-  commissionConfigVersion: number;
-}) {
-  return (
-    Number.isSafeInteger(deal.agreedAmountMad) &&
-    deal.agreedAmountMad > 0 &&
-    Number.isSafeInteger(deal.commissionRateBps) &&
-    deal.commissionRateBps >= 0 &&
-    deal.commissionRateBps <= 3_000 &&
-    Number.isSafeInteger(deal.commissionAmountMad) &&
-    deal.commissionAmountMad >= 0 &&
-    Number.isSafeInteger(deal.commissionConfigVersion) &&
-    deal.commissionConfigVersion > 0
-  );
-}
+export const getMyCommissionSummary = query({
+  args: {},
+  returns: v.object({
+    totalDueMad: v.number(),
+    totalPaidMad: v.number(),
+    dueCount: v.number(),
+  }),
+  handler: async (ctx) => {
+    const { company } = await requireCompanyUser(ctx);
+    return await readCommissionSummary(ctx, company._id);
+  },
+});
 
 /**
  * Read-only Company projection. The authenticated membership determines the
@@ -103,6 +99,7 @@ export const listMyDeals = query({
     const deals = await ctx.db
       .query("deals")
       .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
+      .order("desc")
       .take(200);
 
     const rows = [];

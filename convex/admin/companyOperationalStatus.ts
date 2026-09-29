@@ -94,7 +94,11 @@ export const change = mutation({
     }
     const reason = normalizeReason(args.reason);
     const now = Date.now();
-    await ctx.db.patch(company._id, { operationalStatus: args.toStatus, updatedAt: now });
+    await ctx.db.patch(company._id, {
+      operationalStatus: args.toStatus,
+      directoryListed: args.toStatus !== "suspended",
+      updatedAt: now,
+    });
     const historyId = await ctx.db.insert("companyOperationalStatusHistory", {
       companyId: company._id,
       fromStatus,
@@ -109,13 +113,15 @@ export const change = mutation({
         ? "company_reactivated" as const
         : null;
     if (notificationType) {
+      const companyName = company.name?.trim() || company.legalName?.trim();
       await createOperationalNotificationForActiveCompanyMembers(ctx, {
         companyId: company._id,
         type: notificationType,
         entity: { type: "company_operational_status", id: historyId },
         payload: {
           companyId: company._id,
-          companyName: company.name?.trim() || company.legalName?.trim() || "Company",
+          // Presentation selects the localized generic label when absent.
+          ...(companyName ? { companyName } : {}),
         },
         actorUserId: admin._id,
         dedupeKey: `company-operational-status:${historyId}:${notificationType}`,

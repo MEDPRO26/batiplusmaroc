@@ -31,8 +31,15 @@ export function ConversationContextPanel({
 }) {
   const t = useTranslations("messages.context");
   const tMessages = useTranslations("messages");
-  const assessment = useQuery(api.siteVisits.index.getForConversation, { conversationId });
-  const quote = useQuery(api.finalQuotes.index.getForConversation, { conversationId });
+  const commercialWorkflowReady = conversation.quoteId !== null;
+  const assessment = useQuery(
+    api.siteVisits.index.getForConversation,
+    commercialWorkflowReady ? { conversationId } : "skip",
+  );
+  const quote = useQuery(
+    api.finalQuotes.index.getForConversation,
+    commercialWorkflowReady ? { conversationId } : "skip",
+  );
   // Only the selected Company (and the Client) may read the Deal, which exists once the quote is accepted.
   const dealVisible = quote?.finalQuote?.status === "accepted";
   const deal = useQuery(api.deals.index.getByProject, dealVisible ? { projectId: conversation.projectId } : "skip");
@@ -42,7 +49,9 @@ export function ConversationContextPanel({
       ? ({ pathname: routes.clientProject, params: { projectId: conversation.projectId } } as const)
       : ({ pathname: routes.companyProject, params: { projectId: conversation.projectId } } as const);
   const name = conversation.otherPartyName || tMessages("unknownParty");
-  const loading = assessment === undefined || quote === undefined || (dealVisible && deal === undefined);
+  const loading =
+    commercialWorkflowReady &&
+    (assessment === undefined || quote === undefined || (dealVisible && deal === undefined));
 
   return (
     <div className="flex flex-col gap-6 px-5 py-5">
@@ -82,7 +91,7 @@ export function ConversationContextPanel({
         ) : (
           <ProgressTimeline
             stages={resolveProjectProgress({
-              assessment: assessment.assessment
+              assessment: assessment?.assessment
                 ? {
                     status: assessment.assessment.status,
                     companyName: assessment.assessment.companyName,
@@ -95,7 +104,7 @@ export function ConversationContextPanel({
                       : null,
                   }
                 : null,
-              finalQuote: quote.finalQuote
+              finalQuote: quote?.finalQuote
                 ? {
                     status: quote.finalQuote.status,
                     companyName: quote.finalQuote.companyName,
@@ -107,8 +116,8 @@ export function ConversationContextPanel({
                 : null,
               deal: deal ? { status: deal.status } : null,
             })}
-            visitDate={assessment.assessment?.visit?.proposedDate ?? null}
-            visitTime={assessment.assessment?.visit?.proposedTime ?? null}
+            visitDate={assessment?.assessment?.visit?.proposedDate ?? null}
+            visitTime={assessment?.assessment?.visit?.proposedTime ?? null}
           />
         )}
       </section>

@@ -177,20 +177,6 @@ export function InviteCompanyButton({
               <p className="mt-6 text-sm text-muted" role="status">
                 {t("loading")}
               </p>
-            ) : projects.length === 0 ? (
-              <Gate
-                message={t("empty")}
-                action={t("postProject")}
-                href={routes.postProjectWizard}
-              />
-            ) : projects.every(
-                (project) => project.invitationStatus !== null,
-              ) ? (
-              <Gate
-                message={t("allInvited")}
-                action={t("postProject")}
-                href={routes.postProjectWizard}
-              />
             ) : sent ? (
               <div
                 className="mt-6 rounded-2xl border border-[#b9dac7] bg-[#eff8f2] p-5 text-[#21633d]"
@@ -205,6 +191,20 @@ export function InviteCompanyButton({
                   {t("done")}
                 </button>
               </div>
+            ) : projects.length === 0 ? (
+              <Gate
+                message={t("empty")}
+                action={t("postProject")}
+                href={routes.postProjectWizard}
+              />
+            ) : projects.every(
+                (project) => project.invitationStatus !== null,
+              ) ? (
+              <Gate
+                message={t("allInvited")}
+                action={t("postProject")}
+                href={routes.postProjectWizard}
+              />
             ) : (
               <form className="mt-6 grid gap-5" onSubmit={submit}>
                 <label

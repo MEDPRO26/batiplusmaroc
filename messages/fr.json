@@ -2521,6 +2521,8 @@
     "error": "Impossible de mettre à jour vos notifications. Veuillez réessayer.",
     "retry": "Réessayer",
     "dismiss": "Fermer",
+    "fallbackCompany": "Entreprise",
+    "fallbackCompanyMember": "Membre de l’entreprise",
     "events": {
       "proposal_received": "{companyName} a envoyé une proposition pour {projectTitle}.",
       "proposal_accepted": "La discussion est ouverte pour votre proposition sur {projectTitle}.",

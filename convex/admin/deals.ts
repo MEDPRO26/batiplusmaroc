@@ -1,6 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { commissionStatusValidator, type CommissionStatus } from "../deals/constants";
+import { recordCommissionPaid } from "../deals/commissionSummary";
+import { hasCompleteCommissionSnapshot } from "../deals/money";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { createNotificationForActiveCompanyMembers } from "../notifications/model";
 import { requireAdminUser } from "./access";
@@ -100,7 +102,11 @@ export const markCommissionPaid = mutation({
     const deal = await ctx.db.get(args.dealId);
     if (!deal) throw new ConvexError("DEAL_NOT_FOUND");
     if (deal.commissionStatus === "paid") throw new ConvexError("COMMISSION_ALREADY_PAID");
-    if (deal.commissionDebtorCompanyId !== deal.companyId || deal.commissionBeneficiary !== "batiplus" || !Number.isSafeInteger(deal.commissionAmountMad) || deal.commissionAmountMad < 0 || !Number.isSafeInteger(deal.commissionConfigVersion)) {
+    if (
+      deal.commissionDebtorCompanyId !== deal.companyId ||
+      deal.commissionBeneficiary !== "batiplus" ||
+      !hasCompleteCommissionSnapshot(deal)
+    ) {
       throw new ConvexError("COMMISSION_SNAPSHOT_INCOMPLETE");
     }
     const [project, company] = await Promise.all([
@@ -118,6 +124,7 @@ export const markCommissionPaid = mutation({
       commissionPaymentReference: paymentReference,
       commissionPaymentNote: paymentNote,
     });
+    await recordCommissionPaid(ctx, deal.companyId, deal.commissionAmountMad, now);
     await ctx.db.insert("commissionStatusHistory", {
       dealId: deal._id,
       companyId: deal.companyId,

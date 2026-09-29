@@ -72,11 +72,14 @@ export function notificationIconCategory(type: string): NotificationIconCategory
 
 export { notificationDestination };
 
-export function notificationInterpolation(payload: NotificationRecord["payload"]) {
+export function notificationInterpolation(
+  payload: NotificationRecord["payload"],
+  fallbacks: { actorDisplayName?: string; companyName?: string } = {},
+) {
   return {
-    actorDisplayName: payload.actorDisplayName ?? "",
+    actorDisplayName: payload.actorDisplayName?.trim() || fallbacks.actorDisplayName || "",
     projectTitle: payload.projectTitle ?? "",
-    companyName: payload.companyName ?? "",
+    companyName: payload.companyName?.trim() || fallbacks.companyName || "",
     messagePreview: payload.messagePreview ?? "",
     scheduledAt: payload.scheduledAt ?? 0,
     amountMad: payload.amountMad ?? 0,

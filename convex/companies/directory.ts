@@ -198,6 +198,13 @@ export const listPublicCompanies = query({
   },
   returns: paginationResultValidator(publicCompanyResultValidator),
   handler: async (ctx, args) => {
+    // Keep the migration deploy compatible with legacy rows. Once the final
+    // missing value is backfilled, every path switches to exact indexed
+    // eligibility and suspended rows no longer affect page boundaries.
+    const hasLegacyDirectoryEligibility = await ctx.db
+      .query("companies")
+      .withIndex("by_directoryListed", (q) => q.eq("directoryListed", undefined))
+      .first() !== null;
     const terms = [
       normalizedSearch(args.search),
       normalizedSearch(args.city),
@@ -205,30 +212,61 @@ export const listPublicCompanies = query({
     ].filter(Boolean);
 
     const page = terms.length > 0
-      ? await ctx.db
-          .query("companies")
-          .withSearchIndex("search_directory", (q) => {
-            const search = q
-              .search("directorySearchText", terms.join(" "))
-              .eq("onboardingStatus", "completed");
-            return args.verifiedOnly
-              ? search.eq("verificationStatus", "verified")
-              : search;
-          })
-          .paginate(args.paginationOpts)
+      ? await (() => {
+          const searchQuery = ctx.db
+            .query("companies")
+            .withSearchIndex("search_directory", (q) => {
+              let search = q
+                .search("directorySearchText", terms.join(" "))
+                .eq("onboardingStatus", "completed");
+              if (args.verifiedOnly) {
+                search = search.eq("verificationStatus", "verified");
+              }
+              return hasLegacyDirectoryEligibility
+                ? search
+                : search.eq("directoryListed", true);
+            });
+          return hasLegacyDirectoryEligibility
+            ? searchQuery
+                .filter((q) => q.neq(q.field("operationalStatus"), "suspended"))
+                .paginate(args.paginationOpts)
+            : searchQuery.paginate(args.paginationOpts);
+        })()
       : args.verifiedOnly
-        ? await ctx.db
-            .query("companies")
-            .withIndex("by_onboardingStatus_and_verificationStatus", (q) =>
-              q.eq("onboardingStatus", "completed").eq("verificationStatus", "verified"),
-            )
-            .order(args.sort === "oldest" ? "asc" : "desc")
-            .paginate(args.paginationOpts)
-        : await ctx.db
-            .query("companies")
-            .withIndex("by_onboardingStatus", (q) => q.eq("onboardingStatus", "completed"))
-            .order(args.sort === "oldest" ? "asc" : "desc")
-            .paginate(args.paginationOpts);
+        ? hasLegacyDirectoryEligibility
+          ? await ctx.db
+              .query("companies")
+              .withIndex("by_onboardingStatus_and_verificationStatus", (q) =>
+                q.eq("onboardingStatus", "completed").eq("verificationStatus", "verified"),
+              )
+              .filter((q) => q.neq(q.field("operationalStatus"), "suspended"))
+              .order(args.sort === "oldest" ? "asc" : "desc")
+              .paginate(args.paginationOpts)
+          : await ctx.db
+              .query("companies")
+              .withIndex(
+                "by_onboardingStatus_and_verificationStatus_and_directoryListed",
+                (q) => q
+                  .eq("onboardingStatus", "completed")
+                  .eq("verificationStatus", "verified")
+                  .eq("directoryListed", true),
+              )
+              .order(args.sort === "oldest" ? "asc" : "desc")
+              .paginate(args.paginationOpts)
+        : hasLegacyDirectoryEligibility
+          ? await ctx.db
+              .query("companies")
+              .withIndex("by_onboardingStatus", (q) => q.eq("onboardingStatus", "completed"))
+              .filter((q) => q.neq(q.field("operationalStatus"), "suspended"))
+              .order(args.sort === "oldest" ? "asc" : "desc")
+              .paginate(args.paginationOpts)
+          : await ctx.db
+              .query("companies")
+              .withIndex("by_onboardingStatus_and_directoryListed", (q) =>
+                q.eq("onboardingStatus", "completed").eq("directoryListed", true),
+              )
+              .order(args.sort === "oldest" ? "asc" : "desc")
+              .paginate(args.paginationOpts);
 
     const publicPage = (
       await Promise.all(page.page.map((company) => toPublicCompanyResult(ctx, company)))

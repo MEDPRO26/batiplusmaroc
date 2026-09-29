@@ -679,6 +679,9 @@ describe("invitation decisions and isolation", () => {
         { projectId: state.projectId, ...validQuote },
       ),
     ).rejects.toThrow("PROJECT_NOT_ACCEPTING_QUOTES");
+    await expect(
+      asUser(state.t, state.clientId).query(api.messages.index.listMyThreads, {}),
+    ).resolves.toEqual([]);
     const stored = await state.t.run(async (ctx) => ({
       invitation: await ctx.db.get(created.invitationId),
       history: await ctx.db
@@ -851,7 +854,7 @@ describe("accepted invitation convergence", () => {
     ).rejects.toThrow("PROJECT_NOT_ACCEPTING_QUOTES");
   });
 
-  test("pending is locked; accepted direct proposal opens the existing conversation and quote pipeline", async () => {
+  test("pending is locked; acceptance opens chat and a later quote reuses that conversation", async () => {
     const state = await setup();
     const created = await asUser(state.t, state.clientId).mutation(
       api.invitations.index.inviteCompanyToProject,
@@ -875,11 +878,32 @@ describe("accepted invitation convergence", () => {
         { projectId: state.projectId, ...validQuote },
       ),
     ).rejects.toThrow("PROJECT_NOT_ACCEPTING_QUOTES");
+    await expect(
+      asUser(state.t, state.clientId).query(api.messages.index.listMyThreads, {}),
+    ).resolves.toEqual([]);
 
     await asUser(state.t, state.company.userId).mutation(
       api.invitations.index.acceptInvitation,
       { invitationId: created.invitationId },
     );
+    const threadsAfterAcceptance = await asUser(state.t, state.clientId).query(
+      api.messages.index.listMyThreads,
+      {},
+    );
+    expect(threadsAfterAcceptance).toEqual([
+      expect.objectContaining({
+        projectId: state.projectId,
+        quoteId: null,
+      }),
+    ]);
+    const invitationConversationId = threadsAfterAcceptance[0]?.id;
+    if (!invitationConversationId) throw new Error("Expected invitation conversation");
+    await expect(
+      asUser(state.t, state.clientId).mutation(api.messages.index.sendMessage, {
+        conversationId: invitationConversationId,
+        body: "Thank you for accepting our invitation.",
+      }),
+    ).resolves.toMatchObject({ duplicate: false });
     const quoteContext = await asUser(state.t, state.company.userId).query(
       api.quotes.index.getSubmissionContext,
       { projectId: state.projectId },
@@ -896,17 +920,11 @@ describe("accepted invitation convergence", () => {
     );
     expect(submitted).toMatchObject({
       status: "discussion_open",
-      conversationId: expect.any(String),
+      conversationId: invitationConversationId,
     });
     if (!submitted.conversationId)
       throw new Error("Expected direct conversation");
 
-    await expect(
-      asUser(state.t, state.clientId).mutation(api.messages.index.sendMessage, {
-        conversationId: submitted.conversationId,
-        body: "Thank you for accepting our invitation.",
-      }),
-    ).resolves.toMatchObject({ duplicate: false });
     await expect(
       asUser(state.t, state.company.userId).query(
         api.messages.index.listMessages,

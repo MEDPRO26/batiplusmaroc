@@ -64,6 +64,29 @@ export async function inspectBrowserPush(): Promise<BrowserPushInspection> {
   };
 }
 
+/**
+ * Refresh an existing device binding with the active route locale.
+ *
+ * This is deliberately passive: it neither requests permission nor creates a
+ * browser subscription. It only reconciles a device the user already enabled.
+ */
+export async function reconcileExistingBrowserPushLocale(
+  locale: "fr" | "en",
+  registerSubscription: (
+    subscription: SerializedPushSubscription & { locale: "fr" | "en" },
+  ) => Promise<unknown>,
+): Promise<boolean> {
+  const inspection = await inspectBrowserPush();
+  if (
+    !inspection.supported
+    || inspection.permission !== "granted"
+    || !inspection.subscription
+  ) return false;
+
+  await registerSubscription({ ...inspection.subscription, locale });
+  return true;
+}
+
 export async function enableBrowserPush(
   vapidPublicKey: string,
 ): Promise<SerializedPushSubscription> {
@@ -94,4 +117,43 @@ export async function disableBrowserPush(): Promise<SerializedPushSubscription |
   const removed = await subscription.unsubscribe();
   if (!removed) throw new Error("PUSH_UNSUBSCRIBE_FAILED");
   return serialized;
+}
+
+/**
+ * Detach this browser before authentication is cleared.
+ *
+ * Either removing the authenticated server binding or unsubscribing the
+ * browser is sufficient to stop delivery. We still attempt both so stale
+ * records and stale browser subscriptions do not survive ordinary sign-out.
+ */
+export async function detachBrowserPushBeforeSignOut(
+  unregisterSubscription: (endpoint: string) => Promise<{ removed: boolean }>,
+): Promise<void> {
+  let inspection: BrowserPushInspection;
+  try {
+    inspection = await inspectBrowserPush();
+  } catch {
+    // If inspection fails, a successful unsubscribe still makes the browser safe.
+    await disableBrowserPush();
+    return;
+  }
+  if (!inspection.subscription) return;
+
+  let serverDetached = false;
+  let browserDetached = false;
+  try {
+    const result = await unregisterSubscription(inspection.subscription.endpoint);
+    serverDetached = result.removed;
+  } catch {
+    // Browser cleanup below is an independent privacy fallback.
+  }
+  try {
+    await disableBrowserPush();
+    browserDetached = true;
+  } catch {
+    // A removed server binding is already sufficient to stop delivery.
+  }
+  if (!serverDetached && !browserDetached) {
+    throw new Error("PUSH_SIGN_OUT_CLEANUP_FAILED");
+  }
 }

@@ -967,6 +967,7 @@ export const seedDemoCompanies = internalMutation({
         onboardingStatus: company.onboardingStatus,
         verificationStatus: company.verificationStatus,
         operationalStatus: "normal",
+        directoryListed: true,
         createdAt: now,
         updatedAt: now,
       });

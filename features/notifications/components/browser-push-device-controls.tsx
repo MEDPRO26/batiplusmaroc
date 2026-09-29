@@ -44,8 +44,8 @@ export function BrowserPushDeviceControls({
     return result.registered;
   }, [convex]);
   const register = useCallback(async (subscription: SerializedPushSubscription) => {
-    await registerSubscription(subscription);
-  }, [registerSubscription]);
+    await registerSubscription({ ...subscription, locale });
+  }, [locale, registerSubscription]);
   const unregister = useCallback(async (endpoint: string) => {
     await unregisterSubscription({ endpoint });
   }, [unregisterSubscription]);
@@ -103,13 +103,14 @@ export function BrowserPushDeviceFlow({
         setStatus("not_enabled");
       } else {
         const registered = await isRegistered(inspection.subscription.endpoint);
+        if (registered) await registerSubscription(inspection.subscription);
         setSubscription(inspection.subscription);
         setStatus(registered ? "enabled" : "not_enabled");
       }
     } catch {
       setStatus("error");
     }
-  }, [isRegistered]);
+  }, [isRegistered, registerSubscription]);
 
   useEffect(() => {
     // The async inspection reads browser permission/service-worker state before updating React.

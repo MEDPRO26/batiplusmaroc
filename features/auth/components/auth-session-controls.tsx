@@ -1,9 +1,9 @@
 "use client";
 
-import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
+import { useSafeSignOut } from "@/features/auth/hooks/use-safe-sign-out";
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
@@ -13,7 +13,7 @@ export function AuthSessionControls({ className }: { className: string; inverted
   const tAuth = useTranslations("auth");
   const { isAuthenticated, isLoading } = useConvexAuth();
   const user = useQuery(api.users.currentUser);
-  const { signOut } = useAuthActions();
+  const signOut = useSafeSignOut();
   const router = useRouter();
 
   if (isLoading) {
@@ -31,7 +31,9 @@ export function AuthSessionControls({ className }: { className: string; inverted
         <button
           className={`${className} cursor-pointer border-0 bg-transparent p-0`}
           onClick={() => {
-            void signOut().then(() => router.push(routes.signIn));
+            void signOut().then((signedOut) => {
+              if (signedOut) router.push(routes.signIn);
+            });
           }}
           type="button"
         >
@@ -58,7 +60,7 @@ export function MobileAuthSessionControls({ onNavigate }: { onNavigate: () => vo
   const tAuth = useTranslations("auth");
   const { isAuthenticated, isLoading } = useConvexAuth();
   const user = useQuery(api.users.currentUser);
-  const { signOut } = useAuthActions();
+  const signOut = useSafeSignOut();
   const router = useRouter();
   const itemClass =
     "flex min-h-12 w-full items-center justify-between border-b border-brand-border px-1.5 text-start transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
@@ -76,7 +78,9 @@ export function MobileAuthSessionControls({ onNavigate }: { onNavigate: () => vo
           className={`${itemClass} cursor-pointer border-x-0 border-t-0 bg-transparent`}
           onClick={() => {
             onNavigate();
-            void signOut().then(() => router.push(routes.signIn));
+            void signOut().then((signedOut) => {
+              if (signedOut) router.push(routes.signIn);
+            });
           }}
           type="button"
         >

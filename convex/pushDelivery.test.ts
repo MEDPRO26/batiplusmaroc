@@ -110,12 +110,18 @@ async function enablePush(t: Backend, userId: Id<"users">) {
   });
 }
 
-async function addSubscriptions(t: Backend, userId: Id<"users">, suffixes: string[]) {
+async function addSubscriptions(
+  t: Backend,
+  userId: Id<"users">,
+  devices: Array<string | { suffix: string; locale: "fr" | "en" }>,
+) {
   await t.run(async (ctx) => {
-    for (const suffix of suffixes) {
+    for (const device of devices) {
+      const suffix = typeof device === "string" ? device : device.suffix;
       await ctx.db.insert("pushSubscriptions", {
         userId,
         ...subscription(suffix),
+        locale: typeof device === "string" ? "fr" : device.locale,
         createdAt: 1,
         updatedAt: 1,
       });
@@ -164,7 +170,10 @@ describe("marketplace push delivery", () => {
     const t = convexTest(schema, modules);
     const context = await seedMessageContext(t);
     await enablePush(t, context.recipientUserId);
-    await addSubscriptions(t, context.recipientUserId, ["phone", "laptop"]);
+    await addSubscriptions(t, context.recipientUserId, [
+      { suffix: "phone", locale: "fr" },
+      { suffix: "laptop", locale: "en" },
+    ]);
 
     const first = await createMessageNotification(t, context, "message:delivery:received");
     const duplicate = await createMessageNotification(t, context, "message:delivery:received");
@@ -177,15 +186,25 @@ describe("marketplace push delivery", () => {
     await t.finishAllScheduledFunctions(() => {});
 
     expect(webPush.sendNotification).toHaveBeenCalledTimes(2);
-    const payload = JSON.parse(webPush.sendNotification.mock.calls[0][1] as string);
-    expect(payload).toEqual({
+    const payloads = Object.fromEntries(webPush.sendNotification.mock.calls.map(([device, payload]) => [
+      (device as { endpoint: string }).endpoint,
+      JSON.parse(payload as string),
+    ]));
+    expect(payloads[subscription("phone").endpoint]).toEqual({
       title: "Batiplus Maroc",
       body: "Nouveau message de Amine au sujet de Villa Atlas.",
+      locale: "fr",
       url: `/fr/messages/${context.conversationId}`,
       tag: `batiplus-notification-${first.notificationId}`,
     });
-    expect(JSON.stringify(payload)).not.toContain("Private message text");
-    expect(JSON.stringify(payload)).not.toContain("push.example.test");
+    expect(payloads[subscription("laptop").endpoint]).toEqual({
+      title: "Batiplus Maroc",
+      body: "New message from Amine about Villa Atlas.",
+      locale: "en",
+      url: `/en/messages/${context.conversationId}`,
+      tag: `batiplus-notification-${first.notificationId}`,
+    });
+    expect(JSON.stringify(payloads)).not.toContain("Private message text");
     expect(summaryLog).toHaveBeenCalledWith("Marketplace push delivery completed", {
       notificationId: first.notificationId,
       type: "message_received",
@@ -216,6 +235,102 @@ describe("marketplace push delivery", () => {
       recipientState: { unreadCount: 1 },
     });
     expect(deliveredState.notification).not.toHaveProperty("readAt");
+    expect(deliveredState.notification).not.toHaveProperty("pushDeliveryLeaseId");
+  });
+
+  test("reclaims an expired processing lease and rejects a superseded completion", async () => {
+    const t = convexTest(schema, modules);
+    const context = await seedMessageContext(t);
+    await enablePush(t, context.recipientUserId);
+    await addSubscriptions(t, context.recipientUserId, ["lease-recovery"]);
+    const notificationId = await t.run((ctx) => ctx.db.insert("notifications", {
+      recipientUserId: context.recipientUserId,
+      actorUserId: context.senderUserId,
+      type: "message_received",
+      entity: { type: "conversation", id: context.conversationId },
+      payload: { actorDisplayName: "Amine", projectTitle: "Villa Atlas" },
+      createdAt: Date.now(),
+    }));
+
+    const firstClaim = await t.mutation(
+      internal.notifications.pushDeliveryModel.claimMarketplacePush,
+      { notificationId, leaseId: "abandoned-lease" },
+    );
+    expect(firstClaim).not.toBeNull();
+    await expect(t.mutation(
+      internal.notifications.pushDeliveryModel.claimMarketplacePush,
+      { notificationId, leaseId: "premature-retry" },
+    )).resolves.toBeNull();
+    expect(await t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect()))
+      .toHaveLength(1);
+
+    await t.run(async (ctx) => {
+      await ctx.db.patch(notificationId, {
+        pushAttemptedAt: Date.now() - 16 * 60_000,
+      });
+    });
+    const recoveredClaim = await t.mutation(
+      internal.notifications.pushDeliveryModel.claimMarketplacePush,
+      { notificationId, leaseId: "recovered-lease" },
+    );
+    expect(recoveredClaim).not.toBeNull();
+
+    await t.mutation(
+      internal.notifications.pushDeliveryModel.completeMarketplacePush,
+      {
+        notificationId,
+        recipientUserId: context.recipientUserId,
+        leaseId: "abandoned-lease",
+        deliveredEndpoints: [subscription("lease-recovery").endpoint],
+        permanentFailureEndpoints: [],
+        failedCount: 0,
+      },
+    );
+    expect(await t.run((ctx) => ctx.db.get(notificationId))).toMatchObject({
+      pushDeliveryStatus: "processing",
+      pushDeliveryLeaseId: "recovered-lease",
+    });
+
+    await t.mutation(
+      internal.notifications.pushDeliveryModel.completeMarketplacePush,
+      {
+        notificationId,
+        recipientUserId: context.recipientUserId,
+        leaseId: "recovered-lease",
+        deliveredEndpoints: [subscription("lease-recovery").endpoint],
+        permanentFailureEndpoints: [],
+        failedCount: 0,
+      },
+    );
+    const completed = await t.run((ctx) => ctx.db.get(notificationId));
+    expect(completed).toMatchObject({
+      pushDeliveryStatus: "completed",
+      pushDeliveredCount: 1,
+    });
+    expect(completed).not.toHaveProperty("pushDeliveryLeaseId");
+  });
+
+  test("skips legacy subscriptions instead of guessing French before locale reconciliation", async () => {
+    const t = convexTest(schema, modules);
+    const context = await seedMessageContext(t);
+    await enablePush(t, context.recipientUserId);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("pushSubscriptions", {
+        userId: context.recipientUserId,
+        ...subscription("legacy"),
+        createdAt: 1,
+        updatedAt: 1,
+      });
+    });
+
+    const result = await createMessageNotification(t, context, "message:legacy-locale:received");
+    await t.finishAllScheduledFunctions(() => {});
+
+    expect(webPush.sendNotification).not.toHaveBeenCalled();
+    await expect(t.run((ctx) => ctx.db.get(result.notificationId))).resolves.toMatchObject({
+      pushDeliveryStatus: "skipped",
+      pushDeliveredCount: 0,
+    });
   });
 
   test("requires global preference, category preference, and a subscription", async () => {
@@ -448,8 +563,9 @@ describe("marketplace push presentation", () => {
       const payload = marketplacePushPresentation(notification, "company", locale);
       expect(payload.body).not.toContain("{");
       expect(payload.body).not.toContain("private preview");
+      expect(payload.locale).toBe(locale);
       expect(payload.url).toMatch(new RegExp(`^/${locale}/`));
-      expect(Object.keys(payload).sort()).toEqual(["body", "tag", "title", "url"]);
+      expect(Object.keys(payload).sort()).toEqual(["body", "locale", "tag", "title", "url"]);
     }
   });
 
@@ -480,5 +596,19 @@ describe("marketplace push presentation", () => {
     expect(render("company_admin_message_received", { type: "admin_company_message", id: "message-2" }, "admin", "fr", "company-1").url).toBe("/fr/admin/entreprises/company-1?tab=messages");
     expect(render("company_suspended", { type: "company_operational_status", id: "status-1" }, "company", "fr").url).toBe("/fr/espace-entreprise/batiplus");
     expect(render("company_reactivated", { type: "company_operational_status", id: "status-2" }, "company", "en").url).toBe("/en/company");
+  });
+
+  test("localizes the generic Company name instead of accepting an English data fallback", () => {
+    const notification = {
+      _id: "notification-unnamed" as Id<"notifications">,
+      type: "company_admin_message_received" as const,
+      entity: { type: "admin_company_message" as const, id: "message-unnamed" },
+      payload: { actorDisplayName: "", companyName: "", companyId: "company-unnamed" },
+    } as Parameters<typeof marketplacePushPresentation>[0];
+
+    expect(marketplacePushPresentation(notification, "admin", "en").body)
+      .toBe("Company sent Batiplus a new operational message.");
+    expect(marketplacePushPresentation(notification, "admin", "fr").body)
+      .toBe("Entreprise a envoyé un nouveau message opérationnel à Batiplus.");
   });
 });

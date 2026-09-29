@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthActions } from "@convex-dev/auth/react";
 import {
   ClipboardList,
   FileText,
@@ -19,6 +18,7 @@ import { useState, type ReactNode } from "react";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { NavbarLogo } from "@/components/layout/navbar-logo";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
+import { useSafeSignOut } from "@/features/auth/hooks/use-safe-sign-out";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { routes, type AppRoute } from "@/lib/routes";
 
@@ -56,7 +56,7 @@ export function SeoWorkspaceShell({
   const tBrand = useTranslations("brand");
   const pathname = usePathname();
   const router = useRouter();
-  const { signOut } = useAuthActions();
+  const signOut = useSafeSignOut();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const active = NAV.find((item) =>
     item.id === "dashboard"
@@ -66,8 +66,7 @@ export function SeoWorkspaceShell({
   const displayName = [firstName, lastName].filter(Boolean).join(" ") || email || t("accountFallback");
 
   async function logOut() {
-    await signOut();
-    router.push(routes.signIn);
+    if (await signOut()) router.push(routes.signIn);
   }
 
   return (

@@ -34,6 +34,7 @@ import type * as companyVerification_index from "../companyVerification/index.js
 import type * as deals_company from "../deals/company.js";
 import type * as deals_constants from "../deals/constants.js";
 import type * as deals_index from "../deals/index.js";
+import type * as deals_money from "../deals/money.js";
 import type * as deals_state from "../deals/state.js";
 import type * as dev_conversationRecovery from "../dev/conversationRecovery.js";
 import type * as dev_seedCompanies from "../dev/seedCompanies.js";
@@ -137,6 +138,7 @@ declare const fullApi: ApiFromModules<{
   "deals/company": typeof deals_company;
   "deals/constants": typeof deals_constants;
   "deals/index": typeof deals_index;
+  "deals/money": typeof deals_money;
   "deals/state": typeof deals_state;
   "dev/conversationRecovery": typeof dev_conversationRecovery;
   "dev/seedCompanies": typeof dev_seedCompanies;

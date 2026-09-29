@@ -82,6 +82,7 @@ export async function ensureAccountFoundation(
     onboardingStatus: "pending",
     verificationStatus: "draft",
     operationalStatus: "normal",
+    directoryListed: true,
     createdAt: args.now,
     updatedAt: args.now,
   });

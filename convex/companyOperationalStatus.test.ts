@@ -33,6 +33,7 @@ async function company(t: Backend, name: string, operationalStatus?: "normal" | 
     onboardingStatus: "completed",
     verificationStatus: "verified",
     operationalStatus,
+    directoryListed: operationalStatus !== "suspended",
     createdAt: 1,
     updatedAt: 1,
   }));
@@ -148,6 +149,7 @@ describe("Company operational status administration", () => {
         .collect(),
     }));
     expect(stored.company?.operationalStatus).toBe("suspended");
+    expect(stored.company?.directoryListed).toBe(false);
     expect(stored.history).toEqual([expect.objectContaining({
       fromStatus: "normal",
       toStatus: "suspended",
@@ -264,6 +266,7 @@ describe("Company operational status administration", () => {
     expect(first.fromStatus).toBe("normal");
     expect(second.fromStatus).toBe(first.toStatus);
     expect(stored.company?.operationalStatus).toBe(second.toStatus);
+    expect(stored.company?.directoryListed).toBe(second.toStatus !== "suspended");
   });
 });
 
