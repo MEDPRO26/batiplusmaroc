@@ -72,7 +72,8 @@ const mocks: Plugin = {
           import React from "react";
           export function Link({ children, href, ...props }) {
             const url = typeof href === "string" ? href : Object.entries(href.params || {}).reduce((path, [key, value]) => path.replace(\`[\${key}]\`, value), href.pathname);
-            return <a href={url} {...props}>{children}</a>;
+            const query = typeof href === "string" ? "" : new URLSearchParams(href.query || {}).toString();
+            return <a href={query ? url + "?" + query : url} {...props}>{children}</a>;
           }
           export function useRouter() { return { replace() {}, push() {} }; }
           export function usePathname() { return window.__pathname || "/admin/verification"; }

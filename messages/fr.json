@@ -4438,7 +4438,7 @@
     "metaTitle": "Entreprises",
     "metaDescription": "Gérer les entreprises de la marketplace.",
     "title": "Entreprises",
-    "lead": "Recherchez les entreprises et consultez leurs dossiers de vérification, projets, commissions, avis et activités dans une vue opérationnelle unique.",
+    "lead": "Recherchez, vérifiez et pilotez chaque entreprise de la marketplace depuis un seul endroit.",
     "loading": "Chargement des entreprises",
     "loadingMore": "Chargement…",
     "loadMore": "Charger plus",
@@ -4451,14 +4451,54 @@
       "searchPlaceholder": "Nom, ville ou service",
       "verificationLabel": "Statut de vérification",
       "onboardingLabel": "Statut d’intégration",
-      "options": { "all": "Tous les statuts", "draft": "Brouillon", "pending": "En attente", "verified": "Vérifiée", "rejected": "Refusée", "completed": "Terminée" }
+      "options": {
+        "all": "Tous les statuts",
+        "draft": "Brouillon",
+        "pending": "En attente",
+        "verified": "Vérifiée",
+        "rejected": "Refusée",
+        "completed": "Terminée"
+      },
+      "allVerification": "Toute vérification",
+      "allOperational": "Tous statuts opérationnels",
+      "allOnboarding": "Toute intégration",
+      "operationalLabel": "Statut opérationnel"
     },
-    "columns": { "company": "Entreprise", "status": "Vérification", "onboarding": "Intégration", "services": "Services", "members": "Membres", "activity": "Dernière activité", "action": "Action" },
+    "columns": {
+      "company": "Entreprise",
+      "status": "Vérification",
+      "onboarding": "Intégration",
+      "services": "Services",
+      "members": "Membres",
+      "activity": "Dernière activité",
+      "action": "Action",
+      "operational": "Statut opérationnel",
+      "marketplace": "Marketplace"
+    },
     "status": {
-      "verification": { "draft": "Brouillon", "pending": "En attente", "verified": "Vérifiée", "rejected": "Refusée" },
-      "onboarding": { "pending": "En attente", "completed": "Terminée" }
+      "verification": {
+        "draft": "Brouillon",
+        "pending": "En attente",
+        "verified": "Vérifiée",
+        "rejected": "Refusée"
+      },
+      "onboarding": {
+        "pending": "En attente",
+        "completed": "Terminée"
+      }
     },
-    "services": { "houseConstruction": "Construction de maison", "renovation": "Rénovation", "structural": "Gros œuvre", "finishing": "Second œuvre", "architecture": "Architecture", "interior": "Aménagement intérieur", "electrical": "Électricité", "plumbing": "Plomberie", "joinery": "Menuiserie", "pool": "Piscines" },
+    "services": {
+      "houseConstruction": "Construction de maison",
+      "renovation": "Rénovation",
+      "structural": "Gros œuvre",
+      "finishing": "Second œuvre",
+      "architecture": "Architecture",
+      "interior": "Aménagement intérieur",
+      "electrical": "Électricité",
+      "plumbing": "Plomberie",
+      "joinery": "Menuiserie",
+      "pool": "Piscines"
+    },
     "detail": {
       "metaTitle": "Opérations de l’entreprise",
       "metaDescription": "Vue consolidée des opérations d’une entreprise.",
@@ -4469,7 +4509,19 @@
       "back": "Retour aux entreprises",
       "publicProfile": "Voir le profil public",
       "tabsLabel": "Sections de l’entreprise",
-      "tabs": { "overview": "Vue d’ensemble", "verification": "Vérification", "projectsDeals": "Projets et Deals", "commissions": "Commissions", "reviews": "Avis", "activity": "Activité", "messages": "Messages", "internalNotes": "Notes internes" }
+      "tabs": {
+        "overview": "Vue d’ensemble",
+        "verification": "Vérification",
+        "projectsDeals": "Projets et Deals",
+        "commissions": "Commissions",
+        "reviews": "Avis",
+        "activity": "Activité",
+        "messages": "Messages",
+        "internalNotes": "Notes internes"
+      },
+      "moreActions": "Plus d’actions",
+      "reviewVerification": "Examiner la vérification",
+      "verificationPendingBadge": "Vérification à examiner"
     },
     "overview": {
       "profile": "Profil de l’entreprise",
@@ -4488,12 +4540,21 @@
       "boundedSummary": "Les compteurs sont plafonnés pour garder un résumé rapide.",
       "membersTitle": "Membres actifs de l’entreprise",
       "noMembers": "Aucun membre actif.",
-      "memberRoles": { "owner": "Propriétaire", "staff": "Équipe" }
+      "memberRoles": {
+        "owner": "Propriétaire",
+        "staff": "Équipe"
+      },
+      "verification": "Vérification",
+      "allActivity": "Voir toute l’activité"
     },
     "operationalStatus": {
       "title": "Statut opérationnel marketplace",
       "lead": "Contrôle les nouvelles acquisitions tout en préservant le support, les corrections, la lecture et les obligations en cours.",
-      "status": { "normal": "Normal", "needs_attention": "Attention requise", "suspended": "Suspendue" },
+      "status": {
+        "normal": "Normal",
+        "needs_attention": "Attention requise",
+        "suspended": "Suspendue"
+      },
       "changeTo": "Passer à {status}",
       "dialogTitle": "Passer au statut {status}",
       "confirmation": "Confirmez ce changement de statut opérationnel et consignez le motif interne.",
@@ -4519,21 +4580,96 @@
       "documents": "Documents",
       "noDocuments": "Aucun document de vérification n’a été ajouté.",
       "history": "Historique de vérification",
-      "noHistory": "Aucun historique de vérification."
+      "noHistory": "Aucun historique de vérification.",
+      "decision": "Décision",
+      "confirmApproveLead": "Approuver la vérification de {company} ? L’entreprise apparaîtra comme vérifiée auprès des clients.",
+      "reasonHelp": "Expliquez ce que l’entreprise doit corriger. Le motif lui est communiqué."
     },
     "projects": {
       "title": "Projets et Deals",
       "empty": "Aucune relation de projet marketplace pour cette entreprise.",
-      "source": { "proposal": "Proposition", "invitation": "Invitation" },
+      "source": {
+        "proposal": "Proposition",
+        "invitation": "Invitation"
+      },
       "dealAmount": "Montant du Deal",
       "commissionStatus": "Commission",
       "completed": "Terminé",
-      "dealStatus": { "active": "Deal actif", "completed": "Deal terminé", "cancelled": "Deal annulé" },
-      "projectStatus": { "draft": "Brouillon", "pending_review": "En attente d’examen", "needs_changes": "Modifications requises", "published": "Publié", "in_discussion": "En discussion", "company_selected": "Entreprise sélectionnée", "in_progress": "En cours", "completed": "Terminé", "cancelled": "Annulé", "archived": "Archivé" }
+      "dealStatus": {
+        "active": "Deal actif",
+        "completed": "Deal terminé",
+        "cancelled": "Deal annulé"
+      },
+      "projectStatus": {
+        "draft": "Brouillon",
+        "pending_review": "En attente d’examen",
+        "needs_changes": "Modifications requises",
+        "published": "Publié",
+        "in_discussion": "En discussion",
+        "company_selected": "Entreprise sélectionnée",
+        "in_progress": "En cours",
+        "completed": "Terminé",
+        "cancelled": "Annulé",
+        "archived": "Archivé"
+      }
     },
-    "commissions": { "title": "Commissions", "empty": "Aucune commission pour cette entreprise.", "view": "Voir", "status": { "due": "Due", "paid": "Payée" }, "close": "Fermer les détails de la commission", "reference": "Référence de paiement", "note": "Note interne", "paidAt": "Payée le", "markPaid": "Marquer comme payée", "actionError": "La commission n’a pas pu être mise à jour." },
-    "reviews": { "title": "Avis", "empty": "Aucun avis pour cette entreprise.", "hide": "Masquer", "restore": "Restaurer", "actionError": "L’avis n’a pas pu être mis à jour." },
-    "error": { "title": "Impossible de charger les entreprises", "lead": "Réessayez. Si le problème persiste, revenez au tableau de bord admin.", "retry": "Réessayer" }
+    "commissions": {
+      "title": "Commissions",
+      "empty": "Aucune commission pour cette entreprise.",
+      "view": "Voir",
+      "status": {
+        "due": "Due",
+        "paid": "Payée"
+      },
+      "close": "Fermer les détails de la commission",
+      "reference": "Référence de paiement",
+      "note": "Note interne",
+      "paidAt": "Payée le",
+      "markPaid": "Marquer comme payée",
+      "actionError": "La commission n’a pas pu être mise à jour."
+    },
+    "reviews": {
+      "title": "Avis",
+      "empty": "Aucun avis pour cette entreprise.",
+      "hide": "Masquer",
+      "restore": "Restaurer",
+      "actionError": "L’avis n’a pas pu être mis à jour."
+    },
+    "error": {
+      "title": "Impossible de charger les entreprises",
+      "lead": "Réessayez. Si le problème persiste, revenez au tableau de bord admin.",
+      "retry": "Réessayer"
+    },
+    "views": {
+      "label": "Filtres rapides",
+      "all": "Toutes",
+      "pending": "Vérification en attente",
+      "verified": "Vérifiées",
+      "attention": "Attention requise",
+      "suspended": "Suspendues"
+    },
+    "row": {
+      "onboardingIncomplete": "Intégration incomplète",
+      "openAria": "Ouvrir {name}",
+      "review": "Examiner",
+      "members": "{count, plural, =0 {Aucun membre} one {# membre} other {# membres}}",
+      "noReviews": "Aucun avis",
+      "rating": "★ {rating} ({count})"
+    },
+    "attention": {
+      "title": "Actions requises",
+      "none": "Aucune action requise pour cette entreprise.",
+      "verificationPending": "Vérification soumise, en attente d’examen",
+      "review": "Examiner",
+      "suspended": "L’entreprise est suspendue de toute nouvelle activité",
+      "needsAttention": "L’entreprise est signalée comme à surveiller",
+      "viewNotes": "Voir les notes",
+      "viewHistory": "Voir l’activité",
+      "unreadMessages": "{count, plural, one {# message opérationnel non lu} other {# messages opérationnels non lus}}",
+      "openMessages": "Ouvrir les messages",
+      "commissionsDue": "{count, plural, one {# commission due} other {# commissions dues}} · {amount}",
+      "viewCommissions": "Voir les commissions"
+    }
   },
   "operationalMessaging": {
     "metaTitle": "Assistance Batiplus",

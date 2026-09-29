@@ -5,6 +5,10 @@ import {
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { query, type QueryCtx } from "../_generated/server";
+import {
+  companyOperationalStatusValidator,
+  getCompanyOperationalStatus,
+} from "../companies/operationalStatus";
 import { commissionStatusValidator, dealStatusValidator } from "../deals/constants";
 import { projectStatusValidator } from "../projects/constants";
 import { reviewModerationStatusValidator } from "../reviews/constants";
@@ -69,7 +73,11 @@ const companyListItemValidator = v.object({
   reviewCount: v.number(),
   rating: v.union(v.number(), v.null()),
   latestActivityAt: v.number(),
+  operationalStatus: companyOperationalStatusValidator,
 });
+
+/** Only non-default states are filterable: "normal" is also stored as a missing value. */
+const operationalFilterValidator = v.union(v.literal("needs_attention"), v.literal("suspended"));
 
 const memberValidator = v.object({
   userId: v.id("users"),
@@ -171,9 +179,35 @@ async function listCompaniesPage(
     search?: string;
     verificationStatus?: typeof verificationStatusValidator.type;
     onboardingStatus?: typeof onboardingStatusValidator.type;
+    operationalStatus?: typeof operationalFilterValidator.type;
   },
 ) {
   const search = normalizeSearch(args.search);
+  if (args.operationalStatus) {
+    const operationalStatus = args.operationalStatus;
+    if (search) {
+      return await ctx.db
+        .query("companies")
+        .withSearchIndex("search_directory", (q) => {
+          let filtered = q.search("directorySearchText", search).eq("operationalStatus", operationalStatus);
+          if (args.verificationStatus) filtered = filtered.eq("verificationStatus", args.verificationStatus);
+          if (args.onboardingStatus) filtered = filtered.eq("onboardingStatus", args.onboardingStatus);
+          return filtered;
+        })
+        .paginate(args.paginationOpts);
+    }
+    return await ctx.db
+      .query("companies")
+      .withIndex("by_operationalStatus", (q) => q.eq("operationalStatus", operationalStatus))
+      .order("desc")
+      .filter((q) =>
+        q.and(
+          args.verificationStatus ? q.eq(q.field("verificationStatus"), args.verificationStatus) : true,
+          args.onboardingStatus ? q.eq(q.field("onboardingStatus"), args.onboardingStatus) : true,
+        ),
+      )
+      .paginate(args.paginationOpts);
+  }
   if (search) {
     if (args.onboardingStatus && args.verificationStatus) {
       return await ctx.db
@@ -256,6 +290,7 @@ export const listCompanies = query({
     search: v.optional(v.string()),
     verificationStatus: v.optional(verificationStatusValidator),
     onboardingStatus: v.optional(onboardingStatusValidator),
+    operationalStatus: v.optional(operationalFilterValidator),
   },
   returns: paginationResultValidator(companyListItemValidator),
   handler: async (ctx, args) => {
@@ -299,6 +334,7 @@ export const listCompanies = query({
           ? company.reviewRatingTotal / reviewCount
           : null,
         latestActivityAt: latestActivity?.createdAt ?? company.updatedAt,
+        operationalStatus: getCompanyOperationalStatus(company),
       };
     }));
     return { ...result, page };

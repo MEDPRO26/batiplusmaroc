@@ -118,6 +118,32 @@ describe("admin company list and summary", () => {
     expect(search.page.map((row) => row.name)).toEqual(["Verified Atlas"]);
   });
 
+  test("exposes and filters marketplace operational status, treating a missing value as normal", async () => {
+    const t = convexTest(schema, modules);
+    const admin = await seedUser(t, "admin", "Admin");
+    await seedCompany(t, "Normal Works", "verified");
+    const flagged = await seedCompany(t, "Flagged Atlas", "pending");
+    const suspended = await seedCompany(t, "Suspended Works", "verified");
+    await t.run(async (ctx) => {
+      await ctx.db.patch(flagged, { operationalStatus: "needs_attention" });
+      await ctx.db.patch(suspended, { operationalStatus: "suspended" });
+    });
+    const query = (extra: Record<string, unknown>) =>
+      asUser(t, admin).query(api.admin.companies.listCompanies, { ...listArgs(), ...extra });
+
+    const all = await query({});
+    expect(Object.fromEntries(all.page.map((row) => [row.name, row.operationalStatus]))).toEqual({
+      "Normal Works": "normal",
+      "Flagged Atlas": "needs_attention",
+      "Suspended Works": "suspended",
+    });
+    expect((await query({ operationalStatus: "needs_attention" })).page.map((row) => row.name)).toEqual(["Flagged Atlas"]);
+    expect((await query({ operationalStatus: "suspended", verificationStatus: "pending" })).page).toEqual([]);
+    expect((await query({ operationalStatus: "needs_attention", search: "atlas" })).page.map((row) => row.name)).toEqual(["Flagged Atlas"]);
+    await expect(t.query(api.admin.companies.listCompanies, { ...listArgs(), operationalStatus: "suspended" }))
+      .rejects.toThrow("NOT_AUTHENTICATED");
+  });
+
   test("loads draft, pending, verified and rejected companies and returns a safe missing result", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedUser(t, "admin", "Admin");

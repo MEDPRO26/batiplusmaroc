@@ -19,9 +19,11 @@ vi.mock("convex/react", () => ({
 vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("next/font/google", () => ({ Outfit: () => ({ className: "font-outfit" }) }));
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href, ...props }: Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & { href: string | { pathname: string; params: Record<string, string> } }) => {
-    const resolved = typeof href === "string" ? href : Object.entries(href.params).reduce((path, [key, value]) => path.replace(`[${key}]`, value), href.pathname);
-    return <a href={resolved} {...props}>{children}</a>;
+  Link: ({ children, href, ...props }: Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & { href: string | { pathname: string; params?: Record<string, string>; query?: Record<string, string> } }) => {
+    if (typeof href === "string") return <a href={href} {...props}>{children}</a>;
+    const path = Object.entries(href.params ?? {}).reduce((value, [key, param]) => value.replace(`[${key}]`, param), href.pathname);
+    const query = new URLSearchParams(href.query ?? {}).toString();
+    return <a href={query ? `${path}?${query}` : path} {...props}>{children}</a>;
   },
   usePathname: () => "/admin/companies",
   getPathname: () => "/admin/companies",
@@ -33,6 +35,7 @@ import { AdminCompanyDetailPanel } from "./components/admin-company-detail-panel
 import { AdminShell } from "./components/admin-shell";
 
 const companyId = "company-atlas" as never;
+const noFilters = { search: "", verification: null, onboarding: null, operational: null };
 const summary = {
   companyId,
   name: "Atlas Build",
@@ -64,10 +67,55 @@ describe("Admin companies UI", () => {
   beforeEach(() => { mocks.query = undefined; mocks.paginated = { results: [], status: "Exhausted", loadMore: vi.fn() }; });
 
   test.each([["en", "Companies", "No companies match these filters.", "Search by name"], ["fr", "Entreprises", "Aucune entreprise ne correspond à ces filtres.", "Nom, ville"]] as const)("renders the translated %s list and bounded empty state", (locale, title, empty, search) => {
-    const html = render(locale, <AdminCompaniesPanel />);
+    const html = render(locale, <AdminCompaniesPanel initialFilters={noFilters} />);
     expect(html).toContain(title);
     expect(html).toContain(empty);
     expect(html).toContain(search);
+  });
+
+  test("Verification is no longer a sidebar destination; Companies is", () => {
+    const html = render("en", <AdminCompaniesPanel initialFilters={noFilters} />);
+    expect(html).toMatch(/aria-current="page"[^>]*>(?:<svg.*?<\/svg>)?Companies</);
+    expect(html).not.toContain('href="/admin/verification"');
+    expect(html).not.toContain(`>${en.adminDashboard.navVerification}</span>`);
+  });
+
+  test("pending companies open straight on the Verification tab and rows show operational status", () => {
+    mocks.paginated = {
+      status: "Exhausted",
+      loadMore: vi.fn(),
+      results: [
+        { companyId: "pending-co", name: "Pending Co", legalName: null, city: "Agadir", verificationStatus: "pending", onboardingStatus: "completed", services: ["renovation", "plumbing", "pool"], activeMemberCount: 1, reviewCount: 0, rating: null, latestActivityAt: Date.UTC(2026, 8, 20), operationalStatus: "needs_attention" },
+        { companyId: "verified-co", name: "Verified Co", legalName: null, city: "Rabat", verificationStatus: "verified", onboardingStatus: "completed", services: [], activeMemberCount: 2, reviewCount: 3, rating: 4.7, latestActivityAt: Date.UTC(2026, 8, 21), operationalStatus: "normal" },
+      ],
+    };
+    const html = render("en", <AdminCompaniesPanel initialFilters={{ ...noFilters, verification: "pending" }} />);
+    expect(html).toContain('href="/admin/companies/pending-co?tab=verification"');
+    expect(html).toContain('href="/admin/companies/verified-co"');
+    expect(html).toContain("Needs attention");
+    expect(html).toContain("★ 4.7 (3)");
+    // Long service lists no longer crowd each row.
+    expect(html).not.toContain("Pools");
+    expect(html).toContain('aria-pressed="true"');
+  });
+
+  test("a row without an operational status (older backend or legacy data) shows Normal, never a raw key", () => {
+    mocks.paginated = {
+      status: "Exhausted",
+      loadMore: vi.fn(),
+      results: [{ companyId: "legacy-co", name: "Legacy Co", legalName: null, city: "Rabat", verificationStatus: "verified", onboardingStatus: "completed", services: [], activeMemberCount: 0, reviewCount: 0, rating: null, latestActivityAt: Date.UTC(2026, 8, 1) }],
+    };
+    const html = render("en", <AdminCompaniesPanel initialFilters={noFilters} />);
+    expect(html).toContain(">Normal<");
+    expect(html).not.toContain("operationalStatus.status");
+  });
+
+  test("the company page links back to Companies from the breadcrumb and header", () => {
+    mocks.query = summary;
+    const html = render("en", <AdminCompanyDetailPanel companyId={companyId} />);
+    expect(html.match(/href="\/admin\/companies"/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(html).toContain("Back to companies");
+    expect(html).toContain('aria-label="More actions"');
   });
 
   test("maps the list and dynamic detail routes in both locales", () => {

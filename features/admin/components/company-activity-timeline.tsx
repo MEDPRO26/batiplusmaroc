@@ -3,6 +3,7 @@
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ADMIN_PRESS } from "@/features/admin/components/admin-shell";
@@ -20,13 +21,22 @@ const CATEGORY_STYLES: Record<TimelineItem["category"], string> = {
   reviews: "bg-[#f3ecff] text-[#7047b8]",
 };
 
-export function CompanyActivityTimeline({ companyId }: { companyId: Id<"companies"> }) {
+export function CompanyActivityTimeline({
+  companyId,
+  limit,
+  footer,
+}: {
+  companyId: Id<"companies">;
+  /** Shows only the newest `limit` events without paging (used by the company overview). */
+  limit?: number;
+  footer?: ReactNode;
+}) {
   const t = useTranslations("adminCompanyActivity");
   const locale = useLocale();
   const { results, status, loadMore } = usePaginatedQuery(
     api.admin.companyActivity.listCompanyActivity,
     { companyId },
-    { initialNumItems: 20 },
+    { initialNumItems: limit ?? 20 },
   );
 
   const loadingFirstPage = status === "LoadingFirstPage";
@@ -54,13 +64,14 @@ export function CompanyActivityTimeline({ companyId }: { companyId: Id<"companie
         </p>
       ) : (
         <ol className="mt-4 space-y-3">
-          {results.map((item) => (
+          {(limit ? results.slice(0, limit) : results).map((item) => (
             <TimelineRow item={item} key={item.id} locale={locale} />
           ))}
         </ol>
       )}
 
-      {status === "CanLoadMore" || status === "LoadingMore" ? (
+      {footer}
+      {!limit && (status === "CanLoadMore" || status === "LoadingMore") ? (
         <button
           className={`mt-4 min-h-11 w-full rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold text-[#17191d] disabled:opacity-50 ${ADMIN_PRESS}`}
           disabled={status === "LoadingMore"}

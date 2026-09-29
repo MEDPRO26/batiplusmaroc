@@ -4438,7 +4438,7 @@
     "metaTitle": "Companies",
     "metaDescription": "Manage marketplace companies.",
     "title": "Companies",
-    "lead": "Search companies and inspect verification, marketplace, commission, review and activity records in one operational view.",
+    "lead": "Search, verify and operate every marketplace company from one place.",
     "loading": "Loading companies",
     "loadingMore": "Loading more…",
     "loadMore": "Load more",
@@ -4451,14 +4451,54 @@
       "searchPlaceholder": "Search by name, city or service",
       "verificationLabel": "Verification status",
       "onboardingLabel": "Onboarding status",
-      "options": { "all": "All statuses", "draft": "Draft", "pending": "Pending", "verified": "Verified", "rejected": "Rejected", "completed": "Completed" }
+      "options": {
+        "all": "All statuses",
+        "draft": "Draft",
+        "pending": "Pending",
+        "verified": "Verified",
+        "rejected": "Rejected",
+        "completed": "Completed"
+      },
+      "allVerification": "All verification",
+      "allOperational": "All operational states",
+      "allOnboarding": "All onboarding",
+      "operationalLabel": "Operational status"
     },
-    "columns": { "company": "Company", "status": "Verification", "onboarding": "Onboarding", "services": "Services", "members": "Members", "activity": "Latest activity", "action": "Action" },
+    "columns": {
+      "company": "Company",
+      "status": "Verification",
+      "onboarding": "Onboarding",
+      "services": "Services",
+      "members": "Members",
+      "activity": "Latest activity",
+      "action": "Action",
+      "operational": "Operational status",
+      "marketplace": "Marketplace"
+    },
     "status": {
-      "verification": { "draft": "Draft", "pending": "Pending", "verified": "Verified", "rejected": "Rejected" },
-      "onboarding": { "pending": "Pending", "completed": "Completed" }
+      "verification": {
+        "draft": "Draft",
+        "pending": "Pending",
+        "verified": "Verified",
+        "rejected": "Rejected"
+      },
+      "onboarding": {
+        "pending": "Pending",
+        "completed": "Completed"
+      }
     },
-    "services": { "houseConstruction": "House construction", "renovation": "Renovation", "structural": "Structural work", "finishing": "Finishing", "architecture": "Architecture", "interior": "Interior design", "electrical": "Electrical", "plumbing": "Plumbing", "joinery": "Joinery", "pool": "Pools" },
+    "services": {
+      "houseConstruction": "House construction",
+      "renovation": "Renovation",
+      "structural": "Structural work",
+      "finishing": "Finishing",
+      "architecture": "Architecture",
+      "interior": "Interior design",
+      "electrical": "Electrical",
+      "plumbing": "Plumbing",
+      "joinery": "Joinery",
+      "pool": "Pools"
+    },
     "detail": {
       "metaTitle": "Company operations",
       "metaDescription": "Consolidated admin company operations.",
@@ -4469,7 +4509,19 @@
       "back": "Back to companies",
       "publicProfile": "View public profile",
       "tabsLabel": "Company sections",
-      "tabs": { "overview": "Overview", "verification": "Verification", "projectsDeals": "Projects & Deals", "commissions": "Commissions", "reviews": "Reviews", "activity": "Activity", "messages": "Messages", "internalNotes": "Internal Notes" }
+      "tabs": {
+        "overview": "Overview",
+        "verification": "Verification",
+        "projectsDeals": "Projects & Deals",
+        "commissions": "Commissions",
+        "reviews": "Reviews",
+        "activity": "Activity",
+        "messages": "Messages",
+        "internalNotes": "Internal Notes"
+      },
+      "moreActions": "More actions",
+      "reviewVerification": "Review verification",
+      "verificationPendingBadge": "Verification awaiting review"
     },
     "overview": {
       "profile": "Company profile",
@@ -4488,12 +4540,21 @@
       "boundedSummary": "Counts are capped for a fast operational summary.",
       "membersTitle": "Active company members",
       "noMembers": "No active company members.",
-      "memberRoles": { "owner": "Owner", "staff": "Staff" }
+      "memberRoles": {
+        "owner": "Owner",
+        "staff": "Staff"
+      },
+      "verification": "Verification",
+      "allActivity": "View all activity"
     },
     "operationalStatus": {
       "title": "Marketplace operational status",
       "lead": "Controls new marketplace acquisition while preserving support, remediation, reads, and existing obligations.",
-      "status": { "normal": "Normal", "needs_attention": "Needs attention", "suspended": "Suspended" },
+      "status": {
+        "normal": "Normal",
+        "needs_attention": "Needs attention",
+        "suspended": "Suspended"
+      },
       "changeTo": "Change to {status}",
       "dialogTitle": "Change status to {status}",
       "confirmation": "Confirm this operational status change and record the internal reason.",
@@ -4519,21 +4580,96 @@
       "documents": "Documents",
       "noDocuments": "No verification documents were uploaded.",
       "history": "Verification history",
-      "noHistory": "No verification history yet."
+      "noHistory": "No verification history yet.",
+      "decision": "Decision",
+      "confirmApproveLead": "Approve verification for {company}? The company will show as verified to clients.",
+      "reasonHelp": "Explain what the company must correct. The reason is shared with the company."
     },
     "projects": {
       "title": "Projects and Deals",
       "empty": "No marketplace project relationship is recorded for this company.",
-      "source": { "proposal": "Proposal", "invitation": "Invitation" },
+      "source": {
+        "proposal": "Proposal",
+        "invitation": "Invitation"
+      },
       "dealAmount": "Deal amount",
       "commissionStatus": "Commission",
       "completed": "Completed",
-      "dealStatus": { "active": "Active Deal", "completed": "Completed Deal", "cancelled": "Cancelled Deal" },
-      "projectStatus": { "draft": "Draft", "pending_review": "Pending review", "needs_changes": "Needs changes", "published": "Published", "in_discussion": "In discussion", "company_selected": "Company selected", "in_progress": "In progress", "completed": "Completed", "cancelled": "Cancelled", "archived": "Archived" }
+      "dealStatus": {
+        "active": "Active Deal",
+        "completed": "Completed Deal",
+        "cancelled": "Cancelled Deal"
+      },
+      "projectStatus": {
+        "draft": "Draft",
+        "pending_review": "Pending review",
+        "needs_changes": "Needs changes",
+        "published": "Published",
+        "in_discussion": "In discussion",
+        "company_selected": "Company selected",
+        "in_progress": "In progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "archived": "Archived"
+      }
     },
-    "commissions": { "title": "Commissions", "empty": "No commission obligations for this company.", "view": "View", "status": { "due": "Due", "paid": "Paid" }, "close": "Close commission details", "reference": "Payment reference", "note": "Internal note", "paidAt": "Paid at", "markPaid": "Mark paid", "actionError": "The commission could not be updated." },
-    "reviews": { "title": "Reviews", "empty": "No reviews for this company.", "hide": "Hide", "restore": "Restore", "actionError": "The review could not be updated." },
-    "error": { "title": "Companies could not be loaded", "lead": "Try again. If the problem continues, return to the admin dashboard.", "retry": "Try again" }
+    "commissions": {
+      "title": "Commissions",
+      "empty": "No commission obligations for this company.",
+      "view": "View",
+      "status": {
+        "due": "Due",
+        "paid": "Paid"
+      },
+      "close": "Close commission details",
+      "reference": "Payment reference",
+      "note": "Internal note",
+      "paidAt": "Paid at",
+      "markPaid": "Mark paid",
+      "actionError": "The commission could not be updated."
+    },
+    "reviews": {
+      "title": "Reviews",
+      "empty": "No reviews for this company.",
+      "hide": "Hide",
+      "restore": "Restore",
+      "actionError": "The review could not be updated."
+    },
+    "error": {
+      "title": "Companies could not be loaded",
+      "lead": "Try again. If the problem continues, return to the admin dashboard.",
+      "retry": "Try again"
+    },
+    "views": {
+      "label": "Quick filters",
+      "all": "All",
+      "pending": "Pending verification",
+      "verified": "Verified",
+      "attention": "Needs attention",
+      "suspended": "Suspended"
+    },
+    "row": {
+      "onboardingIncomplete": "Onboarding incomplete",
+      "openAria": "Open {name}",
+      "review": "Review",
+      "members": "{count, plural, =0 {No members} one {# member} other {# members}}",
+      "noReviews": "No reviews",
+      "rating": "★ {rating} ({count})"
+    },
+    "attention": {
+      "title": "Needs action",
+      "none": "Nothing needs action for this company right now.",
+      "verificationPending": "Verification submitted and awaiting review",
+      "review": "Review",
+      "suspended": "Company is suspended from new marketplace activity",
+      "needsAttention": "Company is flagged as needing attention",
+      "viewNotes": "View notes",
+      "viewHistory": "View activity",
+      "unreadMessages": "{count, plural, one {# unread operational message} other {# unread operational messages}}",
+      "openMessages": "Open messages",
+      "commissionsDue": "{count, plural, one {# commission due} other {# commissions due}} · {amount}",
+      "viewCommissions": "View commissions"
+    }
   },
   "operationalMessaging": {
     "metaTitle": "Batiplus support",

@@ -761,9 +761,11 @@ export default defineSchema({
       "verificationStatus",
     ])
     .index("by_verificationStatus", ["verificationStatus"])
+    /** Admin operations filter; a missing value means "normal". */
+    .index("by_operationalStatus", ["operationalStatus"])
     .searchIndex("search_directory", {
       searchField: "directorySearchText",
-      filterFields: ["onboardingStatus", "verificationStatus"],
+      filterFields: ["onboardingStatus", "verificationStatus", "operationalStatus"],
     }),
 
   companyMembers: defineTable({
