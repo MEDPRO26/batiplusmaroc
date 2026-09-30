@@ -52,16 +52,6 @@ const invitationStatusValidator = v.union(
   v.literal("accepted"),
   v.literal("declined"),
 );
-const INITIAL_QUOTE_STATUSES = [
-  "draft",
-  "submitted",
-  "viewed",
-  "shortlisted",
-  "discussion_open",
-  "declined",
-  "withdrawn",
-] as const satisfies readonly Doc<"projectQuotes">["status"][];
-
 const MAX_COMPANY_PAGE_SIZE = 50;
 const MAX_REVIEW_PAGE_SIZE = 30;
 
@@ -205,15 +195,28 @@ async function listCompaniesPage(
   if (args.operationalStatus) {
     const operationalStatus = args.operationalStatus;
     if (search) {
-      return await ctx.db
+      const searchQuery = ctx.db
         .query("companies")
-        .withSearchIndex("search_directory", (q) => {
+        .withSearchIndex("search_directory_v2", (q) => {
           let filtered = q.search("directorySearchText", search);
           if (args.verificationStatus) filtered = filtered.eq("verificationStatus", args.verificationStatus);
           if (args.onboardingStatus) filtered = filtered.eq("onboardingStatus", args.onboardingStatus);
+          if (operationalStatus !== "normal") filtered = filtered.eq("operationalStatus", operationalStatus);
           return filtered;
-        })
-        .filter((q) => matchesOperationalStatus(q, operationalStatus))
+        });
+      return operationalStatus === "normal"
+        ? await searchQuery.filter((q) => matchesOperationalStatus(q, operationalStatus)).paginate(args.paginationOpts)
+        : await searchQuery.paginate(args.paginationOpts);
+    }
+    if (operationalStatus !== "normal") {
+      return await ctx.db.query("companies")
+        .withIndex("by_operationalStatus", (q) => q.eq("operationalStatus", operationalStatus))
+        .filter((q) => q.and(
+          q.eq(q.field("operationalStatus"), operationalStatus),
+          ...(args.onboardingStatus ? [q.eq(q.field("onboardingStatus"), args.onboardingStatus)] : []),
+          ...(args.verificationStatus ? [q.eq(q.field("verificationStatus"), args.verificationStatus)] : []),
+        ))
+        .order("desc")
         .paginate(args.paginationOpts);
     }
     if (args.onboardingStatus && args.verificationStatus) {
@@ -249,42 +252,14 @@ async function listCompaniesPage(
       .paginate(args.paginationOpts);
   }
   if (search) {
-    if (args.onboardingStatus && args.verificationStatus) {
-      return await ctx.db
-        .query("companies")
-        .withSearchIndex("search_directory", (q) =>
-          q
-            .search("directorySearchText", search)
-            .eq("onboardingStatus", args.onboardingStatus!)
-            .eq("verificationStatus", args.verificationStatus!),
-        )
-        .paginate(args.paginationOpts);
-    }
-    if (args.onboardingStatus) {
-      return await ctx.db
-        .query("companies")
-        .withSearchIndex("search_directory", (q) =>
-          q
-            .search("directorySearchText", search)
-            .eq("onboardingStatus", args.onboardingStatus!),
-        )
-        .paginate(args.paginationOpts);
-    }
-    if (args.verificationStatus) {
-      return await ctx.db
-        .query("companies")
-        .withSearchIndex("search_directory", (q) =>
-          q
-            .search("directorySearchText", search)
-            .eq("verificationStatus", args.verificationStatus!),
-        )
-        .paginate(args.paginationOpts);
-    }
     return await ctx.db
       .query("companies")
-      .withSearchIndex("search_directory", (q) =>
-        q.search("directorySearchText", search),
-      )
+      .withSearchIndex("search_directory_v2", (q) => {
+        let filtered = q.search("directorySearchText", search);
+        if (args.onboardingStatus) filtered = filtered.eq("onboardingStatus", args.onboardingStatus);
+        if (args.verificationStatus) filtered = filtered.eq("verificationStatus", args.verificationStatus);
+        return filtered;
+      })
       .paginate(args.paginationOpts);
   }
 
@@ -319,6 +294,7 @@ async function listCompaniesPage(
   }
   return await ctx.db
     .query("companies")
+    .withIndex("by_updatedAt")
     .order("desc")
     .paginate(args.paginationOpts);
 }
@@ -341,7 +317,7 @@ export const listCompanies = query({
     );
     const result = await listCompaniesPage(ctx, args);
     const page = await Promise.all(result.page.map(async (company) => {
-      const [services, members] = await Promise.all([
+      const [services, members, latestMarketplaceActivity] = await Promise.all([
         ctx.db
           .query("companyServices")
           .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
@@ -352,6 +328,10 @@ export const listCompanies = query({
             q.eq("companyId", company._id).eq("status", "active"),
           )
           .take(51),
+        ctx.db.query("marketplaceActivity")
+          .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", company._id))
+          .order("desc")
+          .first(),
       ]);
       const reviewCount = company.reviewCount ?? 0;
       return {
@@ -367,9 +347,7 @@ export const listCompanies = query({
         rating: reviewCount > 0 && company.reviewRatingTotal !== undefined
           ? company.reviewRatingTotal / reviewCount
           : null,
-        // Phase 1 cannot query the staged Company activity index. Company
-        // updates remain a safe bounded fallback for Admin list ordering/copy.
-        latestActivityAt: company.updatedAt,
+        latestActivityAt: Math.max(company.updatedAt, latestMarketplaceActivity?.createdAt ?? 0),
         operationalStatus: getCompanyOperationalStatus(company),
       };
     }));
@@ -553,29 +531,19 @@ async function loadQuoteBatch(
   batchSize: number,
 ) {
   if (cursor.done) return [];
-  const batches = await Promise.all(INITIAL_QUOTE_STATUSES.map(async (status) => {
-    const query = ctx.db.query("projectQuotes")
-      .withIndex("by_companyId_and_status", (q) =>
-        q.eq("companyId", companyId).eq("status", status),
-      )
-      .order("desc");
-    if (cursor.beforeAt === null) return await query.take(batchSize);
-    return await query
-      .filter((q) => q.or(
-        q.lt(q.field("createdAt"), cursor.beforeAt),
-        q.and(
-          q.eq(q.field("createdAt"), cursor.beforeAt),
-          q.lt(q.field("_creationTime"), cursor.beforeCreationTime ?? 0),
-        ),
-      ))
-      .take(batchSize);
-  }));
-  return batches
-    .flat()
-    .sort((left, right) => right.createdAt - left.createdAt
-      || right._creationTime - left._creationTime
-      || left._id.localeCompare(right._id))
-    .slice(0, batchSize);
+  if (cursor.beforeAt === null) {
+    return await ctx.db.query("projectQuotes")
+      .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId))
+      .order("desc").take(batchSize);
+  }
+  const sameTimestamp = await ctx.db.query("projectQuotes")
+    .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId).eq("createdAt", cursor.beforeAt!).lt("_creationTime", cursor.beforeCreationTime!))
+    .order("desc").take(batchSize);
+  if (sameTimestamp.length >= batchSize) return sameTimestamp;
+  const older = await ctx.db.query("projectQuotes")
+    .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId).lt("createdAt", cursor.beforeAt!))
+    .order("desc").take(batchSize - sameTimestamp.length);
+  return [...sameTimestamp, ...older];
 }
 
 async function loadInvitationBatch(

@@ -306,17 +306,11 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_projectId_and_createdAt", ["projectId", "createdAt"])
-    .index("by_companyId_and_createdAt", {
-      fields: ["companyId", "createdAt"],
-      staged: true,
-    })
+    .index("by_companyId_and_createdAt", ["companyId", "createdAt"])
     .index("by_eventType_and_createdAt", ["eventType", "createdAt"])
     .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"])
     .index("by_finalQuoteId_and_createdAt", ["finalQuoteId", "createdAt"])
-    .index("by_dealId_and_createdAt", {
-      fields: ["dealId", "createdAt"],
-      staged: true,
-    }),
+    .index("by_dealId_and_createdAt", ["dealId", "createdAt"]),
 
   siteAssessments: defineTable({
     projectId: v.id("projects"),
@@ -450,10 +444,7 @@ export default defineSchema({
     .index("by_projectId_and_companyId", ["projectId", "companyId"])
     .index("by_projectId_and_status", ["projectId", "status"])
     .index("by_companyId_and_status", ["companyId", "status"])
-    .index("by_companyId_and_createdAt", {
-      fields: ["companyId", "createdAt"],
-      staged: true,
-    }),
+    .index("by_companyId_and_createdAt", ["companyId", "createdAt"]),
 
   finalQuotes: defineTable({
     projectId: v.id("projects"),
@@ -800,24 +791,18 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_slug", ["slug"])
-    .index("by_updatedAt", { fields: ["updatedAt"], staged: true })
+    .index("by_updatedAt", ["updatedAt"])
     .index("by_onboardingStatus", ["onboardingStatus"])
     .index("by_onboardingStatus_and_verificationStatus", [
       "onboardingStatus",
       "verificationStatus",
     ])
-    .index("by_onboardingStatus_and_directoryListed", {
-      fields: ["onboardingStatus", "directoryListed"],
-      staged: true,
-    })
-    .index("by_onboardingStatus_and_verificationStatus_and_directoryListed", {
-      fields: ["onboardingStatus", "verificationStatus", "directoryListed"],
-      staged: true,
-    })
+    .index("by_onboardingStatus_and_directoryListed", ["onboardingStatus", "directoryListed"])
+    .index("by_onboardingStatus_and_verificationStatus_and_directoryListed", ["onboardingStatus", "verificationStatus", "directoryListed"])
     .index("by_verificationStatus", ["verificationStatus"])
-    .index("by_directoryListed", { fields: ["directoryListed"], staged: true })
+    .index("by_directoryListed", ["directoryListed"])
     /** Admin operations filter; a missing value means "normal". */
-    .index("by_operationalStatus", { fields: ["operationalStatus"], staged: true })
+    .index("by_operationalStatus", ["operationalStatus"])
     .searchIndex("search_directory", {
       searchField: "directorySearchText",
       // Keep the already-enabled origin/main index unchanged during phase 1.
@@ -831,7 +816,6 @@ export default defineSchema({
         "operationalStatus",
         "directoryListed",
       ],
-      staged: true,
     }),
 
   companyMembers: defineTable({

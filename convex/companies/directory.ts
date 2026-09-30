@@ -1,9 +1,10 @@
 import {
   paginationOptsValidator,
   paginationResultValidator,
+  type FilterBuilder,
 } from "convex/server";
-import { v } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
+import { ConvexError, v } from "convex/values";
+import type { DataModel, Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
 import { getPublicMediaUrl } from "../storage/publicUrl";
@@ -110,6 +111,54 @@ function serviceMarker(service: CompanyService | undefined) {
   return service ? `service${service.toLowerCase()}` : "";
 }
 
+type DirectoryCursorMode = "legacy" | "exact" | "previous";
+const DIRECTORY_CURSOR_PREFIX = "directory-v2:";
+
+function decodeDirectoryCursor(cursor: string | null): {
+  mode: DirectoryCursorMode | null;
+  nativeCursor: string | null;
+  wrapped: boolean;
+} {
+  if (cursor === null) return { mode: null, nativeCursor: null, wrapped: false };
+  if (!cursor.startsWith(DIRECTORY_CURSOR_PREFIX)) {
+    return { mode: "previous", nativeCursor: cursor, wrapped: false };
+  }
+  try {
+    const parsed = JSON.parse(cursor.slice(DIRECTORY_CURSOR_PREFIX.length)) as {
+      mode?: DirectoryCursorMode;
+      cursor?: unknown;
+    };
+    if (
+      (parsed.mode === "legacy" || parsed.mode === "exact" || parsed.mode === "previous")
+      && typeof parsed.cursor === "string"
+    ) {
+      return { mode: parsed.mode, nativeCursor: parsed.cursor, wrapped: true };
+    }
+  } catch {
+    // Keep the public error independent of Convex's opaque cursor format.
+  }
+  throw new ConvexError("INVALID_COMPANY_DIRECTORY_CURSOR");
+}
+
+function encodeDirectoryCursor(mode: DirectoryCursorMode, nativeCursor: string) {
+  return `${DIRECTORY_CURSOR_PREFIX}${JSON.stringify({ mode, cursor: nativeCursor })}`;
+}
+
+function matchesPublicDirectoryEligibility(q: FilterBuilder<DataModel["companies"]>) {
+  return q.and(
+    q.neq(q.field("operationalStatus"), "suspended"),
+    q.neq(q.field("directoryListed"), false),
+    q.neq(q.field("slug"), undefined),
+    q.neq(q.field("slug"), ""),
+    q.neq(q.field("name"), undefined),
+    q.neq(q.field("name"), ""),
+    q.neq(q.field("city"), undefined),
+    q.neq(q.field("city"), ""),
+    q.neq(q.field("description"), undefined),
+    q.neq(q.field("description"), ""),
+  );
+}
+
 async function resolvePublicMediaUrl(
   ctx: QueryCtx,
   reference: {
@@ -198,9 +247,41 @@ export const listPublicCompanies = query({
   },
   returns: paginationResultValidator(publicCompanyResultValidator),
   handler: async (ctx, args) => {
-    // Phase 1 keeps all reads on indexes already enabled on origin/main. The
-    // staged directory indexes become eligible only after their backfills and
-    // a second deployment; DTO validation remains the final public boundary.
+    const decodedCursor = decodeDirectoryCursor(args.paginationOpts.cursor);
+    const decodedEndCursor = args.paginationOpts.endCursor === undefined
+      ? null
+      : decodeDirectoryCursor(args.paginationOpts.endCursor);
+    if (
+      decodedCursor.wrapped && decodedEndCursor?.wrapped &&
+      decodedCursor.mode !== decodedEndCursor.mode
+    ) {
+      throw new ConvexError("INVALID_COMPANY_DIRECTORY_CURSOR");
+    }
+    // A raw cursor with a wrapped companion can be an in-flight split from the
+    // earlier response format. Otherwise raw cursors belong to Phase 1.
+    let mode: DirectoryCursorMode | null = decodedCursor.wrapped
+      ? decodedCursor.mode
+      : decodedEndCursor?.wrapped
+        ? decodedEndCursor.mode
+        : decodedCursor.nativeCursor !== null || (decodedEndCursor !== null && decodedEndCursor.nativeCursor !== null)
+          ? "previous"
+          : null;
+    // Legacy Companies can have no materialized eligibility. Keep them in the
+    // ordered source until the operational-status backfill has covered all rows.
+    if (mode === null) {
+      const hasLegacyEligibility = await ctx.db.query("companies")
+        .withIndex("by_directoryListed", (q) => q.eq("directoryListed", undefined))
+        .first() !== null;
+      mode = hasLegacyEligibility ? "legacy" : "exact";
+    }
+    // Preserve every native pagination option while unwrapping both boundaries.
+    const paginationOpts = decodedEndCursor === null
+      ? { ...args.paginationOpts, cursor: decodedCursor.nativeCursor }
+      : {
+          ...args.paginationOpts,
+          cursor: decodedCursor.nativeCursor,
+          endCursor: decodedEndCursor.nativeCursor!,
+        };
     const terms = [
       normalizedSearch(args.search),
       normalizedSearch(args.city),
@@ -208,39 +289,67 @@ export const listPublicCompanies = query({
     ].filter(Boolean);
 
     const page = terms.length > 0
-      ? await ctx.db
+      ? mode === "previous"
+        ? await ctx.db
           .query("companies")
           .withSearchIndex("search_directory", (q) => {
-            const search = q
+            let search = q.search("directorySearchText", terms.join(" ")).eq("onboardingStatus", "completed");
+            if (args.verifiedOnly) search = search.eq("verificationStatus", "verified");
+            return search;
+          })
+          .filter(matchesPublicDirectoryEligibility)
+          .paginate(paginationOpts)
+        : await ctx.db
+          .query("companies")
+          .withSearchIndex("search_directory_v2", (q) => {
+            let search = q
               .search("directorySearchText", terms.join(" "))
               .eq("onboardingStatus", "completed");
-            return args.verifiedOnly
-              ? search.eq("verificationStatus", "verified")
-              : search;
+            if (args.verifiedOnly) search = search.eq("verificationStatus", "verified");
+            if (mode === "exact") search = search.eq("directoryListed", true);
+            return search;
           })
-          .filter((q) => q.neq(q.field("operationalStatus"), "suspended"))
-          .paginate(args.paginationOpts)
+          .filter(matchesPublicDirectoryEligibility)
+          .paginate(paginationOpts)
       : args.verifiedOnly
-        ? await ctx.db
-            .query("companies")
-            .withIndex("by_onboardingStatus_and_verificationStatus", (q) =>
-              q.eq("onboardingStatus", "completed").eq("verificationStatus", "verified"),
-            )
-            .filter((q) => q.neq(q.field("operationalStatus"), "suspended"))
-            .order(args.sort === "oldest" ? "asc" : "desc")
-            .paginate(args.paginationOpts)
-        : await ctx.db
-            .query("companies")
-            .withIndex("by_onboardingStatus", (q) => q.eq("onboardingStatus", "completed"))
-            .filter((q) => q.neq(q.field("operationalStatus"), "suspended"))
-            .order(args.sort === "oldest" ? "asc" : "desc")
-            .paginate(args.paginationOpts);
+        ? mode !== "exact"
+          ? await ctx.db.query("companies")
+              .withIndex("by_onboardingStatus_and_verificationStatus", (q) =>
+                q.eq("onboardingStatus", "completed").eq("verificationStatus", "verified"))
+              .filter(matchesPublicDirectoryEligibility)
+              .order(args.sort === "oldest" ? "asc" : "desc")
+              .paginate(paginationOpts)
+          : await ctx.db.query("companies")
+              .withIndex("by_onboardingStatus_and_verificationStatus_and_directoryListed", (q) =>
+                q.eq("onboardingStatus", "completed").eq("verificationStatus", "verified").eq("directoryListed", true))
+              .filter(matchesPublicDirectoryEligibility)
+              .order(args.sort === "oldest" ? "asc" : "desc")
+              .paginate(paginationOpts)
+        : mode !== "exact"
+          ? await ctx.db.query("companies")
+              .withIndex("by_onboardingStatus", (q) => q.eq("onboardingStatus", "completed"))
+              .filter(matchesPublicDirectoryEligibility)
+              .order(args.sort === "oldest" ? "asc" : "desc")
+              .paginate(paginationOpts)
+          : await ctx.db.query("companies")
+              .withIndex("by_onboardingStatus_and_directoryListed", (q) =>
+                q.eq("onboardingStatus", "completed").eq("directoryListed", true))
+              .filter(matchesPublicDirectoryEligibility)
+              .order(args.sort === "oldest" ? "asc" : "desc")
+              .paginate(paginationOpts);
 
     const publicPage = (
       await Promise.all(page.page.map((company) => toPublicCompanyResult(ctx, company)))
     ).filter((company): company is NonNullable<typeof company> => company !== null);
 
-    return { ...page, page: publicPage };
+    return {
+      ...page,
+      page: publicPage,
+      continueCursor: encodeDirectoryCursor(mode, page.continueCursor),
+      splitCursor: page.splitCursor === null || page.splitCursor === undefined
+        ? page.splitCursor
+        : encodeDirectoryCursor(mode, page.splitCursor),
+    };
   },
 });
 

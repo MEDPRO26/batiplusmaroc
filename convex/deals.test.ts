@@ -406,8 +406,7 @@ describe("Deal creation and immutable commercial truth", () => {
         .take(10),
       activity: await ctx.db
         .query("marketplaceActivity")
-        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId))
-        .filter((q) => q.eq(q.field("dealId"), created.dealId))
+        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId))
         .take(10),
     }));
 
@@ -583,8 +582,7 @@ describe("Deal creation and immutable commercial truth", () => {
         .take(2),
       activity: await ctx.db
         .query("marketplaceActivity")
-        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId))
-        .filter((q) => q.eq(q.field("dealId"), first.dealId))
+        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", first.dealId))
         .take(3),
     }));
     expect(counts.deals).toHaveLength(1);
@@ -861,8 +859,7 @@ describe("Deal completion lifecycle", () => {
         .take(10),
       activity: await ctx.db
         .query("marketplaceActivity")
-        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId))
-        .filter((q) => q.eq(q.field("dealId"), created.dealId))
+        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId))
         .take(10),
     }));
     expect(state.deal).toMatchObject({ status: "active", commissionStatus: "due" });
@@ -892,7 +889,7 @@ describe("Deal completion lifecycle", () => {
       project: await ctx.db.get(source.projectId),
       dealHistory: await ctx.db.query("dealStatusHistory").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect(),
       projectHistory: await ctx.db.query("projectStatusHistory").withIndex("by_projectId_and_changedAt", (q) => q.eq("projectId", source.projectId)).collect(),
-      activity: await ctx.db.query("marketplaceActivity").withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId)).filter((q) => q.eq(q.field("dealId"), created.dealId)).collect(),
+      activity: await ctx.db.query("marketplaceActivity").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).take(10),
     }));
     expect(state.deal).toMatchObject({ status: "completed", completedAt: result.completedAt, completedByUserId: source.clientUserId, commissionStatus: "due" });
     expect(state.project).toMatchObject({ status: "completed", updatedAt: result.completedAt });
@@ -931,7 +928,7 @@ describe("Deal completion lifecycle", () => {
       deal: await ctx.db.get(created.dealId),
       dealHistory: await ctx.db.query("dealStatusHistory").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect(),
       projectHistory: await ctx.db.query("projectStatusHistory").withIndex("by_projectId_and_changedAt", (q) => q.eq("projectId", source.projectId)).collect(),
-      completedActivity: await ctx.db.query("marketplaceActivity").withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId)).filter((q) => q.and(q.eq(q.field("dealId"), created.dealId), q.eq(q.field("eventType"), "deal_completed"))).collect(),
+      completedActivity: await ctx.db.query("marketplaceActivity").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).filter((q) => q.eq(q.field("eventType"), "deal_completed")).take(10),
     }));
     expect(state.deal?.completedAt).toBe(first.completedAt);
     expect(state.dealHistory).toHaveLength(2);
@@ -1091,8 +1088,7 @@ describe("Admin commission payment tracking", () => {
         .take(10),
       activity: await ctx.db
         .query("marketplaceActivity")
-        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId))
-        .filter((q) => q.eq(q.field("dealId"), created.dealId))
+        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId))
         .take(10),
     }));
     expect(state.deal).toMatchObject({ commissionStatus: "due" });

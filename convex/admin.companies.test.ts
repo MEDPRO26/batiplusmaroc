@@ -190,6 +190,65 @@ describe("admin company list and summary", () => {
     expect(await names({ operationalStatus: "suspended" })).toEqual(["Suspended Atlas"]);
   });
 
+  test("paginates legacy normal and explicit statuses without leaking other Companies", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    await seedCompany(t, "Legacy Normal");
+    const explicitNormal = await seedCompany(t, "Explicit Normal");
+    const attention = await seedCompany(t, "Attention Company");
+    const suspended = await seedCompany(t, "Suspended Company");
+    await t.run(async (ctx) => {
+      await ctx.db.patch(explicitNormal, { operationalStatus: "normal" });
+      await ctx.db.patch(attention, { operationalStatus: "needs_attention" });
+      await ctx.db.patch(suspended, { operationalStatus: "suspended" });
+    });
+
+    const first = await asUser(t, adminId).query(api.admin.companies.listCompanies, {
+      ...listArgs(1), operationalStatus: "normal",
+    });
+    const second = await asUser(t, adminId).query(api.admin.companies.listCompanies, {
+      ...listArgs(1, first.continueCursor), operationalStatus: "normal",
+    });
+    expect(new Set([...first.page, ...second.page].map((row) => row.name))).toEqual(
+      new Set(["Legacy Normal", "Explicit Normal"]),
+    );
+    expect(second.isDone).toBe(true);
+    expect((await asUser(t, adminId).query(api.admin.companies.listCompanies, {
+      ...listArgs(1), operationalStatus: "needs_attention",
+    })).page.map((row) => row.name)).toEqual(["Attention Company"]);
+    expect((await asUser(t, adminId).query(api.admin.companies.listCompanies, {
+      ...listArgs(1), search: "Suspended", operationalStatus: "suspended",
+    })).page.map((row) => row.name)).toEqual(["Suspended Company"]);
+  });
+
+  test("reports latest Company-scoped marketplace activity without exposing another Company's events", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    const clientId = await seedUser(t, "client", "Client");
+    const companyId = await seedCompany(t, "Active Company", "verified", "completed", 10);
+    const otherCompanyId = await seedCompany(t, "Other Company", "verified", "completed", 20);
+    await t.run(async (ctx) => {
+      const projectId = await ctx.db.insert("projects", {
+        clientId, countryCode: "MA", surfaceUnknown: true, visibility: "marketplace",
+        status: "published", lastCompletedStep: 6, createdAt: 1, updatedAt: 1,
+      });
+      await ctx.db.insert("marketplaceActivity", {
+        projectId, companyId, actorUserId: clientId, actorType: "client",
+        eventType: "company_invited", createdAt: 100,
+      });
+      await ctx.db.insert("marketplaceActivity", {
+        projectId, companyId: otherCompanyId, actorUserId: clientId, actorType: "client",
+        eventType: "company_invited", createdAt: 500,
+      });
+    });
+
+    const page = await asUser(t, adminId).query(api.admin.companies.listCompanies, listArgs());
+    expect(Object.fromEntries(page.page.map((row) => [row.companyId, row.latestActivityAt]))).toEqual({
+      [companyId]: 100,
+      [otherCompanyId]: 500,
+    });
+  });
+
   test("loads draft, pending, verified and rejected companies and returns a safe missing result", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedUser(t, "admin", "Admin");
@@ -254,6 +313,72 @@ describe("admin company marketplace isolation", () => {
     expect(JSON.stringify(result.page)).not.toContain("private scope");
     expect(JSON.stringify(result.page)).not.toContain("private invitation message");
     expect(result.page.every((row) => row.companyId === companyA)).toBe(true);
+  });
+
+  test("orders mixed quote statuses by creation time and deduplicates quote-backed invitations", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    const clientId = await seedUser(t, "client", "Client");
+    const companyUserId = await seedUser(t, "company", "Builder");
+    const companyId = await seedCompany(t, "History Company");
+    const otherCompanyId = await seedCompany(t, "Other Company");
+    await t.run(async (ctx) => {
+      for (const [index, createdAt, status] of [
+        [0, 100, "draft"], [1, 300, "declined"], [2, 200, "submitted"],
+      ] as const) {
+        const projectId = await ctx.db.insert("projects", {
+          clientId, title: `Quote project ${index}`, countryCode: "MA",
+          surfaceUnknown: true, visibility: "marketplace", status: "published",
+          lastCompletedStep: 6, createdAt, updatedAt: createdAt,
+        });
+        await ctx.db.insert("projectQuotes", {
+          projectId, companyId, submittedByUserId: companyUserId,
+          message: "Private quote copy", estimatedPrice: 100_000,
+          currency: "MAD", estimatedDuration: 30, availableStartDate: "2099-01-01",
+          scope: "Private scope", quoteType: "initial", status,
+          createdAt, updatedAt: createdAt, submittedAt: createdAt,
+        });
+        if (index === 0) {
+          await ctx.db.insert("invitations", {
+            projectId, clientUserId: clientId, companyId, status: "pending",
+            message: "Private duplicate invitation", createdAt: 350, updatedAt: 350,
+          });
+        }
+      }
+      const invitationProjectId = await ctx.db.insert("projects", {
+        clientId, title: "Invitation-only project", countryCode: "MA",
+        surfaceUnknown: true, visibility: "marketplace", status: "published",
+        lastCompletedStep: 6, createdAt: 150, updatedAt: 150,
+      });
+      await ctx.db.insert("invitations", {
+        projectId: invitationProjectId, clientUserId: clientId, companyId,
+        status: "pending", createdAt: 150, updatedAt: 150,
+      });
+      const foreignProjectId = await ctx.db.insert("projects", {
+        clientId, countryCode: "MA", surfaceUnknown: true, visibility: "marketplace",
+        status: "published", lastCompletedStep: 6, createdAt: 400, updatedAt: 400,
+      });
+      await ctx.db.insert("projectQuotes", {
+        projectId: foreignProjectId, companyId: otherCompanyId, submittedByUserId: companyUserId,
+        message: "Foreign private quote", estimatedPrice: 100_000, currency: "MAD",
+        estimatedDuration: 30, availableStartDate: "2099-01-01", scope: "Foreign scope",
+        quoteType: "initial", status: "submitted", createdAt: 400, updatedAt: 400, submittedAt: 400,
+      });
+    });
+
+    const first = await asUser(t, adminId).query(api.admin.companies.listCompanyProjectsDeals, {
+      companyId, ...listArgs(2),
+    });
+    const second = await asUser(t, adminId).query(api.admin.companies.listCompanyProjectsDeals, {
+      companyId, ...listArgs(2, first.continueCursor),
+    });
+    const rows = [...first.page, ...second.page];
+    expect(rows.map((row) => row.createdAt)).toEqual([300, 200, 150, 100]);
+    expect(rows.map((row) => row.initialQuoteStatus)).toEqual(["declined", "submitted", null, "draft"]);
+    expect(rows.every((row) => row.companyId === companyId)).toBe(true);
+    expect(new Set(rows.map((row) => row.projectId)).size).toBe(rows.length);
+    expect(JSON.stringify(rows)).not.toContain("Private");
+    expect(JSON.stringify(rows)).not.toContain("Foreign");
   });
 
   test("advances past filtered invitations without starving older eligible project history", async () => {

@@ -130,17 +130,18 @@ describe("admin Company activity authorization", () => {
   });
 });
 
-describe("Phase-1 Company activity", () => {
-  test("contains no marketplaceActivity query while the Company index is staged", () => {
+describe("Phase-2 Company activity", () => {
+  test("uses the Company-scoped marketplace index instead of a global event scan", () => {
     const source = readFileSync(
       new URL("./admin/companyActivity.ts", import.meta.url),
       "utf8",
     );
-    expect(source).not.toMatch(/\.query\(["']marketplaceActivity["']\)/);
+    expect(source).toMatch(/\.query\(["']marketplaceActivity["']\)/);
+    expect(source).toMatch(/\.withIndex\(["']by_companyId_and_createdAt["']/);
     expect(source).not.toMatch(/\.withIndex\(["']by_eventType_and_createdAt["']/);
   });
 
-  test("does not scan global activity for a sparse Company and keeps safe sources isolated", async () => {
+  test("does not scan another Company's busy activity and keeps all sources isolated", async () => {
     const t = convexTest(schema, modules);
     const adminId = await seedUser(t, "admin", "Admin");
     const clientId = await seedUser(t, "client", "Client");
@@ -197,11 +198,11 @@ describe("Phase-1 Company activity", () => {
       firstPage(sparseCompanyId, 5),
     );
     expect(page.page.map((row) => [row.source, row.occurredAt])).toEqual([
+      ["marketplace_activity", 20_000],
       ["verification_history", 300],
       ["operational_status_history", 200],
     ]);
     expect(page.page.every((row) => row.companyId === sparseCompanyId)).toBe(true);
-    expect(page.page.some((row) => row.source === "marketplace_activity")).toBe(false);
     expect(page.isDone).toBe(true);
   });
 
@@ -248,7 +249,7 @@ describe("Phase-1 Company activity", () => {
     )).rejects.toThrow("INVALID_COMPANY_ACTIVITY_CURSOR");
   });
 
-  test("returns only the allowlisted DTO while marketplace details are deferred", async () => {
+  test("returns only the allowlisted DTO with marketplace details", async () => {
     const t = convexTest(schema, modules);
     const adminId = await seedUser(t, "admin", "Admin");
     const clientId = await seedUser(t, "client", "Client");
@@ -277,10 +278,15 @@ describe("Phase-1 Company activity", () => {
 
     const pages = await collectPages(t, adminId, companyId, 20);
     const rows = pages.flatMap((page) => page.page);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({
+    expect(rows).toHaveLength(2);
+    expect(rows.find((row) => row.source === "verification_history")).toMatchObject({
       source: "verification_history",
       eventType: "verification_rejected",
+      companyId,
+    });
+    expect(rows.find((row) => row.source === "marketplace_activity")).toMatchObject({
+      source: "marketplace_activity",
+      eventType: "discussion_opened",
       companyId,
     });
     expect(JSON.stringify(rows)).not.toContain("PRIVATE_");
@@ -298,5 +304,119 @@ describe("Phase-1 Company activity", () => {
       "newStatus",
       "context",
     ].sort());
+  });
+
+  test("restores every documented marketplace family without duplicate semantic rows", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    const actorId = await seedUser(t, "company", "Builder");
+    const clientId = await seedUser(t, "client", "Client");
+    const companyId = await seedCompany(t, "Timeline Company");
+    const otherCompanyId = await seedCompany(t, "Other Company");
+    const projectId = await seedProject(t, clientId, "Timeline project");
+    const eventTypes = [
+      "company_invited", "company_invitation_accepted", "company_invitation_declined",
+      "initial_quote_submitted", "discussion_opened",
+      "site_assessment_invited", "site_assessment_accepted", "site_assessment_declined", "site_assessment_cancelled",
+      "site_visit_scheduled", "site_visit_proposed", "site_visit_rescheduled", "site_visit_confirmed",
+      "site_visit_declined", "site_visit_completed", "site_visit_cancelled",
+      "final_quote_requested", "final_quote_submitted", "final_quote_changes_requested",
+      "final_quote_revised", "final_quote_declined", "final_quote_withdrawn", "final_quote_accepted",
+      "company_selected", "deal_created", "commission_due", "commission_paid", "deal_completed",
+      "review_created", "review_hidden", "review_restored",
+    ] as const;
+    await t.run(async (ctx) => {
+      for (const [index, eventType] of eventTypes.entries()) {
+        await ctx.db.insert("marketplaceActivity", {
+          projectId,
+          companyId,
+          actorUserId: actorId,
+          actorType: "company",
+          eventType,
+          metadata: { agreedAmountMad: 120_000, privateDetail: "PRIVATE_ACTIVITY_SENTINEL" },
+          createdAt: 100 + index,
+        });
+      }
+      await ctx.db.insert("marketplaceActivity", {
+        projectId,
+        companyId: otherCompanyId,
+        actorUserId: actorId,
+        actorType: "company",
+        eventType: "deal_created",
+        createdAt: 1_000,
+      });
+    });
+
+    const pages = await collectPages(t, adminId, companyId, 7);
+    const rows = pages.flatMap((page) => page.page);
+    expect(rows).toHaveLength(eventTypes.length);
+    expect(rows.map((row) => row.eventType)).toEqual(
+      [...eventTypes].reverse().map((eventType) => eventType === "review_created" ? "review_received" : eventType),
+    );
+    expect(rows.every((row) => row.companyId === companyId)).toBe(true);
+    expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
+    expect(rows.find((row) => row.eventType === "review_received")?.category).toBe("reviews");
+    expect(rows.find((row) => row.eventType === "commission_paid")?.category).toBe("deals");
+    expect(JSON.stringify(rows)).not.toContain("PRIVATE_ACTIVITY_SENTINEL");
+  });
+
+  test("advances past a bounded scan of excluded events to older eligible activity", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    const actorId = await seedUser(t, "company", "Builder");
+    const clientId = await seedUser(t, "client", "Client");
+    const companyId = await seedCompany(t, "Sparse Events");
+    const projectId = await seedProject(t, clientId, "Sparse activity project");
+    await t.run(async (ctx) => {
+      for (let index = 0; index < 905; index += 1) {
+        await ctx.db.insert("marketplaceActivity", {
+          projectId, companyId, actorUserId: actorId, actorType: "company",
+          eventType: "quote_viewed", createdAt: 2_000 - index,
+        });
+      }
+      await ctx.db.insert("marketplaceActivity", {
+        projectId, companyId, actorUserId: actorId, actorType: "company",
+        eventType: "deal_created", createdAt: 1,
+      });
+    });
+
+    const pages = await collectPages(t, adminId, companyId, 1);
+    expect(pages[0]).toMatchObject({ page: [], isDone: false });
+    expect(pages.flatMap((page) => page.page).map((row) => row.eventType)).toEqual(["deal_created"]);
+    expect(pages.at(-1)?.isDone).toBe(true);
+  });
+
+  test("does not let an excluded marketplace batch starve another source", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    const actorId = await seedUser(t, "company", "Builder");
+    const clientId = await seedUser(t, "client", "Client");
+    const companyId = await seedCompany(t, "Mixed Sources");
+    const projectId = await seedProject(t, clientId, "Mixed activity project");
+    await t.run(async (ctx) => {
+      for (let index = 0; index < 905; index += 1) {
+        await ctx.db.insert("marketplaceActivity", {
+          projectId, companyId, actorUserId: actorId, actorType: "company",
+          eventType: "quote_viewed", createdAt: 2_000 - index,
+        });
+      }
+      await ctx.db.insert("marketplaceActivity", {
+        projectId, companyId, actorUserId: actorId, actorType: "company",
+        eventType: "deal_created", createdAt: 1_000,
+      });
+      await ctx.db.insert("companyVerificationHistory", {
+        companyId, oldStatus: "draft", newStatus: "pending",
+        changedBy: actorId, changedAt: 1_500,
+      });
+    });
+
+    const pages = await collectPages(t, adminId, companyId, 1);
+    const rows = pages.flatMap((page) => page.page);
+    expect(rows.map((row) => [row.eventType, row.occurredAt])).toEqual([
+      ["verification_submitted", 1_500],
+      ["deal_created", 1_000],
+    ]);
+    expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
+    expect(pages.at(-1)?.isDone).toBe(true);
   });
 });
