@@ -3,6 +3,7 @@ import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { internalMutation, mutation, query } from "../_generated/server";
+import { assertCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { resolveCommissionForDealAmount } from "../marketplaceSettings/index";
 import { createNotificationForActiveCompanyMembers } from "../notifications/model";
@@ -247,7 +248,11 @@ export const completeDeal = mutation({
   },
 });
 
-async function validateCreationSource(ctx: MutationCtx, finalQuoteId: Id<"finalQuotes">) {
+async function validateCreationSource(
+  ctx: MutationCtx,
+  finalQuoteId: Id<"finalQuotes">,
+  dealCreationNonce: string,
+) {
   const finalQuote = await ctx.db.get(finalQuoteId);
   if (
     !finalQuote ||
@@ -258,6 +263,9 @@ async function validateCreationSource(ctx: MutationCtx, finalQuoteId: Id<"finalQ
     !finalQuote.acceptedByUserId
   ) {
     throw new ConvexError("DEAL_REQUIRES_ACCEPTED_CURRENT_FINAL_QUOTE");
+  }
+  if (finalQuote.dealCreationNonce !== dealCreationNonce) {
+    throw new ConvexError("DEAL_RETROACTIVE_CREATION_REQUIRES_MIGRATION");
   }
 
   const [project, revision, initialQuote, conversation, company, acceptedBy] = await Promise.all([
@@ -307,6 +315,7 @@ async function validateCreationSource(ctx: MutationCtx, finalQuoteId: Id<"finalQ
   ) {
     throw new ConvexError("DEAL_SOURCE_INTEGRITY_ERROR");
   }
+  assertCompanyMarketplaceWriteAllowed(company);
 
   return {
     finalQuote,
@@ -321,26 +330,31 @@ async function validateCreationSource(ctx: MutationCtx, finalQuoteId: Id<"finalQ
  * Trusted command used by the Final Quote acceptance transaction. It accepts
  * only a relationship ID; all commercial values are resolved server-side.
  */
-export async function createDealFromAcceptedFinalQuote(
+export async function createDealFromFreshFinalQuoteAcceptance(
   ctx: MutationCtx,
   finalQuoteId: Id<"finalQuotes">,
+  dealCreationNonce: string,
 ) {
+  const { finalQuote, project, revision, company, actorUserId } = await validateCreationSource(
+    ctx,
+    finalQuoteId,
+    dealCreationNonce,
+  );
   const existingForQuote = await ctx.db
     .query("deals")
     .withIndex("by_acceptedFinalQuoteId", (q) => q.eq("acceptedFinalQuoteId", finalQuoteId))
     .unique();
-  if (existingForQuote) return { dealId: existingForQuote._id, duplicate: true };
-
-  const { finalQuote, project, revision, company, actorUserId } = await validateCreationSource(
-    ctx,
-    finalQuoteId,
-  );
+  if (existingForQuote) {
+    await ctx.db.patch(finalQuote._id, { dealCreationNonce: undefined });
+    return { dealId: existingForQuote._id, duplicate: true };
+  }
   const existingForProject = await ctx.db
     .query("deals")
     .withIndex("by_projectId", (q) => q.eq("projectId", project._id))
     .unique();
   if (existingForProject) {
     if (existingForProject.acceptedFinalQuoteId === finalQuote._id) {
+      await ctx.db.patch(finalQuote._id, { dealCreationNonce: undefined });
       return { dealId: existingForProject._id, duplicate: true };
     }
     throw new ConvexError("DEAL_ALREADY_EXISTS_FOR_PROJECT");
@@ -441,11 +455,33 @@ export async function createDealFromAcceptedFinalQuote(
     payload: dealNotificationPayload(project, company, commission.commissionAmountMad),
     dedupeKey: `deal:${dealId}:commission_due`,
   });
+  await ctx.db.patch(finalQuote._id, { dealCreationNonce: undefined });
   return { dealId, duplicate: false };
 }
 
+/**
+ * Replays may reuse an existing Deal, but must never manufacture historical
+ * commission facts for an acceptance that predates atomic Deal creation.
+ */
+export async function reuseDealFromAcceptedFinalQuote(
+  ctx: MutationCtx,
+  finalQuoteId: Id<"finalQuotes">,
+) {
+  const existing = await ctx.db
+    .query("deals")
+    .withIndex("by_acceptedFinalQuoteId", (q) => q.eq("acceptedFinalQuoteId", finalQuoteId))
+    .unique();
+  if (existing) return { dealId: existing._id, duplicate: true };
+
+  const finalQuote = await ctx.db.get(finalQuoteId);
+  const company = finalQuote ? await ctx.db.get(finalQuote.companyId) : null;
+  if (company) assertCompanyMarketplaceWriteAllowed(company);
+  throw new ConvexError("DEAL_RETROACTIVE_CREATION_REQUIRES_MIGRATION");
+}
+
+/** Compatibility retry entrypoint: it can reuse, but never create, a Deal. */
 export const createFromAcceptedFinalQuote = internalMutation({
   args: { finalQuoteId: v.id("finalQuotes") },
   returns: v.object({ dealId: v.id("deals"), duplicate: v.boolean() }),
-  handler: async (ctx, args) => createDealFromAcceptedFinalQuote(ctx, args.finalQuoteId),
+  handler: async (ctx, args) => reuseDealFromAcceptedFinalQuote(ctx, args.finalQuoteId),
 });

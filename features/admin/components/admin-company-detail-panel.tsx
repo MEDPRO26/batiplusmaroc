@@ -19,7 +19,7 @@ import { routes } from "@/lib/routes";
 
 export type AdminCompanyTab = "overview" | "verification" | "projectsDeals" | "commissions" | "reviews" | "activity" | "messages" | "internalNotes";
 type Summary = NonNullable<FunctionReturnType<typeof api.admin.companies.getCompanySummary>>;
-type Commission = FunctionReturnType<typeof api.admin.deals.listCommissionObligations>[number];
+type Commission = FunctionReturnType<typeof api.admin.deals.listCommissionObligations>["page"][number];
 type Review = FunctionReturnType<typeof api.admin.companies.listCompanyReviews>["page"][number];
 type OperationalStatus = "normal" | "needs_attention" | "suspended";
 
@@ -460,9 +460,13 @@ function ProjectsDeals({ companyId }: { companyId: Id<"companies"> }) {
 function Commissions({ companyId }: { companyId: Id<"companies"> }) {
   const t = useTranslations("adminCompanies");
   const locale = useLocale();
-  const rows = useQuery(api.admin.deals.listCommissionObligations, { status: "all", companyId });
+  const { results: rows, status, loadMore } = usePaginatedQuery(
+    api.admin.deals.listCommissionObligations,
+    { status: "all", companyId },
+    { initialNumItems: 15 },
+  );
   const [selected, setSelected] = useState<Commission | null>(null);
-  return <DataSection title={t("commissions.title")}>{rows === undefined ? <Loading /> : rows.length === 0 ? <Empty text={t("commissions.empty")} /> : <div className="grid gap-3">{rows.map((row) => <article className="flex flex-col gap-3 rounded-[14px] bg-[#f8fafb] p-4 sm:flex-row sm:items-center sm:justify-between" key={row.dealId}><div><h3 className="font-semibold">{row.projectTitle}</h3><p className="mt-1 text-sm text-[#626970]">{money(row.commissionAmountMad, locale)} · {t(`commissions.status.${row.commissionStatus}`)}</p></div><button className={`min-h-10 rounded-full border bg-white px-4 text-sm font-semibold ${ADMIN_PRESS}`} onClick={() => setSelected(row)} type="button">{t("commissions.view")}</button></article>)}</div>}{selected ? <CommissionDialog locale={locale} onClose={() => setSelected(null)} row={selected} /> : null}</DataSection>;
+  return <DataSection title={t("commissions.title")}><PaginatedState empty={t("commissions.empty")} loadMore={() => loadMore(15)} loading={status === "LoadingFirstPage"} loadingMore={status === "LoadingMore"} canLoadMore={status === "CanLoadMore"}>{rows.map((row) => <article className="flex flex-col gap-3 rounded-[14px] bg-[#f8fafb] p-4 sm:flex-row sm:items-center sm:justify-between" key={row.dealId}><div><h3 className="font-semibold">{row.projectTitle}</h3><p className="mt-1 text-sm text-[#626970]">{money(row.commissionAmountMad, locale)} · {t(`commissions.status.${row.commissionStatus}`)}</p></div><button className={`min-h-10 rounded-full border bg-white px-4 text-sm font-semibold ${ADMIN_PRESS}`} onClick={() => setSelected(row)} type="button">{t("commissions.view")}</button></article>)}</PaginatedState>{selected ? <CommissionDialog locale={locale} onClose={() => setSelected(null)} row={selected} /> : null}</DataSection>;
 }
 
 function CommissionDialog({ row, locale, onClose }: { row: Commission; locale: string; onClose: () => void }) {

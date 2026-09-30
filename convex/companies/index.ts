@@ -2,7 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { internal } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { consumeVerifiedPublicMediaIntent } from "../storage/publicMediaModel";
 import { getPublicMediaUrl } from "../storage/publicUrl";
@@ -448,44 +448,50 @@ export const getProfileManager = query({
 
 export const updatePublicProfile = mutation({
   args: {
-    name: v.string(),
-    description: v.string(),
-    city: v.string(),
-    phone: v.string(),
-    website: v.string(),
-    yearsExperience: v.optional(v.number()),
-    foundedYear: v.optional(v.number()),
-    companySize: companySizeValidator,
-    languages: v.array(companyLanguageValidator),
-    services: v.array(companyServiceValidator),
-    serviceAreas: v.array(companyServiceAreaValidator),
-    logoUploadToken: v.optional(v.string()),
-    coverUploadToken: v.optional(v.string()),
+    name: v.optional(v.string()),
+    description: v.optional(v.string()),
+    city: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    website: v.optional(v.string()),
+    yearsExperience: v.optional(v.union(v.number(), v.null())),
+    foundedYear: v.optional(v.union(v.number(), v.null())),
+    companySize: v.optional(companySizeValidator),
+    languages: v.optional(v.array(companyLanguageValidator)),
+    services: v.optional(v.array(companyServiceValidator)),
+    serviceAreas: v.optional(v.array(companyServiceAreaValidator)),
   },
   returns: v.object({ slug: v.string() }),
   handler: async (ctx, args) => {
-    const { company, userId } = await requireOwnerCompany(ctx);
+    const { company } = await requireOwnerCompany(ctx);
     if (company.onboardingStatus !== "completed") {
       throw new ConvexError("COMPANY_ONBOARDING_REQUIRED");
     }
-    if (
-      args.logoUploadToken &&
-      args.coverUploadToken &&
-      args.logoUploadToken === args.coverUploadToken
-    ) {
-      throw new ConvexError("INVALID_PUBLIC_MEDIA_UPLOAD");
+    if (Object.values(args).every((value) => value === undefined)) {
+      throw new ConvexError("PROFILE_UPDATE_REQUIRED");
     }
 
-    const name = normalizeText(args.name, 2, 120, "INVALID_COMPANY_NAME");
-    const description = normalizeText(args.description, 20, 1000, "INVALID_DESCRIPTION");
-    const city = normalizeCity(args.city);
-    const phone = normalizeMoroccanPhone(args.phone);
-    const website = normalizeWebsite(args.website);
-    const yearsExperience = validateYearsExperience(args.yearsExperience);
-    const foundedYear = validateFoundedYear(args.foundedYear);
-    const services = validateServices(args.services);
-    const serviceAreas = validateServiceAreas(args.serviceAreas);
-    const languages = validateLanguages(args.languages);
+    const name = args.name === undefined
+      ? company.name
+      : normalizeText(args.name, 2, 120, "INVALID_COMPANY_NAME");
+    if (!name) throw new ConvexError("INVALID_COMPANY_NAME");
+    const description = args.description === undefined
+      ? company.description
+      : normalizeText(args.description, 20, 1000, "INVALID_DESCRIPTION");
+    const city = args.city === undefined ? company.city : normalizeCity(args.city);
+    const phone = args.phone === undefined ? company.phone : normalizeMoroccanPhone(args.phone);
+    const website = args.website === undefined ? company.website : normalizeWebsite(args.website);
+    const yearsExperience = args.yearsExperience === undefined
+      ? company.yearsExperience
+      : validateYearsExperience(args.yearsExperience ?? undefined);
+    const foundedYear = args.foundedYear === undefined
+      ? company.foundedYear
+      : validateFoundedYear(args.foundedYear ?? undefined);
+    const serviceAreas = args.serviceAreas === undefined
+      ? company.serviceAreas ?? []
+      : validateServiceAreas(args.serviceAreas);
+    const languages = args.languages === undefined
+      ? company.languages ?? []
+      : validateLanguages(args.languages);
     const slug = company.slug ?? await createUniqueCompanySlug(ctx, name, company._id);
     const now = Date.now();
 
@@ -499,82 +505,62 @@ export const updatePublicProfile = mutation({
 
     const existingByService = new Map<CompanyService, (typeof currentServices)[number]>();
     for (const row of currentServices) {
-      if (existingByService.has(row.service)) {
-        await ctx.db.delete(row._id);
-      } else {
-        existingByService.set(row.service, row);
+      if (!existingByService.has(row.service)) existingByService.set(row.service, row);
+    }
+
+    const services = args.services === undefined
+      ? [...existingByService.keys()]
+      : validateServices(args.services);
+    if (args.services !== undefined) {
+      const selectedServices = new Set<CompanyService>(services);
+      const seenServices = new Set<CompanyService>();
+      for (const row of currentServices) {
+        if (!selectedServices.has(row.service) || seenServices.has(row.service)) {
+          await ctx.db.delete(row._id);
+        } else {
+          seenServices.add(row.service);
+        }
+      }
+      for (const service of services) {
+        if (!seenServices.has(service)) {
+          await ctx.db.insert("companyServices", {
+            companyId: company._id,
+            service,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
       }
     }
 
-    const selectedServices = new Set<CompanyService>(services);
-    for (const [service, row] of existingByService) {
-      if (!selectedServices.has(service)) await ctx.db.delete(row._id);
-    }
-    for (const service of services) {
-      if (!existingByService.has(service)) {
-        await ctx.db.insert("companyServices", {
-          companyId: company._id,
-          service,
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
-    }
-
-    const [previousLogo, previousCover] = await Promise.all([
-      company.logoMediaId ? ctx.db.get(company.logoMediaId) : Promise.resolve(null),
-      company.coverMediaId ? ctx.db.get(company.coverMediaId) : Promise.resolve(null),
-    ]);
-    const logoMediaId = args.logoUploadToken
-      ? await consumeVerifiedPublicMediaIntent(ctx, {
-          uploadToken: args.logoUploadToken,
-          companyId: company._id,
-          userId,
-          purpose: "companyLogo",
-        })
-      : undefined;
-    const coverMediaId = args.coverUploadToken
-      ? await consumeVerifiedPublicMediaIntent(ctx, {
-          uploadToken: args.coverUploadToken,
-          companyId: company._id,
-          userId,
-          purpose: "companyCover",
-        })
-      : undefined;
-
-    await ctx.db.patch(company._id, {
-      name,
-      slug,
-      description,
-      city,
-      phone,
-      website,
-      yearsExperience,
-      foundedYear,
-      companySize: args.companySize,
-      languages: [...languages],
-      serviceAreas: [...serviceAreas],
-      directorySearchText: buildCompanyDirectorySearchText({
+    const patch: Partial<Omit<Doc<"companies">, "_id" | "_creationTime">> = {
+      updatedAt: now,
+      ...(company.slug ? {} : { slug }),
+      ...(args.name === undefined ? {} : { name }),
+      ...(args.description === undefined ? {} : { description }),
+      ...(args.city === undefined ? {} : { city }),
+      ...(args.phone === undefined ? {} : { phone }),
+      ...(args.website === undefined ? {} : { website }),
+      ...(args.yearsExperience === undefined ? {} : { yearsExperience }),
+      ...(args.foundedYear === undefined ? {} : { foundedYear }),
+      ...(args.companySize === undefined ? {} : { companySize: args.companySize }),
+      ...(args.languages === undefined ? {} : { languages: [...languages] }),
+      ...(args.serviceAreas === undefined ? {} : { serviceAreas: [...serviceAreas] }),
+    };
+    if (
+      args.name !== undefined ||
+      args.city !== undefined ||
+      args.services !== undefined ||
+      args.serviceAreas !== undefined
+    ) {
+      patch.directorySearchText = buildCompanyDirectorySearchText({
         name,
-        city,
+        city: city ?? "",
         services,
         serviceAreas,
-      }),
-      ...(logoMediaId ? { logoMediaId } : {}),
-      ...(coverMediaId ? { coverMediaId } : {}),
-      updatedAt: now,
-    });
-
-    for (const previous of [
-      logoMediaId ? previousLogo : null,
-      coverMediaId ? previousCover : null,
-    ]) {
-      if (!previous) continue;
-      await ctx.db.delete(previous._id);
-      await ctx.scheduler.runAfter(0, internal.storage.r2.deleteObjectIfUnreferenced, {
-        objectKey: previous.objectKey,
       });
     }
+    await ctx.db.patch(company._id, patch);
 
     return { slug };
   },

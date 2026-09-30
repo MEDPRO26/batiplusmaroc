@@ -115,9 +115,10 @@ type SourceCursor = {
   beforeCreationTime: number | null;
   beforeId: string | null;
   done: boolean;
+  frontierPending: boolean;
 };
 type TimelineCursor = {
-  version: 2;
+  version: 3;
   marketplace: SourceCursor;
   verification: SourceCursor;
   operational: SourceCursor;
@@ -128,13 +129,16 @@ const INITIAL_SOURCE_CURSOR: SourceCursor = {
   beforeCreationTime: null,
   beforeId: null,
   done: false,
+  frontierPending: false,
 };
 const MAX_PAGE_SIZE = 30;
 const SOURCE_BATCH_MULTIPLIER = 3;
+const MIN_SOURCE_SCAN_BATCH_SIZE = 50;
+const MAX_SOURCE_SCAN_ROWS = 900;
 
 function initialCursor(): TimelineCursor {
   return {
-    version: 2,
+    version: 3,
     marketplace: { ...INITIAL_SOURCE_CURSOR },
     verification: { ...INITIAL_SOURCE_CURSOR },
     operational: { ...INITIAL_SOURCE_CURSOR },
@@ -149,15 +153,40 @@ function isSourceCursor(value: unknown): value is SourceCursor {
     (candidate.beforeCreationTime === null || typeof candidate.beforeCreationTime === "number") &&
     (candidate.beforeId === null || typeof candidate.beforeId === "string") &&
     typeof candidate.done === "boolean"
+    && typeof candidate.frontierPending === "boolean"
+  );
+}
+
+function isLegacySourceCursor(value: unknown): value is Omit<SourceCursor, "frontierPending"> {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<SourceCursor>;
+  return (
+    (candidate.beforeAt === null || typeof candidate.beforeAt === "number")
+    && (candidate.beforeCreationTime === null || typeof candidate.beforeCreationTime === "number")
+    && (candidate.beforeId === null || typeof candidate.beforeId === "string")
+    && typeof candidate.done === "boolean"
   );
 }
 
 function decodeCursor(cursor: string | null): TimelineCursor {
   if (cursor === null) return initialCursor();
   try {
-    const parsed = JSON.parse(cursor) as Partial<TimelineCursor>;
+    const parsed = JSON.parse(cursor) as Record<string, unknown>;
     if (
-      parsed.version !== 2 ||
+      parsed.version === 2
+      && isLegacySourceCursor(parsed.marketplace)
+      && isLegacySourceCursor(parsed.verification)
+      && isLegacySourceCursor(parsed.operational)
+    ) {
+      return {
+        version: 3,
+        marketplace: { ...parsed.marketplace, frontierPending: false },
+        verification: { ...parsed.verification, frontierPending: false },
+        operational: { ...parsed.operational, frontierPending: false },
+      };
+    }
+    if (
+      parsed.version !== 3 ||
       !isSourceCursor(parsed.marketplace) ||
       !isSourceCursor(parsed.verification) ||
       !isSourceCursor(parsed.operational)
@@ -293,60 +322,8 @@ function candidateTime(candidate: Candidate) {
       : candidate.row.createdAt;
 }
 
-function candidateCreationTime(candidate: Candidate) {
-  return candidate.row._creationTime;
-}
-
 function compareCandidates(left: Candidate, right: Candidate) {
-  const sourceRank = {
-    marketplace_activity: 0,
-    verification_history: 1,
-    operational_status_history: 2,
-  } as const;
-  return (
-    candidateTime(right) - candidateTime(left) ||
-    candidateCreationTime(right) - candidateCreationTime(left) ||
-    sourceRank[left.source] - sourceRank[right.source] ||
-    left.row._id.localeCompare(right.row._id)
-  );
-}
-
-async function loadMarketplaceBatch(
-  ctx: QueryCtx,
-  companyId: Id<"companies">,
-  cursor: SourceCursor,
-  batchSize: number,
-) {
-  if (cursor.done) return [];
-  if (cursor.beforeAt === null) {
-    return await ctx.db
-      .query("marketplaceActivity")
-      .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId))
-      .order("desc")
-      .take(batchSize);
-  }
-
-  const sameTimestamp = await ctx.db
-    .query("marketplaceActivity")
-    .withIndex("by_companyId_and_createdAt", (q) =>
-      q
-        .eq("companyId", companyId)
-        .eq("createdAt", cursor.beforeAt!)
-        .lt("_creationTime", cursor.beforeCreationTime!),
-    )
-    .order("desc")
-    .take(batchSize);
-  if (sameTimestamp.length >= batchSize) {
-    return sameTimestamp;
-  }
-  const older = await ctx.db
-    .query("marketplaceActivity")
-    .withIndex("by_companyId_and_createdAt", (q) =>
-      q.eq("companyId", companyId).lt("createdAt", cursor.beforeAt!),
-    )
-    .order("desc")
-    .take(batchSize - sameTimestamp.length);
-  return [...sameTimestamp, ...older];
+  return compareOrderingKeys(candidateOrderingKey(left), candidateOrderingKey(right));
 }
 
 async function loadVerificationBatch(
@@ -409,6 +386,42 @@ async function loadOperationalBatch(
   return [...sameTimestamp, ...older];
 }
 
+async function loadVerificationWindow(
+  ctx: QueryCtx,
+  companyId: Id<"companies">,
+  cursor: SourceCursor,
+  batchSize: number,
+  targetEligibleRows: number,
+) {
+  const rows: Doc<"companyVerificationHistory">[] = [];
+  let scanCursor = cursor;
+  let eligibleRows = 0;
+
+  while (rows.length < MAX_SOURCE_SCAN_ROWS && eligibleRows < targetEligibleRows) {
+    const requestSize = Math.min(
+      Math.max(batchSize, MIN_SOURCE_SCAN_BATCH_SIZE),
+      MAX_SOURCE_SCAN_ROWS - rows.length,
+    );
+    const batch = await loadVerificationBatch(ctx, companyId, scanCursor, requestSize);
+    rows.push(...batch);
+    eligibleRows += batch.filter((row) => normalizeVerificationEventType(row) !== null).length;
+    if (batch.length < requestSize) return { rows, frontierUnknown: false };
+    scanCursor = nextSourceCursor(
+      scanCursor,
+      batch,
+      [],
+      true,
+      requestSize,
+      (row) => row.changedAt,
+    );
+  }
+
+  return {
+    rows,
+    frontierUnknown: rows.length >= MAX_SOURCE_SCAN_ROWS && eligibleRows < targetEligibleRows,
+  };
+}
+
 function nextSourceCursor<T extends { _id: string; _creationTime: number }>(
   current: SourceCursor,
   rows: T[],
@@ -416,24 +429,64 @@ function nextSourceCursor<T extends { _id: string; _creationTime: number }>(
   consumeWholeBatch: boolean,
   batchSize: number,
   occurredAt: (row: T) => number,
+  frontierPending = false,
 ): SourceCursor {
   if (current.done) return current;
   if (rows.length === 0 && consumeWholeBatch) {
-    return { ...current, done: true };
+    return { ...current, done: true, frontierPending: false };
   }
   const consumedThrough = consumeWholeBatch
     ? rows.length
     : selectedRawIndices.length > 0
       ? Math.max(...selectedRawIndices) + 1
       : 0;
-  if (consumedThrough === 0) return current;
+  if (consumedThrough === 0) return { ...current, frontierPending };
   const lastConsumed = rows[consumedThrough - 1];
   return {
     beforeAt: occurredAt(lastConsumed),
     beforeCreationTime: lastConsumed._creationTime,
     beforeId: lastConsumed._id,
     done: consumedThrough === rows.length && rows.length < batchSize,
+    frontierPending,
   };
+}
+
+type OrderingKey = {
+  source: Candidate["source"];
+  occurredAt: number;
+  creationTime: number;
+  id: string;
+};
+
+function compareOrderingKeys(left: OrderingKey, right: OrderingKey) {
+  const sourceRank = {
+    marketplace_activity: 0,
+    verification_history: 1,
+    operational_status_history: 2,
+  } as const;
+  return (
+    right.occurredAt - left.occurredAt
+    || right.creationTime - left.creationTime
+    || sourceRank[left.source] - sourceRank[right.source]
+    || left.id.localeCompare(right.id)
+  );
+}
+
+function candidateOrderingKey(candidate: Candidate): OrderingKey {
+  return {
+    source: candidate.source,
+    occurredAt: candidateTime(candidate),
+    creationTime: candidate.row._creationTime,
+    id: candidate.row._id,
+  };
+}
+
+function rawOrderingKey(
+  source: OrderingKey["source"],
+  row: { _id: string; _creationTime: number },
+  occurredAt: number,
+): OrderingKey {
+  return { source, occurredAt, creationTime: row._creationTime, id: row._id };
 }
 
 async function loadActorMap(ctx: QueryCtx, candidates: Candidate[]) {
@@ -457,9 +510,9 @@ async function loadProjectMap(ctx: QueryCtx, candidates: Candidate[]) {
 }
 
 /**
- * Admin-only, bounded merge of the canonical Company activity projection and
- * verification history. The opaque cursor keeps independent source positions
- * so neither source is duplicated or skipped while pages are merged.
+ * Admin-only, bounded phase-one merge of Company-scoped verification and
+ * operational histories. The cursor retains the deferred marketplace source
+ * position so phase two can restore it without changing the public shape.
  */
 export const listCompanyActivity = query({
   args: {
@@ -482,11 +535,19 @@ export const listCompanyActivity = query({
     const batchSize = pageSize * SOURCE_BATCH_MULTIPLIER;
     const cursor = decodeCursor(args.paginationOpts.cursor);
 
-    const [marketplaceRows, verificationRows, operationalRows] = await Promise.all([
-      loadMarketplaceBatch(ctx, args.companyId, cursor.marketplace, batchSize),
-      loadVerificationBatch(ctx, args.companyId, cursor.verification, batchSize),
+    // Phase 1 deliberately defers marketplace activity. The only Company-scoped
+    // access path is staged, and filtering the global event index can exceed
+    // Convex read limits. Phase 2 restores this source after index promotion.
+    const marketplaceWindow = {
+      rows: [] as Doc<"marketplaceActivity">[],
+      frontierUnknown: false,
+    };
+    const [verificationWindow, operationalRows] = await Promise.all([
+      loadVerificationWindow(ctx, args.companyId, cursor.verification, batchSize, pageSize),
       loadOperationalBatch(ctx, args.companyId, cursor.operational, batchSize),
     ]);
+    const marketplaceRows = marketplaceWindow.rows;
+    const verificationRows = verificationWindow.rows;
 
     const marketplaceCandidates: MarketplaceCandidate[] = marketplaceRows
       .map((row, index) => ({ row, rawIndex: index, eventType: normalizeMarketplaceEventType(row.eventType) }))
@@ -519,21 +580,82 @@ export const listCompanyActivity = query({
       rawIndex,
     }));
 
-    const selected = [...marketplaceCandidates, ...verificationCandidates, ...operationalCandidates]
-      .sort(compareCandidates)
-      .slice(0, pageSize);
-    const consumeWholeBatch = selected.length < pageSize;
+    const frontierBoundaries: OrderingKey[] = [];
+    if (marketplaceWindow.frontierUnknown && marketplaceRows.length > 0) {
+      const row = marketplaceRows.at(-1)!;
+      frontierBoundaries.push(rawOrderingKey("marketplace_activity", row, row.createdAt));
+    }
+    if (verificationWindow.frontierUnknown && verificationRows.length > 0) {
+      const row = verificationRows.at(-1)!;
+      frontierBoundaries.push(rawOrderingKey("verification_history", row, row.changedAt));
+    }
+
+    const allCandidates = [...marketplaceCandidates, ...verificationCandidates, ...operationalCandidates];
+    const safeCandidates = allCandidates.filter((candidate) =>
+      frontierBoundaries.every((boundary) =>
+        compareOrderingKeys(candidateOrderingKey(candidate), boundary) <= 0,
+      ),
+    );
+    const selected = safeCandidates.sort(compareCandidates).slice(0, pageSize);
+
+    if (selected.length === 0 && frontierBoundaries.length > 0) {
+      const marketplacePrefix = marketplaceCandidates[0]?.rawIndex ?? marketplaceRows.length;
+      const verificationPrefix = verificationCandidates[0]?.rawIndex ?? verificationRows.length;
+      const progressCursor: TimelineCursor = {
+        version: 3,
+        marketplace: marketplaceWindow.frontierUnknown
+          ? nextSourceCursor(
+              cursor.marketplace,
+              marketplaceRows,
+              marketplacePrefix > 0 ? [marketplacePrefix - 1] : [],
+              marketplaceCandidates.length === 0,
+              batchSize,
+              (row) => row.createdAt,
+              true,
+            )
+          : cursor.marketplace,
+        verification: verificationWindow.frontierUnknown
+          ? nextSourceCursor(
+              cursor.verification,
+              verificationRows,
+              verificationPrefix > 0 ? [verificationPrefix - 1] : [],
+              verificationCandidates.length === 0,
+              batchSize,
+              (row) => row.changedAt,
+              true,
+            )
+          : cursor.verification,
+        operational: cursor.operational,
+      };
+      return {
+        page: [],
+        isDone: false,
+        continueCursor: encodeCursor(progressCursor),
+      };
+    }
+
+    const selectedIds = new Set(selected.map((candidate) => `${candidate.source}:${candidate.row._id}`));
+    const allMarketplaceSelected = marketplaceCandidates.every((candidate) =>
+      selectedIds.has(`${candidate.source}:${candidate.row._id}`),
+    );
+    const allVerificationSelected = verificationCandidates.every((candidate) =>
+      selectedIds.has(`${candidate.source}:${candidate.row._id}`),
+    );
+    const allOperationalSelected = operationalCandidates.every((candidate) =>
+      selectedIds.has(`${candidate.source}:${candidate.row._id}`),
+    );
     const nextCursor: TimelineCursor = {
-      version: 2,
+      version: 3,
       marketplace: nextSourceCursor(
         cursor.marketplace,
         marketplaceRows,
         selected
           .filter((candidate): candidate is MarketplaceCandidate => candidate.source === "marketplace_activity")
           .map((candidate) => candidate.rawIndex),
-        consumeWholeBatch,
+        allMarketplaceSelected,
         batchSize,
         (row) => row.createdAt,
+        marketplaceWindow.frontierUnknown,
       ),
       verification: nextSourceCursor(
         cursor.verification,
@@ -541,15 +663,16 @@ export const listCompanyActivity = query({
         selected
           .filter((candidate): candidate is VerificationCandidate => candidate.source === "verification_history")
           .map((candidate) => candidate.rawIndex),
-        consumeWholeBatch,
+        allVerificationSelected,
         batchSize,
         (row) => row.changedAt,
+        verificationWindow.frontierUnknown,
       ),
       operational: nextSourceCursor(
         cursor.operational,
         operationalRows,
         selected.filter((candidate): candidate is OperationalCandidate => candidate.source === "operational_status_history").map((candidate) => candidate.rawIndex),
-        consumeWholeBatch,
+        allOperationalSelected,
         batchSize,
         (row) => row.createdAt,
       ),

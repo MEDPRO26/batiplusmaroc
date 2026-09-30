@@ -235,15 +235,17 @@ describe("public company discovery", () => {
     expect(first.page[0].slug).not.toContain("suspended");
     expect(first.isDone).toBe(false);
 
-    const second = await list(t, {
-      ...filters,
-      numItems: 1,
-      cursor: first.continueCursor,
-    });
-    expect(second.page).toHaveLength(1);
-    expect(second.page[0].slug).not.toContain("suspended");
-    expect(second.isDone).toBe(true);
-    expect(new Set([...first.page, ...second.page].map((company) => company.slug))).toEqual(
+    const pages = [first];
+    let cursor = first.continueCursor;
+    for (let pageNumber = 0; pageNumber < 10 && !pages.at(-1)!.isDone; pageNumber += 1) {
+      const page = await list(t, { ...filters, numItems: 1, cursor });
+      pages.push(page);
+      cursor = page.continueCursor;
+    }
+    expect(pages.at(-1)?.isDone).toBe(true);
+    const visible = pages.flatMap((page) => page.page);
+    expect(visible.every((company) => !company.slug.includes("suspended"))).toBe(true);
+    expect(new Set(visible.map((company) => company.slug))).toEqual(
       new Set(["pagination-eligible-oldest", "pagination-eligible-newest"]),
     );
   });

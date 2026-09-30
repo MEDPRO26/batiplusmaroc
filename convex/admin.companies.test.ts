@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
+import type { FunctionReturnType } from "convex/server";
 import { exportPKCS8, generateKeyPair } from "jose";
 import { beforeAll, describe, expect, test } from "vitest";
 import { api } from "./_generated/api";
@@ -9,6 +10,9 @@ import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
 type Backend = ReturnType<typeof convexTest>;
+type ProjectsDealsPage = FunctionReturnType<
+  typeof api.admin.companies.listCompanyProjectsDeals
+>;
 
 beforeAll(async () => {
   const { privateKey } = await generateKeyPair("RS256", { extractable: true });
@@ -208,5 +212,305 @@ describe("admin company marketplace isolation", () => {
     expect(JSON.stringify(result.page)).not.toContain("private scope");
     expect(JSON.stringify(result.page)).not.toContain("private invitation message");
     expect(result.page.every((row) => row.companyId === companyA)).toBe(true);
+  });
+
+  test("advances past filtered invitations without starving older eligible project history", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    const clientId = await seedUser(t, "client", "Client");
+    const companyUserId = await seedUser(t, "company", "Member");
+    const companyId = await seedCompany(t, "Cursor Company");
+    const seeded = await t.run(async (ctx) => {
+      const quoteProjectIds: Id<"projects">[] = [];
+      const quoteIds: Id<"projectQuotes">[] = [];
+      for (let index = 0; index < 2; index += 1) {
+        const quoteCreatedAt = 30_000 - index * 20_000;
+        const projectId = await ctx.db.insert("projects", {
+          clientId,
+          title: `Quoted project ${index}`,
+          countryCode: "MA",
+          surfaceUnknown: true,
+          visibility: "marketplace",
+          status: "published",
+          lastCompletedStep: 6,
+          createdAt: quoteCreatedAt,
+          updatedAt: quoteCreatedAt,
+        });
+        quoteProjectIds.push(projectId);
+        quoteIds.push(await ctx.db.insert("projectQuotes", {
+          projectId,
+          companyId,
+          submittedByUserId: companyUserId,
+          message: `Private proposal ${index}`,
+          estimatedPrice: 100_000 + index,
+          currency: "MAD",
+          estimatedDuration: 30,
+          availableStartDate: "2099-01-01",
+          scope: `Private scope ${index}`,
+          quoteType: "initial",
+          status: "submitted",
+          createdAt: quoteCreatedAt,
+          updatedAt: quoteCreatedAt,
+          submittedAt: quoteCreatedAt,
+        }));
+      }
+
+      const filteredInvitationIds: Id<"invitations">[] = [];
+      for (let index = 0; index < 125; index += 1) {
+        filteredInvitationIds.push(await ctx.db.insert("invitations", {
+          projectId: quoteProjectIds[index % quoteProjectIds.length],
+          clientUserId: clientId,
+          companyId,
+          message: `Private duplicate invitation ${index}`,
+          status: "pending",
+          createdAt: 20_000 - index,
+          updatedAt: 20_000 - index,
+        }));
+      }
+
+      const invitationOnlyProjectId = await ctx.db.insert("projects", {
+        clientId,
+        title: "Older invitation-only project",
+        countryCode: "MA",
+        surfaceUnknown: true,
+        visibility: "marketplace",
+        status: "published",
+        lastCompletedStep: 6,
+        createdAt: 15_000,
+        updatedAt: 15_000,
+      });
+      const eligibleInvitationId = await ctx.db.insert("invitations", {
+        projectId: invitationOnlyProjectId,
+        clientUserId: clientId,
+        companyId,
+        message: "Private eligible invitation",
+        status: "pending",
+        createdAt: 15_000,
+        updatedAt: 15_000,
+      });
+      return {
+        eligibleInvitationId,
+        filteredInvitationIds,
+        invitationOnlyProjectId,
+        quoteIds,
+        quoteProjectIds,
+      };
+    });
+
+    const pages: ProjectsDealsPage[] = [];
+    const seenCursors = new Set<string>();
+    let cursor: string | null = null;
+    for (let pageNumber = 0; pageNumber < 10; pageNumber += 1) {
+      const page: ProjectsDealsPage = await asUser(t, adminId).query(
+        api.admin.companies.listCompanyProjectsDeals,
+        { companyId, ...listArgs(2, cursor) },
+      );
+      pages.push(page);
+      if (page.isDone) break;
+      expect(page.continueCursor).not.toBe(cursor);
+      expect(seenCursors.has(page.continueCursor)).toBe(false);
+      seenCursors.add(page.continueCursor);
+      cursor = page.continueCursor;
+    }
+
+    expect(pages.at(-1)?.isDone).toBe(true);
+    const firstCursor = JSON.parse(pages[0].continueCursor) as {
+      invitations: { beforeAt: number | null };
+    };
+    expect(firstCursor.invitations.beforeAt).not.toBeNull();
+
+    const rows = pages.flatMap((page) => page.page);
+    expect(rows.map((row) => row.createdAt)).toEqual([30_000, 15_000, 10_000]);
+    expect(rows.map((row) => row.projectId)).toEqual([
+      seeded.quoteProjectIds[0],
+      seeded.invitationOnlyProjectId,
+      seeded.quoteProjectIds[1],
+    ]);
+    expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
+    expect(rows.filter((row) => row.initialQuoteStatus !== null).map((row) => row.id))
+      .toEqual(seeded.quoteIds.map((quoteId) => `quote:${quoteId}`));
+    expect(rows.filter((row) => row.initialQuoteStatus === null).map((row) => row.id))
+      .toEqual([`invitation:${seeded.eligibleInvitationId}`]);
+    for (const invitationId of seeded.filteredInvitationIds) {
+      expect(rows.map((row) => row.id)).not.toContain(`invitation:${invitationId}`);
+    }
+    expect(JSON.stringify(rows)).not.toContain("Private duplicate invitation");
+    expect(JSON.stringify(rows)).not.toContain("Private eligible invitation");
+  });
+
+  test("carries eligible invitations while advancing the raw cursor past filtered rows", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    const clientId = await seedUser(t, "client", "Client");
+    const companyUserId = await seedUser(t, "company", "Member");
+    const companyId = await seedCompany(t, "Pending Cursor Company");
+    const seeded = await t.run(async (ctx) => {
+      const quoteProjectId = await ctx.db.insert("projects", {
+        clientId,
+        title: "Newest quoted project",
+        countryCode: "MA",
+        surfaceUnknown: true,
+        visibility: "marketplace",
+        status: "published",
+        lastCompletedStep: 6,
+        createdAt: 300,
+        updatedAt: 300,
+      });
+      const quoteId = await ctx.db.insert("projectQuotes", {
+        projectId: quoteProjectId,
+        companyId,
+        submittedByUserId: companyUserId,
+        message: "Private proposal",
+        estimatedPrice: 100_000,
+        currency: "MAD",
+        estimatedDuration: 30,
+        availableStartDate: "2099-01-01",
+        scope: "Private scope",
+        quoteType: "initial",
+        status: "submitted",
+        createdAt: 300,
+        updatedAt: 300,
+        submittedAt: 300,
+      });
+      const invitationIds: Id<"invitations">[] = [];
+      for (const [index, createdAt] of [250, 230].entries()) {
+        const projectId = await ctx.db.insert("projects", {
+          clientId,
+          title: `Invitation-only project ${index}`,
+          countryCode: "MA",
+          surfaceUnknown: true,
+          visibility: "marketplace",
+          status: "published",
+          lastCompletedStep: 6,
+          createdAt,
+          updatedAt: createdAt,
+        });
+        invitationIds.push(await ctx.db.insert("invitations", {
+          projectId,
+          clientUserId: clientId,
+          companyId,
+          message: `Private eligible invitation ${index}`,
+          status: "pending",
+          createdAt,
+          updatedAt: createdAt,
+        }));
+      }
+      const filteredInvitationId = await ctx.db.insert("invitations", {
+        projectId: quoteProjectId,
+        clientUserId: clientId,
+        companyId,
+        message: "Private filtered invitation",
+        status: "pending",
+        createdAt: 240,
+        updatedAt: 240,
+      });
+      return { filteredInvitationId, invitationIds, quoteId };
+    });
+
+    const pages: ProjectsDealsPage[] = [];
+    const seenCursors = new Set<string>();
+    let cursor: string | null = null;
+    for (let pageNumber = 0; pageNumber < 5; pageNumber += 1) {
+      const page: ProjectsDealsPage = await asUser(t, adminId).query(
+        api.admin.companies.listCompanyProjectsDeals,
+        { companyId, ...listArgs(1, cursor) },
+      );
+      pages.push(page);
+      if (page.isDone) break;
+      expect(page.continueCursor).not.toBe(cursor);
+      expect(seenCursors.has(page.continueCursor)).toBe(false);
+      seenCursors.add(page.continueCursor);
+      cursor = page.continueCursor;
+    }
+
+    const firstCursor = JSON.parse(pages[0].continueCursor) as {
+      invitations: { done: boolean };
+      pendingInvitationIds: string[];
+    };
+    expect(firstCursor.invitations.done).toBe(true);
+    expect(firstCursor.pendingInvitationIds).toEqual(seeded.invitationIds);
+    expect(pages.at(-1)?.isDone).toBe(true);
+
+    const rows = pages.flatMap((page) => page.page);
+    expect(rows.map((row) => row.createdAt)).toEqual([300, 250, 230]);
+    expect(rows.map((row) => row.id)).toEqual([
+      `quote:${seeded.quoteId}`,
+      ...seeded.invitationIds.map((id) => `invitation:${id}`),
+    ]);
+    expect(rows.map((row) => row.id)).not.toContain(
+      `invitation:${seeded.filteredInvitationId}`,
+    );
+    expect(new Set(rows.map((row) => row.id)).size).toBe(rows.length);
+  });
+
+  test("rejects pending invitation cursor IDs from another company", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    const clientId = await seedUser(t, "client", "Client");
+    const companyA = await seedCompany(t, "Cursor Company A");
+    const companyB = await seedCompany(t, "Cursor Company B");
+    const projectId = await t.run((ctx) => ctx.db.insert("projects", {
+      clientId,
+      title: "Foreign pending invitation",
+      countryCode: "MA",
+      surfaceUnknown: true,
+      visibility: "marketplace",
+      status: "published",
+      lastCompletedStep: 6,
+      createdAt: 1,
+      updatedAt: 1,
+    }));
+    const foreignInvitationId = await t.run((ctx) => ctx.db.insert("invitations", {
+      projectId,
+      clientUserId: clientId,
+      companyId: companyB,
+      status: "pending",
+      createdAt: 1,
+      updatedAt: 1,
+    }));
+    const sourceCursor = {
+      beforeAt: null,
+      beforeCreationTime: null,
+      beforeId: null,
+      done: true,
+    };
+    const forgedCursor = JSON.stringify({
+      version: 2,
+      quotes: sourceCursor,
+      invitations: sourceCursor,
+      pendingInvitationIds: [foreignInvitationId],
+    });
+
+    await expect(asUser(t, adminId).query(
+      api.admin.companies.listCompanyProjectsDeals,
+      { companyId: companyA, ...listArgs(1, forgedCursor) },
+    )).rejects.toThrow("INVALID_ADMIN_COMPANY_PROJECT_CURSOR");
+  });
+
+  test("accepts in-flight version-one project history cursors", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    const companyId = await seedCompany(t, "Legacy Cursor Company");
+    const sourceCursor = {
+      beforeAt: null,
+      beforeCreationTime: null,
+      beforeId: null,
+      done: false,
+    };
+    const legacyCursor = JSON.stringify({
+      version: 1,
+      quotes: sourceCursor,
+      invitations: sourceCursor,
+    });
+
+    const page = await asUser(t, adminId).query(
+      api.admin.companies.listCompanyProjectsDeals,
+      { companyId, ...listArgs(1, legacyCursor) },
+    );
+    expect(page).toMatchObject({ page: [], isDone: true });
+    expect(JSON.parse(page.continueCursor)).toMatchObject({
+      version: 2,
+      pendingInvitationIds: [],
+    });
   });
 });

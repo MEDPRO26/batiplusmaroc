@@ -89,13 +89,7 @@ test("services are edited in a focused dialog that saves only that section", asy
   const calls = await page.evaluate(() => (window as unknown as { __mutationCalls: Array<{ path: string; args: Record<string, unknown> }> }).__mutationCalls);
   expect(calls).toHaveLength(1);
   expect(calls[0].path).toBe("companies.index.updatePublicProfile");
-  expect(calls[0].args).toMatchObject({
-    name: "Atlas Build",
-    city: "Agadir",
-    phone: "0612345678",
-    companySize: "11to50",
-    languages: ["arabic", "french"],
-    serviceAreas: ["agadir", "marrakech"],
+  expect(calls[0].args).toEqual({
     services: ["structural", "finishing", "plumbing"],
   });
 });

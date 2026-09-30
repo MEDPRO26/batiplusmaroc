@@ -17,7 +17,6 @@ const LISTED_STATUSES = [
   "declined",
   "withdrawn",
 ] as const;
-const PER_STATUS_LIMIT = 100;
 const RESULT_LIMIT = 200;
 
 const proposalStatusValidator = v.union(
@@ -68,17 +67,30 @@ export const listMyProposals = query({
   returns: v.array(companyProposalValidator),
   handler: async (ctx) => {
     const { company } = await requireCompanyUser(ctx);
-    const quotes: Doc<"projectQuotes">[] = [];
-    for (const status of LISTED_STATUSES) {
-      const batch = await ctx.db
-        .query("projectQuotes")
-        .withIndex("by_companyId_and_status", (q) =>
-          q.eq("companyId", company._id).eq("status", status),
-        )
-        .take(PER_STATUS_LIMIT);
-      quotes.push(...batch);
-    }
-    quotes.sort((a, b) => b.submittedAt - a.submittedAt);
+    // The global result can contain at most RESULT_LIMIT rows, so no status can
+    // contribute more than RESULT_LIMIT rows to that result. Reading that many
+    // candidates from every indexed status partition is therefore an exact
+    // bounded top-K merge rather than a per-status truncation heuristic.
+    // Initial quotes are inserted with createdAt === submittedAt, preserving the
+    // partition index order used here; status transitions do not change either.
+    const quotePartitions = await Promise.all(
+      LISTED_STATUSES.map((status) =>
+        ctx.db
+          .query("projectQuotes")
+          .withIndex("by_companyId_and_status", (q) =>
+            q.eq("companyId", company._id).eq("status", status),
+          )
+          .order("desc")
+          .take(RESULT_LIMIT),
+      ),
+    );
+    const quotes: Doc<"projectQuotes">[] = quotePartitions.flat();
+    quotes.sort(
+      (a, b) =>
+        b.submittedAt - a.submittedAt ||
+        b._creationTime - a._creationTime ||
+        b._id.localeCompare(a._id),
+    );
 
     const rows = [];
     for (const quote of quotes.slice(0, RESULT_LIMIT)) {

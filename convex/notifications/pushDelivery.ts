@@ -24,7 +24,7 @@ export const deliverMarketplacePush = internalAction({
 
     const deliveredEndpoints: string[] = [];
     const permanentFailureEndpoints: string[] = [];
-    let failedCount = 0;
+    const temporaryFailureEndpoints: string[] = [];
     try {
       configureWebPush();
       for (const subscription of claimed.subscriptions) {
@@ -41,7 +41,7 @@ export const deliverMarketplacePush = internalAction({
           if (isPermanentPushFailure(error)) {
             permanentFailureEndpoints.push(subscription.endpoint);
           } else {
-            failedCount += 1;
+            temporaryFailureEndpoints.push(subscription.endpoint);
             console.error("Marketplace push delivery failed", {
               notificationId: args.notificationId,
               type: claimed.notification.type,
@@ -51,7 +51,9 @@ export const deliverMarketplacePush = internalAction({
         }
       }
     } catch (error) {
-      failedCount = claimed.subscriptions.length;
+      temporaryFailureEndpoints.push(
+        ...claimed.subscriptions.map((subscription) => subscription.endpoint),
+      );
       console.error("Marketplace push delivery unavailable", {
         notificationId: args.notificationId,
         type: claimed.notification.type,
@@ -67,7 +69,7 @@ export const deliverMarketplacePush = internalAction({
         leaseId,
         deliveredEndpoints,
         permanentFailureEndpoints,
-        failedCount,
+        temporaryFailureEndpoints,
       },
     );
     console.info("Marketplace push delivery completed", {
@@ -76,7 +78,7 @@ export const deliverMarketplacePush = internalAction({
       attempted: claimed.subscriptions.length,
       delivered: deliveredEndpoints.length,
       permanentFailures: permanentFailureEndpoints.length,
-      temporaryFailures: failedCount,
+      temporaryFailures: temporaryFailureEndpoints.length,
     });
     return null;
   },

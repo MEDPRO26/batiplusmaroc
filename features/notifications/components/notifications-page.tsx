@@ -8,7 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { NotificationItem } from "@/features/notifications/components/notification-item";
 import { NotificationListSkeleton } from "@/features/notifications/components/notification-bell-view";
 import { NotificationPreferencesPanel } from "@/features/notifications/components/notification-preferences-panel";
-import { readThenNavigate, resolveNotificationDestinationForOpen, type NotificationAccountType } from "@/features/notifications/lib/presentation";
+import { openNotificationWithLock, resolveNotificationDestinationForOpen, type NotificationAccountType } from "@/features/notifications/lib/presentation";
 import { useRouter } from "@/i18n/navigation";
 
 export function NotificationsPage({ accountType }: { accountType: NotificationAccountType }) {
@@ -29,23 +29,20 @@ export function NotificationsPage({ accountType }: { accountType: NotificationAc
 
   async function openNotification(notification: (typeof results)[number]) {
     if (openingRef.current) return;
-    openingRef.current = true;
-    let navigated = false;
     setPendingId(notification.id);
     setError(false);
     try {
       const destination = resolveNotificationDestinationForOpen(notification, accountType);
-      await readThenNavigate(
+      await openNotificationWithLock({
+        lock: openingRef,
         notification,
         destination,
-        (notificationId) => markRead({ notificationId }),
-        (destination) => router.push(destination),
-      );
-      navigated = true;
+        markRead: (notificationId) => markRead({ notificationId }),
+        navigate: (nextDestination) => router.push(nextDestination),
+      });
     } catch {
       setError(true);
     } finally {
-      if (!navigated) openingRef.current = false;
       setPendingId(null);
     }
   }

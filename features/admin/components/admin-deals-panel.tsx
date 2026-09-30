@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -8,7 +8,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ADMIN_PRESS, AdminPage } from "./admin-shell";
 
-type Row = FunctionReturnType<typeof api.admin.deals.listCommissionObligations>[number];
+type Row = FunctionReturnType<typeof api.admin.deals.listCommissionObligations>["page"][number];
 type Filter = "all" | "due" | "paid";
 
 export function AdminDealsPanel() {
@@ -18,7 +18,14 @@ export function AdminDealsPanel() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Row | null>(null);
   const [notice, setNotice] = useState("");
-  const rows = useQuery(api.admin.deals.listCommissionObligations, { status, search: search.trim() || undefined });
+  const { results: rows, status: pageStatus, loadMore } = usePaginatedQuery(
+    api.admin.deals.listCommissionObligations,
+    { status, search: search.trim() || undefined },
+    { initialNumItems: 30 },
+  );
+  useEffect(() => {
+    if (pageStatus === "CanLoadMore" && rows.length === 0) loadMore(30);
+  }, [loadMore, pageStatus, rows.length]);
   useEffect(() => { if (!notice) return; const id = window.setTimeout(() => setNotice(""), 4000); return () => window.clearTimeout(id); }, [notice]);
   return (
     <AdminPage breadcrumb={t("title")} notice={notice} title={t("title")}>
@@ -33,9 +40,10 @@ export function AdminDealsPanel() {
             <input className="h-11 w-full bg-transparent outline-none" onChange={(e) => setSearch(e.target.value)} placeholder={t("searchPlaceholder")} value={search} />
           </label>
         </div>
-        {rows === undefined ? <p className="py-12 text-center text-sm text-[#8b919a]">{t("loading")}</p> : rows.length === 0 ? <p className="py-12 text-center text-sm text-[#8b919a]">{t("empty")}</p> : <>
+        {pageStatus === "LoadingFirstPage" ? <p className="py-12 text-center text-sm text-[#8b919a]">{t("loading")}</p> : rows.length === 0 ? <p className="py-12 text-center text-sm text-[#8b919a]">{t("empty")}</p> : <>
           <div className="mt-5 grid gap-3 md:hidden">{rows.map((row) => <DealCard key={row.dealId} locale={locale} onOpen={() => setSelected(row)} row={row} t={t} />)}</div>
           <div className="mt-5 hidden overflow-x-auto md:block"><table className="min-w-full border-separate border-spacing-y-2 text-left text-sm"><thead><tr className="text-xs font-semibold uppercase tracking-wide text-[#8b919a]">{(["project","company","dealAmount","commission","statusLabel","created","action"] as const).map((key) => <th className="px-3 py-2" key={key}>{t(`columns.${key}`)}</th>)}</tr></thead><tbody>{rows.map((row) => <tr className="bg-[#f8fafb]" key={row.dealId}><td className="rounded-l-[14px] px-3 py-3 font-semibold">{row.projectTitle}</td><td className="px-3 py-3">{row.companyName}</td><td className="px-3 py-3">{money(row.agreedAmountMad, locale)}</td><td className="px-3 py-3 font-semibold">{money(row.commissionAmountMad, locale)} <span className="block text-xs font-normal text-[#8b919a]">{rate(row.commissionRateBps, locale)}</span></td><td className="px-3 py-3"><Status status={row.commissionStatus} t={t} /></td><td className="px-3 py-3">{date(row.createdAt, locale)}</td><td className="rounded-r-[14px] px-3 py-3"><button className={`min-h-10 rounded-full border bg-white px-3 font-semibold ${ADMIN_PRESS}`} onClick={() => setSelected(row)} type="button">{t("view")}</button></td></tr>)}</tbody></table></div>
+          {pageStatus === "CanLoadMore" || pageStatus === "LoadingMore" ? <button className={`mt-4 min-h-11 w-full rounded-full border px-4 text-sm font-semibold disabled:opacity-50 ${ADMIN_PRESS}`} disabled={pageStatus === "LoadingMore"} onClick={() => loadMore(30)} type="button">{pageStatus === "LoadingMore" ? t("loadingMore") : t("loadMore")}</button> : null}
         </>}
       </section>
       {selected ? <DealDialog locale={locale} onClose={() => setSelected(null)} onSuccess={() => { setSelected(null); setNotice(t("paidSuccess")); }} row={selected} /> : null}

@@ -5,7 +5,10 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser, requireVerifiedCompanyMarketplaceUser } from "../companies/access";
 import { assertCompanyMarketplaceWriteAllowed, getCompanyOperationalStatus, requireCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
-import { createDealFromAcceptedFinalQuote } from "../deals/index";
+import {
+  createDealFromFreshFinalQuoteAcceptance,
+  reuseDealFromAcceptedFinalQuote,
+} from "../deals/index";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import {
   createNotification,
@@ -438,7 +441,7 @@ export const review = mutation({
     ]);
     if (!revision || revision.finalQuoteId !== parent._id || parent.currentRevisionId !== revision._id) throw new ConvexError("FINAL_QUOTE_REVISION_NOT_CURRENT");
     if (parent.status === "accepted" && args.action === "accept" && parent.acceptedRevisionId === revision._id) {
-      await createDealFromAcceptedFinalQuote(ctx, parent._id);
+      await reuseDealFromAcceptedFinalQuote(ctx, parent._id);
       if (!company) throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");
       await createFinalQuoteAcceptedNotifications(ctx, {
         parent,
@@ -465,8 +468,9 @@ export const review = mutation({
     if (args.action === "accept" && revision.validUntil < new Date(now).toISOString().slice(0, 10)) throw new ConvexError("FINAL_QUOTE_EXPIRED");
     const next = args.action === "accept" ? "accepted" as const : args.action === "request_changes" ? "changes_requested" as const : "declined" as const;
     assertFinalQuoteTransition(parent.status, next);
+    const dealCreationNonce = next === "accepted" ? crypto.randomUUID() : undefined;
     await ctx.db.patch(parent._id, { status: next, updatedAt: now,
-      ...(next === "accepted" ? { acceptedAt: now, acceptedByUserId: client.userId, acceptedRevisionId: revision._id } : {}),
+      ...(next === "accepted" ? { acceptedAt: now, acceptedByUserId: client.userId, acceptedRevisionId: revision._id, dealCreationNonce } : {}),
       ...(next === "changes_requested" ? { changesRequestedAt: now, changesRequestedByUserId: client.userId, changesRequestReason: reason } : {}),
       ...(next === "declined" ? { declinedAt: now, declinedByUserId: client.userId, declineReason: reason } : {}) });
     const eventType = next === "accepted" ? "final_quote_accepted" as const : next === "changes_requested" ? "final_quote_changes_requested" as const : "final_quote_declined" as const;
@@ -475,13 +479,14 @@ export const review = mutation({
       quoteId: parent.initialQuoteId, conversationId: parent.conversationId, ...siteRefs, finalQuoteId: parent._id, finalQuoteRevisionId: revision._id,
       oldStatus: parent.status, newStatus: next, reason, metadata: { revisionNumber: revision.revisionNumber, price: revision.price, currency: "MAD" }, createdAt: now });
     if (next === "accepted") {
+      if (!dealCreationNonce) throw new ConvexError("DEAL_CREATION_AUTHORIZATION_FAILED");
       assertProjectTransition(project.status, "company_selected");
       await ctx.db.patch(project._id, { status: "company_selected", selectedCompanyId: parent.companyId, selectedFinalQuoteId: parent._id, selectedAt: now, updatedAt: now });
       await ctx.db.insert("projectStatusHistory", { projectId: project._id, oldStatus: project.status, newStatus: "company_selected", changedBy: client.userId, changedAt: now });
       await appendMarketplaceActivity(ctx, { projectId: parent.projectId, eventType: "company_selected", actorUserId: client.userId, actorType: "client", companyId: parent.companyId,
         quoteId: parent.initialQuoteId, conversationId: parent.conversationId, ...siteRefs, finalQuoteId: parent._id, finalQuoteRevisionId: revision._id,
         oldStatus: project.status, newStatus: "company_selected", metadata: { revisionNumber: revision.revisionNumber, price: revision.price, currency: "MAD" }, createdAt: now });
-      await createDealFromAcceptedFinalQuote(ctx, parent._id);
+      await createDealFromFreshFinalQuoteAcceptance(ctx, parent._id, dealCreationNonce);
       await createFinalQuoteAcceptedNotifications(ctx, {
         parent,
         project,

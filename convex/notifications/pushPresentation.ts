@@ -90,6 +90,7 @@ export function marketplacePushPresentation(
   locale: PushLocale,
 ) {
   return {
+    notificationId: notification._id,
     title: "Batiplus Maroc",
     body: bodyFor(notification, locale),
     locale,

@@ -1,17 +1,20 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
+import type { FunctionReturnType } from "convex/server";
 import { describe, expect, test } from "vitest";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import type { CommissionTier } from "./marketplaceSettings/constants";
 import * as companyCommissionModule from "./deals/company";
+import { createDealFromFreshFinalQuoteAcceptance } from "./deals/index";
 import { isCentimePrecisionMadAmount } from "./deals/money";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
 type Backend = ReturnType<typeof convexTest>;
 type AccountType = "client" | "company" | "admin" | "seo_team";
+type AdminDealPage = FunctionReturnType<typeof api.admin.deals.listCommissionObligations>;
 
 const APPROVED_TIERS: CommissionTier[] = [
   { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 300 },
@@ -215,8 +218,14 @@ async function setupAcceptedSource(
 }
 
 async function createDeal(t: Backend, finalQuoteId: Id<"finalQuotes">) {
-  return await t.mutation(internal.deals.index.createFromAcceptedFinalQuote, {
-    finalQuoteId,
+  return await t.run(async (ctx) => {
+    const dealCreationNonce = crypto.randomUUID();
+    await ctx.db.patch(finalQuoteId, { dealCreationNonce });
+    return await createDealFromFreshFinalQuoteAcceptance(
+      ctx,
+      finalQuoteId,
+      dealCreationNonce,
+    );
   });
 }
 
@@ -248,6 +257,104 @@ async function addActiveCompanyTeammate(
 }
 
 describe("Deal creation and immutable commercial truth", () => {
+  test("legacy accepted Final Quote cannot be backfilled with the current commission schedule", async () => {
+    const source = await setupAcceptedSource();
+    await source.t.run(async (ctx) => {
+      const setting = await ctx.db
+        .query("marketplaceSettings")
+        .withIndex("by_key", (q) => q.eq("key", "global"))
+        .unique();
+      if (!setting) throw new Error("missing marketplace settings fixture");
+      await ctx.db.patch(setting._id, {
+        commissionTiers: [
+          { minAmountMad: 0, maxAmountMad: null, commissionRateBps: 700 },
+        ],
+        commissionConfigVersion: 2,
+      });
+    });
+
+    await expect(
+      source.t.mutation(internal.deals.index.createFromAcceptedFinalQuote, {
+        finalQuoteId: source.finalQuoteId,
+      }),
+    ).rejects.toThrow("DEAL_RETROACTIVE_CREATION_REQUIRES_MIGRATION");
+    await expect(
+      source.t.run((ctx) =>
+        createDealFromFreshFinalQuoteAcceptance(
+          ctx,
+          source.finalQuoteId,
+          crypto.randomUUID(),
+        ),
+      ),
+    ).rejects.toThrow("DEAL_RETROACTIVE_CREATION_REQUIRES_MIGRATION");
+
+    const state = await source.t.run(async (ctx) => ({
+      deals: await ctx.db
+        .query("deals")
+        .withIndex("by_projectId", (q) => q.eq("projectId", source.projectId))
+        .take(2),
+      summary: await ctx.db
+        .query("companyCommissionSummaries")
+        .withIndex("by_companyId", (q) => q.eq("companyId", source.companyId))
+        .unique(),
+    }));
+    expect(state.deals).toHaveLength(0);
+    expect(state.summary).toBeNull();
+  });
+
+  test("suspended Company cannot create a missing Deal through replay or the central creator", async () => {
+    const source = await setupAcceptedSource();
+    await source.t.run((ctx) =>
+      ctx.db.patch(source.companyId, { operationalStatus: "suspended" }),
+    );
+
+    await expect(
+      source.t.mutation(internal.deals.index.createFromAcceptedFinalQuote, {
+        finalQuoteId: source.finalQuoteId,
+      }),
+    ).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+    await expect(
+      source.t.run(async (ctx) => {
+        const dealCreationNonce = crypto.randomUUID();
+        await ctx.db.patch(source.finalQuoteId, { dealCreationNonce });
+        return await createDealFromFreshFinalQuoteAcceptance(
+          ctx,
+          source.finalQuoteId,
+          dealCreationNonce,
+        );
+      }),
+    ).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+
+    const deals = await source.t.run((ctx) =>
+      ctx.db
+        .query("deals")
+        .withIndex("by_projectId", (q) => q.eq("projectId", source.projectId))
+        .take(2),
+    );
+    expect(deals).toHaveLength(0);
+  });
+
+  test("an existing Deal remains idempotently reusable after later suspension", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    await source.t.run((ctx) =>
+      ctx.db.patch(source.companyId, { operationalStatus: "suspended" }),
+    );
+
+    await expect(
+      source.t.mutation(internal.deals.index.createFromAcceptedFinalQuote, {
+        finalQuoteId: source.finalQuoteId,
+      }),
+    ).resolves.toEqual({ dealId: created.dealId, duplicate: true });
+    const deals = await source.t.run((ctx) =>
+      ctx.db
+        .query("deals")
+        .withIndex("by_projectId", (q) => q.eq("projectId", source.projectId))
+        .take(2),
+    );
+    expect(deals).toHaveLength(1);
+  });
+
   test("Deal creation notifies every active debtor-Company member once that commission is due", async () => {
     const source = await setupAcceptedSource();
     const teammateUserId = await addActiveCompanyTeammate(source);
@@ -299,7 +406,8 @@ describe("Deal creation and immutable commercial truth", () => {
         .take(10),
       activity: await ctx.db
         .query("marketplaceActivity")
-        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId))
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId))
+        .filter((q) => q.eq(q.field("dealId"), created.dealId))
         .take(10),
     }));
 
@@ -475,7 +583,8 @@ describe("Deal creation and immutable commercial truth", () => {
         .take(2),
       activity: await ctx.db
         .query("marketplaceActivity")
-        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", first.dealId))
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId))
+        .filter((q) => q.eq(q.field("dealId"), first.dealId))
         .take(3),
     }));
     expect(counts.deals).toHaveLength(1);
@@ -752,7 +861,8 @@ describe("Deal completion lifecycle", () => {
         .take(10),
       activity: await ctx.db
         .query("marketplaceActivity")
-        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId))
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId))
+        .filter((q) => q.eq(q.field("dealId"), created.dealId))
         .take(10),
     }));
     expect(state.deal).toMatchObject({ status: "active", commissionStatus: "due" });
@@ -782,7 +892,7 @@ describe("Deal completion lifecycle", () => {
       project: await ctx.db.get(source.projectId),
       dealHistory: await ctx.db.query("dealStatusHistory").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect(),
       projectHistory: await ctx.db.query("projectStatusHistory").withIndex("by_projectId_and_changedAt", (q) => q.eq("projectId", source.projectId)).collect(),
-      activity: await ctx.db.query("marketplaceActivity").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect(),
+      activity: await ctx.db.query("marketplaceActivity").withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId)).filter((q) => q.eq(q.field("dealId"), created.dealId)).collect(),
     }));
     expect(state.deal).toMatchObject({ status: "completed", completedAt: result.completedAt, completedByUserId: source.clientUserId, commissionStatus: "due" });
     expect(state.project).toMatchObject({ status: "completed", updatedAt: result.completedAt });
@@ -821,7 +931,7 @@ describe("Deal completion lifecycle", () => {
       deal: await ctx.db.get(created.dealId),
       dealHistory: await ctx.db.query("dealStatusHistory").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).collect(),
       projectHistory: await ctx.db.query("projectStatusHistory").withIndex("by_projectId_and_changedAt", (q) => q.eq("projectId", source.projectId)).collect(),
-      completedActivity: await ctx.db.query("marketplaceActivity").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId)).filter((q) => q.eq(q.field("eventType"), "deal_completed")).collect(),
+      completedActivity: await ctx.db.query("marketplaceActivity").withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId)).filter((q) => q.and(q.eq(q.field("dealId"), created.dealId), q.eq(q.field("eventType"), "deal_completed"))).collect(),
     }));
     expect(state.deal?.completedAt).toBe(first.completedAt);
     expect(state.dealHistory).toHaveLength(2);
@@ -981,7 +1091,8 @@ describe("Admin commission payment tracking", () => {
         .take(10),
       activity: await ctx.db
         .query("marketplaceActivity")
-        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", created.dealId))
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", source.projectId))
+        .filter((q) => q.eq(q.field("dealId"), created.dealId))
         .take(10),
     }));
     expect(state.deal).toMatchObject({ commissionStatus: "due" });
@@ -1020,7 +1131,7 @@ describe("Admin commission payment tracking", () => {
   test("non-admins cannot list or update commission obligations", async () => {
     const source = await setupAcceptedSource();
     const created = await createDeal(source.t, source.finalQuoteId);
-    await expect(asUser(source.t, source.companyUserId).query(api.admin.deals.listCommissionObligations, { status: "all" })).rejects.toThrow("ADMIN_REQUIRED");
+    await expect(asUser(source.t, source.companyUserId).query(api.admin.deals.listCommissionObligations, { status: "all", paginationOpts: { numItems: 20, cursor: null } })).rejects.toThrow("ADMIN_REQUIRED");
     await expect(asUser(source.t, source.clientUserId).mutation(api.admin.deals.markCommissionPaid, { dealId: created.dealId })).rejects.toThrow("ADMIN_REQUIRED");
   });
 
@@ -1029,10 +1140,93 @@ describe("Admin commission payment tracking", () => {
     const created = await createDeal(source.t, source.finalQuoteId);
     await source.t.run((ctx) => ctx.db.patch(source.projectId, { title: "Riad restoration" }));
     const admin = asUser(source.t, source.adminUserId);
-    const due = await admin.query(api.admin.deals.listCommissionObligations, { status: "due", search: "atlas" });
-    expect(due).toHaveLength(1);
-    expect(due[0]).toMatchObject({ dealId: created.dealId, projectTitle: "Riad restoration", companyName: "Atlas Build", commissionStatus: "due" });
-    expect(await admin.query(api.admin.deals.listCommissionObligations, { status: "paid" })).toEqual([]);
+    const due = await admin.query(api.admin.deals.listCommissionObligations, { status: "due", search: "atlas", paginationOpts: { numItems: 20, cursor: null } });
+    expect(due.page).toHaveLength(1);
+    expect(due.page[0]).toMatchObject({ dealId: created.dealId, projectTitle: "Riad restoration", companyName: "Atlas Build", commissionStatus: "due" });
+    expect((await admin.query(api.admin.deals.listCommissionObligations, { status: "paid", paginationOpts: { numItems: 20, cursor: null } })).page).toEqual([]);
+  });
+
+  test("admin search finds a matching Deal older than the newest 200", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    await source.t.run(async (ctx) => {
+      const template = await ctx.db.get(created.dealId);
+      const sourceProject = await ctx.db.get(source.projectId);
+      if (!template) throw new Error("missing Deal fixture");
+      if (!sourceProject) throw new Error("missing Project fixture");
+      const { _id: _templateId, _creationTime: _templateCreationTime, ...fields } = template;
+      const { _id: _projectId, _creationTime: _projectCreationTime, ...projectFields } = sourceProject;
+      void _templateId;
+      void _templateCreationTime;
+      void _projectId;
+      void _projectCreationTime;
+      const unrelatedProjectId = await ctx.db.insert("projects", {
+        ...projectFields,
+        title: "Unrelated project",
+      });
+      for (let index = 0; index < 201; index += 1) {
+        await ctx.db.insert("deals", {
+          ...fields,
+          projectId: unrelatedProjectId,
+          createdAt: fields.createdAt + index + 1,
+        });
+      }
+    });
+
+    const rows = await asUser(source.t, source.adminUserId).query(
+      api.admin.deals.listCommissionObligations,
+      { status: "all", search: "Riad restoration", paginationOpts: { numItems: 20, cursor: null } },
+    );
+    expect(rows.page).toEqual([expect.objectContaining({ dealId: created.dealId })]);
+  });
+
+  test("admin search paginates more than 200 matches newest first", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    await source.t.run(async (ctx) => {
+      const template = await ctx.db.get(created.dealId);
+      if (!template) throw new Error("missing Deal fixture");
+      const { _id: _templateId, _creationTime: _templateCreationTime, ...fields } = template;
+      void _templateId;
+      void _templateCreationTime;
+      for (let index = 1; index <= 205; index += 1) {
+        await ctx.db.insert("deals", { ...fields, createdAt: fields.createdAt + index });
+      }
+    });
+
+    const admin = asUser(source.t, source.adminUserId);
+    const createdAtValues: number[] = [];
+    let cursor: string | null = null;
+    for (let pageNumber = 0; pageNumber < 20; pageNumber += 1) {
+      const page: AdminDealPage = await admin.query(api.admin.deals.listCommissionObligations, {
+        status: "all",
+        search: "Atlas Build",
+        paginationOpts: { numItems: 30, cursor },
+      });
+      createdAtValues.push(...page.page.map((row) => row.createdAt));
+      if (page.isDone) break;
+      cursor = page.continueCursor;
+    }
+    expect(createdAtValues).toHaveLength(206);
+    expect(createdAtValues).toEqual([...createdAtValues].sort((left, right) => right - left));
+  });
+
+  test("admin search uses the current company name after a rename", async () => {
+    const source = await setupAcceptedSource();
+    const created = await createDeal(source.t, source.finalQuoteId);
+    await source.t.run((ctx) => ctx.db.patch(source.companyId, { name: "Rabat Heritage Works" }));
+
+    const page = await asUser(source.t, source.adminUserId).query(
+      api.admin.deals.listCommissionObligations,
+      {
+        status: "all",
+        search: "Heritage Works",
+        paginationOpts: { numItems: 20, cursor: null },
+      },
+    );
+    expect(page.page).toEqual([
+      expect.objectContaining({ dealId: created.dealId, companyName: "Rabat Heritage Works" }),
+    ]);
   });
 });
 

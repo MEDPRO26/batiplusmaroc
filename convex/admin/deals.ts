@@ -1,15 +1,22 @@
+import { paginationOptsValidator, paginationResultValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "../_generated/server";
+import { internal } from "../_generated/api";
+import type { Doc } from "../_generated/dataModel";
+import { internalQuery, mutation, query } from "../_generated/server";
+import type { QueryCtx } from "../_generated/server";
 import { commissionStatusValidator, type CommissionStatus } from "../deals/constants";
 import { recordCommissionPaid } from "../deals/commissionSummary";
 import { hasCompleteCommissionSnapshot } from "../deals/money";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { createNotificationForActiveCompanyMembers } from "../notifications/model";
+import schema from "../schema";
 import { requireAdminUser } from "./access";
 
 const listStatusValidator = v.union(v.literal("all"), commissionStatusValidator);
 const nullableString = v.union(v.string(), v.null());
 const nullableNumber = v.union(v.number(), v.null());
+const MAX_PAGE_SIZE = 30;
+const MAX_SEARCH_SCAN_ROWS = 900;
 
 const rowValidator = v.object({
   dealId: v.id("deals"),
@@ -41,34 +48,117 @@ function displayName(user: { firstName?: string; lastName?: string; email?: stri
   return [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email || "—";
 }
 
+function normalizeDealAdminSearch(value: string | undefined) {
+  const normalized = value?.trim().replace(/\s+/g, " ");
+  return normalized || null;
+}
+
+async function loadDealBatch(
+  ctx: QueryCtx,
+  args: {
+    status: "all" | CommissionStatus;
+    companyId?: import("../_generated/dataModel").Id<"companies">;
+  },
+  paginationOpts: { numItems: number; cursor: string | null },
+) {
+  const result: {
+    page: Doc<"deals">[];
+    isDone: boolean;
+    continueCursor: string;
+  } = await ctx.runQuery(internal.admin.deals.loadCommissionDealBatch, {
+    status: args.status,
+    companyId: args.companyId,
+    paginationOpts,
+  });
+  return result;
+}
+
+export const loadCommissionDealBatch = internalQuery({
+  args: {
+    status: listStatusValidator,
+    companyId: v.optional(v.id("companies")),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: paginationResultValidator(schema.doc("deals")),
+  handler: async (ctx, args) => {
+    if (args.companyId) {
+      if (args.status === "all") {
+        return await ctx.db
+          .query("deals")
+          .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", args.companyId!))
+          .order("desc")
+          .paginate(args.paginationOpts);
+      }
+      return await ctx.db
+        .query("deals")
+        .withIndex("by_companyId_and_commissionStatus_and_createdAt", (q) =>
+          q
+            .eq("companyId", args.companyId!)
+            .eq("commissionStatus", args.status as CommissionStatus),
+        )
+        .order("desc")
+        .paginate(args.paginationOpts);
+    }
+    if (args.status === "all") {
+      return await ctx.db
+        .query("deals")
+        .withIndex("by_createdAt")
+        .order("desc")
+        .paginate(args.paginationOpts);
+    }
+    return await ctx.db
+      .query("deals")
+      .withIndex("by_commissionStatus_and_createdAt", (q) =>
+        q.eq("commissionStatus", args.status as CommissionStatus),
+      )
+      .order("desc")
+      .paginate(args.paginationOpts);
+  },
+});
+
 export const listCommissionObligations = query({
   args: {
     status: listStatusValidator,
     search: v.optional(v.string()),
     companyId: v.optional(v.id("companies")),
+    paginationOpts: paginationOptsValidator,
   },
-  returns: v.array(rowValidator),
+  returns: paginationResultValidator(rowValidator),
   handler: async (ctx, args) => {
     await requireAdminUser(ctx);
-    const deals = args.companyId
-      ? args.status === "all"
-        ? await ctx.db.query("deals").withIndex("by_companyId", (q) => q.eq("companyId", args.companyId!)).order("desc").take(200)
-        : await ctx.db.query("deals").withIndex("by_companyId_and_commissionStatus", (q) => q.eq("companyId", args.companyId!).eq("commissionStatus", args.status as CommissionStatus)).order("desc").take(200)
-      : args.status === "all"
-        ? await ctx.db.query("deals").order("desc").take(200)
-        : await ctx.db.query("deals").withIndex("by_commissionStatus_and_createdAt", (q) => q.eq("commissionStatus", args.status as CommissionStatus)).order("desc").take(200);
-    const needle = args.search?.trim().toLocaleLowerCase() ?? "";
-    const rows = [];
-    for (const deal of deals) {
-      const [project, company, paidBy] = await Promise.all([
-        ctx.db.get(deal.projectId),
-        ctx.db.get(deal.companyId),
-        deal.commissionPaidByAdminUserId ? ctx.db.get(deal.commissionPaidByAdminUserId) : null,
-      ]);
-      const projectTitle = project?.title ?? "—";
-      const companyName = company?.name ?? company?.legalName ?? "—";
-      if (needle && !`${projectTitle} ${companyName}`.toLocaleLowerCase().includes(needle)) continue;
-      rows.push({
+    const search = normalizeDealAdminSearch(args.search);
+    const requestedPageSize = Math.max(1, Math.min(MAX_PAGE_SIZE, Math.floor(args.paginationOpts.numItems)));
+    const rows: Array<typeof rowValidator.type> = [];
+    let scannedRows = 0;
+    let databaseCursor = args.paginationOpts.cursor;
+    let isDone = false;
+
+    while (rows.length < requestedPageSize && scannedRows < MAX_SEARCH_SCAN_ROWS && !isDone) {
+      const remaining = requestedPageSize - rows.length;
+      const batch = await loadDealBatch(ctx, args, {
+        numItems: Math.min(remaining, MAX_SEARCH_SCAN_ROWS - scannedRows),
+        cursor: databaseCursor,
+      });
+      databaseCursor = batch.continueCursor;
+      isDone = batch.isDone;
+      scannedRows += batch.page.length;
+
+      const hydrated = await Promise.all(batch.page.map(async (deal) => ({
+        deal,
+        project: await ctx.db.get(deal.projectId),
+        company: await ctx.db.get(deal.companyId),
+      })));
+      for (const { deal, project, company } of hydrated) {
+        const projectTitle = project?.title ?? "—";
+        const companyName = company?.name ?? company?.legalName ?? "—";
+        if (
+          search
+          && !`${projectTitle} ${companyName}`.toLocaleLowerCase().includes(search.toLocaleLowerCase())
+        ) continue;
+        const paidBy = deal.commissionPaidByAdminUserId
+          ? await ctx.db.get(deal.commissionPaidByAdminUserId)
+          : null;
+        rows.push({
         dealId: deal._id,
         projectId: deal.projectId,
         projectTitle,
@@ -84,9 +174,11 @@ export const listCommissionObligations = query({
         paidByAdminName: paidBy ? displayName(paidBy) : null,
         paymentReference: deal.commissionPaymentReference ?? null,
         paymentNote: deal.commissionPaymentNote ?? null,
-      });
+        });
+      }
     }
-    return rows;
+    if (databaseCursor === null) throw new Error("DEAL_PAGINATION_CURSOR_MISSING");
+    return { page: rows, isDone, continueCursor: databaseCursor };
   },
 });
 

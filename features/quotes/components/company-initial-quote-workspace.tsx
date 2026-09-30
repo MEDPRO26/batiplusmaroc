@@ -60,6 +60,8 @@ export function CompanyInitialQuoteWorkspace({ projectId }: { projectId: string 
           <ProjectSummary project={context.project} />
           {quote ? (
             <QuoteDetail quote={quote} />
+          ) : !context.marketplaceWriteAllowed ? (
+            <MarketplaceSuspended />
           ) : context.verificationStatus !== "verified" ? (
             <VerificationRequired />
           ) : (
@@ -290,6 +292,11 @@ function ProjectSummary({ project }: { project: NonNullable<FunctionReturnType<t
 function VerificationRequired() {
   const t = useTranslations("initialQuote");
   return <section className="rounded-2xl border border-brand-border bg-white p-6 sm:p-8"><h2 className="m-0 text-xl font-semibold text-ink">{t("verificationTitle")}</h2><p className="mt-3 mb-0 text-sm leading-6 text-muted">{t("verificationLead")}</p><Link className="mt-6 inline-flex min-h-12 items-center rounded-full bg-brand px-6 text-sm font-semibold text-white" href={routes.companyVerification}>{t("verifyAction")}</Link></section>;
+}
+
+function MarketplaceSuspended() {
+  const t = useTranslations("initialQuote");
+  return <section className="rounded-2xl border border-brand-border bg-white p-6 sm:p-8"><h2 className="m-0 text-xl font-semibold text-ink">{t("suspendedTitle")}</h2><p className="mt-3 mb-0 text-sm leading-6 text-muted">{t("suspendedLead")}</p></section>;
 }
 
 function UnavailableQuoteWorkspace({ projectId }: { projectId: string }) {

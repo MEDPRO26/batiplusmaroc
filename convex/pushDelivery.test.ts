@@ -191,6 +191,7 @@ describe("marketplace push delivery", () => {
       JSON.parse(payload as string),
     ]));
     expect(payloads[subscription("phone").endpoint]).toEqual({
+      notificationId: first.notificationId,
       title: "Batiplus Maroc",
       body: "Nouveau message de Amine au sujet de Villa Atlas.",
       locale: "fr",
@@ -198,6 +199,7 @@ describe("marketplace push delivery", () => {
       tag: `batiplus-notification-${first.notificationId}`,
     });
     expect(payloads[subscription("laptop").endpoint]).toEqual({
+      notificationId: first.notificationId,
       title: "Batiplus Maroc",
       body: "New message from Amine about Villa Atlas.",
       locale: "en",
@@ -283,7 +285,7 @@ describe("marketplace push delivery", () => {
         leaseId: "abandoned-lease",
         deliveredEndpoints: [subscription("lease-recovery").endpoint],
         permanentFailureEndpoints: [],
-        failedCount: 0,
+        temporaryFailureEndpoints: [],
       },
     );
     expect(await t.run((ctx) => ctx.db.get(notificationId))).toMatchObject({
@@ -299,7 +301,7 @@ describe("marketplace push delivery", () => {
         leaseId: "recovered-lease",
         deliveredEndpoints: [subscription("lease-recovery").endpoint],
         permanentFailureEndpoints: [],
-        failedCount: 0,
+        temporaryFailureEndpoints: [],
       },
     );
     const completed = await t.run((ctx) => ctx.db.get(notificationId));
@@ -374,12 +376,16 @@ describe("marketplace push delivery", () => {
     const context = await seedMessageContext(t);
     await enablePush(t, context.recipientUserId);
     await addSubscriptions(t, context.recipientUserId, ["ok", "gone", "temporary"]);
+    let temporaryAttempts = 0;
     webPush.sendNotification.mockImplementation(async (value: { endpoint: string }) => {
       if (value.endpoint.endsWith("gone")) {
         throw Object.assign(new Error("gone"), { statusCode: 410 });
       }
       if (value.endpoint.endsWith("temporary")) {
-        throw Object.assign(new Error("unavailable"), { statusCode: 503 });
+        temporaryAttempts += 1;
+        if (temporaryAttempts === 1) {
+          throw Object.assign(new Error("unavailable"), { statusCode: 503 });
+        }
       }
       return { statusCode: 201 };
     });
@@ -396,6 +402,9 @@ describe("marketplace push delivery", () => {
       });
     });
     await t.finishAllScheduledFunctions(() => {});
+    await t.action(internal.notifications.pushDelivery.deliverMarketplacePush, {
+      notificationId: result.notificationId,
+    });
 
     const stored = await t.run(async (ctx) => ({
       project: await ctx.db.get(context.projectId),
@@ -407,10 +416,11 @@ describe("marketplace push delivery", () => {
     expect(stored.recipientState[0].unreadCount).toBe(1);
     expect(stored.notification).toMatchObject({
       pushDeliveryStatus: "completed",
-      pushDeliveredCount: 1,
+      pushDeliveredCount: 2,
       pushRemovedCount: 1,
       pushFailedCount: 1,
     });
+    expect(temporaryAttempts).toBe(2);
     expect(stored.notification).not.toHaveProperty("readAt");
     expect(stored.subscriptions.map((item) => item.endpoint).sort()).toEqual([
       subscription("ok").endpoint,
@@ -468,6 +478,12 @@ describe("marketplace push delivery", () => {
       idempotencyKey: "operational-push-failure",
     });
     await t.finishAllScheduledFunctions(() => {});
+    const notificationId = await t.run(async (ctx) => (await ctx.db
+      .query("notifications")
+      .withIndex("by_recipientUserId_and_createdAt", (q) => q.eq("recipientUserId", memberId))
+      .unique())!._id);
+    await t.action(internal.notifications.pushDelivery.deliverMarketplacePush, { notificationId });
+    await t.action(internal.notifications.pushDelivery.deliverMarketplacePush, { notificationId });
 
     const stored = await t.run(async (ctx) => ({
       message: await ctx.db.get(sent.messageId),
@@ -481,7 +497,7 @@ describe("marketplace push delivery", () => {
       pushDeliveryStatus: "completed",
       pushDeliveredCount: 0,
       pushRemovedCount: 0,
-      pushFailedCount: 1,
+      pushFailedCount: 3,
     });
   });
 
@@ -565,7 +581,14 @@ describe("marketplace push presentation", () => {
       expect(payload.body).not.toContain("private preview");
       expect(payload.locale).toBe(locale);
       expect(payload.url).toMatch(new RegExp(`^/${locale}/`));
-      expect(Object.keys(payload).sort()).toEqual(["body", "locale", "tag", "title", "url"]);
+      expect(Object.keys(payload).sort()).toEqual([
+        "body",
+        "locale",
+        "notificationId",
+        "tag",
+        "title",
+        "url",
+      ]);
     }
   });
 

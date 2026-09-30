@@ -8,6 +8,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
+import { isCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
 import { isActiveQuoteStatus } from "../quotes/state";
 import { invitationForPair } from "../invitations/index";
 import { toPublicClientProfile } from "../lib/clientPublicShape";
@@ -508,7 +509,10 @@ export const getCompanyMarketplaceProject = query({
       ...card,
       client,
       neighborhood: project.neighborhood ?? null,
-      canSubmitQuote: company.verificationStatus === "verified" && activeQuote === null,
+      canSubmitQuote:
+        company.verificationStatus === "verified"
+        && isCompanyMarketplaceWriteAllowed(company)
+        && activeQuote === null,
       myQuoteId: recentQuotes[0]?._id ?? null,
     };
   },

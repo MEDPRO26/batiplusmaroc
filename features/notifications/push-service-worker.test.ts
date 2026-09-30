@@ -14,11 +14,19 @@ beforeAll(async () => {
 
 function worker(overrides: {
   windows?: Array<{ url: string; navigate: ReturnType<typeof vi.fn>; focus: ReturnType<typeof vi.fn> }>;
+  dedupeEntries?: Map<string, Response>;
 } = {}) {
   const listeners = new Map<string, Listener>();
   const showNotification = vi.fn(async () => undefined);
   const openWindow = vi.fn(async () => undefined);
   const windows = overrides.windows ?? [];
+  const dedupeEntries = overrides.dedupeEntries ?? new Map<string, Response>();
+  const cache = {
+    match: vi.fn(async (request: Request) => dedupeEntries.get(request.url)),
+    put: vi.fn(async (request: Request, response: Response) => { dedupeEntries.set(request.url, response); }),
+    keys: vi.fn(async () => [...dedupeEntries.keys()].map((url) => new Request(url))),
+    delete: vi.fn(async (request: Request) => dedupeEntries.delete(request.url)),
+  };
   const self = {
     location: { origin: "https://batiplus.example" },
     registration: { showNotification },
@@ -28,7 +36,13 @@ function worker(overrides: {
     },
     addEventListener: (name: string, listener: Listener) => listeners.set(name, listener),
   };
-  vm.runInNewContext(source, { self, URL });
+  vm.runInNewContext(source, {
+    self,
+    URL,
+    Request,
+    Response,
+    caches: { open: vi.fn(async () => cache) },
+  });
   return { listeners, showNotification, openWindow };
 }
 
@@ -49,6 +63,7 @@ describe("push service worker", () => {
     await dispatch(state.listeners.get("push")!, {
       data: { json: () => ({
         title: "Batiplus Maroc",
+        notificationId: "notification-1",
         body: "Les notifications Batiplus sont activées.",
         locale: "fr",
         url: "/fr/notifications",
@@ -60,6 +75,42 @@ describe("push service worker", () => {
       tag: "test",
       data: { locale: "fr", url: "/fr/notifications" },
     });
+  });
+
+  test("does not display a retried notification after the worker restarts", async () => {
+    const dedupeEntries = new Map<string, Response>();
+    const payload = {
+      notificationId: "notification-crash-window",
+      title: "Batiplus Maroc",
+      body: "New marketplace activity.",
+      locale: "en",
+      url: "/en/notifications",
+      tag: "batiplus-notification-notification-crash-window",
+    };
+    const firstWorker = worker({ dedupeEntries });
+    await dispatch(firstWorker.listeners.get("push")!, { data: { json: () => payload } });
+    expect(firstWorker.showNotification).toHaveBeenCalledTimes(1);
+
+    const reclaimedWorker = worker({ dedupeEntries });
+    await dispatch(reclaimedWorker.listeners.get("push")!, { data: { json: () => payload } });
+    expect(reclaimedWorker.showNotification).not.toHaveBeenCalled();
+  });
+
+  test("serializes concurrent duplicate deliveries in one worker", async () => {
+    const state = worker();
+    const payload = {
+      notificationId: "notification-concurrent-retry",
+      title: "Batiplus Maroc",
+      body: "New marketplace activity.",
+      locale: "en",
+      url: "/en/notifications",
+      tag: "batiplus-notification-notification-concurrent-retry",
+    };
+    await Promise.all([
+      dispatch(state.listeners.get("push")!, { data: { json: () => payload } }),
+      dispatch(state.listeners.get("push")!, { data: { json: () => payload } }),
+    ]);
+    expect(state.showNotification).toHaveBeenCalledTimes(1);
   });
 
   test("derives an English fallback from an existing client for a malformed payload", async () => {
@@ -171,10 +222,9 @@ describe("push service worker", () => {
     expect(state.openWindow).not.toHaveBeenCalled();
   });
 
-  test("has no fetch interception, cache, install, or activation behavior", () => {
+  test("has no fetch interception, install, or activation behavior", () => {
     expect(source).not.toMatch(/addEventListener\(["']fetch["']/);
     expect(source).not.toMatch(/addEventListener\(["']install["']/);
     expect(source).not.toMatch(/addEventListener\(["']activate["']/);
-    expect(source).not.toContain("caches.");
   });
 });

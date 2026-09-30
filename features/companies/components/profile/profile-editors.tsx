@@ -19,9 +19,9 @@ type Size = ProfileManager["companySizeOptions"][number];
 
 const labelClass = "block text-sm font-medium text-ink";
 
-function useEditor(profile: ProfileManager) {
+function useEditor() {
   const t = useTranslations("companyProfileManager");
-  const { save } = useProfileSave(profile);
+  const { save } = useProfileSave();
   const fail = (key: Parameters<typeof t>[0]) => {
     throw new Error(t(key));
   };
@@ -29,7 +29,7 @@ function useEditor(profile: ProfileManager) {
 }
 
 export function IdentityEditor({ profile }: Props) {
-  const { t, save, fail } = useEditor(profile);
+  const { t, save, fail } = useEditor();
   return (
     <EditDialog
       lead={t("dialogs.identityLead")}
@@ -54,7 +54,7 @@ export function IdentityEditor({ profile }: Props) {
 }
 
 export function AboutEditor({ profile }: Props) {
-  const { t, save, fail } = useEditor(profile);
+  const { t, save, fail } = useEditor();
   return (
     <EditDialog
       lead={t("overview.lead")}
@@ -79,7 +79,7 @@ export function AboutEditor({ profile }: Props) {
 }
 
 export function CompanyInfoEditor({ profile }: Props) {
-  const { t, save, fail } = useEditor(profile);
+  const { t, save, fail } = useEditor();
   return (
     <EditDialog
       lead={t("dialogs.infoLead")}
@@ -113,7 +113,7 @@ export function CompanyInfoEditor({ profile }: Props) {
 }
 
 export function LanguagesEditor({ profile }: Props) {
-  const { t, save, fail } = useEditor(profile);
+  const { t, save, fail } = useEditor();
   return (
     <EditDialog
       onSave={async (form) => {
@@ -138,7 +138,7 @@ export function LanguagesEditor({ profile }: Props) {
 }
 
 export function ServicesEditor({ profile }: Props) {
-  const { t, save, fail } = useEditor(profile);
+  const { t, save, fail } = useEditor();
   return (
     <EditDialog
       lead={t("dialogs.servicesLead")}
@@ -165,7 +165,7 @@ export function ServicesEditor({ profile }: Props) {
 }
 
 export function ServiceAreasEditor({ profile }: Props) {
-  const { t, save, fail } = useEditor(profile);
+  const { t, save, fail } = useEditor();
   return (
     <EditDialog
       lead={t("dialogs.areasLead")}
@@ -194,7 +194,7 @@ export function ServiceAreasEditor({ profile }: Props) {
 }
 
 export function ContactEditor({ profile }: Props) {
-  const { t, save, fail } = useEditor(profile);
+  const { t, save, fail } = useEditor();
   return (
     <EditDialog
       lead={t("dialogs.contactLead")}

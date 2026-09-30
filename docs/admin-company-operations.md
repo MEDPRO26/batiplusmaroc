@@ -15,27 +15,99 @@ Company verification review drawer and the consolidated Company detail route.
    Deal, commission, and review events.
 2. `companyVerificationHistory` fills the verification event family because
    verification changes are not written to `marketplaceActivity`.
+3. `companyOperationalStatusHistory` provides suspension and reactivation
+   events without reading the cross-domain activity projection.
 
 No `companyActivity` table exists. Entity histories remain authoritative and
 the timeline is a read-only normalized projection.
 
 ### Indexes and bounds
 
-- `marketplaceActivity.by_companyId_and_createdAt` provides the primary
-  Company/newest-first access path.
-- `companyVerificationHistory.by_companyId_and_changedAt` is reused.
-- The public query clamps logical pages to 30 items and reads at most three
-  page sizes from either source per request. Same-timestamp continuation uses
-  Convex's implicit `_creationTime` index tiebreaker, so dense timestamp groups
-  remain bounded without skipping rows.
+- During phase one, marketplace activity is deliberately absent from the
+  timeline. Filtering the global `by_eventType_and_createdAt` index by Company
+  is not read-bounded, while `marketplaceActivity.by_companyId_and_createdAt`
+  remains staged and unavailable until phase two.
+- `companyVerificationHistory.by_companyId_and_changedAt` and
+  `companyOperationalStatusHistory.by_companyId_and_createdAt` remain enabled,
+  Company-scoped timeline sources.
+- The public query clamps logical pages to 30 items. Verification reads advance
+  through bounded windows of at most 900 Company-scoped rows. Same-timestamp
+  continuation uses Convex's implicit `_creationTime` index tiebreaker.
 - The cursor stores an independent `(timestamp, creation time, document ID)`
   boundary for each source. The backend merges the two bounded batches and
   returns the standard Convex pagination result shape used by
   `usePaginatedQuery`.
 
-### Included V1 events
+### Existing-table index rollout
+
+This branch uses a two-deployment rollout for every index added to a table that
+already exists on `origin/main`. Production must not receive phase-two query
+code until Convex reports every phase-one staged index as backfilled.
+
+Phase one declares these indexes with `staged: true` and does not query them:
+
+| Table | Staged index |
+| --- | --- |
+| `marketplaceActivity` | `by_companyId_and_createdAt` |
+| `marketplaceActivity` | `by_dealId_and_createdAt` |
+| `projectQuotes` | `by_companyId_and_createdAt` |
+| `companies` | `by_updatedAt` |
+| `companies` | `by_onboardingStatus_and_directoryListed` |
+| `companies` | `by_onboardingStatus_and_verificationStatus_and_directoryListed` |
+| `companies` | `by_directoryListed` |
+| `companies` | `by_operationalStatus` |
+| `companies` | `search_directory_v2` |
+
+The enabled `companies.search_directory` and `projects.search_marketplace`
+definitions remain identical to `origin/main` in phase one, avoiding an
+implicit rebuild under an existing index name. Temporary phase-one reads use
+only indexes that are already enabled on `origin/main`:
+
+- Company activity exposes only verification and operational-status histories.
+  It performs no `marketplaceActivity` query until the Company-scoped index is
+  promoted in phase two.
+- Deal/review audit assertions use
+  `marketplaceActivity.by_projectId_and_createdAt` and filter their bounded test
+  fixtures by Deal ID.
+- Admin Company project history merges existing
+  `projectQuotes.by_companyId_and_status` partitions and the new-table
+  Invitation index.
+- Admin Company filters use existing onboarding/verification indexes and
+  bounded post-index operational filtering. The unfiltered Admin list uses
+  built-in creation-time order; `updatedAt` is the temporary displayed activity
+  fallback.
+- Public Company discovery keeps the enabled `search_directory` filters and
+  existing onboarding/verification indexes, then excludes suspended rows after
+  the indexed read. A filtered search can return an empty progress page before
+  `isDone`; callers continue with `continueCursor`.
+
+Phase two is a separate change and deployment:
+
+1. Confirm all nine staged indexes are fully backfilled in the target
+   deployment; never infer this from a successful phase-one code push.
+2. Remove `staged: true` and deploy that schema change.
+3. Switch Company activity and latest-activity reads to
+   `marketplaceActivity.by_companyId_and_createdAt`, Deal-scoped activity reads
+   to `marketplaceActivity.by_dealId_and_createdAt`, Admin project history to
+   `projectQuotes.by_companyId_and_createdAt`, and Company Admin/directory reads
+   to the new Company indexes and `search_directory_v2`.
+4. Run the full quality gates and verify Company activity ordering, directory
+   pagination, and Admin Company filters against the target development
+   deployment.
+5. Remove phase-one fallbacks in that phase-two change. Remove the legacy
+   `search_directory` only after every caller uses `search_directory_v2`.
+
+Never combine phase-one staging and phase-two query activation in one
+deployment. Never use `--prod` or `convex deploy` while validating this plan.
+
+### Included timeline events
 
 - Verification: submitted/resubmitted, approved, rejected.
+- Operational status: needs attention, suspension, reactivation, and return to
+  normal.
+
+After phase-two index promotion, the timeline also restores:
+
 - Marketplace: Company invited, invitation accepted/declined, initial quote
   submitted, discussion opened.
 - Site work: site assessment invited/accepted/declined/cancelled and site visit
@@ -58,16 +130,14 @@ canonical stored names.
 - Message delivery/read state, notification delivery, and background technical
   events are excluded.
 - Profile/portfolio edit tracking is deferred to V1.5.
-- Operational status and suspension events are deferred to OC2.7.
 - Admin ↔ Company messaging events are deferred to OC2.4/OC2.5.
 
 ### Source precedence and duplicate handling
 
-`marketplaceActivity` wins for every event family it already represents.
-Quote, invitation, Deal, commission, and review histories are therefore not
-merged a second time. Verification history is merged only because no equivalent
-marketplace activity exists. This prevents two rows for the same semantic
-transition, such as a discussion opening or a commission payment.
+In phase one, only the two Company-scoped history tables are merged. After
+phase-two promotion, `marketplaceActivity` wins for every event family it
+represents; quote, invitation, Deal, commission, and review histories are not
+merged a second time. This prevents duplicate semantic transitions.
 
 ### Normalized Admin DTO
 

@@ -101,6 +101,31 @@ export async function readThenNavigate(
   navigate(destination);
 }
 
+export async function openNotificationWithLock({
+  lock,
+  notification,
+  destination,
+  markRead,
+  navigate,
+}: {
+  lock: { current: boolean };
+  notification: Pick<NotificationRecord, "id" | "readAt">;
+  destination: NotificationDestination;
+  markRead: (notificationId: Id<"notifications">) => Promise<unknown>;
+  navigate: (destination: NotificationDestination) => void;
+}) {
+  if (lock.current) return false;
+  lock.current = true;
+  let navigated = false;
+  try {
+    await readThenNavigate(notification, destination, markRead, navigate);
+    navigated = true;
+    return true;
+  } finally {
+    if (!navigated || destination === routes.notifications) lock.current = false;
+  }
+}
+
 export function resolveNotificationDestinationForOpen(
   notification: NotificationRecord,
   accountType: NotificationAccountType,

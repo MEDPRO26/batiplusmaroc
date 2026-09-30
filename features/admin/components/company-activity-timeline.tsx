@@ -3,7 +3,7 @@
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ADMIN_PRESS } from "@/features/admin/components/admin-shell";
@@ -41,6 +41,10 @@ export function CompanyActivityTimeline({
 
   const loadingFirstPage = status === "LoadingFirstPage";
   const empty = status === "Exhausted" && results.length === 0;
+
+  useEffect(() => {
+    if (status === "CanLoadMore" && results.length === 0) loadMore(limit ?? 20);
+  }, [limit, loadMore, results.length, status]);
 
   return (
     <section aria-labelledby="company-activity-title" className="rounded-[16px] border border-[#eef1f4] p-4">

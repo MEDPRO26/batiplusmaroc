@@ -22,6 +22,7 @@ import {
   notificationDestination,
   notificationIconCategory,
   notificationTranslationKey,
+  openNotificationWithLock,
   readThenNavigate,
   resolveNotificationDestinationForOpen,
   unreadBadgeLabel,
@@ -338,6 +339,98 @@ describe("notification presentation", () => {
     await readThenNavigate(row, routes.clientDashboard, markRead, navigate);
     expect(markRead).not.toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith(routes.clientDashboard);
+  });
+
+  test("releases the click lock after fallback navigation so a second notification opens", async () => {
+    const row = notification("proposal_received", {
+      type: "proposal",
+      id: "proposal-1" as Id<"projectQuotes">,
+    });
+    const lock = { current: false };
+    let finishFirstMarkRead!: () => void;
+    const markRead = vi.fn()
+      .mockImplementationOnce(() => new Promise<void>((resolve) => {
+        finishFirstMarkRead = resolve;
+      }))
+      .mockResolvedValue(undefined);
+    const navigate = vi.fn();
+    const firstOpen = openNotificationWithLock({
+      lock,
+      notification: row,
+      destination: routes.notifications,
+      markRead,
+      navigate,
+    });
+
+    await expect(openNotificationWithLock({
+      lock,
+      notification: row,
+      destination: routes.notifications,
+      markRead,
+      navigate,
+    })).resolves.toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
+
+    finishFirstMarkRead();
+    await expect(firstOpen).resolves.toBe(true);
+    expect(lock.current).toBe(false);
+    expect(navigate).toHaveBeenCalledTimes(1);
+
+    await expect(openNotificationWithLock({
+      lock,
+      notification: row,
+      destination: routes.notifications,
+      markRead,
+      navigate,
+    })).resolves.toBe(true);
+    expect(navigate).toHaveBeenCalledTimes(2);
+    expect(navigate).toHaveBeenNthCalledWith(1, routes.notifications);
+    expect(navigate).toHaveBeenNthCalledWith(2, routes.notifications);
+    expect(markRead).toHaveBeenCalledTimes(2);
+  });
+
+  test("keeps real navigation locked and suppresses duplicate router pushes", async () => {
+    const row = notification("proposal_received", {
+      type: "proposal",
+      id: "proposal-1" as Id<"projectQuotes">,
+    });
+    const lock = { current: false };
+    let finishMarkRead!: () => void;
+    const markRead = vi.fn(() => new Promise<void>((resolve) => {
+      finishMarkRead = resolve;
+    }));
+    const navigate = vi.fn();
+    const firstOpen = openNotificationWithLock({
+      lock,
+      notification: row,
+      destination: routes.clientDashboard,
+      markRead,
+      navigate,
+    });
+
+    await expect(openNotificationWithLock({
+      lock,
+      notification: row,
+      destination: routes.clientDashboard,
+      markRead,
+      navigate,
+    })).resolves.toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
+
+    finishMarkRead();
+    await expect(firstOpen).resolves.toBe(true);
+    expect(lock.current).toBe(true);
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith(routes.clientDashboard);
+
+    await expect(openNotificationWithLock({
+      lock,
+      notification: row,
+      destination: routes.clientDashboard,
+      markRead,
+      navigate,
+    })).resolves.toBe(false);
+    expect(navigate).toHaveBeenCalledTimes(1);
   });
 });
 

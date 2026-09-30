@@ -31,6 +31,7 @@ import type * as companies_directory from "../companies/directory.js";
 import type * as companies_index from "../companies/index.js";
 import type * as companies_operationalStatus from "../companies/operationalStatus.js";
 import type * as companyVerification_index from "../companyVerification/index.js";
+import type * as deals_commissionSummary from "../deals/commissionSummary.js";
 import type * as deals_company from "../deals/company.js";
 import type * as deals_constants from "../deals/constants.js";
 import type * as deals_index from "../deals/index.js";
@@ -135,6 +136,7 @@ declare const fullApi: ApiFromModules<{
   "companies/index": typeof companies_index;
   "companies/operationalStatus": typeof companies_operationalStatus;
   "companyVerification/index": typeof companyVerification_index;
+  "deals/commissionSummary": typeof deals_commissionSummary;
   "deals/company": typeof deals_company;
   "deals/constants": typeof deals_constants;
   "deals/index": typeof deals_index;

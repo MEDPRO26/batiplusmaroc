@@ -1,10 +1,37 @@
 const FALLBACK_TITLE = "Batiplus Maroc";
 const MAX_TEXT_LENGTH = 240;
+const PUSH_DEDUPE_CACHE = "batiplus-push-dedupe-v1";
+const MAX_DEDUPE_ENTRIES = 500;
+let pushDedupeQueue = Promise.resolve();
 
 function safeText(value, fallback = "") {
   return typeof value === "string" && value.trim() && value.length <= MAX_TEXT_LENGTH
     ? value.trim()
     : fallback;
+}
+
+function safeNotificationId(value) {
+  return typeof value === "string" && /^[a-zA-Z0-9_-]{1,128}$/.test(value) ? value : null;
+}
+
+async function claimVisibleNotification(notificationId) {
+  if (!notificationId) return true;
+  const claim = pushDedupeQueue.then(async () => {
+    const cache = await caches.open(PUSH_DEDUPE_CACHE);
+    const key = new Request(`${self.location.origin}/__push_dedupe__/${notificationId}`);
+    if (await cache.match(key)) return false;
+
+    // Persist before displaying. The queue makes check-and-store atomic within
+    // the active worker; Cache Storage preserves it across worker restarts.
+    await cache.put(key, new Response(null, { status: 204 }));
+    const keys = await cache.keys();
+    for (const staleKey of keys.slice(0, Math.max(0, keys.length - MAX_DEDUPE_ENTRIES))) {
+      await cache.delete(staleKey);
+    }
+    return true;
+  });
+  pushDedupeQueue = claim.then(() => undefined, () => undefined);
+  return await claim;
 }
 
 function safeLocale(value) {
@@ -65,6 +92,7 @@ async function safePushPayload(event) {
     ?? localeFromUrl(value.url)
     ?? localeFromWindows(windows);
   return {
+    notificationId: safeNotificationId(value.notificationId),
     title: safeText(value.title, FALLBACK_TITLE),
     body: safeText(value.body),
     locale,
@@ -76,6 +104,7 @@ async function safePushPayload(event) {
 self.addEventListener("push", (event) => {
   event.waitUntil((async () => {
     const payload = await safePushPayload(event);
+    if (!await claimVisibleNotification(payload.notificationId)) return;
     await self.registration.showNotification(payload.title, {
       body: payload.body,
       tag: payload.tag,

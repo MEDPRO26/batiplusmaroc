@@ -145,6 +145,9 @@ export default defineSchema({
     )),
     /** Identifies the currently active delivery attempt; cleared on terminal states. */
     pushDeliveryLeaseId: v.optional(v.string()),
+    /** Endpoints still awaiting a retry after a temporary delivery failure. */
+    pushPendingEndpoints: v.optional(v.array(v.string())),
+    pushAttemptCount: v.optional(v.number()),
     pushAttemptedAt: v.optional(v.number()),
     pushCompletedAt: v.optional(v.number()),
     pushDeliveredCount: v.optional(v.number()),
@@ -247,7 +250,9 @@ export default defineSchema({
     .index("by_createdAt", ["createdAt"])
     .searchIndex("search_marketplace", {
       searchField: "marketplaceSearchText",
-      filterFields: ["status", "visibility", "city", "primaryCategory", "timeline", "propertyType"],
+      // Phase 1 keeps the enabled origin/main definition unchanged. Removing
+      // budgetRange is deferred until the staged-index rollout is promoted.
+      filterFields: ["status", "visibility", "city", "primaryCategory", "budgetRange", "timeline", "propertyType"],
     }),
 
   projectStatusHistory: defineTable({
@@ -301,11 +306,17 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_projectId_and_createdAt", ["projectId", "createdAt"])
-    .index("by_companyId_and_createdAt", ["companyId", "createdAt"])
+    .index("by_companyId_and_createdAt", {
+      fields: ["companyId", "createdAt"],
+      staged: true,
+    })
     .index("by_eventType_and_createdAt", ["eventType", "createdAt"])
     .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"])
     .index("by_finalQuoteId_and_createdAt", ["finalQuoteId", "createdAt"])
-    .index("by_dealId_and_createdAt", ["dealId", "createdAt"]),
+    .index("by_dealId_and_createdAt", {
+      fields: ["dealId", "createdAt"],
+      staged: true,
+    }),
 
   siteAssessments: defineTable({
     projectId: v.id("projects"),
@@ -439,7 +450,10 @@ export default defineSchema({
     .index("by_projectId_and_companyId", ["projectId", "companyId"])
     .index("by_projectId_and_status", ["projectId", "status"])
     .index("by_companyId_and_status", ["companyId", "status"])
-    .index("by_companyId_and_createdAt", ["companyId", "createdAt"]),
+    .index("by_companyId_and_createdAt", {
+      fields: ["companyId", "createdAt"],
+      staged: true,
+    }),
 
   finalQuotes: defineTable({
     projectId: v.id("projects"),
@@ -460,6 +474,8 @@ export default defineSchema({
     changesRequestReason: v.optional(v.string()),
     acceptedAt: v.optional(v.number()),
     acceptedByUserId: v.optional(v.id("users")),
+    /** Transaction-local authorization for atomic Deal creation; removed on success. */
+    dealCreationNonce: v.optional(v.string()),
     declinedAt: v.optional(v.number()),
     declinedByUserId: v.optional(v.id("users")),
     declineReason: v.optional(v.string()),
@@ -543,6 +559,8 @@ export default defineSchema({
     .index("by_projectId", ["projectId"])
     .index("by_clientUserId", ["clientUserId"])
     .index("by_companyId", ["companyId"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_companyId_and_createdAt", ["companyId", "createdAt"])
     .index("by_companyId_and_status", ["companyId", "status"])
     .index("by_commissionDebtorCompanyId_and_createdAt", [
       "commissionDebtorCompanyId",
@@ -550,6 +568,11 @@ export default defineSchema({
     ])
     .index("by_commissionStatus_and_createdAt", ["commissionStatus", "createdAt"])
     .index("by_companyId_and_commissionStatus", ["companyId", "commissionStatus"])
+    .index("by_companyId_and_commissionStatus_and_createdAt", [
+      "companyId",
+      "commissionStatus",
+      "createdAt",
+    ])
     .index("by_status", ["status"])
     .index("by_acceptedFinalQuoteId", ["acceptedFinalQuoteId"]),
 
@@ -777,26 +800,30 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_slug", ["slug"])
-    .index("by_updatedAt", ["updatedAt"])
+    .index("by_updatedAt", { fields: ["updatedAt"], staged: true })
     .index("by_onboardingStatus", ["onboardingStatus"])
     .index("by_onboardingStatus_and_verificationStatus", [
       "onboardingStatus",
       "verificationStatus",
     ])
-    .index("by_onboardingStatus_and_directoryListed", [
-      "onboardingStatus",
-      "directoryListed",
-    ])
-    .index("by_onboardingStatus_and_verificationStatus_and_directoryListed", [
-      "onboardingStatus",
-      "verificationStatus",
-      "directoryListed",
-    ])
+    .index("by_onboardingStatus_and_directoryListed", {
+      fields: ["onboardingStatus", "directoryListed"],
+      staged: true,
+    })
+    .index("by_onboardingStatus_and_verificationStatus_and_directoryListed", {
+      fields: ["onboardingStatus", "verificationStatus", "directoryListed"],
+      staged: true,
+    })
     .index("by_verificationStatus", ["verificationStatus"])
-    .index("by_directoryListed", ["directoryListed"])
+    .index("by_directoryListed", { fields: ["directoryListed"], staged: true })
     /** Admin operations filter; a missing value means "normal". */
-    .index("by_operationalStatus", ["operationalStatus"])
+    .index("by_operationalStatus", { fields: ["operationalStatus"], staged: true })
     .searchIndex("search_directory", {
+      searchField: "directorySearchText",
+      // Keep the already-enabled origin/main index unchanged during phase 1.
+      filterFields: ["onboardingStatus", "verificationStatus"],
+    })
+    .searchIndex("search_directory_v2", {
       searchField: "directorySearchText",
       filterFields: [
         "onboardingStatus",
@@ -804,6 +831,7 @@ export default defineSchema({
         "operationalStatus",
         "directoryListed",
       ],
+      staged: true,
     }),
 
   companyMembers: defineTable({

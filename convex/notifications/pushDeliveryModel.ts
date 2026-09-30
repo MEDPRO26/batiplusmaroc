@@ -8,6 +8,8 @@ import {
 } from "./deliveryPolicy";
 
 const MAX_SUBSCRIPTIONS_PER_USER = 20;
+const MAX_PUSH_DELIVERY_ATTEMPTS = 3;
+const PUSH_RETRY_DELAY_MS = 60_000;
 export const PUSH_DELIVERY_LEASE_MS = 15 * 60_000;
 const pushLocaleValidator = v.union(v.literal("fr"), v.literal("en"));
 
@@ -81,9 +83,13 @@ export const claimMarketplacePush = internalMutation({
       .query("pushSubscriptions")
       .withIndex("by_userId", (q) => q.eq("userId", notification.recipientUserId))
       .take(MAX_SUBSCRIPTIONS_PER_USER);
+    const pendingEndpoints = notification.pushPendingEndpoints === undefined
+      ? null
+      : new Set(notification.pushPendingEndpoints);
     const localizedSubscriptions = subscriptions.filter(
       (subscription): subscription is typeof subscription & { locale: "fr" | "en" } =>
-        subscription.locale !== undefined,
+        subscription.locale !== undefined
+        && (pendingEndpoints === null || pendingEndpoints.has(subscription.endpoint)),
     );
     if (localizedSubscriptions.length === 0) {
       await ctx.db.patch(notification._id, {
@@ -101,6 +107,7 @@ export const claimMarketplacePush = internalMutation({
     await ctx.db.patch(notification._id, {
       pushDeliveryStatus: "processing",
       pushDeliveryLeaseId: args.leaseId,
+      pushAttemptCount: (notification.pushAttemptCount ?? 0) + 1,
       pushAttemptedAt: now,
     });
     // The schedule is committed atomically with the lease. A successful attempt
@@ -136,7 +143,7 @@ export const completeMarketplacePush = internalMutation({
     leaseId: v.string(),
     deliveredEndpoints: v.array(v.string()),
     permanentFailureEndpoints: v.array(v.string()),
-    failedCount: v.number(),
+    temporaryFailureEndpoints: v.array(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -169,13 +176,40 @@ export const completeMarketplacePush = internalMutation({
         removedCount += 1;
       }
     }
+    const deliveredCount = (notification.pushDeliveredCount ?? 0) + args.deliveredEndpoints.length;
+    const totalRemovedCount = (notification.pushRemovedCount ?? 0) + removedCount;
+    const failedCount = (notification.pushFailedCount ?? 0) + args.temporaryFailureEndpoints.length;
+    const retryEndpoints = [...new Set(args.temporaryFailureEndpoints)];
+    const canRetry =
+      retryEndpoints.length > 0
+      && (notification.pushAttemptCount ?? 1) < MAX_PUSH_DELIVERY_ATTEMPTS;
+
+    if (canRetry) {
+      await ctx.db.patch(notification._id, {
+        pushDeliveryStatus: undefined,
+        pushDeliveryLeaseId: undefined,
+        pushPendingEndpoints: retryEndpoints,
+        pushCompletedAt: undefined,
+        pushDeliveredCount: deliveredCount,
+        pushRemovedCount: totalRemovedCount,
+        pushFailedCount: failedCount,
+      });
+      await ctx.scheduler.runAfter(
+        PUSH_RETRY_DELAY_MS,
+        internal.notifications.pushDelivery.deliverMarketplacePush,
+        { notificationId: notification._id },
+      );
+      return null;
+    }
+
     await ctx.db.patch(notification._id, {
       pushDeliveryStatus: "completed",
       pushDeliveryLeaseId: undefined,
+      pushPendingEndpoints: undefined,
       pushCompletedAt: now,
-      pushDeliveredCount: args.deliveredEndpoints.length,
-      pushRemovedCount: removedCount,
-      pushFailedCount: args.failedCount,
+      pushDeliveredCount: deliveredCount,
+      pushRemovedCount: totalRemovedCount,
+      pushFailedCount: failedCount,
     });
     return null;
   },

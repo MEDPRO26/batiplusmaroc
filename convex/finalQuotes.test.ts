@@ -503,6 +503,54 @@ describe("immutable revision state machine", () => {
 });
 
 describe("atomic Deal creation at Final Quote acceptance", () => {
+  test("replaying a legacy accepted Final Quote without a Deal requires migration", async () => {
+    const s = await setup();
+    const { requested, submitted } = await prepareSubmittedFinalQuote(s, 450_000);
+    await s.t.run(async (ctx) => {
+      await ctx.db.patch(requested.finalQuoteId, {
+        status: "accepted",
+        acceptedAt: 10,
+        acceptedByUserId: s.clientId,
+        acceptedRevisionId: submitted.revisionId,
+        updatedAt: 10,
+      });
+      await ctx.db.patch(s.projectId, {
+        status: "company_selected",
+        selectedCompanyId: s.companyId,
+        selectedFinalQuoteId: requested.finalQuoteId,
+        selectedAt: 10,
+        updatedAt: 10,
+      });
+      const setting = await ctx.db
+        .query("marketplaceSettings")
+        .withIndex("by_key", (q) => q.eq("key", "global"))
+        .unique();
+      if (!setting) throw new Error("missing marketplace settings fixture");
+      await ctx.db.patch(setting._id, {
+        commissionTiers: [
+          { minAmountMad: 0, maxAmountMad: null, commissionRateBps: 700 },
+        ],
+        commissionConfigVersion: 2,
+      });
+    });
+
+    await expect(
+      asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      }),
+    ).rejects.toThrow("DEAL_RETROACTIVE_CREATION_REQUIRES_MIGRATION");
+
+    const deals = await s.t.run((ctx) =>
+      ctx.db
+        .query("deals")
+        .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+        .take(2),
+    );
+    expect(deals).toHaveLength(0);
+  });
+
   test.each([
     [299_999, 300, 8_999.97],
     [300_000, 300, 9_000],

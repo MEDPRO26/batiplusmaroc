@@ -124,8 +124,8 @@ export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
 function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVerified: boolean }) {
   const t = useTranslations("companyProfileManager");
   const initials = profile.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("");
-  const cover = useImageReplace(profile, "companyCover");
-  const logo = useImageReplace(profile, "companyLogo");
+  const cover = useImageReplace("companyCover");
+  const logo = useImageReplace("companyLogo");
   const coverUrl = cover.previewUrl ?? profile.coverImageUrl;
   const logoUrl = logo.previewUrl ?? profile.logoUrl;
 
@@ -196,8 +196,8 @@ function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVer
 }
 
 /** Replaces the cover or logo immediately: preview, upload, save, and a visible error on failure. */
-function useImageReplace(profile: ProfileManager, purpose: "companyLogo" | "companyCover") {
-  const { save, uploadImage } = useProfileSave(profile);
+function useImageReplace(purpose: "companyLogo" | "companyCover") {
+  const { saveImage, uploadImage } = useProfileSave();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -216,7 +216,7 @@ function useImageReplace(profile: ProfileManager, purpose: "companyLogo" | "comp
     setPreviewUrl(URL.createObjectURL(file));
     try {
       const token = await uploadImage(file, purpose);
-      await save(purpose === "companyLogo" ? { logoUploadToken: token } : { coverUploadToken: token });
+      await saveImage(purpose === "companyLogo" ? "logo" : "cover", token);
     } catch (caught) {
       setPreviewUrl(null);
       setError(errorMessage(caught));

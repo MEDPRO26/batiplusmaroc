@@ -125,7 +125,11 @@ describe("initial quote submission", () => {
     const caller = asUser(t, company.userId);
 
     const context = await caller.query(api.quotes.index.getSubmissionContext, { projectId });
-    expect(context).toMatchObject({ project: { id: projectId }, verificationStatus: "verified" });
+    expect(context).toMatchObject({
+      project: { id: projectId },
+      verificationStatus: "verified",
+      marketplaceWriteAllowed: true,
+    });
     const submitted = await caller.mutation(api.quotes.index.submitInitialQuote, {
       projectId,
       ...validQuote,
@@ -133,6 +137,24 @@ describe("initial quote submission", () => {
     expect(submitted.status).toBe("submitted");
     const quote = await caller.query(api.quotes.index.getMyQuote, { quoteId: submitted.quoteId });
     expect(quote).toMatchObject({ estimatedPrice: validQuote.estimatedPrice, project: { id: projectId } });
+  });
+
+  test("projects suspended marketplace eligibility for the direct quote route", async () => {
+    const { t, projectId, company } = await setup();
+    await t.run((ctx) => ctx.db.patch(company.companyId, { operationalStatus: "suspended" }));
+
+    const context = await asUser(t, company.userId).query(
+      api.quotes.index.getSubmissionContext,
+      { projectId },
+    );
+    expect(context).toMatchObject({
+      verificationStatus: "verified",
+      marketplaceWriteAllowed: false,
+    });
+    await expect(asUser(t, company.userId).mutation(
+      api.quotes.index.submitInitialQuote,
+      { projectId, ...validQuote },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
   });
 
   test("verified company submits once and creates immutable submission history", async () => {
@@ -577,6 +599,99 @@ describe("client reviews initial quotes", () => {
       )
       .take(2));
     expect(acceptedDedupeKeys).toHaveLength(1);
+  });
+
+  test("blocks a new discussion after Company suspension without side effects", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    const { quoteId } = await asUser(t, company.userId).mutation(
+      api.quotes.index.submitInitialQuote,
+      { projectId, ...validQuote },
+    );
+    await t.run((ctx) => ctx.db.patch(company.companyId, {
+      operationalStatus: "suspended",
+    }));
+
+    await expect(asUser(t, clientId).mutation(api.quotes.index.reviewInitialQuote, {
+      quoteId,
+      action: "open_discussion",
+    })).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+
+    const state = await t.run(async (ctx) => ({
+      quote: await ctx.db.get(quoteId),
+      conversations: await ctx.db
+        .query("conversations")
+        .withIndex("by_projectId_and_companyId", (q) => q
+          .eq("projectId", projectId)
+          .eq("companyId", company.companyId))
+        .take(10),
+      history: await ctx.db
+        .query("quoteStatusHistory")
+        .withIndex("by_quoteId_and_changedAt", (q) => q.eq("quoteId", quoteId))
+        .order("asc")
+        .take(10),
+      activity: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId))
+        .order("asc")
+        .take(10),
+      companyNotifications: await ctx.db
+        .query("notifications")
+        .withIndex("by_recipientUserId_and_createdAt", (q) =>
+          q.eq("recipientUserId", company.userId),
+        )
+        .take(10),
+    }));
+    expect(state.quote?.status).toBe("submitted");
+    expect(state.conversations).toEqual([]);
+    expect(state.history.map((event) => event.newStatus)).toEqual(["submitted"]);
+    expect(state.activity.map((event) => event.eventType)).toEqual([
+      "initial_quote_submitted",
+    ]);
+    expect(state.companyNotifications).toEqual([]);
+  });
+
+  test("keeps an existing discussion idempotently available after later suspension", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    const { quoteId } = await asUser(t, company.userId).mutation(
+      api.quotes.index.submitInitialQuote,
+      { projectId, ...validQuote },
+    );
+    const owner = asUser(t, clientId);
+    const opened = await owner.mutation(api.quotes.index.reviewInitialQuote, {
+      quoteId,
+      action: "open_discussion",
+    });
+    await t.run((ctx) => ctx.db.patch(company.companyId, {
+      operationalStatus: "suspended",
+    }));
+
+    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, {
+      quoteId,
+      action: "open_discussion",
+    })).resolves.toEqual(opened);
+
+    const state = await t.run(async (ctx) => ({
+      conversations: await ctx.db
+        .query("conversations")
+        .withIndex("by_projectId_and_companyId", (q) => q
+          .eq("projectId", projectId)
+          .eq("companyId", company.companyId))
+        .take(10),
+      activity: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId))
+        .take(10),
+      acceptedNotifications: await ctx.db
+        .query("notifications")
+        .withIndex("by_recipientUserId_and_dedupeKey", (q) => q
+          .eq("recipientUserId", company.userId)
+          .eq("dedupeKey", `proposal:${quoteId}:accepted`))
+        .take(10),
+    }));
+    expect(state.conversations).toHaveLength(1);
+    expect(state.activity.filter((event) => event.eventType === "discussion_opened"))
+      .toHaveLength(1);
+    expect(state.acceptedNotifications).toHaveLength(1);
   });
 
   test("missing active Company notification recipients roll back discussion opening", async () => {

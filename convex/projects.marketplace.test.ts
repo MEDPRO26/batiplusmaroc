@@ -25,7 +25,12 @@ async function seedUser(t: TestBackend, accountType: "client" | "company", suffi
   }));
 }
 
-async function seedCompany(t: TestBackend, verificationStatus: "draft" | "pending" | "verified" = "verified", onboardingStatus: "pending" | "completed" = "completed") {
+async function seedCompany(
+  t: TestBackend,
+  verificationStatus: "draft" | "pending" | "verified" = "verified",
+  onboardingStatus: "pending" | "completed" = "completed",
+  operationalStatus?: "normal" | "needs_attention" | "suspended",
+) {
   const userId = await seedUser(t, "company", crypto.randomUUID(), onboardingStatus);
   const companyId = await t.run((ctx) => ctx.db.insert("companies", {
     name: "Atlas Build",
@@ -33,6 +38,7 @@ async function seedCompany(t: TestBackend, verificationStatus: "draft" | "pendin
     description: "A completed construction company profile.",
     onboardingStatus,
     verificationStatus,
+    operationalStatus,
     createdAt: 10,
     updatedAt: 10,
   }));
@@ -368,6 +374,22 @@ describe("company project marketplace safe details", () => {
     expect(serialized).not.toContain("attachments");
     expect(serialized).not.toContain('"email"');
     expect(serialized).not.toContain('"phone"');
+  });
+
+  test.each([
+    ["normal", true],
+    ["needs_attention", true],
+    ["suspended", false],
+  ] as const)("returns quote eligibility for a verified %s company", async (operationalStatus, canSubmitQuote) => {
+    const t = convexTest(schema, modules);
+    const clientId = await seedUser(t, "client", `client-${operationalStatus}`);
+    const company = await seedCompany(t, "verified", "completed", operationalStatus);
+    const projectId = await seedProject(t, clientId);
+
+    await expect(asUser(t, company.userId).query(
+      api.projects.marketplace.getCompanyMarketplaceProject,
+      { projectId },
+    )).resolves.toMatchObject({ canSubmitQuote });
   });
 
   test("hides missing, non-published, and invite-only project details", async () => {

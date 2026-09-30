@@ -20,8 +20,8 @@ Inside one Convex mutation, the command:
 3. checks the submitted revision is current, unexpired, and eligible;
 4. validates the Project state transition to `company_selected`;
 5. marks the Final Quote `accepted` and the Project `company_selected`;
-6. calls `createDealFromAcceptedFinalQuote`, which derives the amount from the
-   accepted revision and calls `resolveCommissionForDealAmount()`;
+6. calls `createDealFromFreshFinalQuoteAcceptance`, which derives the amount
+   from the accepted revision and calls `resolveCommissionForDealAmount()`;
 7. creates the immutable Deal and Company-to-Batiplus commission obligation;
 8. appends status history and marketplace activity.
 9. notifies every active selected-Company member once with
@@ -34,6 +34,14 @@ Convex commits all of these writes atomically. A missing or corrupt commission
 schedule, relationship mismatch, authorization failure, or any other error
 rolls back the quote acceptance, Company selection, Deal, and audit writes.
 There is no frontend-controlled follow-up Deal creation step.
+
+An already-accepted Final Quote may only reuse its existing Deal. If a legacy
+accepted Final Quote has no Deal, retries and repair calls fail with
+`DEAL_RETROACTIVE_CREATION_REQUIRES_MIGRATION`; they never apply the current
+commission schedule retroactively. Any historical recovery requires an
+explicit, separately reviewed migration that supplies and validates the
+commission facts effective at the original Company-selection time. V1 does not
+provide an automatic recovery command.
 
 ## Trusted amount and immutable snapshots
 
@@ -164,6 +172,11 @@ double-clicks and concurrent retries converge on the first Deal. Repeating the
 same acceptance returns an idempotent result and does not duplicate the Deal,
 status history, `deal_created`, or `commission_due` activity. A different
 accepted Final Quote cannot create a second Deal for the same Project.
+
+The central fresh-acceptance creator also rechecks current Company marketplace
+write eligibility before resolving the commission or inserting the Deal. A
+suspended Company therefore cannot obtain a Deal through an alternate trusted
+caller, while an existing Deal remains safely reusable after later suspension.
 
 ## Flow convergence
 

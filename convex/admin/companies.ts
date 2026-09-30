@@ -51,6 +51,15 @@ const invitationStatusValidator = v.union(
   v.literal("accepted"),
   v.literal("declined"),
 );
+const INITIAL_QUOTE_STATUSES = [
+  "draft",
+  "submitted",
+  "viewed",
+  "shortlisted",
+  "discussion_open",
+  "declined",
+  "withdrawn",
+] as const satisfies readonly Doc<"projectQuotes">["status"][];
 
 const MAX_COMPANY_PAGE_SIZE = 50;
 const MAX_REVIEW_PAGE_SIZE = 30;
@@ -189,23 +198,44 @@ async function listCompaniesPage(
       return await ctx.db
         .query("companies")
         .withSearchIndex("search_directory", (q) => {
-          let filtered = q.search("directorySearchText", search).eq("operationalStatus", operationalStatus);
+          let filtered = q.search("directorySearchText", search);
           if (args.verificationStatus) filtered = filtered.eq("verificationStatus", args.verificationStatus);
           if (args.onboardingStatus) filtered = filtered.eq("onboardingStatus", args.onboardingStatus);
           return filtered;
         })
+        .filter((q) => q.eq(q.field("operationalStatus"), operationalStatus))
+        .paginate(args.paginationOpts);
+    }
+    if (args.onboardingStatus && args.verificationStatus) {
+      return await ctx.db
+        .query("companies")
+        .withIndex("by_onboardingStatus_and_verificationStatus", (q) => q
+          .eq("onboardingStatus", args.onboardingStatus!)
+          .eq("verificationStatus", args.verificationStatus!))
+        .filter((q) => q.eq(q.field("operationalStatus"), operationalStatus))
+        .order("desc")
+        .paginate(args.paginationOpts);
+    }
+    if (args.onboardingStatus) {
+      return await ctx.db
+        .query("companies")
+        .withIndex("by_onboardingStatus", (q) => q.eq("onboardingStatus", args.onboardingStatus!))
+        .filter((q) => q.eq(q.field("operationalStatus"), operationalStatus))
+        .order("desc")
+        .paginate(args.paginationOpts);
+    }
+    if (args.verificationStatus) {
+      return await ctx.db
+        .query("companies")
+        .withIndex("by_verificationStatus", (q) => q.eq("verificationStatus", args.verificationStatus!))
+        .filter((q) => q.eq(q.field("operationalStatus"), operationalStatus))
+        .order("desc")
         .paginate(args.paginationOpts);
     }
     return await ctx.db
       .query("companies")
-      .withIndex("by_operationalStatus", (q) => q.eq("operationalStatus", operationalStatus))
+      .filter((q) => q.eq(q.field("operationalStatus"), operationalStatus))
       .order("desc")
-      .filter((q) =>
-        q.and(
-          args.verificationStatus ? q.eq(q.field("verificationStatus"), args.verificationStatus) : true,
-          args.onboardingStatus ? q.eq(q.field("onboardingStatus"), args.onboardingStatus) : true,
-        ),
-      )
       .paginate(args.paginationOpts);
   }
   if (search) {
@@ -279,7 +309,6 @@ async function listCompaniesPage(
   }
   return await ctx.db
     .query("companies")
-    .withIndex("by_updatedAt")
     .order("desc")
     .paginate(args.paginationOpts);
 }
@@ -302,7 +331,7 @@ export const listCompanies = query({
     );
     const result = await listCompaniesPage(ctx, args);
     const page = await Promise.all(result.page.map(async (company) => {
-      const [services, members, latestActivity] = await Promise.all([
+      const [services, members] = await Promise.all([
         ctx.db
           .query("companyServices")
           .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
@@ -313,11 +342,6 @@ export const listCompanies = query({
             q.eq("companyId", company._id).eq("status", "active"),
           )
           .take(51),
-        ctx.db
-          .query("marketplaceActivity")
-          .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", company._id))
-          .order("desc")
-          .first(),
       ]);
       const reviewCount = company.reviewCount ?? 0;
       return {
@@ -333,7 +357,9 @@ export const listCompanies = query({
         rating: reviewCount > 0 && company.reviewRatingTotal !== undefined
           ? company.reviewRatingTotal / reviewCount
           : null,
-        latestActivityAt: latestActivity?.createdAt ?? company.updatedAt,
+        // Phase 1 cannot query the staged Company activity index. Company
+        // updates remain a safe bounded fallback for Admin list ordering/copy.
+        latestActivityAt: company.updatedAt,
         operationalStatus: getCompanyOperationalStatus(company),
       };
     }));
@@ -446,7 +472,17 @@ type SourceCursor = {
   beforeId: string | null;
   done: boolean;
 };
-type ProjectCursor = { version: 1; quotes: SourceCursor; invitations: SourceCursor };
+type LegacyProjectCursor = {
+  version: 1;
+  quotes: SourceCursor;
+  invitations: SourceCursor;
+};
+type ProjectCursor = {
+  version: 2;
+  quotes: SourceCursor;
+  invitations: SourceCursor;
+  pendingInvitationIds: string[];
+};
 const EMPTY_SOURCE_CURSOR: SourceCursor = {
   beforeAt: null,
   beforeCreationTime: null,
@@ -454,17 +490,20 @@ const EMPTY_SOURCE_CURSOR: SourceCursor = {
   done: false,
 };
 const MAX_PROJECT_PAGE_SIZE = 30;
+const MIN_INVITATION_SCAN_BATCH_SIZE = 30;
+const MAX_INVITATION_SCAN_ROWS = 120;
 
 function decodeProjectCursor(value: string | null): ProjectCursor {
   if (value === null) {
     return {
-      version: 1,
+      version: 2,
       quotes: { ...EMPTY_SOURCE_CURSOR },
       invitations: { ...EMPTY_SOURCE_CURSOR },
+      pendingInvitationIds: [],
     };
   }
   try {
-    const parsed = JSON.parse(value) as Partial<ProjectCursor>;
+    const parsed = JSON.parse(value) as Partial<ProjectCursor | LegacyProjectCursor>;
     const valid = (cursor: SourceCursor | undefined) => Boolean(
       cursor &&
       (cursor.beforeAt === null || typeof cursor.beforeAt === "number") &&
@@ -472,10 +511,26 @@ function decodeProjectCursor(value: string | null): ProjectCursor {
       (cursor.beforeId === null || typeof cursor.beforeId === "string") &&
       typeof cursor.done === "boolean",
     );
-    if (parsed.version !== 1 || !valid(parsed.quotes) || !valid(parsed.invitations)) {
-      throw new Error("invalid cursor");
+    if (parsed.version === 1 && valid(parsed.quotes) && valid(parsed.invitations)) {
+      return {
+        version: 2,
+        quotes: parsed.quotes!,
+        invitations: parsed.invitations!,
+        pendingInvitationIds: [],
+      };
     }
-    return parsed as ProjectCursor;
+    if (
+      parsed.version === 2 &&
+      valid(parsed.quotes) &&
+      valid(parsed.invitations) &&
+      Array.isArray(parsed.pendingInvitationIds) &&
+      parsed.pendingInvitationIds.length <= MAX_INVITATION_SCAN_ROWS &&
+      parsed.pendingInvitationIds.every((id) => typeof id === "string") &&
+      new Set(parsed.pendingInvitationIds).size === parsed.pendingInvitationIds.length
+    ) {
+      return parsed as ProjectCursor;
+    }
+    throw new Error("invalid cursor");
   } catch {
     throw new ConvexError("INVALID_ADMIN_COMPANY_PROJECT_CURSOR");
   }
@@ -488,19 +543,29 @@ async function loadQuoteBatch(
   batchSize: number,
 ) {
   if (cursor.done) return [];
-  if (cursor.beforeAt === null) {
-    return await ctx.db.query("projectQuotes")
-      .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId))
-      .order("desc").take(batchSize);
-  }
-  const same = await ctx.db.query("projectQuotes")
-    .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId).eq("createdAt", cursor.beforeAt!).lt("_creationTime", cursor.beforeCreationTime!))
-    .order("desc").take(batchSize);
-  if (same.length >= batchSize) return same;
-  const older = await ctx.db.query("projectQuotes")
-    .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId).lt("createdAt", cursor.beforeAt!))
-    .order("desc").take(batchSize - same.length);
-  return [...same, ...older];
+  const batches = await Promise.all(INITIAL_QUOTE_STATUSES.map(async (status) => {
+    const query = ctx.db.query("projectQuotes")
+      .withIndex("by_companyId_and_status", (q) =>
+        q.eq("companyId", companyId).eq("status", status),
+      )
+      .order("desc");
+    if (cursor.beforeAt === null) return await query.take(batchSize);
+    return await query
+      .filter((q) => q.or(
+        q.lt(q.field("createdAt"), cursor.beforeAt),
+        q.and(
+          q.eq(q.field("createdAt"), cursor.beforeAt),
+          q.lt(q.field("_creationTime"), cursor.beforeCreationTime ?? 0),
+        ),
+      ))
+      .take(batchSize);
+  }));
+  return batches
+    .flat()
+    .sort((left, right) => right.createdAt - left.createdAt
+      || right._creationTime - left._creationTime
+      || left._id.localeCompare(right._id))
+    .slice(0, batchSize);
 }
 
 async function loadInvitationBatch(
@@ -525,6 +590,118 @@ async function loadInvitationBatch(
   return [...same, ...older];
 }
 
+type InvitationWindow = {
+  rows: Doc<"invitations">[];
+  rawCursor: SourceCursor;
+  frontierUnknown: boolean;
+  frontierRow: Doc<"invitations"> | null;
+};
+
+function cursorAfterRow(
+  current: SourceCursor,
+  row: { _id: string; _creationTime: number; createdAt: number },
+  done: boolean,
+): SourceCursor {
+  return {
+    beforeAt: row.createdAt,
+    beforeCreationTime: row._creationTime,
+    beforeId: row._id,
+    done: current.done || done,
+  };
+}
+
+/**
+ * Scan past quote-backed invitations until enough eligible rows are visible to
+ * establish a page boundary, the source ends, or the bounded safety limit is
+ * reached. The raw cursor advances past every scanned row, while eligible rows
+ * not selected on this page are retained by ID in the bounded public cursor.
+ */
+async function loadInvitationWindow(
+  ctx: QueryCtx,
+  companyId: Id<"companies">,
+  cursor: SourceCursor,
+  pendingInvitationIds: string[],
+  batchSize: number,
+  targetEligibleRows: number,
+): Promise<InvitationWindow> {
+  const normalizedPendingIds = pendingInvitationIds.map((rawId) => {
+    const invitationId = ctx.db.normalizeId("invitations", rawId);
+    if (invitationId === null) {
+      throw new ConvexError("INVALID_ADMIN_COMPANY_PROJECT_CURSOR");
+    }
+    return invitationId;
+  });
+  const pendingRows = await Promise.all(normalizedPendingIds.map((id) => ctx.db.get(id)));
+  if (pendingRows.some((row) => row !== null && row.companyId !== companyId)) {
+    throw new ConvexError("INVALID_ADMIN_COMPANY_PROJECT_CURSOR");
+  }
+  const pendingQuoteBacked = await Promise.all(pendingRows.map(async (invitation) =>
+    invitation === null
+      ? true
+      : await ctx.db.query("projectQuotes")
+        .withIndex("by_projectId_and_companyId", (q) =>
+          q.eq("projectId", invitation.projectId).eq("companyId", companyId),
+        )
+        .first() !== null,
+  ));
+  const rows = pendingRows
+    .flatMap((row, index) => row !== null && !pendingQuoteBacked[index] ? [row] : [])
+    .sort((left, right) => right.createdAt - left.createdAt
+      || right._creationTime - left._creationTime
+      || left._id.localeCompare(right._id));
+  let scanCursor = cursor;
+  let scannedRows = 0;
+  let frontierRow: Doc<"invitations"> | null = null;
+
+  while (scannedRows < MAX_INVITATION_SCAN_ROWS && rows.length < targetEligibleRows) {
+    const requestSize = Math.min(
+      Math.max(batchSize, MIN_INVITATION_SCAN_BATCH_SIZE),
+      MAX_INVITATION_SCAN_ROWS - scannedRows,
+    );
+    const batch = await loadInvitationBatch(ctx, companyId, scanCursor, requestSize);
+    if (batch.length === 0) {
+      return {
+        rows,
+        rawCursor: { ...scanCursor, done: true },
+        frontierUnknown: false,
+        frontierRow: null,
+      };
+    }
+    const batchQuoteBacked = await Promise.all(batch.map(async (invitation) =>
+      await ctx.db.query("projectQuotes")
+        .withIndex("by_projectId_and_companyId", (q) =>
+          q.eq("projectId", invitation.projectId).eq("companyId", companyId),
+        )
+        .first() !== null,
+    ));
+    scannedRows += batch.length;
+    rows.push(...batch.flatMap((row, index) => batchQuoteBacked[index] ? [] : [row]));
+    frontierRow = batch.at(-1)!;
+    scanCursor = cursorAfterRow(
+      scanCursor,
+      batch.at(-1)!,
+      batch.length < requestSize,
+    );
+
+    if (batch.length < requestSize) {
+      return {
+        rows,
+        rawCursor: scanCursor,
+        frontierUnknown: false,
+        frontierRow: null,
+      };
+    }
+  }
+
+  const frontierUnknown = !scanCursor.done && rows.length < targetEligibleRows;
+  return {
+    rows,
+    rawCursor: scanCursor,
+    frontierUnknown,
+    frontierRow: frontierUnknown ? frontierRow : null,
+  };
+}
+
 type ProjectCandidate =
   | { kind: "quote"; row: Doc<"projectQuotes">; rawIndex: number }
   | { kind: "invitation"; row: Doc<"invitations">; rawIndex: number };
@@ -536,28 +713,23 @@ function compareProjectCandidates(left: ProjectCandidate, right: ProjectCandidat
     left.row._id.localeCompare(right.row._id);
 }
 
-function nextSourceCursor<T extends { _id: string; _creationTime: number; createdAt: number }>(
+function nextQuoteCursor(
   current: SourceCursor,
-  rows: T[],
+  rows: Doc<"projectQuotes">[],
   selectedRawIndices: number[],
-  consumeWholeBatch: boolean,
   batchSize: number,
 ): SourceCursor {
   if (current.done) return current;
-  if (rows.length === 0 && consumeWholeBatch) return { ...current, done: true };
-  const consumedThrough = consumeWholeBatch
-    ? rows.length
-    : selectedRawIndices.length > 0
-      ? Math.max(...selectedRawIndices) + 1
-      : 0;
+  if (rows.length === 0) return { ...current, done: true };
+  const consumedThrough = selectedRawIndices.length > 0
+    ? Math.max(...selectedRawIndices) + 1
+    : 0;
   if (consumedThrough === 0) return current;
-  const row = rows[consumedThrough - 1];
-  return {
-    beforeAt: row.createdAt,
-    beforeCreationTime: row._creationTime,
-    beforeId: row._id,
-    done: consumedThrough === rows.length && rows.length < batchSize,
-  };
+  return cursorAfterRow(
+    current,
+    rows[consumedThrough - 1],
+    consumedThrough === rows.length && rows.length < batchSize,
+  );
 }
 
 export const listCompanyProjectsDeals = query({
@@ -573,41 +745,58 @@ export const listCompanyProjectsDeals = query({
     const pageSize = Math.min(MAX_PROJECT_PAGE_SIZE, Math.max(1, Math.floor(args.paginationOpts.numItems)));
     const batchSize = pageSize * 2;
     const cursor = decodeProjectCursor(args.paginationOpts.cursor);
-    const [quotes, invitations] = await Promise.all([
+    const [quotes, invitationWindow] = await Promise.all([
       loadQuoteBatch(ctx, args.companyId, cursor.quotes, batchSize),
-      loadInvitationBatch(ctx, args.companyId, cursor.invitations, batchSize),
+      loadInvitationWindow(
+        ctx,
+        args.companyId,
+        cursor.invitations,
+        cursor.pendingInvitationIds,
+        batchSize,
+        pageSize,
+      ),
     ]);
-    const invitationHasQuote = await Promise.all(invitations.map(async (invitation) =>
-      await ctx.db.query("projectQuotes")
-        .withIndex("by_projectId_and_companyId", (q) =>
-          q.eq("projectId", invitation.projectId).eq("companyId", args.companyId),
-        )
-        .first() !== null,
-    ));
+    const invitations = invitationWindow.rows;
     const candidates: ProjectCandidate[] = [
       ...quotes.map((row, rawIndex) => ({ kind: "quote" as const, row, rawIndex })),
-      ...invitations.flatMap((row, rawIndex) => invitationHasQuote[rawIndex]
-        ? []
-        : [{ kind: "invitation" as const, row, rawIndex }]),
+      ...invitations.map((row, rawIndex) => ({
+        kind: "invitation" as const,
+        row,
+        rawIndex,
+      })),
     ];
-    const selected = candidates.sort(compareProjectCandidates).slice(0, pageSize);
-    const consumeWholeBatch = selected.length < pageSize;
+    const invitationFrontier = invitationWindow.frontierUnknown
+      ? ({
+          kind: "invitation" as const,
+          row: invitationWindow.frontierRow!,
+          rawIndex: -1,
+        })
+      : null;
+    // If the bounded invitation scan ends before exposing enough eligible
+    // rows, only emit candidates known to be newer than its raw frontier.
+    // This prevents older quotes from overtaking an unseen invitation.
+    const safeCandidates = invitationFrontier === null
+      ? candidates
+      : candidates.filter((candidate) =>
+          compareProjectCandidates(candidate, invitationFrontier) <= 0,
+        );
+    const selected = safeCandidates.sort(compareProjectCandidates).slice(0, pageSize);
+    const selectedInvitationIds = new Set(selected.flatMap((item) =>
+      item.kind === "invitation" ? [item.row._id] : [],
+    ));
+    const pendingInvitationIds = invitations
+      .filter((invitation) => !selectedInvitationIds.has(invitation._id))
+      .map((invitation) => invitation._id);
     const nextCursor: ProjectCursor = {
-      version: 1,
-      quotes: nextSourceCursor(
+      version: 2,
+      quotes: nextQuoteCursor(
         cursor.quotes,
         quotes,
         selected.filter((item) => item.kind === "quote").map((item) => item.rawIndex),
-        consumeWholeBatch,
         batchSize,
       ),
-      invitations: nextSourceCursor(
-        cursor.invitations,
-        invitations,
-        selected.filter((item) => item.kind === "invitation").map((item) => item.rawIndex),
-        consumeWholeBatch,
-        batchSize,
-      ),
+      invitations: invitationWindow.rawCursor,
+      pendingInvitationIds,
     };
     const hydrated = await Promise.all(selected.map(async (candidate) => {
       const [project, deal, invitation] = await Promise.all([
@@ -639,7 +828,10 @@ export const listCompanyProjectsDeals = query({
     const page = hydrated.filter((item): item is NonNullable<typeof item> => item !== null);
     return {
       page,
-      isDone: nextCursor.quotes.done && nextCursor.invitations.done,
+      isDone:
+        nextCursor.quotes.done &&
+        nextCursor.invitations.done &&
+        nextCursor.pendingInvitationIds.length === 0,
       continueCursor: JSON.stringify(nextCursor),
     };
   },

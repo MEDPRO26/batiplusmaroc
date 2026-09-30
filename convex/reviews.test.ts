@@ -198,7 +198,8 @@ describe("Client Deal reviews", () => {
       company: await ctx.db.get(state.companyId),
       activity: await ctx.db
         .query("marketplaceActivity")
-        .withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", state.dealId))
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", state.projectId))
+        .filter((q) => q.eq(q.field("dealId"), state.dealId))
         .take(10),
     }));
     expect(result.reviews).toHaveLength(0);
@@ -217,7 +218,7 @@ describe("Client Deal reviews", () => {
       comment: "Excellent construction work delivered on time.", moderationStatus: "visible",
     });
     expect(await state.t.run((ctx) => ctx.db.get(state.companyId))).toMatchObject({ reviewCount: 1, reviewRatingTotal: 5 });
-    const activity = await state.t.run((ctx) => ctx.db.query("marketplaceActivity").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", state.dealId)).take(10));
+    const activity = await state.t.run((ctx) => ctx.db.query("marketplaceActivity").withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", state.projectId)).filter((q) => q.eq(q.field("dealId"), state.dealId)).take(10));
     expect(activity).toEqual([expect.objectContaining({ eventType: "review_created", reviewId: created.reviewId, actorUserId: state.clientUserId, newStatus: "visible", metadata: { rating: 5 } })]);
   });
 
@@ -309,7 +310,7 @@ describe("Review aggregates, public profile, and moderation", () => {
     expect(await first.t.run((ctx) => ctx.db.get(first.companyId))).toMatchObject({ reviewCount: 2, reviewRatingTotal: 8 });
     profile = await first.t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "atlas-build" });
     expect(profile).toMatchObject({ rating: 4, reviewCount: 2 });
-    const events = await first.t.run((ctx) => ctx.db.query("marketplaceActivity").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", first.dealId)).order("asc").take(10));
+    const events = await first.t.run((ctx) => ctx.db.query("marketplaceActivity").withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", first.projectId)).filter((q) => q.eq(q.field("dealId"), first.dealId)).order("asc").take(10));
     expect(events.map((event) => event.eventType)).toEqual(["review_created", "review_hidden", "review_restored"]);
     expect(await notificationsFor(first.t, first.companyUserId)).toHaveLength(
       notificationCountBeforeModeration,
@@ -330,7 +331,7 @@ describe("Review aggregates, public profile, and moderation", () => {
     await expect(admin.query(api.admin.reviews.listReviews, { status: "visible", search: "Atlas" })).resolves.toHaveLength(1);
     await admin.mutation(api.admin.reviews.setReviewVisibility, args);
     await expect(admin.mutation(api.admin.reviews.setReviewVisibility, args)).resolves.toEqual({ status: "hidden", changed: false });
-    const events = await state.t.run((ctx) => ctx.db.query("marketplaceActivity").withIndex("by_dealId_and_createdAt", (q) => q.eq("dealId", state.dealId)).take(10));
+    const events = await state.t.run((ctx) => ctx.db.query("marketplaceActivity").withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", state.projectId)).filter((q) => q.eq(q.field("dealId"), state.dealId)).take(10));
     expect(events.filter((event) => event.eventType === "review_hidden")).toHaveLength(1);
   });
 });

@@ -23,9 +23,15 @@ export function getCompanyOperationalStatus(
 export function assertCompanyMarketplaceWriteAllowed(
   company: Pick<Doc<"companies">, "operationalStatus">,
 ) {
-  if (getCompanyOperationalStatus(company) === "suspended") {
+  if (!isCompanyMarketplaceWriteAllowed(company)) {
     throw new ConvexError("COMPANY_MARKETPLACE_SUSPENDED");
   }
+}
+
+export function isCompanyMarketplaceWriteAllowed(
+  company: Pick<Doc<"companies">, "operationalStatus">,
+) {
+  return getCompanyOperationalStatus(company) !== "suspended";
 }
 
 export async function requireCompanyMarketplaceWriteAllowed(

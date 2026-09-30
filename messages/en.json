@@ -2716,6 +2716,8 @@
     "searchPlaceholder": "Search project or company",
     "loading": "Loading commission obligations…",
     "empty": "No commission obligations match these filters.",
+    "loadMore": "Load more",
+    "loadingMore": "Loading…",
     "columns": { "project": "Project", "company": "Company", "dealAmount": "Deal amount", "commission": "Commission owed", "statusLabel": "Status", "created": "Created", "action": "Action" },
     "view": "View details",
     "commissionOf": "{rate} of {amount}",
@@ -3482,6 +3484,8 @@
     "verificationTitle": "Company verification required",
     "verificationLead": "Verify your company before submitting a proposal.",
     "verifyAction": "Verify company",
+    "suspendedTitle": "Proposal submission unavailable",
+    "suspendedLead": "Your company’s marketplace access is temporarily suspended. Contact Batiplus support for next steps.",
     "detail": {
       "title": "Your proposal",
       "status": "Status",

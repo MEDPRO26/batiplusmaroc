@@ -3,6 +3,10 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser, requireVerifiedCompanyMarketplaceUser } from "../companies/access";
+import {
+  isCompanyMarketplaceWriteAllowed,
+  requireCompanyMarketplaceWriteAllowed,
+} from "../companies/operationalStatus";
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import {
   projectCategoryValidator,
@@ -294,6 +298,7 @@ export const getSubmissionContext = query({
         v.literal("verified"),
         v.literal("rejected"),
       ),
+      marketplaceWriteAllowed: v.boolean(),
       activeQuoteId: v.union(v.id("projectQuotes"), v.null()),
       latestQuoteId: v.union(v.id("projectQuotes"), v.null()),
     }),
@@ -319,6 +324,7 @@ export const getSubmissionContext = query({
     return {
       project: projectSummary(project),
       verificationStatus: company.verificationStatus,
+      marketplaceWriteAllowed: isCompanyMarketplaceWriteAllowed(company),
       activeQuoteId: existing?._id ?? null,
       latestQuoteId: recentQuotes[0]?._id ?? null,
     };
@@ -582,6 +588,7 @@ export const reviewInitialQuote = mutation({
           conversationId: await ensureConversationForQuote(ctx, quote, project, userId),
         };
       }
+      await requireCompanyMarketplaceWriteAllowed(ctx, quote.companyId);
       const status = await appendStatusHistory(ctx, quote, nextStatus, userId, reason || undefined);
       const conversationId = await ensureConversationForQuote(
         ctx,

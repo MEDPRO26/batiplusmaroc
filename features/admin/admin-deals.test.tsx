@@ -6,7 +6,7 @@ import fr from "@/messages/fr.json";
 
 const convex = vi.hoisted(() => ({ result: [] as unknown[] }));
 vi.mock("next/font/google", () => ({ Outfit: () => ({ className: "font-outfit" }) }));
-vi.mock("convex/react", () => ({ useQuery: () => convex.result, useMutation: () => vi.fn(), usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }) }));
+vi.mock("convex/react", () => ({ useQuery: () => convex.result, useMutation: () => vi.fn(), usePaginatedQuery: () => ({ results: convex.result, status: "Exhausted", loadMore: vi.fn() }) }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => <a href={href} {...props}>{children}</a>,
   usePathname: () => "/admin/deals",

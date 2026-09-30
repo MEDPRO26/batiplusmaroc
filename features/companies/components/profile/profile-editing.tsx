@@ -14,8 +14,7 @@ import { mapConvexFailure } from "@/lib/errors";
 
 export type ProfileManager = FunctionReturnType<typeof api.companies.index.getProfileManager>;
 type UpdateArgs = FunctionArgs<typeof api.companies.index.updatePublicProfile>;
-export type ProfilePatch = Partial<Omit<UpdateArgs, "logoUploadToken" | "coverUploadToken">> &
-  Pick<Partial<UpdateArgs>, "logoUploadToken" | "coverUploadToken">;
+export type ProfilePatch = UpdateArgs;
 
 const imageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxLogoBytes = 5 * 1024 * 1024;
@@ -23,37 +22,28 @@ const maxCoverBytes = 10 * 1024 * 1024;
 
 class ProfileSaveError extends Error {}
 
-/**
- * `updatePublicProfile` persists the whole public profile. Focused editors send the
- * stored values with only their own section replaced, so saving one section can
- * never overwrite unsaved edits elsewhere.
- */
-export function useProfileSave(profile: ProfileManager) {
+/** Each focused editor sends only the fields owned by its section. */
+export function useProfileSave() {
   const t = useTranslations("companyProfileManager");
   const tUx = useTranslations("ux");
   const update = useMutation(api.companies.index.updatePublicProfile);
+  const setImage = useMutation(api.companies.index.setCompanyPublicImage);
   const requestUpload = useAction(api.storage.r2.requestPublicMediaUpload);
   const verifyUpload = useAction(api.storage.r2.verifyPublicMediaUpload);
   const { showToast } = useToast();
 
   async function save(patch: ProfilePatch) {
-    const companySize = patch.companySize ?? profile.companySize;
-    if (!companySize) throw new ProfileSaveError(t("validation.companySize"));
     try {
-      await update({
-        name: profile.name,
-        description: profile.description,
-        city: profile.city,
-        phone: profile.phone,
-        website: profile.website,
-        yearsExperience: profile.yearsExperience ?? undefined,
-        foundedYear: profile.foundedYear ?? undefined,
-        languages: profile.languages,
-        services: profile.services,
-        serviceAreas: profile.serviceAreas,
-        ...patch,
-        companySize,
-      });
+      await update(patch);
+    } catch (caught) {
+      throw new ProfileSaveError(mapConvexFailure(caught, tUx).message);
+    }
+    showToast(t("success"));
+  }
+
+  async function saveImage(kind: "logo" | "cover", uploadToken: string) {
+    try {
+      await setImage({ kind, uploadToken });
     } catch (caught) {
       throw new ProfileSaveError(mapConvexFailure(caught, tUx).message);
     }
@@ -76,7 +66,7 @@ export function useProfileSave(profile: ProfileManager) {
     }
   }
 
-  return { save, uploadImage };
+  return { save, saveImage, uploadImage };
 }
 
 export function errorMessage(caught: unknown) {
@@ -286,5 +276,5 @@ export function readList<T extends string>(form: FormData, name: string) {
 
 export function optionalNumber(form: FormData, name: string) {
   const value = String(form.get(name) ?? "").trim();
-  return value === "" ? undefined : Number(value);
+  return value === "" ? null : Number(value);
 }

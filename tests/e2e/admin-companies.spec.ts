@@ -38,15 +38,15 @@ function state(locale: "en" | "fr") {
         legalRepresentative: "Sara El Amrani", phone: "+212612345678", address: "12 avenue Hassan II, Rabat",
         submittedAt: createdAt, status: "pending", latestRejectionReason: null, documents: [], history: [],
       },
-      "admin.deals.listCommissionObligations": [{
-        dealId: "deal-atlas", projectId: "project-atlas", projectTitle: "Villa Atlas", companyId, companyName: "Atlas Build",
-        agreedAmountMad: 100000, commissionRateBps: 500, commissionAmountMad: 5000, commissionConfigVersion: 3,
-        commissionStatus: "due", createdAt, paidAt: null, paidByAdminName: null, paymentReference: null, paymentNote: null,
-      }],
       "adminCompanyMessaging.getAdminConversation": null,
       "admin.companyOperationalStatus.get": { status: "needs_attention" },
     },
     __paginatedQueries: {
+      "admin.deals.listCommissionObligations": { status: "Exhausted", results: [{
+        dealId: "deal-atlas", projectId: "project-atlas", projectTitle: "Villa Atlas", companyId, companyName: "Atlas Build",
+        agreedAmountMad: 100000, commissionRateBps: 500, commissionAmountMad: 5000, commissionConfigVersion: 3,
+        commissionStatus: "due", createdAt, paidAt: null, paidByAdminName: null, paymentReference: null, paymentNote: null,
+      }] },
       "admin.companies.listCompanies": { status: "Exhausted", results: [{ companyId, name: "Atlas Build", legalName: "Atlas Build SARL", city: "Rabat", verificationStatus: "pending", onboardingStatus: "completed", services: ["renovation"], activeMemberCount: 1, reviewCount: 1, rating: 5, latestActivityAt: createdAt, operationalStatus: "needs_attention" }] },
       "admin.companyOperationalStatus.listHistory": { status: "Exhausted", results: [] },
       "admin.companies.listCompanyProjectsDeals": { status: "Exhausted", results: [{ id: "quote:one", companyId, projectId: "project-atlas", projectTitle: "Villa Atlas", projectStatus: "in_progress", source: "proposal", initialQuoteStatus: "discussion_open", invitationStatus: null, dealId: "deal-atlas", dealStatus: "active", agreedAmountMad: 100000, commissionStatus: "due", createdAt, selectedAt: createdAt, completedAt: null }] },

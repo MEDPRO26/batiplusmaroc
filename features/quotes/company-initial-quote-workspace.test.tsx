@@ -76,6 +76,7 @@ describe("company initial quote workspace", () => {
     const html = render(locale, {
       project,
       verificationStatus: "verified",
+      marketplaceWriteAllowed: true,
       activeQuoteId: null,
       latestQuoteId: null,
     });
@@ -91,6 +92,7 @@ describe("company initial quote workspace", () => {
     const html = render("en", {
       project,
       verificationStatus: "verified",
+      marketplaceWriteAllowed: true,
       activeQuoteId: null,
       latestQuoteId: null,
     });
@@ -105,11 +107,25 @@ describe("company initial quote workspace", () => {
     const html = render("en", {
       project,
       verificationStatus: "pending",
+      marketplaceWriteAllowed: true,
       activeQuoteId: null,
       latestQuoteId: null,
     });
     expect(html).toContain("Company verification required");
     expect(html).toContain("Verify your company before submitting a proposal.");
+    expect(html).not.toContain("quote-message");
+  });
+
+  test("replaces the direct-route form when marketplace access is suspended", () => {
+    const html = render("en", {
+      project,
+      verificationStatus: "verified",
+      marketplaceWriteAllowed: false,
+      activeQuoteId: null,
+      latestQuoteId: null,
+    });
+    expect(html).toContain("Proposal submission unavailable");
+    expect(html).toContain("temporarily suspended");
     expect(html).not.toContain("quote-message");
   });
 
@@ -119,6 +135,7 @@ describe("company initial quote workspace", () => {
       {
         project,
         verificationStatus: "verified",
+        marketplaceWriteAllowed: true,
         activeQuoteId: quoteId,
         latestQuoteId: quoteId,
       },
@@ -156,7 +173,7 @@ describe("company initial quote workspace", () => {
     state.queryResults = [];
     const html = render(
       locale,
-      { project, verificationStatus: "verified", activeQuoteId: quoteId, latestQuoteId: quoteId },
+      { project, verificationStatus: "verified", marketplaceWriteAllowed: true, activeQuoteId: quoteId, latestQuoteId: quoteId },
       {
         id: quoteId, projectId, companyId, message: "We can deliver this renovation with a dedicated site team.",
         estimatedPrice: 185000, currency: "MAD", estimatedDuration: 75, availableStartDate: "2099-01-15",
