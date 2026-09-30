@@ -59,6 +59,7 @@
     "postProject": "Publier un projet",
     "myProjects": "Mes projets",
     "messages": "Messages",
+    "commissions": "Commissions",
     "searchLabel": "Rechercher des entreprises et des services",
     "searchPlaceholder": "Rechercher une entreprise ou un service",
     "companySearchLabel": "Rechercher des projets",
@@ -72,6 +73,25 @@
     "portfolio": "Portfolio",
     "clientMain": "Navigation client",
     "companyMain": "Navigation entreprise",
+    "companySuspended": {
+      "message": "Votre accès à la marketplace est temporairement suspendu. Vous pouvez toujours gérer votre profil, vos documents, vos messages et vos obligations en cours.",
+      "support": "Contacter le support Batiplus"
+    },
+    "company": {
+      "findWork": "Trouver des projets",
+      "findProjects": "Trouver des projets",
+      "proposals": "Mes propositions",
+      "invitations": "Invitations",
+      "growPresence": "Développer votre visibilité",
+      "companyProfile": "Profil entreprise",
+      "portfolio": "Portfolio",
+      "manageWork": "Gérer les projets",
+      "activeProjects": "Projets actifs",
+      "projectHistory": "Historique des projets",
+      "finances": "Finances",
+      "commissions": "Commissions",
+      "batiplus": "Batiplus"
+    },
     "profileMenu": {
       "openMenu": "Ouvrir le menu du compte",
       "client": {
@@ -86,7 +106,17 @@
         "fallbackName": "Compte entreprise",
         "companyProfile": "Profil entreprise",
         "portfolio": "Portfolio",
-        "workspace": "Espace entreprise"
+        "workspace": "Espace entreprise",
+        "viewPublicProfile": "Voir le profil public",
+        "editProfile": "Modifier le profil entreprise",
+        "settings": "Paramètres du profil",
+        "verification": "Vérification",
+        "verificationStatus": {
+          "draft": "Non soumise",
+          "pending": "En cours",
+          "verified": "Vérifiée",
+          "rejected": "Refusée"
+        }
       }
     }
   },
@@ -169,7 +199,7 @@
       "items": {
         "0": {
           "title": "Un projet clair, dès le départ",
-          "text": "Décrivez les travaux, la ville et le budget. Les entreprises comprennent ce que vous attendez.",
+          "text": "Décrivez les travaux, la ville et le délai. Les entreprises comprennent ce que vous attendez.",
           "alt": "Villa contemporaine prête à être lancée comme projet"
         },
         "1": {
@@ -270,37 +300,31 @@
       "projects": {
         "tab": "Projets ouverts",
         "title": "Des projets prêts à recevoir des propositions",
-        "description": "Besoin, ville et budget au même endroit. Répondez à ceux qui correspondent à votre métier.",
+        "description": "Besoin, ville et délai au même endroit. Répondez à ceux qui correspondent à votre métier.",
         "cta": "Voir tous les projets",
         "0": {
           "title": "Villa 180 m² — gros œuvre et structure",
-          "text": "Construction d’une villa à Founty. Fondations, structure et toiture. Accès chantier déjà préparé.",
-          "budget": "850 000 – 1 200 000 DH"
+          "text": "Construction d’une villa à Founty. Fondations, structure et toiture. Accès chantier déjà préparé."
         },
         "1": {
           "title": "Rénovation complète d’un appartement 120 m²",
-          "text": "Second œuvre, électricité et finitions à Casablanca. Le client veut un planning clair avant de démarrer.",
-          "budget": "220 000 – 310 000 DH"
+          "text": "Second œuvre, électricité et finitions à Casablanca. Le client veut un planning clair avant de démarrer."
         },
         "2": {
           "title": "Immeuble R+3 — reprise structurelle",
-          "text": "Renforcement et gros œuvre à Rabat. Plans disponibles. Recherche d’une entreprise expérimentée.",
-          "budget": "1,4 – 1,9 M DH"
+          "text": "Renforcement et gros œuvre à Rabat. Plans disponibles. Recherche d’une entreprise expérimentée."
         },
         "3": {
           "title": "Mise aux normes électriques d’une villa",
-          "text": "Tableau, câblage et éclairage à Marrakech. Intervention sur maison occupée, créneaux à convenir.",
-          "budget": "45 000 – 70 000 DH"
+          "text": "Tableau, câblage et éclairage à Marrakech. Intervention sur maison occupée, créneaux à convenir."
         },
         "4": {
           "title": "Piscine 8 × 4 m et aménagement extérieur",
-          "text": "Terrassement, bassin et plage à Agadir. Le client compare 2 à 3 entreprises vérifiées.",
-          "budget": "180 000 – 260 000 DH"
+          "text": "Terrassement, bassin et plage à Agadir. Le client compare 2 à 3 entreprises vérifiées."
         },
         "5": {
           "title": "Aménagement intérieur d’une résidence",
-          "text": "Cuisine, menuiserie et finitions à Tanger. Moodboard fourni. Début souhaité dans 6 semaines.",
-          "budget": "95 000 – 140 000 DH"
+          "text": "Cuisine, menuiserie et finitions à Tanger. Moodboard fourni. Début souhaité dans 6 semaines."
         }
       },
       "companies": {
@@ -696,7 +720,7 @@
       "cards": {
         "0": {
           "title": "Publiez votre projet (c’est gratuit)",
-          "body": "Décrivez les travaux, la ville et le budget. Les entreprises comprennent le besoin avant de proposer.",
+          "body": "Décrivez les travaux, la ville et le délai. Les entreprises comprennent le besoin avant de proposer.",
           "cta": "Publier un projet"
         },
         "1": {
@@ -731,7 +755,7 @@
       "steps": {
         "0": {
           "title": "Vous publiez le projet",
-          "body": "Travaux, ville et budget. Le brief est clair pour les entreprises."
+          "body": "Travaux, ville et délai. Le brief est clair pour les entreprises."
         },
         "1": {
           "title": "Proposition ou invitation",
@@ -767,7 +791,7 @@
         },
         "3": {
           "question": "Quels travaux puis-je confier ?",
-          "answer": "Gros œuvre, second œuvre, rénovation, construction de maison, électricité, plomberie, menuiserie, piscine et aménagement. Indiquez la ville, le budget et le périmètre dans le projet.",
+          "answer": "Gros œuvre, second œuvre, rénovation, construction de maison, électricité, plomberie, menuiserie, piscine et aménagement. Indiquez la ville, le délai et le périmètre dans le projet.",
           "more": "Parcourir les entreprises"
         },
         "4": {
@@ -919,6 +943,26 @@
     "companyProjects": {
       "title": "Trouver des projets — Batiplus",
       "description": "Parcourez les projets de construction validés et accessibles aux entreprises sur Batiplus."
+    },
+    "companyInvitations": {
+      "title": "Invitations aux projets — Batiplus",
+      "description": "Consultez et traitez les invitations directes envoyées par les clients Batiplus."
+    },
+    "companySettings": {
+      "title": "Paramètres de l’entreprise — Batiplus",
+      "description": "Gérez le profil, les coordonnées et la vérification de votre entreprise."
+    },
+    "companyProposals": {
+      "title": "Mes propositions — Batiplus",
+      "description": "Suivez les propositions envoyées par votre entreprise aux clients Batiplus."
+    },
+    "companyWork": {
+      "title": "Projets actifs — Batiplus",
+      "description": "Suivez les projets remportés par votre entreprise sur Batiplus."
+    },
+    "companyCommissions": {
+      "title": "Commissions de l’entreprise — Batiplus",
+      "description": "Consultez les commissions dues à Batiplus par votre entreprise et leur statut de paiement."
     },
     "signUpClient": {
       "title": "Inscription client — Batiplus",
@@ -1186,6 +1230,8 @@
         "verificationBadge": "Badge de vérification",
         "portfolio": "Réalisations",
         "messages": "Messages",
+        "invitations": "Invitations",
+        "commissions": "Commissions",
         "contact": "Centre d’aide"
       }
     },
@@ -1284,7 +1330,7 @@
           "title": "3. Obligations des clients",
           "paragraphs": [
             "Les clients peuvent publier des projets, inviter des entreprises, consulter des propositions, ouvrir une discussion après intérêt mutuel, et sélectionner une entreprise.",
-            "Les descriptions de projet doivent être sincères, licites et suffisamment précises. Il est interdit de publier des budgets trompeurs, de faux projets ou des contenus portant atteinte aux droits de tiers.",
+            "Les descriptions de projet doivent être sincères, licites et suffisamment précises. Il est interdit de publier des informations trompeuses, de faux projets ou des contenus portant atteinte aux droits de tiers.",
             "Le client reste seul responsable du choix de l’entreprise, de la négociation du contrat de travaux, des accès chantier, des autorisations et des paiements dans le cadre de tout accord hors plateforme."
           ]
         },
@@ -1475,7 +1521,6 @@
     "post": "Publier un projet",
     "title": "Titre du projet",
     "description": "Description",
-    "budget": "Budget",
     "location": "Localisation",
     "category": "Catégorie",
     "submit": "Publier",
@@ -1550,9 +1595,65 @@
     "portfolioPreview": "Réalisations publiées",
     "portfolioAlt": "Réalisation publiée : {title}",
     "portfolioFallback": "Aucune réalisation publiée pour le moment.",
-    "portfolioCount": "{count, plural, =0 {Aucune réalisation publiée} one {# réalisation publiée} other {# réalisations publiées affichées}}"
+    "portfolioCount": "{count, plural, =0 {Aucune réalisation publiée} one {# réalisation publiée} other {# réalisations publiées affichées}}",
+    "reviewCount": "{count, plural, one {# avis} other {# avis}}"
   },
   "companyProfileManager": {
+    "profileView": {
+      "settings": "Paramètres du profil",
+      "about": "À propos de l’entreprise",
+      "showMore": "Voir plus",
+      "showLess": "Voir moins",
+      "companyInfo": "Informations de l’entreprise",
+      "notSpecified": "Pas encore renseigné",
+      "verificationDetails": "Détails de la vérification",
+      "uploading": "Téléversement…",
+      "published": "Publiées",
+      "drafts": "Brouillons",
+      "portfolioEmpty": "Aucune réalisation publiée. Les réalisations publiées sont ce que les clients voient en premier.",
+      "draftsEmpty": "Aucun brouillon.",
+      "viewAllPortfolio": "Voir les {count} réalisations",
+      "reviews": "Projets réalisés et avis",
+      "reviewsEmpty": "Les avis clients apparaissent ici après des projets Batiplus terminés."
+    },
+    "dialogs": {
+      "save": "Enregistrer",
+      "selected": "Sélection",
+      "noneSelected": "Aucune sélection pour le moment.",
+      "remove": "Retirer {item}",
+      "noMatches": "Aucun résultat.",
+      "searchCities": "Rechercher une ville",
+      "identityTitle": "Nom et localisation",
+      "identityLead": "Comment les clients trouvent et reconnaissent votre entreprise.",
+      "editIdentity": "Modifier le nom et la localisation",
+      "editAbout": "Modifier la présentation de l’entreprise",
+      "descriptionHelp": "Entre 20 et 1 000 caractères.",
+      "infoLead": "Les informations clés que les clients comparent.",
+      "editInfo": "Modifier les informations de l’entreprise",
+      "editLanguages": "Modifier les langues",
+      "servicesLead": "Quels services votre entreprise propose-t-elle ?",
+      "editServices": "Modifier les services",
+      "areasLead": "Où votre entreprise intervient-elle ?",
+      "editAreas": "Modifier les zones d’intervention",
+      "contactLead": "Comment Batiplus et les clients peuvent joindre votre entreprise.",
+      "editContact": "Modifier les coordonnées"
+    },
+    "settings": {
+      "title": "Paramètres",
+      "navLabel": "Sections des paramètres",
+      "profile": "Profil de l’entreprise",
+      "contact": "Coordonnées",
+      "verification": "Vérification",
+      "openProfile": "Ouvrir mon profil",
+      "viewAsClients": "Voir le profil comme les clients",
+      "businessContact": "Coordonnées professionnelles",
+      "businessContactLead": "Les coordonnées de votre entreprise.",
+      "account": "Compte",
+      "accountLead": "Vos identifiants de connexion restent privés et n’apparaissent jamais sur votre profil.",
+      "email": "E-mail de connexion",
+      "status": "Statut",
+      "verificationPublicNote": "Les clients voient uniquement si votre entreprise est vérifiée. Les informations légales et les documents restent privés."
+    },
     "eyebrow": "Espace entreprise",
     "title": "Gérer le profil entreprise",
     "lead": "Mettez à jour les informations publiques visibles par les clients.",
@@ -1715,6 +1816,7 @@
     "invite": "Inviter à un projet",
     "quote": "Demander un devis",
     "ctaSoon": "Cette action sera disponible prochainement.",
+    "quoteSoon": "Les demandes directes de devis ne sont pas encore disponibles.",
     "overview": "Présentation",
     "stats": "Chiffres clés",
     "statYears": "Années d’expérience",
@@ -1771,6 +1873,13 @@
     "portfolioTitleCount": "Portfolio ({count})",
     "portfolioEmpty": "Cette entreprise n’a pas encore publié de réalisation.",
     "projectImageAlt": "Réalisation : {title}",
+    "reviewsNone": "Aucun avis pour le moment",
+    "reviewCount": "{count, plural, one {# avis} other {# avis}}",
+    "reviewsTitle": "Avis clients ({count})",
+    "reviewsEmpty": "Cette entreprise n’a pas encore d’avis public.",
+    "ratingOutOfFive": "{rating} étoiles sur 5",
+    "reviewBy": "Avis de {name}",
+    "reviewerAnonymous": "Client",
     "service": {
       "houseConstruction": "Construction de maisons",
       "renovation": "Rénovation",
@@ -1796,10 +1905,32 @@
   "portfolioManager": {
     "eyebrow": "Espace entreprise",
     "title": "Vos réalisations",
-    "lead": "Présentez vos meilleurs travaux sur votre profil public.",
+    "lead": "Montrez à vos clients les chantiers que vous avez réalisés. Les réalisations publiées apparaissent sur votre profil public.",
     "viewProfile": "Voir le profil public",
     "add": "Ajouter une réalisation",
     "listTitle": "Liste des réalisations",
+    "addTileLead": "Les clients jugent un chantier sur photos. Ajoutez une réalisation avec une belle image de couverture.",
+    "surfaceValue": "{value} m²",
+    "photoCount": "{count} photos",
+    "moreActions": "Autres actions pour {title}",
+    "sections": {
+      "basics": "Informations principales",
+      "basicsLead": "Ce qui a été réalisé, et où.",
+      "details": "Détails du projet",
+      "detailsLead": "Informations facultatives qui aident les clients à comparer.",
+      "media": "Photos"
+    },
+    "placeholders": {
+      "title": "ex. Villa contemporaine à Agadir",
+      "description": "Décrivez les travaux, les matériaux et le résultat."
+    },
+    "uploadCover": "Téléverser l’image de couverture",
+    "replaceCover": "Remplacer la couverture",
+    "fileRules": "JPG, PNG ou WebP · 10 Mo maximum",
+    "galleryCount": "{count} / {max} photos",
+    "addPhotos": "Ajouter des photos",
+    "clearNewPhotos": "Retirer les photos ajoutées",
+    "draftHint": "Les nouvelles réalisations sont enregistrées en brouillon. Publiez-les depuis la carte.",
     "empty": "Ajoutez votre première réalisation.",
     "imageAlt": "Photo de {title}",
     "previewAlt": "Aperçu de l’image de couverture sélectionnée",
@@ -1882,16 +2013,11 @@
         "lead": "Un titre clair et une courte description aident les entreprises à comprendre vos besoins."
       },
       "4": {
-        "eyebrow": "Budget",
-        "title": "Quel est votre budget estimé ?",
-        "lead": "Une fourchette suffit. Choisissez « Je ne sais pas encore » si besoin."
-      },
-      "5": {
         "eyebrow": "Calendrier",
         "title": "Quand souhaitez-vous commencer ?",
         "lead": "Choisissez l’option la plus proche. Vous pouvez rester flexible."
       },
-      "6": {
+      "5": {
         "eyebrow": "Vérification",
         "title": "Vérifiez votre projet",
         "lead": "Relisez les informations avant de publier. Vous pouvez modifier chaque section."
@@ -1905,7 +2031,6 @@
       "propertyType": "Choisissez un type de bien.",
       "surface": "Saisissez une surface positive ou cochez « Je ne sais pas ».",
       "description": "Décrivez votre projet en au moins 20 caractères.",
-      "budget": "Choisissez une fourchette de budget.",
       "timeline": "Choisissez un délai.",
       "image": "Choisissez des images JPG, PNG ou WebP de 10 Mo maximum.",
       "document": "Choisissez des documents PDF de 15 Mo maximum."
@@ -1961,15 +2086,6 @@
       "land": "Terrain",
       "other": "Autre"
     },
-    "budgetOptions": {
-      "under_50000": "Moins de 50 000 MAD",
-      "50000_100000": "50 000–100 000 MAD",
-      "100000_250000": "100 000–250 000 MAD",
-      "250000_500000": "250 000–500 000 MAD",
-      "500000_1000000": "500 000–1 000 000 MAD",
-      "1000000_plus": "1 000 000+ MAD",
-      "unknown": "Je ne sais pas encore"
-    },
     "timelineOptions": {
       "asap": "Dès que possible",
       "within_1_month": "Dans le mois",
@@ -2000,7 +2116,6 @@
       "surface": "Surface",
       "description": "Description",
       "details": "Détails",
-      "budget": "Budget",
       "timeline": "Calendrier",
       "files": "Fichiers",
       "fileCount": "{images} images · {documents} documents"
@@ -2027,7 +2142,6 @@
     "untitled": "Projet sans titre",
     "locationPending": "Localisation non renseignée",
     "notProvided": "Non renseigné",
-    "budget": "Budget",
     "timeline": "Calendrier",
     "submitted": "Envoyé le {date}",
     "updated": "Mis à jour le {date}",
@@ -2067,7 +2181,7 @@
     "notFoundTitle": "Projet indisponible",
     "images": "Photos du projet",
     "imageAlt": "Photo {number} du projet {title}",
-    "description": "Description",
+    "description": "Description du projet",
     "documents": "Documents privés",
     "documentsPrivate": "Les informations de ces documents sont visibles uniquement par les personnes autorisées.",
     "fileSizeKb": "{count} Ko",
@@ -2088,15 +2202,70 @@
       "companySelected": "Entreprise sélectionnée",
       "openConversation": "Ouvrir la conversation"
     },
+    "completion": {
+      "eyebrow": "Clôture de l’accord",
+      "loading": "Chargement du statut de clôture…",
+      "activeTitle": "Travaux en cours",
+      "activeLead": "Lorsque les travaux convenus sont entièrement terminés, confirmez leur achèvement pour clôturer l’accord et le projet.",
+      "action": "Confirmer l’achèvement",
+      "confirmTitle": "Confirmer que les travaux sont terminés ?",
+      "confirmLead": "Cette action terminera l’accord et le projet et rendra l’accord éligible à un avis. Elle ne modifie pas le statut de paiement de la commission.",
+      "cancel": "Annuler",
+      "confirmAction": "Terminer l’accord",
+      "saving": "Clôture…",
+      "completedTitle": "Travaux terminés",
+      "completedLead": "Vous avez confirmé l’achèvement le {date}.",
+      "reviewEligible": "Cet accord est désormais éligible à un avis.",
+      "errors": {
+        "alreadyCompleted": "Cet accord est déjà terminé.",
+        "notCompletable": "Cet accord ne peut pas être terminé depuis son état actuel.",
+        "generic": "Impossible de terminer l’accord. Veuillez réessayer."
+      }
+    },
+    "review": {
+      "loading": "Chargement de votre avis…",
+      "title": "Partagez votre expérience",
+      "lead": "Votre avis aide les futurs clients à évaluer cette entreprise.",
+      "action": "Laisser un avis",
+      "dialogTitle": "Évaluer l’entreprise",
+      "dialogLead": "Évaluez le travail de l’entreprise pour cette transaction terminée. Votre avis apparaîtra sur son profil public.",
+      "ratingLabel": "Note",
+      "starRating": "{rating} étoiles",
+      "ratingOutOfFive": "{rating} étoiles sur 5",
+      "commentLabel": "Votre avis",
+      "commentPlaceholder": "Décrivez la qualité, la communication et la réalisation des travaux.",
+      "commentHelp": "10 à 2 000 caractères · {count} saisis",
+      "cancel": "Annuler",
+      "submit": "Publier l’avis",
+      "saving": "Publication…",
+      "submittedTitle": "Avis publié",
+      "submittedMeta": "Publié le {date}",
+      "hiddenStatus": "Non visible publiquement pour le moment",
+      "errors": {
+        "rating": "Choisissez une note de 1 à 5 étoiles.",
+        "comment": "Rédigez un avis de 10 à 2 000 caractères.",
+        "alreadyExists": "Vous avez déjà publié un avis pour cette transaction.",
+        "notEligible": "Cette transaction ne peut pas recevoir d’avis.",
+        "generic": "L’avis n’a pas pu être publié. Veuillez réessayer."
+      }
+    },
     "history": {
-      "title": "Historique du statut",
+      "title": "Activité du projet",
       "transition": "{from} → {to}",
       "meta": "{date} · {actor}",
       "actor": {
         "client": "Client",
         "staff": "Équipe Batiplus"
-      }
-    }
+      },
+      "count": "{count, plural, one {# mise à jour} other {# mises à jour}}"
+    },
+    "projectInformation": "Informations du projet",
+    "publishedOn": "Publié le {date}",
+    "createdOn": "Créé le {date}",
+    "showMore": "Afficher plus",
+    "showLess": "Afficher moins",
+    "dates": "Dates clés",
+    "publishedLabel": "Publié"
   },
   "clientDashboard": {
     "eyebrow": "Tableau de bord client",
@@ -2227,6 +2396,61 @@
     "ctaCompanyAction": "Aller à Trouver des projets"
   },
   "messages": {
+    "context": {
+      "title": "Détails du projet",
+      "open": "Afficher les détails du projet",
+      "close": "Masquer les détails du projet",
+      "partyLabel": "Contact de la conversation",
+      "roleClient": "Client",
+      "roleCompany": "Entreprise",
+      "viewProject": "Voir le projet",
+      "progressTitle": "Avancement du projet",
+      "loading": "Chargement de l’avancement…",
+      "stages": {
+        "proposal": "Proposition envoyée",
+        "discussion": "Discussion ouverte",
+        "siteVisit": "Visite de site",
+        "finalQuote": "Devis final",
+        "selection": "Sélection de l’entreprise",
+        "deal": "Contrat"
+      },
+      "states": {
+        "done": "terminé",
+        "current": "en cours",
+        "upcoming": "pas commencé",
+        "skipped": "ignoré",
+        "stopped": "arrêté"
+      },
+      "detail": {
+        "siteVisit": {
+          "optional": "Facultative — non demandée",
+          "notRequired": "Non requise",
+          "invited": "Visite demandée",
+          "accepted": "Acceptée — date à fixer",
+          "dateProposed": "Date proposée : {date}",
+          "scheduled": "Planifiée : {date}",
+          "completed": "Effectuée",
+          "declined": "Refusée",
+          "cancelled": "Annulée"
+        },
+        "finalQuote": {
+          "requested": "Demandé par le client",
+          "submitted": "Envoyé — en attente du client",
+          "changesRequested": "Modifications demandées",
+          "accepted": "Accepté",
+          "declined": "Refusé",
+          "withdrawn": "Retiré"
+        },
+        "selection": {
+          "selected": "Entreprise sélectionnée"
+        },
+        "deal": {
+          "inProgress": "En cours",
+          "completed": "Terminé",
+          "cancelled": "Annulé"
+        }
+      }
+    },
     "title": "Messages",
     "searchConversations": "Rechercher des conversations",
     "searchConversationsPlaceholder": "Rechercher des conversations",
@@ -2279,8 +2503,122 @@
     "closedNotice": "Cette conversation est fermée et n’accepte plus de nouveaux messages."
   },
   "notifications": {
+    "metaTitle": "Notifications — Batiplus",
+    "metaDescription": "Consultez vos notifications Batiplus.",
+    "eyebrow": "Votre activité",
     "title": "Notifications",
-    "empty": "Vous n’avez aucune notification."
+    "bell": "Ouvrir les notifications",
+    "bellWithUnread": "Ouvrir les notifications, {count, plural, one {# notification non lue} other {# notifications non lues}}",
+    "unreadCount": "{count, plural, =0 {Aucune notification non lue} one {# notification non lue} other {# notifications non lues}}",
+    "markAll": "Tout marquer comme lu",
+    "viewAll": "Voir toutes les notifications",
+    "loadMore": "Charger plus",
+    "loadingMore": "Chargement…",
+    "emptyTitle": "Vous êtes à jour.",
+    "emptyDescription": "Les actualités de vos projets et conversations apparaîtront ici.",
+    "openUnread": "Non lue : {notification}",
+    "errorTitle": "Notifications indisponibles",
+    "error": "Impossible de mettre à jour vos notifications. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "dismiss": "Fermer",
+    "fallbackCompany": "Entreprise",
+    "fallbackCompanyMember": "Membre de l’entreprise",
+    "events": {
+      "proposal_received": "{companyName} a envoyé une proposition pour {projectTitle}.",
+      "proposal_accepted": "La discussion est ouverte pour votre proposition sur {projectTitle}.",
+      "invitation_received": "Vous avez été invité à travailler sur {projectTitle}.",
+      "invitation_accepted": "{companyName} a accepté votre invitation pour {projectTitle}.",
+      "invitation_declined": "{companyName} a refusé votre invitation pour {projectTitle}.",
+      "message_received": "Nouveau message de {actorDisplayName} au sujet de {projectTitle}.",
+      "site_visit_proposed": "{actorDisplayName} a proposé une visite technique pour {projectTitle}.",
+      "site_visit_confirmed": "La visite technique pour {projectTitle} est confirmée.",
+      "site_visit_rescheduled": "{actorDisplayName} a proposé un nouvel horaire de visite pour {projectTitle}.",
+      "site_visit_cancelled": "La visite technique pour {projectTitle} a été annulée.",
+      "final_quote_submitted": "{companyName} a envoyé un devis final pour {projectTitle}.",
+      "final_quote_accepted": "Votre devis final pour {projectTitle} a été accepté.",
+      "deal_created": "Une transaction a été créée pour {projectTitle}.",
+      "commission_due": "Une commission de {amountMad} MAD est due pour {projectTitle}.",
+      "commission_paid": "La commission de {amountMad} MAD pour {projectTitle} a été marquée comme payée.",
+      "deal_completed": "{projectTitle} a été marqué comme terminé.",
+      "review_received": "Vous avez reçu un avis de {rating} étoiles pour {projectTitle}.",
+      "company_verification_approved": "{companyName} est désormais vérifiée.",
+      "company_verification_rejected": "La vérification de {companyName} nécessite votre attention.",
+      "admin_company_message_received": "Batiplus vous a envoyé un nouveau message opérationnel.",
+      "company_admin_message_received": "{companyName} a envoyé un nouveau message opérationnel à Batiplus.",
+      "company_suspended": "L’accès de {companyName} à la marketplace a été suspendu. Consultez l’assistance Batiplus pour connaître les prochaines étapes.",
+      "company_reactivated": "L’accès de {companyName} à la marketplace a été rétabli.",
+      "fallback": "Mise à jour de la marketplace"
+    }
+  },
+  "notificationPreferences": {
+    "eyebrow": "Paramètres de diffusion",
+    "title": "Préférences de notification",
+    "description": "Gérez les notifications push et cet appareil. Les notifications dans l’application restent dans votre boîte.",
+    "inApp": {
+      "title": "Notifications dans l’application",
+      "alwaysOn": "Toujours actives",
+      "description": "Les actualités importantes de la marketplace Batiplus restent toujours disponibles dans votre boîte de notifications. Elles ne peuvent pas être désactivées."
+    },
+    "push": {
+      "title": "Notifications push du navigateur",
+      "description": "Autorisez les actualités marketplace éligibles à utiliser les notifications push.",
+      "toggle": "Activer la préférence des notifications push",
+      "previewNotice": "Cette préférence ne demande aucune autorisation au navigateur. L’autorisation de cet appareil se gère séparément ci-dessous."
+    },
+    "device": {
+      "title": "Cet appareil",
+      "description": "Demandez l’autorisation du navigateur sur cet appareil, puis envoyez éventuellement un test.",
+      "status": {
+        "loading": "Vérification de la compatibilité du navigateur…",
+        "unsupported": "Les notifications push ne sont pas prises en charge sur cet appareil.",
+        "not_enabled": "Non activées sur cet appareil.",
+        "denied": "L’autorisation des notifications du navigateur est refusée.",
+        "enabled": "Activées sur cet appareil.",
+        "error": "La configuration des notifications du navigateur n’a pas pu aboutir."
+      },
+      "globalPreferenceOff": "Cet appareil est enregistré, mais les notifications marketplace restent désactivées tant que votre préférence globale n’est pas activée.",
+      "deniedHelp": "Modifiez l’autorisation dans les réglages de votre navigateur pour activer cet appareil. Batiplus ne redemandera pas l’autorisation tant qu’elle est refusée.",
+      "enable": "Activer sur cet appareil",
+      "disable": "Désactiver sur cet appareil",
+      "sendTest": "Envoyer une notification de test",
+      "working": "Traitement…",
+      "testSuccess": "Notification de test envoyée.",
+      "testError": "La notification de test n’a pas pu être envoyée. Veuillez réessayer."
+    },
+    "categories": {
+      "title": "Catégories de notifications push",
+      "description": "Choisissez quels événements marketplace peuvent envoyer une notification push. Les notifications dans l’application restent disponibles.",
+      "internalRoleNotice": "Les catégories sont masquées, car cet espace ne reçoit actuellement aucune notification d’événement marketplace.",
+      "projects": {
+        "title": "Projets",
+        "description": "Propositions et invitations.",
+        "toggle": "Activer les notifications push pour les projets"
+      },
+      "messages": {
+        "title": "Messages",
+        "description": "Nouveaux messages de conversation.",
+        "toggle": "Activer les notifications push pour les messages"
+      },
+      "site_visits": {
+        "title": "Visites techniques",
+        "description": "Propositions, confirmations, reprogrammations et annulations.",
+        "toggle": "Activer les notifications push pour les visites techniques"
+      },
+      "commercial": {
+        "title": "Activité commerciale",
+        "description": "Devis finaux, commissions, achèvement et avis.",
+        "toggle": "Activer les notifications push pour l’activité commerciale"
+      },
+      "account": {
+        "title": "Compte et vérification",
+        "description": "Décisions de vérification de l’entreprise.",
+        "toggle": "Activer les notifications push pour le compte et la vérification"
+      }
+    },
+    "save": "Enregistrer les préférences",
+    "saving": "Enregistrement…",
+    "success": "Préférences mises à jour.",
+    "error": "Impossible d’enregistrer vos préférences. Veuillez réessayer."
   },
   "adminDashboard": {
     "sampleNote": "Aperçu visuel. Ces chiffres ne sont pas encore connectés aux données Batiplus.",
@@ -2367,6 +2705,89 @@
     "accountFallback": "Administrateur",
     "footerTeam": "Équipe Batiplus"
   },
+  "adminDeals": {
+    "metaTitle": "Suivi des commissions | Batiplus",
+    "metaDescription": "Suivre les obligations de commission des entreprises pour les transactions Batiplus.",
+    "title": "Transactions et commissions",
+    "lead": "Suivez les commissions dues à Batiplus par les entreprises sélectionnées. L’enregistrement du paiement est uniquement une confirmation administrative.",
+    "filtersLabel": "Statut de la commission",
+    "status": { "all": "Toutes", "due": "Due", "paid": "Payée" },
+    "searchLabel": "Rechercher des transactions",
+    "searchPlaceholder": "Rechercher un projet ou une entreprise",
+    "loading": "Chargement des obligations de commission…",
+    "empty": "Aucune obligation de commission ne correspond à ces filtres.",
+    "loadMore": "Charger plus",
+    "loadingMore": "Chargement…",
+    "columns": { "project": "Projet", "company": "Entreprise", "dealAmount": "Montant du contrat", "commission": "Commission due", "statusLabel": "Statut", "created": "Créée le", "action": "Action" },
+    "view": "Voir les détails",
+    "commissionOf": "{rate} de {amount}",
+    "close": "Fermer",
+    "fields": { "dealAmount": "Montant convenu", "commission": "Commission due", "rate": "Taux enregistré", "configVersion": "Version de configuration", "status": "Statut du paiement", "created": "Transaction créée le", "paidAt": "Payée le", "paidBy": "Enregistrée par", "reference": "Référence de paiement", "note": "Note interne" },
+    "markPaidTitle": "Marquer la commission comme payée",
+    "markPaidHelp": "Confirmez que Batiplus a reçu cette commission de l’entreprise. Cette action ne traite aucun paiement.",
+    "referenceLabel": "Référence de paiement (facultative)",
+    "noteLabel": "Note interne (facultative)",
+    "cancel": "Annuler",
+    "confirmPaid": "Confirmer le paiement",
+    "saving": "Enregistrement…",
+    "paidSuccess": "Commission marquée comme payée.",
+    "errors": { "alreadyPaid": "Cette commission est déjà marquée comme payée.", "invalidInput": "Vérifiez la référence ou la note de paiement.", "generic": "Le statut de la commission n’a pas pu être mis à jour. Réessayez." }
+  },
+  "adminReviews": {
+    "metaTitle": "Modération des avis | Batiplus",
+    "metaDescription": "Modérez les avis clients sur Batiplus.",
+    "title": "Avis",
+    "lead": "Consultez les retours clients et contrôlez leur visibilité publique. Le contenu des avis est immuable et ne peut pas être modifié ici.",
+    "filtersLabel": "Visibilité des avis",
+    "status": { "all": "Tous", "visible": "Visibles", "hidden": "Masqués" },
+    "searchLabel": "Rechercher des avis",
+    "searchPlaceholder": "Entreprise, projet, client ou commentaire",
+    "loading": "Chargement des avis…",
+    "empty": "Aucun avis ne correspond à ces filtres.",
+    "ratingOutOfFive": "{rating} étoiles sur 5",
+    "hide": "Masquer l’avis",
+    "restore": "Restaurer l’avis",
+    "saving": "Enregistrement…",
+    "hiddenSuccess": "L’avis est masqué des profils publics.",
+    "restoredSuccess": "L’avis est de nouveau visible sur les profils publics.",
+    "error": "La visibilité de l’avis n’a pas pu être modifiée. Réessayez."
+  },
+  "adminSettings": {
+    "metaTitle": "Paramètres admin | Batiplus",
+    "metaDescription": "Gérer les paramètres privés de la marketplace Batiplus.",
+    "title": "Paramètres",
+    "lead": "Gérez les règles de la plateforme applicables aux futures activités de la marketplace.",
+    "policyLabel": "Politique commerciale",
+    "marketplaceCommissionRules": "Règles de commission",
+    "rulesDescription": "Configurez la commission appliquée aux nouveaux contrats selon le montant accepté du contrat.",
+    "dealValueFrom": "Montant du contrat à partir de",
+    "dealValueTo": "Montant du contrat jusqu’à",
+    "commission": "Commission",
+    "noLimit": "Sans limite",
+    "addTier": "Ajouter une tranche",
+    "removeTier": "Supprimer la tranche",
+    "tierNumber": "Tranche {number}",
+    "version": "Version {version}",
+    "appliesNewDeals": "S’applique uniquement aux nouveaux contrats.",
+    "existingDealsKeepCommission": "Les contrats existants conservent leur commission d’origine.",
+    "saveChanges": "Enregistrer les modifications",
+    "saving": "Enregistrement…",
+    "updatedSuccess": "Règles de commission mises à jour avec succès.",
+    "tiersRequired": "Ajoutez au moins une tranche de commission.",
+    "invalidBoundary": "Saisissez des montants entiers en MAD avec un minimum et un maximum valides.",
+    "invalidRate": "Saisissez une commission comprise entre 0,00 % et 30,00 %.",
+    "firstTierZero": "La première tranche doit commencer à 0 MAD.",
+    "unordered": "Les tranches doivent être classées du montant le plus bas au plus élevé.",
+    "overlap": "Les tranches ne peuvent pas se chevaucher.",
+    "gap": "Les tranches ne peuvent pas contenir d’écarts.",
+    "finalTierOpen": "La dernière tranche doit être sans limite supérieure.",
+    "multipleOpenTiers": "Seule la dernière tranche peut être sans limite supérieure.",
+    "configurationRequired": "Les règles de commission doivent être configurées avant la création d’un contrat.",
+    "loading": "Chargement des règles de commission…",
+    "backendError": "Les règles de commission n’ont pas pu être chargées ou enregistrées. Veuillez réessayer.",
+    "errorTitle": "Paramètres indisponibles",
+    "retry": "Réessayer"
+  },
   "adminVerification": {
     "metaTitle": "Vérification des entreprises",
     "metaDescription": "Examiner les dossiers de vérification des entreprises.",
@@ -2444,7 +2865,74 @@
     "confirmReject": "Confirmer le refus",
     "cancel": "Annuler",
     "approved": "Vérification d’entreprise approuvée.",
-    "rejected": "Vérification d’entreprise refusée."
+    "rejected": "Vérification d’entreprise refusée.",
+    "error": {
+      "title": "La vérification des entreprises est indisponible",
+      "description": "Le dossier de vérification et l’activité de l’entreprise n’ont pas pu être chargés. Veuillez réessayer.",
+      "retry": "Réessayer"
+    }
+  },
+  "adminCompanyActivity": {
+    "title": "Activité de l’entreprise",
+    "lead": "Événements importants de vérification et de marketplace, du plus récent au plus ancien.",
+    "loading": "Chargement de l’activité de l’entreprise…",
+    "loadingMore": "Chargement…",
+    "loadMore": "Charger plus d’activité",
+    "empty": "Aucune activité enregistrée pour cette entreprise pour le moment.",
+    "projectContext": "Projet : {project}",
+    "companyContext": "Compte entreprise",
+    "amount": "Montant : {amount}",
+    "rating": "Note : {rating}/5",
+    "viewDetails": "Voir les détails",
+    "categories": {
+      "verification": "Vérification",
+      "marketplace": "Marketplace",
+      "deals": "Contrats et commission",
+      "reviews": "Avis"
+    },
+    "actorTypes": {
+      "client": "Client",
+      "company": "Membre de l’entreprise",
+      "admin": "Admin",
+      "system": "Système"
+    },
+    "events": {
+      "verification_submitted": "Vérification soumise",
+      "verification_approved": "Vérification approuvée",
+      "verification_rejected": "Vérification refusée",
+      "company_invited": "Entreprise invitée",
+      "company_invitation_accepted": "Invitation acceptée",
+      "company_invitation_declined": "Invitation refusée",
+      "initial_quote_submitted": "Proposition initiale soumise",
+      "discussion_opened": "Discussion ouverte",
+      "site_assessment_invited": "Évaluation sur site proposée",
+      "site_assessment_accepted": "Évaluation sur site acceptée",
+      "site_assessment_declined": "Évaluation sur site refusée",
+      "site_assessment_cancelled": "Évaluation sur site annulée",
+      "site_visit_scheduled": "Visite de chantier planifiée",
+      "site_visit_proposed": "Visite de chantier proposée",
+      "site_visit_rescheduled": "Visite de chantier replanifiée",
+      "site_visit_confirmed": "Visite de chantier confirmée",
+      "site_visit_declined": "Visite de chantier refusée",
+      "site_visit_completed": "Visite de chantier terminée",
+      "site_visit_cancelled": "Visite de chantier annulée",
+      "final_quote_requested": "Devis final demandé",
+      "final_quote_submitted": "Devis final soumis",
+      "final_quote_changes_requested": "Modifications du devis final demandées",
+      "final_quote_revised": "Devis final révisé",
+      "final_quote_declined": "Devis final refusé",
+      "final_quote_withdrawn": "Devis final retiré",
+      "final_quote_accepted": "Devis final accepté",
+      "company_selected": "Entreprise sélectionnée",
+      "deal_created": "Contrat créé",
+      "commission_due": "Commission due",
+      "commission_paid": "Commission payée",
+      "deal_completed": "Contrat terminé",
+      "review_received": "Avis reçu",
+      "review_hidden": "Avis masqué",
+      "review_restored": "Avis restauré"
+      ,"operational_status_changed": "Statut opérationnel marketplace modifié"
+    }
   },
   "adminProjects": {
     "metaTitle": "Examen des projets",
@@ -2483,7 +2971,6 @@
       "client": "Client",
       "city": "Ville",
       "category": "Catégorie",
-      "budget": "Budget",
       "submitted": "Soumis le",
       "status": "Statut",
       "action": "Action"
@@ -2508,7 +2995,6 @@
       "propertyType": "Type de bien",
       "surface": "Surface",
       "description": "Description",
-      "budget": "Budget",
       "timeline": "Calendrier",
       "status": "Statut actuel"
     },
@@ -2782,10 +3268,8 @@
       "siteAddress": "Adresse privée du chantier",
       "visitStatus": "Statut de la visite",
       "declinedBy": "Refusée par",
-      "declinedAt": "Refusée le",
       "cancellationReason": "Motif d’annulation",
       "cancelledBy": "Annulée par",
-      "cancelledAt": "Annulée le",
       "completedBy": "Terminée par",
       "completedAt": "Terminée le",
       "finalQuoteStatus": "Statut du devis final"
@@ -2809,6 +3293,48 @@
     "foundationDescription": "Aucun outil d’administration des projets, entreprises ou transactions n’a encore été ajouté.",
     "home": "Retour à Batiplus"
   },
+  "companyCommissions": {
+    "historyTitle": "Historique des commissions",
+    "eyebrow": "Espace entreprise",
+    "title": "Commissions",
+    "lead": "Consultez la commission due à Batiplus par votre entreprise pour chaque transaction acceptée. Le statut du paiement est enregistré par les administrateurs Batiplus.",
+    "beneficiary": "Batiplus",
+    "unavailable": "Indisponible",
+    "loading": "Chargement des obligations de commission…",
+    "summary": {
+      "label": "Résumé des commissions",
+      "due": "Total des commissions dues",
+      "paid": "Total des commissions payées",
+      "count": "Obligations dues"
+    },
+    "status": { "due": "Due", "paid": "Payée" },
+    "columns": {
+      "project": "Projet",
+      "dealAmount": "Montant du contrat",
+      "commission": "Montant de la commission",
+      "status": "Statut",
+      "dealDate": "Date du contrat",
+      "paidAt": "Payée le",
+      "details": "Détails"
+    },
+    "details": {
+      "open": "Voir les détails",
+      "rate": "Taux de commission",
+      "beneficiary": "Bénéficiaire",
+      "configVersion": "Version de configuration",
+      "snapshot": "Instantané de commission",
+      "incomplete": "Incomplet — contactez le support Batiplus"
+    },
+    "empty": {
+      "title": "Aucune commission à payer pour le moment",
+      "lead": "Les commissions de votre entreprise apparaîtront ici après l’acceptation d’un devis final."
+    },
+    "error": {
+      "title": "Commissions indisponibles",
+      "lead": "Impossible de charger vos obligations de commission. Veuillez réessayer.",
+      "retry": "Réessayer"
+    }
+  },
   "companyProjects": {
     "eyebrow": "Marché des projets",
     "title": "Trouvez votre prochain projet de construction",
@@ -2826,8 +3352,6 @@
       "selectCategories": "Sélectionner des catégories",
       "selectedCount": "{count} sélectionnées",
       "allCategories": "Toutes les catégories",
-      "budget": "Budget",
-      "allBudgets": "Tous les budgets",
       "timeline": "Délai",
       "propertyType": "Type de bien",
       "surface": "Surface",
@@ -2853,9 +3377,7 @@
       "triggerAria": "Trier par : {option}",
       "options": {
         "newest": "Plus récents",
-        "oldest": "Plus anciens",
-        "budgetHigh": "Budget le plus élevé",
-        "budgetLow": "Budget le plus bas"
+        "oldest": "Plus anciens"
       }
     },
     "loadedCount": "{count, plural, =0 {Aucun projet chargé} one {# projet chargé} other {# projets chargés}}",
@@ -2881,7 +3403,6 @@
       "back": "Retour aux projets",
       "close": "Fermer les détails du projet",
       "openFullPage": "Ouvrir la page complète du projet",
-      "budget": "Budget",
       "timeline": "Délai",
       "propertyType": "Type de bien",
       "surface": "Surface",
@@ -2898,15 +3419,22 @@
       "clientPrivacy": "Les coordonnées restent privées jusqu’à ce que les deux parties acceptent de discuter du projet.",
       "retry": "Réessayer",
       "unavailableTitle": "Ce projet n’est plus disponible.",
-      "unavailableLead": "Il a peut-être été retiré du marché ou n’accepte plus de marques d’intérêt."
+      "unavailableLead": "Il a peut-être été retiré du marché ou n’accepte plus de marques d’intérêt.",
+      "projectInformation": "Informations du projet",
+      "location": "Localisation",
+      "servicesTitle": "Services recherchés",
+      "showMore": "Afficher plus",
+      "showLess": "Afficher moins"
     },
     "quote": {
       "title": "Intéressé par ce projet ?",
-      "lead": "Envoyez une première estimation claire. La messagerie reste verrouillée jusqu’à ce que le client ouvre la discussion.",
-      "submit": "Envoyer un devis estimatif",
-      "view": "Voir mon devis",
-      "verificationRequired": "Vérifiez votre entreprise avant d’envoyer un devis.",
-      "verifyAction": "Vérifier l’entreprise"
+      "lead": "Présentez votre entreprise et envoyez une proposition avec une première estimation. Il ne s’agit pas du devis final.",
+      "submit": "Envoyer une proposition",
+      "view": "Voir ma proposition",
+      "verificationRequired": "Vérifiez votre entreprise avant d’envoyer une proposition.",
+      "verifyAction": "Vérifier l’entreprise",
+      "alreadySubmitted": "Vous avez déjà envoyé une proposition",
+      "messagingRule": "La messagerie s’ouvre uniquement lorsque le client ouvre une discussion sur votre proposition."
     },
     "error": {
       "title": "Impossible de charger les projets",
@@ -2915,26 +3443,34 @@
     }
   },
   "initialQuote": {
-    "eyebrow": "Devis estimatif",
-    "title": "Envoyer un devis estimatif",
-    "lead": "Partagez une première estimation commerciale avec le client. Il ne s’agit pas du devis contractuel final.",
-    "loading": "Chargement de l’espace devis…",
-    "unavailableTitle": "Ce projet n’accepte pas de devis estimatifs.",
+    "eyebrow": "Proposition",
+    "title": "Envoyer une proposition",
+    "lead": "Partagez une première estimation avec le client. Ce n’est pas le devis contractuel final : il vient après la discussion et, si besoin, une visite de chantier.",
+    "loading": "Chargement de votre proposition…",
+    "unavailableTitle": "Ce projet n’accepte pas de propositions.",
     "unavailableLead": "Il n’est peut-être plus publié ou disponible sur la place de marché.",
     "backToProject": "Retour au projet",
-    "projectSummary": "Résumé du projet",
+    "projectSummary": "Détails du projet",
     "form": {
-      "message": "Message au client",
-      "messageHint": "Présentez votre entreprise et expliquez pourquoi elle convient à ce projet.",
-      "estimatedPrice": "Prix estimé",
+      "message": "Message de proposition",
+      "messageHint": "Présentez votre entreprise et expliquez comment vous aborderiez ce projet.",
+      "estimatedPrice": "Estimation initiale",
       "currency": "MAD",
       "estimatedDuration": "Durée estimée",
       "durationUnit": "jours",
       "availableStartDate": "Disponibilité",
       "scope": "Périmètre des travaux",
       "scopeHint": "Résumez les principaux travaux inclus dans cette estimation.",
-      "submit": "Envoyer le devis estimatif",
-      "submitting": "Envoi du devis…"
+      "submit": "Envoyer la proposition",
+      "submitting": "Envoi de la proposition…",
+      "estimateSection": "Votre estimation",
+      "estimateLead": "Une première estimation sans engagement. Le client la voit avec votre proposition.",
+      "estimatedPriceHint": "Montant total approximatif des travaux, en dirhams.",
+      "estimatedDurationHint": "Durée prévue des travaux une fois commencés.",
+      "availableStartDateHint": "La date la plus proche à laquelle votre équipe peut démarrer.",
+      "detailsSection": "Informations complémentaires",
+      "characterCount": "{count} / {max}",
+      "cancel": "Annuler"
     },
     "validation": {
       "required": "Complétez tous les champs obligatoires.",
@@ -2944,12 +3480,14 @@
       "date": "Choisissez une date de disponibilité.",
       "scope": "Décrivez le périmètre en au moins 20 caractères."
     },
-    "success": "Votre devis estimatif a bien été envoyé.",
+    "success": "Votre proposition a bien été envoyée.",
     "verificationTitle": "Vérification de l’entreprise requise",
-    "verificationLead": "Vérifiez votre entreprise avant d’envoyer un devis.",
+    "verificationLead": "Vérifiez votre entreprise avant d’envoyer une proposition.",
     "verifyAction": "Vérifier l’entreprise",
+    "suspendedTitle": "Envoi de proposition indisponible",
+    "suspendedLead": "L’accès de votre entreprise à la marketplace est temporairement suspendu. Contactez le support Batiplus pour connaître les prochaines étapes.",
     "detail": {
-      "title": "Votre devis estimatif",
+      "title": "Votre proposition",
       "status": "Statut",
       "draft": "Brouillon",
       "submitted": "Envoyé",
@@ -2959,12 +3497,12 @@
       "declined": "Refusé",
       "withdrawn": "Retiré",
       "submittedAt": "Envoyé le {date}",
-      "estimatedPrice": "Prix estimé",
+      "estimatedPrice": "Estimation initiale",
       "estimatedDuration": "Durée estimée",
       "durationValue": "{count, plural, one {# jour} other {# jours}}",
       "availability": "Disponibilité",
       "scope": "Périmètre des travaux",
-      "message": "Message au client",
+      "message": "Message de proposition",
       "messagingLocked": "La messagerie reste verrouillée. Elle s’ouvrira uniquement si le client choisit d’ouvrir la discussion.",
       "discussionOpenedTitle": "Discussion ouverte",
       "discussionPending": "Le client a ouvert une discussion concernant ce projet.",
@@ -2973,37 +3511,37 @@
       "conversationUnavailableTitle": "Impossible de charger la conversation.",
       "conversationUnavailableLead": "Veuillez réessayer. Si le problème persiste, contactez le support.",
       "retryConversation": "Réessayer",
-      "withdraw": "Retirer le devis",
+      "withdraw": "Retirer la proposition",
       "withdrawing": "Retrait…",
-      "withdrawnNotice": "Ce devis a été retiré et reste conservé dans votre historique."
-    }
+      "withdrawnNotice": "Cette proposition a été retirée et reste dans votre historique."
+    },
+    "viewProject": "Voir le projet complet"
   },
   "receivedQuotes": {
-    "eyebrow": "Réponses commerciales",
-    "title": "Devis reçus",
-    "count": "{count, plural, =0 {Aucun devis} one {# devis} other {# devis}}",
-    "loading": "Chargement des devis reçus…",
-    "loadingDetail": "Chargement du devis…",
+    "title": "Propositions",
+    "count": "{count, plural, =0 {Aucune reçue pour le moment} one {# reçue} other {# reçues}}",
+    "loading": "Chargement des propositions…",
+    "loadingDetail": "Chargement de la proposition…",
     "empty": {
-      "title": "Aucun devis reçu pour le moment.",
-      "description": "Les entreprises vérifiées peuvent envoyer une première estimation tant que votre projet est ouvert. Les nouveaux devis apparaîtront ici automatiquement."
+      "title": "Aucune proposition pour le moment.",
+      "description": "Les entreprises vérifiées peuvent envoyer une proposition tant que votre projet est ouvert. Les nouvelles propositions apparaîtront ici automatiquement."
     },
     "verified": "Entreprise vérifiée",
     "cityUnavailable": "Localisation non renseignée",
-    "price": "Prix estimé",
+    "price": "Estimation initiale",
     "duration": "Durée estimée",
     "durationValue": "{count, plural, one {# jour} other {# jours}}",
-    "availableStart": "Disponibilité",
-    "submittedAt": "Envoyé le {date}",
+    "availableStart": "Début disponible",
+    "submittedAt": "Envoyée le {date}",
     "scope": "Périmètre des travaux",
     "message": "Message",
-    "openQuote": "Examiner le devis",
-    "viewProfile": "Voir le profil",
-    "close": "Fermer le devis",
-    "unavailable": "Ce devis n’est plus disponible.",
-    "messagingNotice": "Ouvrir la discussion crée une conversation privée liée au projet avec cette entreprise.",
+    "openQuote": "Voir la proposition",
+    "viewProfile": "Voir le profil de l’entreprise",
+    "close": "Fermer la proposition",
+    "unavailable": "Cette proposition n’est plus disponible.",
+    "messagingNotice": "Ouvrir une discussion crée une conversation privée liée au projet avec cette entreprise.",
     "discussionOpenedTitle": "Discussion ouverte",
-    "discussionOpenedNotice": "Votre conversation privée liée au projet est prête.",
+    "discussionOpenedNotice": "Vous pouvez maintenant poursuivre la conversation avec cette entreprise.",
     "continueInMessages": "Continuer dans Messages",
     "conversationLoading": "Préparation de votre conversation…",
     "conversationUnavailableTitle": "Impossible de charger la conversation.",
@@ -3011,34 +3549,48 @@
     "retryConversation": "Réessayer",
     "status": {
       "draft": "Brouillon",
-      "submitted": "Envoyé",
-      "viewed": "Consulté",
-      "shortlisted": "Présélectionné",
+      "submitted": "Nouvelle",
+      "viewed": "Consultée",
+      "shortlisted": "Présélectionnée",
       "discussion_open": "Discussion ouverte",
-      "declined": "Refusé",
-      "withdrawn": "Retiré"
+      "declined": "Refusée",
+      "withdrawn": "Retirée"
     },
     "detail": {
-      "eyebrow": "Devis estimatif",
-      "title": "Détails du devis",
-      "aboutCompany": "À propos de l’entreprise"
+      "eyebrow": "Proposition",
+      "title": "Détails de la proposition",
+      "companyTitle": "Entreprise",
+      "proposalTitle": "Détails de la proposition",
+      "estimateNote": "Il s’agit d’une estimation initiale, pas d’un devis final. Le devis final vient après la discussion et, si besoin, une visite de chantier."
     },
     "actions": {
       "shortlist": "Présélectionner",
       "decline": "Refuser",
-      "openDiscussion": "Ouvrir la discussion",
+      "openDiscussion": "Ouvrir une discussion",
       "working": "Mise à jour…"
     },
     "declineConfirm": {
-      "title": "Refuser ce devis ?",
-      "description": "Cette décision est irréversible. L’entreprise verra que son devis a été refusé.",
-      "confirm": "Refuser le devis",
-      "cancel": "Conserver le devis"
+      "title": "Refuser cette proposition ?",
+      "description": "Cette décision est irréversible. L’entreprise verra que sa proposition a été refusée.",
+      "confirm": "Refuser la proposition",
+      "cancel": "Conserver la proposition"
     },
     "success": {
-      "shortlist": "Devis présélectionné.",
-      "decline": "Devis refusé.",
+      "shortlist": "Proposition présélectionnée.",
+      "decline": "Proposition refusée.",
       "open_discussion": "Discussion ouverte."
+    },
+    "opensInNewTab": "(s’ouvre dans un nouvel onglet)",
+    "overview": {
+      "title": "Propositions",
+      "received": "Reçues",
+      "new": "Nouvelles",
+      "shortlisted": "Présélectionnées",
+      "discussions": "Discussions ouvertes",
+      "nextEmpty": "Les entreprises vérifiées peuvent envoyer des propositions tant que votre projet est publié.",
+      "nextNew": "{count, plural, one {# nouvelle proposition attend} other {# nouvelles propositions attendent}} votre examen.",
+      "nextReview": "Comparez les propositions, présélectionnez des entreprises et ouvrez une discussion quand vous êtes prêt.",
+      "review": "Voir les propositions"
     }
   },
   "seoCms": {
@@ -3572,6 +4124,61 @@
       "companySelected": "Entreprise sélectionnée"
     }
   },
+  "invitations": {
+    "client": {
+      "open": "Inviter à un projet",
+      "title": "Inviter cette entreprise",
+      "lead": "Choisissez l’un de vos projets actifs. L’entreprise peut consulter l’invitation avant l’ouverture de la messagerie.",
+      "close": "Fermer la fenêtre d’invitation",
+      "loading": "Chargement de vos projets…",
+      "chooseProject": "Choisir un projet",
+      "choosePlaceholder": "Sélectionnez un projet",
+      "chooseProjectError": "Choisissez un projet avant d’envoyer l’invitation.",
+      "message": "Message d’invitation",
+      "optional": "(facultatif)",
+      "characterCount": "{count}/2 000 caractères",
+      "send": "Envoyer l’invitation",
+      "sending": "Envoi…",
+      "cancel": "Annuler",
+      "sent": "Invitation envoyée.",
+      "done": "Terminer",
+      "empty": "Vous devez avoir un projet actif avant d’inviter cette entreprise.",
+      "allInvited": "Cette entreprise a déjà reçu une invitation pour chacun de vos projets éligibles.",
+      "postProject": "Publier un projet",
+      "signInRequired": "Connectez-vous avec un compte client pour inviter cette entreprise.",
+      "signIn": "Connexion",
+      "clientRequired": "Seul un compte client finalisé peut envoyer des invitations.",
+      "clientWorkspace": "Espace client",
+      "unavailable": "Seules les entreprises vérifiées peuvent recevoir des invitations.",
+      "status": { "pending": "Invitation envoyée", "accepted": "Invitation acceptée", "declined": "Invitation refusée" }
+    },
+    "company": {
+      "eyebrow": "Espace entreprise",
+      "title": "Invitations aux projets",
+      "lead": "Consultez les invitations directes des clients. La messagerie et le parcours de proposition s’ouvrent uniquement après acceptation.",
+      "filterLabel": "Filtrer les invitations",
+      "filter": { "all": "Toutes", "pending": "En attente", "accepted": "Acceptées", "declined": "Refusées" },
+      "suspended": "L’accès à la marketplace est temporairement suspendu. Contactez le support Batiplus.",
+      "status": { "pending": "En attente", "accepted": "Acceptée", "declined": "Refusée" },
+      "emptyTitle": "Aucune invitation à afficher",
+      "emptyLead": "Les invitations directes aux projets apparaîtront ici.",
+      "invitedAt": "Invitation reçue le {date}",
+      "location": "Localisation",
+      "category": "Catégorie",
+      "client": "Client",
+      "fromClient": "De {name}",
+      "clientFallback": "Client",
+      "accept": "Accepter l’invitation",
+      "decline": "Refuser l’invitation",
+      "working": "Enregistrement…",
+      "continue": "Voir le projet et envoyer une proposition"
+    },
+    "project": {
+      "title": "Entreprises invitées",
+      "loading": "Chargement des invitations…",
+      "status": { "pending": "En attente", "accepted": "Acceptée", "declined": "Refusée" }
+    }
+  },
   "ux": {
     "retry": "Réessayer",
     "offline": "Problème de connexion. Nous allons réessayer.",
@@ -3605,6 +4212,7 @@
         "COMPANY_ACCOUNT_REQUIRED": "Un compte entreprise est requis pour cette action.",
         "COMPANY_MEMBERSHIP_REQUIRED": "Une adhésion active à une entreprise est requise.",
         "COMPANY_VERIFICATION_REQUIRED": "Vérifiez votre entreprise avant d’envoyer des propositions.",
+        "COMPANY_MARKETPLACE_SUSPENDED": "L’accès de cette entreprise à la marketplace est temporairement suspendu.",
         "COMPANY_OWNER_REQUIRED": "Seul le propriétaire de l’entreprise peut faire cette action.",
         "COMPANY_NOT_FOUND": "Cette entreprise n’existe pas ou n’est plus disponible.",
         "DUPLICATE_ACCOUNT_FOUNDATION": "Ce compte est déjà configuré.",
@@ -3662,6 +4270,16 @@
         "PROJECT_ATTACHMENT_NOT_FOUND": "Ce document privé est introuvable.",
         "PROJECT_NOT_PENDING_REVIEW": "Seuls les projets en attente peuvent être modérés.",
         "PROJECT_REVIEW_REASON_REQUIRED": "Saisissez un motif d’au moins 3 caractères.",
+        "INVITATION_NOT_FOUND": "Cette invitation n’est pas disponible.",
+        "INVALID_INVITATION_MESSAGE": "Limitez le message d’invitation à 2 000 caractères.",
+        "INVALID_INVITATION_TRANSITION": "Cette action n’est plus disponible pour cette invitation.",
+        "ACTIVE_INVITATION_ALREADY_EXISTS": "Une invitation active existe déjà pour cette entreprise et ce projet.",
+        "INVITATION_ALREADY_ACCEPTED": "Cette invitation a déjà été acceptée.",
+        "INVITATION_ALREADY_DECLINED": "Cette invitation a déjà été refusée.",
+        "PROJECT_NOT_ELIGIBLE_FOR_INVITATION": "Ce projet n’est plus éligible aux invitations.",
+        "COMPANY_NOT_ELIGIBLE_FOR_INVITATION": "Cette entreprise n’est pas actuellement éligible aux invitations.",
+        "INVITATION_INTEGRITY_ERROR": "Impossible de charger cette invitation en toute sécurité. Contactez le support.",
+        "INVALID_ACTIVITY_INVITATION": "L’activité de cette invitation n’a pas pu être enregistrée.",
         "PROJECT_NOT_ACCEPTING_QUOTES": "Ce projet n’accepte plus de devis estimatifs.",
         "ACTIVE_QUOTE_ALREADY_EXISTS": "Votre entreprise a déjà un devis estimatif actif pour ce projet.",
         "QUOTE_NOT_FOUND": "Ce devis estimatif est introuvable.",
@@ -3730,6 +4348,33 @@
         "INVALID_FINAL_QUOTE_REASON": "Saisissez un motif valide.",
         "INVALID_ACTIVITY_FINAL_QUOTE": "L’activité du devis final n’a pas pu être enregistrée.",
         "INVALID_ACTIVITY_FINAL_QUOTE_REVISION": "L’activité de la révision n’a pas pu être enregistrée.",
+        "DEAL_NOT_FOUND": "Cet accord est introuvable.",
+        "DEAL_ALREADY_COMPLETED": "Cet accord est déjà terminé.",
+        "DEAL_NOT_COMPLETABLE": "Cet accord ne peut pas être terminé depuis son état actuel.",
+        "DEAL_COMPLETION_INTEGRITY_ERROR": "Cet accord ne peut pas être terminé car sa relation avec le projet est incohérente.",
+        "REVIEW_NOT_FOUND": "Cet avis ou cette transaction est indisponible.",
+        "REVIEW_NOT_ELIGIBLE": "Seule une transaction terminée peut recevoir un avis.",
+        "REVIEW_DEAL_INTEGRITY_ERROR": "Cet avis ne peut pas être créé car la relation de la transaction est incohérente.",
+        "REVIEW_ALREADY_EXISTS": "Cette transaction possède déjà un avis.",
+        "INVALID_REVIEW_RATING": "Choisissez une note entière de 1 à 5.",
+        "INVALID_REVIEW_COMMENT": "Rédigez un avis de 10 à 2 000 caractères.",
+        "REVIEW_AGGREGATE_INTEGRITY_ERROR": "La note globale de l’entreprise n’a pas pu être mise à jour de façon sûre.",
+        "INVALID_ACTIVITY_REVIEW": "L’activité de l’avis n’a pas pu être enregistrée.",
+        "INVALID_COMMISSION_RATE": "Saisissez un taux de commission compris entre 0,00 % et 30,00 %.",
+        "INVALID_COMMISSION_TIER_BOUNDARY": "Saisissez des limites de tranche valides en MAD entiers.",
+        "COMMISSION_TIERS_REQUIRED": "Ajoutez au moins une tranche de commission.",
+        "COMMISSION_FIRST_TIER_ZERO_REQUIRED": "La première tranche de commission doit commencer à 0 MAD.",
+        "COMMISSION_TIERS_UNORDERED": "Les tranches de commission doivent être classées du montant le plus bas au plus élevé.",
+        "COMMISSION_TIERS_OVERLAP": "Les tranches de commission ne peuvent pas se chevaucher.",
+        "COMMISSION_TIERS_GAP": "Les tranches de commission ne peuvent pas contenir d’écarts.",
+        "COMMISSION_FINAL_TIER_OPEN_REQUIRED": "La dernière tranche de commission doit être sans limite supérieure.",
+        "COMMISSION_MULTIPLE_OPEN_TIERS": "Seule la dernière tranche de commission peut être sans limite supérieure.",
+        "COMMISSION_CONFIGURATION_REQUIRED": "Configurez les règles de commission avant de créer un contrat.",
+        "COMMISSION_CONFIGURATION_INVALID": "Les règles de commission sont invalides. Contactez un administrateur.",
+        "COMMISSION_ALREADY_PAID": "Cette commission est déjà marquée comme payée.",
+        "COMMISSION_SNAPSHOT_INCOMPLETE": "Cette transaction ne contient pas un instantané de commission complet.",
+        "INVALID_COMMISSION_PAYMENT_REFERENCE": "La référence de paiement est trop longue.",
+        "INVALID_COMMISSION_PAYMENT_NOTE": "La note interne de paiement est trop longue.",
         "NETWORK": "Problème de connexion. Nous allons réessayer.",
         "UNKNOWN": "Une erreur est survenue. Veuillez réessayer."
       }
@@ -3770,6 +4415,352 @@
       "company": "Cette entreprise n’existe pas ou n’est plus disponible.",
       "project": "Ce projet est introuvable.",
       "portfolio": "Cette réalisation n’est plus disponible."
+    }
+  },
+  "companyProposals": {
+    "title": "Mes propositions",
+    "lead": "Toutes les propositions envoyées par votre entreprise. Une discussion s’ouvre dès que le client répond à votre proposition.",
+    "findProjects": "Trouver des projets",
+    "filtersLabel": "Filtrer les propositions",
+    "filters": {
+      "all": "Toutes",
+      "open": "En attente du client",
+      "discussion": "En discussion",
+      "closed": "Clôturées"
+    },
+    "sentOn": "Envoyée le {date}",
+    "estimate": "Estimation initiale",
+    "openDiscussion": "Ouvrir la discussion",
+    "viewProposal": "Voir la proposition",
+    "empty": {
+      "title": "Aucune proposition pour le moment",
+      "lead": "Parcourez les projets ouverts et envoyez votre première proposition à un client.",
+      "action": "Trouver des projets",
+      "filteredTitle": "Rien à afficher",
+      "filteredLead": "Aucune proposition ne correspond à ce filtre."
+    }
+  },
+  "adminCompanies": {
+    "metaTitle": "Entreprises",
+    "metaDescription": "Gérer les entreprises de la marketplace.",
+    "title": "Entreprises",
+    "lead": "Recherchez, vérifiez et pilotez chaque entreprise de la marketplace depuis un seul endroit.",
+    "loading": "Chargement des entreprises",
+    "loadingMore": "Chargement…",
+    "loadMore": "Charger plus",
+    "saving": "Enregistrement…",
+    "empty": "Aucune entreprise ne correspond à ces filtres.",
+    "viewCompany": "Voir l’entreprise",
+    "rating": "Note",
+    "filters": {
+      "searchLabel": "Rechercher des entreprises",
+      "searchPlaceholder": "Nom, ville ou service",
+      "verificationLabel": "Statut de vérification",
+      "onboardingLabel": "Statut d’intégration",
+      "options": {
+        "all": "Tous les statuts",
+        "draft": "Brouillon",
+        "pending": "En attente",
+        "verified": "Vérifiée",
+        "rejected": "Refusée",
+        "completed": "Terminée"
+      },
+      "allVerification": "Toute vérification",
+      "allOperational": "Tous statuts opérationnels",
+      "allOnboarding": "Toute intégration",
+      "operationalLabel": "Statut opérationnel"
+    },
+    "columns": {
+      "company": "Entreprise",
+      "status": "Vérification",
+      "onboarding": "Intégration",
+      "services": "Services",
+      "members": "Membres",
+      "activity": "Dernière activité",
+      "action": "Action",
+      "operational": "Statut opérationnel",
+      "marketplace": "Marketplace"
+    },
+    "status": {
+      "verification": {
+        "draft": "Brouillon",
+        "pending": "En attente",
+        "verified": "Vérifiée",
+        "rejected": "Refusée"
+      },
+      "onboarding": {
+        "pending": "En attente",
+        "completed": "Terminée"
+      }
+    },
+    "services": {
+      "houseConstruction": "Construction de maison",
+      "renovation": "Rénovation",
+      "structural": "Gros œuvre",
+      "finishing": "Second œuvre",
+      "architecture": "Architecture",
+      "interior": "Aménagement intérieur",
+      "electrical": "Électricité",
+      "plumbing": "Plomberie",
+      "joinery": "Menuiserie",
+      "pool": "Piscines"
+    },
+    "detail": {
+      "metaTitle": "Opérations de l’entreprise",
+      "metaDescription": "Vue consolidée des opérations d’une entreprise.",
+      "breadcrumb": "Entreprise",
+      "loading": "Chargement de l’entreprise",
+      "notFoundTitle": "Entreprise introuvable",
+      "notFoundLead": "Cette entreprise n’existe plus ou n’est pas disponible.",
+      "back": "Retour aux entreprises",
+      "publicProfile": "Voir le profil public",
+      "tabsLabel": "Sections de l’entreprise",
+      "tabs": {
+        "overview": "Vue d’ensemble",
+        "verification": "Vérification",
+        "projectsDeals": "Projets et Deals",
+        "commissions": "Commissions",
+        "reviews": "Avis",
+        "activity": "Activité",
+        "messages": "Messages",
+        "internalNotes": "Notes internes"
+      },
+      "moreActions": "Plus d’actions",
+      "reviewVerification": "Examiner la vérification",
+      "verificationPendingBadge": "Vérification à examiner"
+    },
+    "overview": {
+      "profile": "Profil de l’entreprise",
+      "noDescription": "Aucune description pour le moment.",
+      "legalName": "Raison sociale",
+      "created": "Créée le",
+      "services": "Services",
+      "serviceAreas": "Zones d’intervention",
+      "operations": "Résumé opérationnel",
+      "members": "Membres actifs",
+      "reviews": "Avis",
+      "activeDeals": "Deals actifs",
+      "completedDeals": "Deals terminés",
+      "commissionsDue": "Commissions dues",
+      "amountDue": "Montant dû",
+      "boundedSummary": "Les compteurs sont plafonnés pour garder un résumé rapide.",
+      "membersTitle": "Membres actifs de l’entreprise",
+      "noMembers": "Aucun membre actif.",
+      "memberRoles": {
+        "owner": "Propriétaire",
+        "staff": "Équipe"
+      },
+      "verification": "Vérification",
+      "allActivity": "Voir toute l’activité"
+    },
+    "operationalStatus": {
+      "title": "Statut opérationnel marketplace",
+      "lead": "Contrôle les nouvelles acquisitions tout en préservant le support, les corrections, la lecture et les obligations en cours.",
+      "status": {
+        "normal": "Normal",
+        "needs_attention": "Attention requise",
+        "suspended": "Suspendue"
+      },
+      "changeTo": "Passer à {status}",
+      "dialogTitle": "Passer au statut {status}",
+      "confirmation": "Confirmez ce changement de statut opérationnel et consignez le motif interne.",
+      "highImpactConfirmation": "Ce changement suspend ou rétablit l’accès à la marketplace. Confirmez son impact et consignez le motif interne.",
+      "reason": "Motif interne",
+      "reasonHelp": "10 à 1 000 caractères. Visible uniquement par les administrateurs.",
+      "confirm": "Confirmer le changement",
+      "cancel": "Annuler",
+      "saving": "Enregistrement…",
+      "actionError": "Le statut opérationnel n’a pas pu être modifié.",
+      "history": "Historique du statut",
+      "emptyHistory": "Aucun changement de statut opérationnel.",
+      "loadMore": "Charger plus"
+    },
+    "verification": {
+      "title": "Dossier de vérification",
+      "notFound": "Aucun dossier de vérification disponible.",
+      "submitted": "Soumis le {date}",
+      "reason": "Motif du refus",
+      "approveSuccess": "Vérification de l’entreprise approuvée.",
+      "rejectSuccess": "Vérification de l’entreprise refusée.",
+      "actionError": "L’action de vérification n’a pas pu être effectuée.",
+      "documents": "Documents",
+      "noDocuments": "Aucun document de vérification n’a été ajouté.",
+      "history": "Historique de vérification",
+      "noHistory": "Aucun historique de vérification.",
+      "decision": "Décision",
+      "confirmApproveLead": "Approuver la vérification de {company} ? L’entreprise apparaîtra comme vérifiée auprès des clients.",
+      "reasonHelp": "Expliquez ce que l’entreprise doit corriger. Le motif lui est communiqué."
+    },
+    "projects": {
+      "title": "Projets et Deals",
+      "empty": "Aucune relation de projet marketplace pour cette entreprise.",
+      "source": {
+        "proposal": "Proposition",
+        "invitation": "Invitation"
+      },
+      "dealAmount": "Montant du Deal",
+      "commissionStatus": "Commission",
+      "completed": "Terminé",
+      "dealStatus": {
+        "active": "Deal actif",
+        "completed": "Deal terminé",
+        "cancelled": "Deal annulé"
+      },
+      "projectStatus": {
+        "draft": "Brouillon",
+        "pending_review": "En attente d’examen",
+        "needs_changes": "Modifications requises",
+        "published": "Publié",
+        "in_discussion": "En discussion",
+        "company_selected": "Entreprise sélectionnée",
+        "in_progress": "En cours",
+        "completed": "Terminé",
+        "cancelled": "Annulé",
+        "archived": "Archivé"
+      }
+    },
+    "commissions": {
+      "title": "Commissions",
+      "empty": "Aucune commission pour cette entreprise.",
+      "view": "Voir",
+      "status": {
+        "due": "Due",
+        "paid": "Payée"
+      },
+      "close": "Fermer les détails de la commission",
+      "reference": "Référence de paiement",
+      "note": "Note interne",
+      "paidAt": "Payée le",
+      "markPaid": "Marquer comme payée",
+      "actionError": "La commission n’a pas pu être mise à jour."
+    },
+    "reviews": {
+      "title": "Avis",
+      "empty": "Aucun avis pour cette entreprise.",
+      "hide": "Masquer",
+      "restore": "Restaurer",
+      "actionError": "L’avis n’a pas pu être mis à jour."
+    },
+    "error": {
+      "title": "Impossible de charger les entreprises",
+      "lead": "Réessayez. Si le problème persiste, revenez au tableau de bord admin.",
+      "retry": "Réessayer"
+    },
+    "views": {
+      "label": "Filtres rapides",
+      "all": "Toutes",
+      "pending": "Vérification en attente",
+      "verified": "Vérifiées",
+      "attention": "Attention requise",
+      "suspended": "Suspendues"
+    },
+    "row": {
+      "onboardingIncomplete": "Intégration incomplète",
+      "openAria": "Ouvrir {name}",
+      "review": "Examiner",
+      "members": "{count, plural, =0 {Aucun membre} one {# membre} other {# membres}}",
+      "noReviews": "Aucun avis",
+      "rating": "★ {rating} ({count})"
+    },
+    "attention": {
+      "title": "Actions requises",
+      "none": "Aucune action requise pour cette entreprise.",
+      "verificationPending": "Vérification soumise, en attente d’examen",
+      "review": "Examiner",
+      "suspended": "L’entreprise est suspendue de toute nouvelle activité",
+      "needsAttention": "L’entreprise est signalée comme à surveiller",
+      "viewNotes": "Voir les notes",
+      "viewHistory": "Voir l’activité",
+      "unreadMessages": "{count, plural, one {# message opérationnel non lu} other {# messages opérationnels non lus}}",
+      "openMessages": "Ouvrir les messages",
+      "commissionsDue": "{count, plural, one {# commission due} other {# commissions dues}} · {amount}",
+      "viewCommissions": "Voir les commissions"
+    }
+  },
+  "operationalMessaging": {
+    "metaTitle": "Assistance Batiplus",
+    "metaDescription": "Contactez l’équipe Batiplus au sujet des opérations de votre entreprise.",
+    "company": {
+      "title": "Assistance Batiplus",
+      "lead": "Contactez l’équipe Batiplus au sujet de votre compte entreprise, de la vérification, des commissions ou des opérations marketplace.",
+      "pageLabel": "Conversation opérationnelle avec Batiplus",
+      "emptyTitle": "Aucune conversation avec Batiplus pour le moment.",
+      "emptyLead": "Démarrez une conversation lorsque vous avez besoin d’aide concernant les opérations de votre entreprise.",
+      "emptyAction": "Démarrer une conversation"
+    },
+    "admin": {
+      "title": "Conversation opérationnelle",
+      "lead": "Les messages entre Batiplus et {company} sont séparés des conversations de Projets de la marketplace.",
+      "emptyTitle": "Aucune conversation opérationnelle avec cette entreprise pour le moment.",
+      "emptyLead": "Envoyez le premier message pour démarrer cette conversation au niveau de l’entreprise.",
+      "emptyAction": "Envoyer un message"
+    },
+    "thread": {
+      "messageList": "Historique des messages opérationnels",
+      "loading": "Chargement de la conversation",
+      "loadOlder": "Charger les messages précédents",
+      "loadingOlder": "Chargement des messages précédents",
+      "composerLabel": "Message",
+      "composerPlaceholder": "Rédigez un message opérationnel…",
+      "send": "Envoyer",
+      "sending": "Envoi…",
+      "retry": "Réessayer",
+      "sendFailed": "Le message n’a pas pu être envoyé. Votre texte est conservé — réessayez.",
+      "readFailed": "La conversation n’a pas pu être marquée comme lue.",
+      "characterCount": "{count} caractères sur {maximum}",
+      "senderAdmin": "Équipe Batiplus",
+      "senderCompany": "Membre de l’entreprise",
+      "yourMessage": "Votre message",
+      "unreadBadge": "{count, plural, one {# message opérationnel non lu} other {# messages opérationnels non lus}}"
+    },
+    "access": {
+      "title": "Conversation Batiplus indisponible",
+      "lead": "Vous n’avez plus accès à cette conversation opérationnelle.",
+      "retry": "Réessayer"
+    }
+  },
+  "adminNotes": {
+    "title": "Notes internes",
+    "privateLead": "Visibles uniquement par les administrateurs Batiplus.",
+    "composerTitle": "Ajouter une note interne",
+    "immutableHelp": "Les notes ne peuvent pas être modifiées après leur création. Ajoutez une nouvelle note pour corriger une information précédente.",
+    "label": "Note",
+    "placeholder": "Consignez un contexte opérationnel privé concernant cette entreprise…",
+    "plainTextHelp": "Texte brut uniquement. Cette note ne sera pas partagée avec l’entreprise.",
+    "characterCount": "{count} caractères sur {maximum}",
+    "add": "Ajouter une note",
+    "adding": "Ajout…",
+    "createError": "La note n’a pas pu être ajoutée. Votre texte est conservé — réessayez.",
+    "empty": "Aucune note interne pour cette entreprise pour le moment.",
+    "loading": "Chargement des notes internes",
+    "listLabel": "Notes internes concernant cette entreprise",
+    "loadMore": "Charger plus",
+    "loadingMore": "Chargement"
+  },
+  "companyWork": {
+    "activeTitle": "Projets actifs",
+    "historyTitle": "Historique des projets",
+    "lead": "Les projets remportés par votre entreprise. Chacun regroupe sa discussion, sa visite de site et son devis final.",
+    "tabsLabel": "Filtrer les projets",
+    "tabs": {
+      "active": "Actifs",
+      "history": "Historique"
+    },
+    "status": {
+      "active": "En cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé"
+    },
+    "startedOn": "Démarré le {date}",
+    "completedOn": "Terminé le {date}",
+    "agreedAmount": "Montant convenu",
+    "openWorkspace": "Ouvrir le projet",
+    "empty": {
+      "activeTitle": "Aucun projet actif pour le moment",
+      "activeLead": "Lorsqu’un client sélectionne votre entreprise, le projet apparaît ici.",
+      "activeAction": "Voir mes propositions",
+      "historyTitle": "Aucun projet passé",
+      "historyLead": "Les projets terminés et annulés apparaîtront ici."
     }
   }
 }

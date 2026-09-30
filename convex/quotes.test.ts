@@ -10,6 +10,7 @@ import schema from "./schema";
 const modules = import.meta.glob("./**/*.ts");
 type TestBackend = ReturnType<typeof convexTest>;
 type ProjectStatus = "draft" | "pending_review" | "published" | "cancelled";
+const notificationPage = { paginationOpts: { numItems: 20, cursor: null } };
 
 async function seedUser(
   t: TestBackend,
@@ -77,10 +78,6 @@ async function seedProject(
       surface: 120,
       surfaceUnknown: false,
       description: "Complete apartment renovation with plumbing and electrical work.",
-      budgetRange: "100000_250000",
-      budgetMin: 100_000,
-      budgetMax: 250_000,
-      budgetUnknown: false,
       timeline: "one_to_three_months",
       visibility,
       status,
@@ -120,8 +117,49 @@ async function setup(status: ProjectStatus = "published") {
 }
 
 describe("initial quote submission", () => {
-  test("verified company submits once and creates immutable submission history", async () => {
+  test("a verified Company can inspect and quote a marketplace Project with no Client budget", async () => {
+    const t = convexTest(schema, modules);
+    const clientId = await seedUser(t, "client");
+    const projectId = await seedProject(t, clientId);
+    const company = await seedCompany(t);
+    const caller = asUser(t, company.userId);
+
+    const context = await caller.query(api.quotes.index.getSubmissionContext, { projectId });
+    expect(context).toMatchObject({
+      project: { id: projectId },
+      verificationStatus: "verified",
+      marketplaceWriteAllowed: true,
+    });
+    const submitted = await caller.mutation(api.quotes.index.submitInitialQuote, {
+      projectId,
+      ...validQuote,
+    });
+    expect(submitted.status).toBe("submitted");
+    const quote = await caller.query(api.quotes.index.getMyQuote, { quoteId: submitted.quoteId });
+    expect(quote).toMatchObject({ estimatedPrice: validQuote.estimatedPrice, project: { id: projectId } });
+  });
+
+  test("projects suspended marketplace eligibility for the direct quote route", async () => {
     const { t, projectId, company } = await setup();
+    await t.run((ctx) => ctx.db.patch(company.companyId, { operationalStatus: "suspended" }));
+
+    const context = await asUser(t, company.userId).query(
+      api.quotes.index.getSubmissionContext,
+      { projectId },
+    );
+    expect(context).toMatchObject({
+      verificationStatus: "verified",
+      marketplaceWriteAllowed: false,
+    });
+    await expect(asUser(t, company.userId).mutation(
+      api.quotes.index.submitInitialQuote,
+      { projectId, ...validQuote },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+  });
+
+  test("verified company submits once and creates immutable submission history", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    const otherClientId = await seedUser(t, "client");
     const result = await asUser(t, company.userId).mutation(
       api.quotes.index.submitInitialQuote,
       { projectId, ...validQuote },
@@ -136,6 +174,12 @@ describe("initial quote submission", () => {
       activity: await ctx.db
         .query("marketplaceActivity")
         .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId))
+        .take(10),
+      notifications: await ctx.db
+        .query("notifications")
+        .withIndex("by_recipientUserId_and_createdAt", (q) =>
+          q.eq("recipientUserId", clientId),
+        )
         .take(10),
     }));
     expect(state.quote?.estimatedPrice).toBe(185_000);
@@ -162,6 +206,70 @@ describe("initial quote submission", () => {
         quoteId: result.quoteId,
       }),
     ]);
+    expect(state.notifications).toEqual([
+      expect.objectContaining({
+        recipientUserId: clientId,
+        actorUserId: company.userId,
+        type: "proposal_received",
+        entity: { type: "proposal", id: result.quoteId },
+        payload: {
+          projectTitle: "Renovation of a family apartment",
+          companyName: expect.any(String),
+        },
+        dedupeKey: `proposal:${result.quoteId}:received`,
+      }),
+    ]);
+    await expect(asUser(t, clientId)
+      .query(api.notifications.index.getMyUnreadCount, {})).resolves.toBe(1);
+    expect((await asUser(t, otherClientId).query(
+      api.notifications.index.listMyNotifications,
+      notificationPage,
+    )).page).toEqual([]);
+  });
+
+  test("notification recipient integrity failure rolls back Proposal submission atomically", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    await t.run((ctx) => ctx.db.delete(clientId));
+
+    await expect(asUser(t, company.userId).mutation(
+      api.quotes.index.submitInitialQuote,
+      { projectId, ...validQuote },
+    )).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const rolledBack = await t.run(async (ctx) => ({
+      quotes: await ctx.db
+        .query("projectQuotes")
+        .withIndex("by_projectId_and_companyId", (q) =>
+          q.eq("projectId", projectId).eq("companyId", company.companyId),
+        )
+        .take(10),
+      activity: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId))
+        .take(10),
+    }));
+    expect(rolledBack).toEqual({ quotes: [], activity: [] });
+  });
+
+  test("rejects a frontend-supplied Proposal notification recipient", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    const otherClientId = await seedUser(t, "client");
+    const forgedArgs = {
+      projectId,
+      ...validQuote,
+      recipientUserId: otherClientId,
+    } as unknown as FunctionArgs<typeof api.quotes.index.submitInitialQuote>;
+
+    await expect(asUser(t, company.userId).mutation(
+      api.quotes.index.submitInitialQuote,
+      forgedArgs,
+    )).rejects.toThrow();
+    for (const userId of [clientId, otherClientId]) {
+      expect((await asUser(t, userId).query(
+        api.notifications.index.listMyNotifications,
+        notificationPage,
+      )).page).toEqual([]);
+    }
   });
 
   test("rejects unauthenticated users, clients, incomplete companies, and unverified companies", async () => {
@@ -224,7 +332,7 @@ describe("initial quote submission", () => {
   });
 
   test("rejects a second active quote for the same company and project", async () => {
-    const { t, projectId, company } = await setup();
+    const { t, clientId, projectId, company } = await setup();
     const caller = asUser(t, company.userId);
     await caller.mutation(api.quotes.index.submitInitialQuote, { projectId, ...validQuote });
     await expect(
@@ -239,6 +347,12 @@ describe("initial quote submission", () => {
         .take(10),
     );
     expect(quotes).toHaveLength(1);
+    const notifications = await t.run((ctx) => ctx.db
+      .query("notifications")
+      .withIndex("by_recipientUserId_and_createdAt", (q) => q.eq("recipientUserId", clientId))
+      .take(10));
+    expect(notifications).toHaveLength(1);
+    expect(notifications[0]?.dedupeKey).toBe(`proposal:${quotes[0]?._id}:received`);
   });
 
   test("project detail switches from submit to view-my-quote after submission", async () => {
@@ -397,12 +511,35 @@ describe("client reviews initial quotes", () => {
 
   test("records submitted -> viewed -> shortlisted -> discussion_open with immutable history", async () => {
     const { t, clientId, projectId, company } = await setup();
+    const staffId = await seedUser(t, "company");
+    const inactiveMemberId = await seedUser(t, "company");
+    const otherCompany = await seedCompany(t);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("companyMembers", {
+        companyId: company.companyId,
+        userId: staffId,
+        role: "staff",
+        status: "active",
+        createdAt: 100,
+      });
+      await ctx.db.insert("companyMembers", {
+        companyId: company.companyId,
+        userId: inactiveMemberId,
+        role: "staff",
+        status: "inactive",
+        createdAt: 100,
+      });
+    });
     const { quoteId } = await asUser(t, company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId, ...validQuote });
     const owner = asUser(t, clientId);
     await expect(owner.mutation(api.quotes.index.markInitialQuoteViewed, { quoteId })).resolves.toEqual({ status: "viewed" });
     await expect(owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "shortlist" })).resolves.toEqual({ status: "shortlisted", conversationId: null });
     const opened = await owner.mutation(api.quotes.index.reviewInitialQuote, { quoteId, action: "open_discussion" });
     expect(opened).toMatchObject({ status: "discussion_open", conversationId: expect.any(String) });
+    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, {
+      quoteId,
+      action: "open_discussion",
+    })).resolves.toEqual(opened);
     const history = await t.run((ctx) => ctx.db.query("quoteStatusHistory").withIndex("by_quoteId_and_changedAt", (q) => q.eq("quoteId", quoteId)).order("asc").take(10));
     expect(history.map((item) => [item.oldStatus, item.newStatus, item.changedBy])).toEqual([
       ["draft", "submitted", company.userId],
@@ -427,6 +564,173 @@ describe("client reviews initial quotes", () => {
     await expect(asUser(t, company.userId).query(api.quotes.index.getMyQuote, { quoteId })).resolves.toMatchObject({ status: "discussion_open" });
     await expect(asUser(t, company.userId).query(api.messages.index.listMyThreads, {})).resolves.toHaveLength(1);
     await expect(owner.query(api.messages.index.listMyThreads, {})).resolves.toHaveLength(1);
+    for (const recipientUserId of [company.userId, staffId]) {
+      const notifications = await asUser(t, recipientUserId).query(
+        api.notifications.index.listMyNotifications,
+        notificationPage,
+      );
+      expect(notifications.page).toEqual([
+        expect.objectContaining({
+          type: "proposal_accepted",
+          entity: { type: "proposal", id: quoteId },
+          actorUserId: clientId,
+          payload: {
+            projectTitle: "Renovation of a family apartment",
+            companyName: expect.any(String),
+          },
+          readAt: null,
+        }),
+      ]);
+      await expect(asUser(t, recipientUserId).query(
+        api.notifications.index.getMyUnreadCount,
+        {},
+      )).resolves.toBe(1);
+    }
+    for (const excludedUserId of [inactiveMemberId, otherCompany.userId]) {
+      expect((await asUser(t, excludedUserId).query(
+        api.notifications.index.listMyNotifications,
+        notificationPage,
+      )).page).toEqual([]);
+    }
+    const acceptedDedupeKeys = await t.run((ctx) => ctx.db
+      .query("notifications")
+      .withIndex("by_recipientUserId_and_dedupeKey", (q) =>
+        q.eq("recipientUserId", company.userId).eq("dedupeKey", `proposal:${quoteId}:accepted`),
+      )
+      .take(2));
+    expect(acceptedDedupeKeys).toHaveLength(1);
+  });
+
+  test("blocks a new discussion after Company suspension without side effects", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    const { quoteId } = await asUser(t, company.userId).mutation(
+      api.quotes.index.submitInitialQuote,
+      { projectId, ...validQuote },
+    );
+    await t.run((ctx) => ctx.db.patch(company.companyId, {
+      operationalStatus: "suspended",
+    }));
+
+    await expect(asUser(t, clientId).mutation(api.quotes.index.reviewInitialQuote, {
+      quoteId,
+      action: "open_discussion",
+    })).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+
+    const state = await t.run(async (ctx) => ({
+      quote: await ctx.db.get(quoteId),
+      conversations: await ctx.db
+        .query("conversations")
+        .withIndex("by_projectId_and_companyId", (q) => q
+          .eq("projectId", projectId)
+          .eq("companyId", company.companyId))
+        .take(10),
+      history: await ctx.db
+        .query("quoteStatusHistory")
+        .withIndex("by_quoteId_and_changedAt", (q) => q.eq("quoteId", quoteId))
+        .order("asc")
+        .take(10),
+      activity: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId))
+        .order("asc")
+        .take(10),
+      companyNotifications: await ctx.db
+        .query("notifications")
+        .withIndex("by_recipientUserId_and_createdAt", (q) =>
+          q.eq("recipientUserId", company.userId),
+        )
+        .take(10),
+    }));
+    expect(state.quote?.status).toBe("submitted");
+    expect(state.conversations).toEqual([]);
+    expect(state.history.map((event) => event.newStatus)).toEqual(["submitted"]);
+    expect(state.activity.map((event) => event.eventType)).toEqual([
+      "initial_quote_submitted",
+    ]);
+    expect(state.companyNotifications).toEqual([]);
+  });
+
+  test("keeps an existing discussion idempotently available after later suspension", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    const { quoteId } = await asUser(t, company.userId).mutation(
+      api.quotes.index.submitInitialQuote,
+      { projectId, ...validQuote },
+    );
+    const owner = asUser(t, clientId);
+    const opened = await owner.mutation(api.quotes.index.reviewInitialQuote, {
+      quoteId,
+      action: "open_discussion",
+    });
+    await t.run((ctx) => ctx.db.patch(company.companyId, {
+      operationalStatus: "suspended",
+    }));
+
+    await expect(owner.mutation(api.quotes.index.reviewInitialQuote, {
+      quoteId,
+      action: "open_discussion",
+    })).resolves.toEqual(opened);
+
+    const state = await t.run(async (ctx) => ({
+      conversations: await ctx.db
+        .query("conversations")
+        .withIndex("by_projectId_and_companyId", (q) => q
+          .eq("projectId", projectId)
+          .eq("companyId", company.companyId))
+        .take(10),
+      activity: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId))
+        .take(10),
+      acceptedNotifications: await ctx.db
+        .query("notifications")
+        .withIndex("by_recipientUserId_and_dedupeKey", (q) => q
+          .eq("recipientUserId", company.userId)
+          .eq("dedupeKey", `proposal:${quoteId}:accepted`))
+        .take(10),
+    }));
+    expect(state.conversations).toHaveLength(1);
+    expect(state.activity.filter((event) => event.eventType === "discussion_opened"))
+      .toHaveLength(1);
+    expect(state.acceptedNotifications).toHaveLength(1);
+  });
+
+  test("missing active Company notification recipients roll back discussion opening", async () => {
+    const { t, clientId, projectId, company } = await setup();
+    const { quoteId } = await asUser(t, company.userId).mutation(
+      api.quotes.index.submitInitialQuote,
+      { projectId, ...validQuote },
+    );
+    await t.run(async (ctx) => {
+      const membership = await ctx.db
+        .query("companyMembers")
+        .withIndex("by_companyId_and_userId", (q) => q
+          .eq("companyId", company.companyId)
+          .eq("userId", company.userId))
+        .unique();
+      if (membership) await ctx.db.patch(membership._id, { status: "inactive" });
+    });
+
+    await expect(asUser(t, clientId).mutation(api.quotes.index.reviewInitialQuote, {
+      quoteId,
+      action: "open_discussion",
+    })).rejects.toThrow("COMPANY_NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const rolledBack = await t.run(async (ctx) => ({
+      quote: await ctx.db.get(quoteId),
+      conversations: await ctx.db
+        .query("conversations")
+        .withIndex("by_projectId_and_companyId", (q) => q
+          .eq("projectId", projectId)
+          .eq("companyId", company.companyId))
+        .take(10),
+      history: await ctx.db
+        .query("quoteStatusHistory")
+        .withIndex("by_quoteId_and_changedAt", (q) => q.eq("quoteId", quoteId))
+        .take(10),
+    }));
+    expect(rolledBack.quote?.status).toBe("submitted");
+    expect(rolledBack.conversations).toEqual([]);
+    expect(rolledBack.history.map((event) => event.newStatus)).toEqual(["submitted"]);
   });
 
   test("supports direct shortlist and decline while rejecting terminal-state transitions", async () => {

@@ -11,7 +11,7 @@ const convex = vi.hoisted(() => ({ result: undefined as unknown }));
 vi.mock("next/font/google", () => ({
   Outfit: () => ({ className: "font-outfit" }),
 }));
-vi.mock("convex/react", () => ({ useQuery: () => convex.result }));
+vi.mock("convex/react", () => ({ useQuery: () => convex.result, useMutation: () => vi.fn(), usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }) }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({
     children,
@@ -24,6 +24,7 @@ vi.mock("@/i18n/navigation", () => ({
   ),
   usePathname: () => "/admin/site-visits",
   getPathname: () => "/admin/site-visits",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 vi.mock("next/navigation", () => ({ useParams: () => ({ locale: "en" }) }));
 

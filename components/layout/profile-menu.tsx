@@ -1,17 +1,18 @@
 "use client";
 
-import { useAuthActions } from "@convex-dev/auth/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useEffect, useId, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { useSafeSignOut } from "@/features/auth/hooks/use-safe-sign-out";
 import { Link, useRouter } from "@/i18n/navigation";
-import type { AppRoute } from "@/lib/routes";
 import { routes } from "@/lib/routes";
 import { userInitials } from "./navbar-role";
 
 export type ProfileMenuItem = {
-  href: AppRoute;
+  href: ComponentProps<typeof Link>["href"];
   label: string;
+  /** Short trailing status, e.g. the verification state next to "Verification". */
+  meta?: ReactNode;
 };
 
 export function ProfileMenu({
@@ -20,7 +21,7 @@ export function ProfileMenu({
   displayName,
   roleLabel,
   profileImageUrl,
-  items,
+  sections,
 }: {
   role: "client" | "company";
   firstName: string | null;
@@ -28,11 +29,12 @@ export function ProfileMenu({
   displayName: string;
   roleLabel: string;
   profileImageUrl?: string | null;
-  items: ProfileMenuItem[];
+  /** Groups of account links, separated visually. Marketplace navigation stays in the navbar. */
+  sections: ProfileMenuItem[][];
 }) {
   const t = useTranslations("nav.profileMenu");
   const tAuth = useTranslations("auth");
-  const { signOut } = useAuthActions();
+  const signOut = useSafeSignOut();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -107,26 +109,35 @@ export function ProfileMenu({
             <p className="m-0 text-xs text-muted">{roleLabel}</p>
           </div>
         </div>
-        <ul className="m-0 list-none p-1">
-          {items.map((item, index) => (
-            <li key={`${item.href}-${item.label}`}>
-              <Link
-                className="flex min-h-11 items-center rounded-xl px-3 text-sm font-medium text-ink transition-colors hover:bg-brand-soft/70 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                href={item.href}
-                onClick={() => setOpen(false)}
-                ref={index === 0 ? firstItemRef : undefined}
-                role="menuitem"
-              >
-                {item.label}
-              </Link>
-            </li>
+        <ul className="m-0 list-none p-1" role="none">
+          {sections.map((section, sectionIndex) => (
+            <Fragment key={sectionIndex}>
+              {sectionIndex > 0 ? <li aria-hidden className="mx-2 my-1 h-px bg-brand-border" role="separator" /> : null}
+              {section.map((item, index) => (
+                <li key={item.label} role="none">
+                  <Link
+                    className="flex min-h-11 items-center justify-between gap-3 rounded-xl px-3 text-sm font-medium text-ink transition-colors hover:bg-brand-soft/70 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    ref={sectionIndex === 0 && index === 0 ? firstItemRef : undefined}
+                    role="menuitem"
+                  >
+                    {item.label}
+                    {item.meta ? <span className="shrink-0 text-xs font-normal text-muted">{item.meta}</span> : null}
+                  </Link>
+                </li>
+              ))}
+            </Fragment>
           ))}
-          <li>
+          <li aria-hidden className="mx-2 my-1 h-px bg-brand-border" role="separator" />
+          <li role="none">
             <button
               className="flex min-h-11 w-full cursor-pointer items-center rounded-xl border-0 bg-transparent px-3 text-start text-sm font-medium text-ink transition-colors hover:bg-brand-soft/70 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               onClick={() => {
                 setOpen(false);
-                void signOut().then(() => router.push(routes.signIn));
+                void signOut().then((signedOut) => {
+                  if (signedOut) router.push(routes.signIn);
+                });
               }}
               role="menuitem"
               type="button"

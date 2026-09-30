@@ -16,18 +16,12 @@ import { mapConvexFailure } from "@/lib/errors";
 import { createSubmitLock, focusFirstInvalidField } from "@/lib/forms/submit";
 import { routes } from "@/lib/routes";
 
-/** Six wizard screens: 1–5 collect answers, 6 is review + publish. */
-const totalSteps = 6;
+/** Five wizard screens: 1–4 collect answers, 5 is review + publish. */
+const totalSteps = 5;
 type Wizard = FunctionReturnType<typeof api.projects.index.getWizard>;
 type Draft = NonNullable<Wizard["draft"]>;
-type Step = 1 | 2 | 3 | 4 | 5 | 6;
+type Step = 1 | 2 | 3 | 4 | 5;
 type Translate = (key: string, values?: Record<string, string | number>) => string;
-
-/** Resume after timeline (5) or older files step (6+) lands on review. */
-export function resumeWizardStep(lastCompletedStep: number): Step {
-  if (lastCompletedStep >= 5) return 6;
-  return Math.max(1, lastCompletedStep + 1) as Step;
-}
 
 export function shouldInitializeDraft({
   submitted,
@@ -59,7 +53,6 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
   const saveCategory = useMutation(api.projects.index.saveCategory);
   const saveLocation = useMutation(api.projects.index.saveLocation);
   const saveDetails = useMutation(api.projects.index.saveDetails);
-  const saveBudget = useMutation(api.projects.index.saveBudget);
   const saveTimeline = useMutation(api.projects.index.saveTimeline);
   const publish = useMutation(api.projects.index.publishProject);
   const router = useRouter();
@@ -102,7 +95,7 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
   useEffect(() => {
     if (wizard?.draft && loadedDraft.current !== wizard.draft.id) {
       loadedDraft.current = wizard.draft.id;
-      setStep(resumeWizardStep(wizard.draft.lastCompletedStep));
+      setStep(wizard.draft.resumeStep);
     }
   }, [wizard?.draft]);
 
@@ -209,10 +202,6 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
           description,
         });
       } else if (step === 4) {
-        const budgetRange = String(values.get("budgetRange") ?? "") as Wizard["budgetOptions"][number];
-        if (!data.budgetOptions.includes(budgetRange)) return fail(form, "budgetRange", t("validation.budget"));
-        await saveBudget({ projectId: draft.id, budgetRange });
-      } else if (step === 5) {
         const timeline = String(values.get("timeline") ?? "") as Wizard["timelineOptions"][number];
         if (!data.timelineOptions.includes(timeline)) return fail(form, "timeline", t("validation.timeline"));
         await saveTimeline({ projectId: draft.id, timeline });
@@ -223,9 +212,9 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
         router.push(routes.clientDashboard);
       } else if (returnToReview) {
         setReturnToReview(false);
-        go(6);
+        go(5);
       } else {
-        go(Math.min(6, (step + 1) as Step) as Step);
+        go(Math.min(5, (step + 1) as Step) as Step);
       }
     } catch (caught) {
       const mapped = mapConvexFailure(caught, tUx);
@@ -267,7 +256,7 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
           <span aria-live="polite">{saving ? t("saving") : t("autosaveHint")}</span>
         </div>
 
-        {step < 6 ? (
+        {step < 5 ? (
           <form
             className="flex min-h-[520px] flex-1 flex-col"
             noValidate
@@ -294,7 +283,7 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
                 </p>
               </header>
 
-              <StepBody data={data} draft={draft} fieldError={fieldError} step={step as Exclude<Step, 6>} t={t} />
+              <StepBody data={data} draft={draft} fieldError={fieldError} step={step as Exclude<Step, 5>} t={t} />
               {error ? (
                 <div className="mt-8">
                   <FriendlyAlert>{error}</FriendlyAlert>
@@ -304,7 +293,7 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
 
             <Actions
               disabled={saving}
-              step={step as Exclude<Step, 6>}
+              step={step as Exclude<Step, 5>}
               t={t}
               onBack={() => go((step - 1) as Step)}
               onSave={() => {
@@ -337,7 +326,7 @@ function StepBody({
   t,
   fieldError,
 }: {
-  step: Exclude<Step, 6>;
+  step: Exclude<Step, 5>;
   draft: Draft;
   data: Wizard;
   t: Translate;
@@ -487,10 +476,10 @@ function StepBody({
     );
   }
 
-  const name = step === 4 ? "budgetRange" : "timeline";
-  const selected = step === 4 ? draft.budgetRange : draft.timeline;
-  const values = step === 4 ? data.budgetOptions : data.timelineOptions;
-  const prefix = step === 4 ? "budgetOptions" : "timelineOptions";
+  const name = "timeline";
+  const selected = draft.timeline;
+  const values = data.timelineOptions;
+  const prefix = "timelineOptions";
 
   return (
     <fieldset
@@ -524,7 +513,7 @@ function Review({
 }: {
   draft: Draft;
   t: Translate;
-  onEdit: (step: Exclude<Step, 6>) => void;
+  onEdit: (step: Exclude<Step, 5>) => void;
   onPublish: () => void;
   publishing: boolean;
   error: string | null;
@@ -537,7 +526,7 @@ function Review({
       }`
     : t("notProvided");
 
-  const rows: Array<{ step: Exclude<Step, 6>; label: string; value: ReactNode }> = [
+  const rows: Array<{ step: Exclude<Step, 5>; label: string; value: ReactNode }> = [
     { step: 1, label: t("review.category"), value: category },
     {
       step: 2,
@@ -573,11 +562,6 @@ function Review({
     },
     {
       step: 4,
-      label: t("review.budget"),
-      value: draft.budgetRange ? t(`budgetOptions.${draft.budgetRange}`) : t("notProvided"),
-    },
-    {
-      step: 5,
       label: t("review.timeline"),
       value: draft.timeline ? t(`timelineOptions.${draft.timeline}`) : t("notProvided"),
     },
@@ -587,12 +571,12 @@ function Review({
     <section>
       <header className="max-w-xl">
         <p className="m-0 text-xs font-semibold tracking-[0.15em] text-brand uppercase">
-          {t("steps.6.eyebrow")}
+          {t("steps.5.eyebrow")}
         </p>
         <h1 className="mt-4 text-[clamp(1.85rem,4.5vw,2.75rem)] font-semibold tracking-[-0.045em] text-ink">
-          {t("steps.6.title")}
+          {t("steps.5.title")}
         </h1>
-        <p className="mt-4 mb-0 text-base leading-7 text-muted sm:text-lg">{t("steps.6.lead")}</p>
+        <p className="mt-4 mb-0 text-base leading-7 text-muted sm:text-lg">{t("steps.5.lead")}</p>
       </header>
 
       <div className="mt-10 divide-y divide-brand-border border-y border-brand-border">
@@ -638,7 +622,7 @@ function Actions({
   onBack,
   onSave,
 }: {
-  step: Exclude<Step, 6>;
+  step: Exclude<Step, 5>;
   disabled: boolean;
   t: Translate;
   onBack: () => void;
@@ -664,7 +648,7 @@ function Actions({
           {t("saveAndExit")}
         </button>
         <button className="button button-primary min-h-12" disabled={disabled} type="submit">
-          {disabled ? t("saving") : step === 5 ? t("reviewProject") : t("continue")}
+          {disabled ? t("saving") : step === 4 ? t("reviewProject") : t("continue")}
         </button>
       </div>
     </div>

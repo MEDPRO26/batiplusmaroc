@@ -1,0 +1,71 @@
+# Batiplus Marketplace
+
+Batiplus connects construction Clients with verified Companies around a Project
+and records the commercial relationship created when a Company is selected.
+
+## Language
+
+**Client**:
+The person who owns a Project and selects the Company that will perform it.
+_Avoid_: Customer, buyer
+
+**Company**:
+A verified construction business or professional that participates in Projects
+and may be selected to perform the work.
+_Avoid_: Vendor, freelancer
+
+**Project**:
+The central marketplace opportunity through which a Client and Companies move
+from initial interest to Company Selection.
+_Avoid_: Job, order
+
+**Final Quote**:
+The Company's definitive commercial offer whose current revision supplies the
+amount and terms a Client may accept.
+_Avoid_: Estimate, initial quote
+
+**Company Selection**:
+The Client's acceptance of a Company's current Final Quote, establishing that
+Company as the Project winner.
+_Avoid_: Assignment, manual award
+
+**Deal**:
+The immutable commercial record created by Company Selection, preserving the
+accepted parties, amount, quote, and marketplace commission facts.
+_Avoid_: Payment, invoice
+
+**Deal Completion**:
+The owning Client's final confirmation that the selected Company completed the
+agreed work. It completes both the Deal and Project and makes the Deal eligible
+for a review, independently of commission payment.
+_Avoid_: Commission settlement, Company self-completion
+
+**Client Review**:
+The completed Deal owner's one immutable rating and comment about the selected
+Company. It is public by default, and an Admin may hide or restore its public
+visibility without editing its content. Hidden reviews do not contribute to the
+Company's public rating or review count.
+_Avoid_: Company-to-Client review, testimonial, editable Admin content
+
+**Direct Company Invitation**:
+The owning Client's request for one verified Company to consider an active
+Project. It is pending until that Company's active member accepts or declines.
+Acceptance records mutual interest and permits the Company to submit through
+the existing Proposal flow; the submitted direct Proposal opens the existing
+conversation. Decline preserves history and leaves messaging locked.
+_Avoid_: Request Quote, automatic proposal, open chat before acceptance
+
+**Marketplace Commission**:
+The flat-bracket fee owed to Batiplus for a Deal, calculated from the full
+accepted Deal amount using the schedule in effect at Company Selection.
+_Avoid_: Client fee, progressive commission
+
+**Commission Obligation**:
+The Deal-specific debt in which the selected Company is the debtor and the
+Batiplus platform is the beneficiary; the Client is not the debtor. An Admin
+may record its one-way operational status from due to paid after receipt.
+_Avoid_: Client commission, commission deduction
+
+**Batiplus Platform**:
+The marketplace beneficiary represented operationally by Batiplus Admins.
+_Avoid_: Client, selected Company

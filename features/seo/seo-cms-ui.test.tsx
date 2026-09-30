@@ -11,6 +11,7 @@ vi.mock("convex/react", () => ({
   useQuery: () => convex.queryResult,
   useMutation: () => vi.fn(),
   useAction: () => vi.fn(),
+  usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }),
 }));
 vi.mock("@convex-dev/auth/react", () => ({ useAuthActions: () => ({ signOut: vi.fn() }) }));
 vi.mock("@/i18n/navigation", () => ({

@@ -5,7 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
-import { projectBudgetRanges, projectCategories, projectCities } from "@/convex/projects/constants";
+import { projectCategories, projectCities } from "@/convex/projects/constants";
 import { DashboardCardsSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
@@ -18,7 +18,6 @@ type Profile = NonNullable<FunctionReturnType<typeof api.companies.index.getOnbo
 type Project = FunctionReturnType<typeof api.projects.marketplace.listCompanyMarketplaceProjects>["page"][number];
 type City = (typeof projectCities)[number];
 type Category = (typeof projectCategories)[number];
-type Budget = (typeof projectBudgetRanges)[number];
 
 const PAGE_SIZE = 8;
 
@@ -83,7 +82,6 @@ export function CompanyDashboard() {
   const [search, setSearch] = useState("");
   const [city, setCity] = useState<City | "">("");
   const [category, setCategory] = useState<Category | "">("");
-  const [budgetRange, setBudgetRange] = useState<Budget | "">("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const debouncedSearch = useDebouncedValue(search, 250);
 
@@ -105,10 +103,9 @@ export function CompanyDashboard() {
             search: debouncedSearch.trim() || undefined,
             city: city || undefined,
             category: category || undefined,
-            budgetRange: budgetRange || undefined,
           }
         : ("skip" as const),
-    [budgetRange, canLoad, category, city, debouncedSearch],
+    [canLoad, category, city, debouncedSearch],
   );
   const { results, status, loadMore } = usePaginatedQuery(
     api.projects.marketplace.listCompanyMarketplaceProjects,
@@ -133,18 +130,15 @@ export function CompanyDashboard() {
     <div className="min-h-[calc(100dvh-4.5rem)] bg-white">
       <div className="mx-auto grid w-full max-w-[1120px] items-start gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6 lg:px-8">
         <ProjectFeed
-          budgetRange={budgetRange}
           category={category}
           city={city}
           filtersOpen={filtersOpen}
-          onBudgetChange={setBudgetRange}
           onCategoryChange={setCategory}
           onCityChange={setCity}
           onClearFilters={() => {
             setSearch("");
             setCity("");
             setCategory("");
-            setBudgetRange("");
           }}
           onSearchChange={setSearch}
           onToggleFilters={() => setFiltersOpen((open) => !open)}
@@ -167,10 +161,8 @@ function ProjectFeed({
   onToggleFilters,
   city,
   category,
-  budgetRange,
   onCityChange,
   onCategoryChange,
-  onBudgetChange,
   onClearFilters,
   projects,
   status,
@@ -183,10 +175,8 @@ function ProjectFeed({
   onToggleFilters: () => void;
   city: City | "";
   category: Category | "";
-  budgetRange: Budget | "";
   onCityChange: (value: City | "") => void;
   onCategoryChange: (value: Category | "") => void;
-  onBudgetChange: (value: Budget | "") => void;
   onClearFilters: () => void;
   projects: Project[];
   status: "LoadingFirstPage" | "LoadingMore" | "CanLoadMore" | "Exhausted";
@@ -248,12 +238,10 @@ function ProjectFeed({
       </div>
 
       {filtersOpen ? (
-        <div className="mt-3 rounded-xl border border-[#e4ebe6] bg-white p-4">
+        <div className="mt-3 rounded-xl border border-brand-border bg-white p-4">
           <FilterFields
-            budgetRange={budgetRange}
             category={category}
             city={city}
-            onBudgetChange={onBudgetChange}
             onCategoryChange={onCategoryChange}
             onCityChange={onCityChange}
             onClear={onClearFilters}
@@ -261,7 +249,7 @@ function ProjectFeed({
         </div>
       ) : null}
 
-      <div className="mt-5 border-b border-[#e4ebe6]">
+      <div className="mt-5 border-b border-brand-border">
         <p className="m-0 inline-flex border-b-2 border-[#B9563B] pb-3 text-sm font-semibold text-ink">
           {t("feed.tabRecent")}
         </p>
@@ -338,8 +326,6 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
         </Link>
       </h2>
       <p className="mt-1 mb-0 text-sm text-ink/80">
-        {tWizard(`budgetOptions.${project.budgetRange}`)}
-        <span aria-hidden> · </span>
         {tWizard(`timelineOptions.${project.timeline}`)}
         <span aria-hidden> · </span>
         {tWizard(`cityOptions.${project.city}`)}
@@ -386,7 +372,7 @@ function CompanySidebar({ profile, verification }: { profile: Profile; verificat
 
   return (
     <aside className="grid gap-4 lg:sticky lg:top-24">
-      <section className="rounded-2xl border border-[#e4ebe6] bg-white px-5 py-5">
+      <section className="rounded-2xl border border-brand-border bg-white px-5 py-5">
         <div className="flex items-center gap-3">
           {profile.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -423,15 +409,15 @@ function CompanySidebar({ profile, verification }: { profile: Profile; verificat
         <div className="mt-4 border-t border-[#eef2f0] pt-4">
           <div className="flex items-center justify-between gap-3 text-sm">
             <p className="m-0 text-ink">{t("sidebar.completeProfile")}</p>
-            <p className="m-0 font-semibold text-[#108a00]">{t("sidebar.progress", { value: completion })}</p>
+            <p className="m-0 font-semibold text-brand">{t("sidebar.progress", { value: completion })}</p>
           </div>
           <div aria-hidden className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#e6eee8]">
-            <div className="h-full rounded-full bg-[#108a00]" style={{ width: `${completion}%` }} />
+            <div className="h-full rounded-full bg-brand" style={{ width: `${completion}%` }} />
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-[#e4ebe6] bg-white">
+      <section className="rounded-2xl border border-brand-border bg-white">
         <button
           aria-expanded={reachOpen}
           className="flex min-h-14 w-full items-center justify-between px-5 text-left text-[15px] font-semibold text-ink"
@@ -476,50 +462,21 @@ function CompanySidebar({ profile, verification }: { profile: Profile; verificat
         ) : null}
       </section>
 
-      <nav aria-label={t("sidebar.reachMore")} className="overflow-hidden rounded-2xl border border-[#e4ebe6] bg-white">
-        <SidebarLink href={routes.messages} label={t("sidebar.messages")} />
-        <SidebarLink href={routes.companyProjects} label={t("findWorkTitle")} />
-        <SidebarLink href={routes.contact} label={t("sidebar.contact")} />
-      </nav>
     </aside>
-  );
-}
-
-function SidebarLink({
-  href,
-  label,
-}: {
-  href: typeof routes.messages | typeof routes.companyProjects | typeof routes.contact;
-  label: string;
-}) {
-  return (
-    <Link
-      className="flex min-h-12 items-center justify-between border-b border-[#eef2f0] px-5 text-sm font-medium text-ink last:border-b-0 hover:bg-[#f7faf8]"
-      href={href}
-    >
-      {label}
-      <span aria-hidden className="text-muted">
-        ›
-      </span>
-    </Link>
   );
 }
 
 function FilterFields({
   city,
   category,
-  budgetRange,
   onCityChange,
   onCategoryChange,
-  onBudgetChange,
   onClear,
 }: {
   city: City | "";
   category: Category | "";
-  budgetRange: Budget | "";
   onCityChange: (value: City | "") => void;
   onCategoryChange: (value: Category | "") => void;
-  onBudgetChange: (value: Budget | "") => void;
   onClear: () => void;
 }) {
   const t = useTranslations("companyProjects");
@@ -532,7 +489,7 @@ function FilterFields({
           {t("clearFilters")}
         </button>
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <FilterSelect id="company-feed-city" label={t("filters.city")} onChange={(value) => onCityChange(value as City | "")} value={city}>
           <option value="">{t("filters.allCities")}</option>
           {projectCities.map((item) => (
@@ -551,19 +508,6 @@ function FilterFields({
           {projectCategories.map((item) => (
             <option key={item} value={item}>
               {tWizard(`categoryOptions.${item}`)}
-            </option>
-          ))}
-        </FilterSelect>
-        <FilterSelect
-          id="company-feed-budget"
-          label={t("filters.budget")}
-          onChange={(value) => onBudgetChange(value as Budget | "")}
-          value={budgetRange}
-        >
-          <option value="">{t("filters.allBudgets")}</option>
-          {projectBudgetRanges.map((item) => (
-            <option key={item} value={item}>
-              {tWizard(`budgetOptions.${item}`)}
             </option>
           ))}
         </FilterSelect>

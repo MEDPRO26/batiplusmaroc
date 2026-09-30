@@ -25,7 +25,12 @@ async function seedUser(t: TestBackend, accountType: "client" | "company", suffi
   }));
 }
 
-async function seedCompany(t: TestBackend, verificationStatus: "draft" | "pending" | "verified" = "verified", onboardingStatus: "pending" | "completed" = "completed") {
+async function seedCompany(
+  t: TestBackend,
+  verificationStatus: "draft" | "pending" | "verified" = "verified",
+  onboardingStatus: "pending" | "completed" = "completed",
+  operationalStatus?: "normal" | "needs_attention" | "suspended",
+) {
   const userId = await seedUser(t, "company", crypto.randomUUID(), onboardingStatus);
   const companyId = await t.run((ctx) => ctx.db.insert("companies", {
     name: "Atlas Build",
@@ -33,6 +38,7 @@ async function seedCompany(t: TestBackend, verificationStatus: "draft" | "pendin
     description: "A completed construction company profile.",
     onboardingStatus,
     verificationStatus,
+    operationalStatus,
     createdAt: 10,
     updatedAt: 10,
   }));
@@ -52,14 +58,12 @@ async function seedProject(t: TestBackend, clientId: Id<"users">, options?: {
   visibility?: "marketplace" | "invite_only";
   city?: "rabat" | "agadir";
   category?: "renovation" | "architecture";
-  budgetRange?: "under_50000" | "100000_250000" | "500000_1000000";
   timeline?: "asap" | "one_to_three_months" | "flexible";
   propertyType?: "apartment" | "house" | "building";
   surface?: number;
   surfaceUnknown?: boolean;
   publishedAt?: number;
 }) {
-  const budgetRange = options?.budgetRange ?? "100000_250000" as const;
   const project = {
     clientId,
     primaryCategory: options?.category ?? "renovation" as const,
@@ -71,20 +75,14 @@ async function seedProject(t: TestBackend, clientId: Id<"users">, options?: {
     surface: options?.surfaceUnknown ? undefined : (options?.surface ?? 95),
     surfaceUnknown: options?.surfaceUnknown ?? false,
     description: "Renovation complete with electrical and plumbing work.",
-    budgetRange,
-    budgetMin: budgetRange === "under_50000" ? 0 : budgetRange === "500000_1000000" ? 500_000 : 100_000,
-    budgetMax: budgetRange === "under_50000" ? 50_000 : budgetRange === "500000_1000000" ? 1_000_000 : 250_000,
-    budgetUnknown: false,
     timeline: options?.timeline ?? "one_to_three_months" as const,
     visibility: options?.visibility ?? "marketplace" as const,
     status: options?.status ?? "published" as ProjectStatus,
-    lastCompletedStep: 6,
+    lastCompletedStep: 5,
     createdAt: options?.publishedAt ?? 100,
     updatedAt: options?.publishedAt ?? 100,
     submittedAt: 50,
     publishedAt: options?.publishedAt ?? 100,
-    marketplaceBudgetRank:
-      budgetRange === "under_50000" ? 1 : budgetRange === "500000_1000000" ? 5 : 3,
   };
   return await t.run((ctx) => ctx.db.insert("projects", {
     ...project,
@@ -132,23 +130,37 @@ describe("company project marketplace authorization and visibility", () => {
 });
 
 describe("company project marketplace discovery", () => {
-  test("filters by city, category, budget and search while keeping newest-first order", async () => {
+  test("discovers and opens a published Project", async () => {
+    const t = convexTest(schema, modules);
+    const clientId = await seedUser(t, "client", "no-budget-client");
+    const company = await seedCompany(t);
+    const projectId = await seedProject(t, clientId, {
+      title: "No-budget renovation",
+      publishedAt: 400,
+    });
+    const caller = asUser(t, company.userId);
+
+    const listing = await caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, firstPage);
+    expect(listing.page).toEqual([expect.objectContaining({ id: projectId })]);
+    const detail = await caller.query(api.projects.marketplace.getCompanyMarketplaceProject, { projectId });
+    expect(detail).toMatchObject({ id: projectId, canSubmitQuote: true });
+  });
+
+  test("filters by city, category and search", async () => {
     const t = convexTest(schema, modules);
     const clientId = await seedUser(t, "client", "client");
     const company = await seedCompany(t);
-    const rabatId = await seedProject(t, clientId, { title: "Rabat modern renovation", city: "rabat", category: "renovation", budgetRange: "100000_250000", publishedAt: 300 });
-    const agadirId = await seedProject(t, clientId, { title: "Agadir villa plans", city: "agadir", category: "architecture", budgetRange: "under_50000", publishedAt: 200 });
+    const rabatId = await seedProject(t, clientId, { title: "Rabat modern renovation", city: "rabat", category: "renovation", publishedAt: 300 });
+    const agadirId = await seedProject(t, clientId, { title: "Agadir villa plans", city: "agadir", category: "architecture", publishedAt: 200 });
     const caller = asUser(t, company.userId);
 
     const all = await caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, firstPage);
     expect(all.page.map((project) => project.id)).toEqual([rabatId, agadirId]);
     await expect(caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, { ...firstPage, city: "agadir" })).resolves.toMatchObject({ page: [expect.objectContaining({ id: agadirId })] });
     await expect(caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, { ...firstPage, category: "renovation" })).resolves.toMatchObject({ page: [expect.objectContaining({ id: rabatId })] });
-    await expect(caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, { ...firstPage, budgetRange: "under_50000" })).resolves.toMatchObject({ page: [expect.objectContaining({ id: agadirId })] });
     await expect(caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, { ...firstPage, cities: ["agadir"] })).resolves.toMatchObject({ page: [expect.objectContaining({ id: agadirId })] });
     await expect(caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, { ...firstPage, cities: [] })).resolves.toMatchObject({ page: [] });
     await expect(caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, { ...firstPage, categories: ["renovation", "architecture"] })).resolves.toMatchObject({ page: [expect.objectContaining({ id: rabatId }), expect.objectContaining({ id: agadirId })] });
-    await expect(caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, { ...firstPage, budgetRanges: ["under_50000", "100000_250000"] })).resolves.toMatchObject({ page: [expect.objectContaining({ id: rabatId }), expect.objectContaining({ id: agadirId })] });
     await expect(caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, { ...firstPage, search: "villa", categories: ["renovation", "architecture"] })).resolves.toMatchObject({ page: [expect.objectContaining({ id: agadirId })] });
     await expect(caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, { ...firstPage, search: "villa" })).resolves.toMatchObject({ page: [expect.objectContaining({ id: agadirId })] });
     await expect(caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, { ...firstPage, search: "architecture" })).resolves.toMatchObject({ page: [expect.objectContaining({ id: agadirId })] });
@@ -181,7 +193,6 @@ describe("company project marketplace discovery", () => {
       title: "Agadir renovation match",
       city: "agadir",
       category: "renovation",
-      budgetRange: "100000_250000",
       timeline: "one_to_three_months",
       propertyType: "house",
       surface: 150,
@@ -191,7 +202,6 @@ describe("company project marketplace discovery", () => {
       title: "Wrong timeline",
       city: "agadir",
       category: "renovation",
-      budgetRange: "100000_250000",
       timeline: "asap",
       propertyType: "house",
       surface: 150,
@@ -201,7 +211,6 @@ describe("company project marketplace discovery", () => {
       title: "Wrong property",
       city: "agadir",
       category: "renovation",
-      budgetRange: "100000_250000",
       timeline: "one_to_three_months",
       propertyType: "apartment",
       surface: 150,
@@ -211,7 +220,6 @@ describe("company project marketplace discovery", () => {
       title: "Wrong surface",
       city: "agadir",
       category: "renovation",
-      budgetRange: "100000_250000",
       timeline: "one_to_three_months",
       propertyType: "house",
       surface: 80,
@@ -221,7 +229,6 @@ describe("company project marketplace discovery", () => {
       title: "Too old",
       city: "agadir",
       category: "renovation",
-      budgetRange: "100000_250000",
       timeline: "one_to_three_months",
       propertyType: "house",
       surface: 150,
@@ -280,7 +287,6 @@ describe("company project marketplace discovery", () => {
       ...firstPage,
       cities: ["agadir"],
       categories: ["renovation"],
-      budgetRanges: ["100000_250000"],
       timelines: ["one_to_three_months"],
       propertyTypes: ["house"],
       surfaceRanges: ["100_200"],
@@ -290,23 +296,20 @@ describe("company project marketplace discovery", () => {
     expect(combined.page.map((project) => project.id)).toEqual([matchId]);
   });
 
-  test("sorts by newest, oldest, and budget ranks", async () => {
+  test("sorts by newest and oldest", async () => {
     const t = convexTest(schema, modules);
     const clientId = await seedUser(t, "client", "client");
     const company = await seedCompany(t);
-    const lowId = await seedProject(t, clientId, {
-      title: "Low budget",
-      budgetRange: "under_50000",
+    const oldestId = await seedProject(t, clientId, {
+      title: "Oldest project",
       publishedAt: 100,
     });
-    const midId = await seedProject(t, clientId, {
-      title: "Mid budget",
-      budgetRange: "100000_250000",
+    const newestId = await seedProject(t, clientId, {
+      title: "Newest project",
       publishedAt: 200,
     });
-    const highId = await seedProject(t, clientId, {
-      title: "High budget",
-      budgetRange: "500000_1000000",
+    const middleId = await seedProject(t, clientId, {
+      title: "Middle project",
       publishedAt: 150,
     });
     const caller = asUser(t, company.userId);
@@ -318,9 +321,9 @@ describe("company project marketplace discovery", () => {
       }),
     ).resolves.toMatchObject({
       page: [
-        expect.objectContaining({ id: midId }),
-        expect.objectContaining({ id: highId }),
-        expect.objectContaining({ id: lowId }),
+        expect.objectContaining({ id: newestId }),
+        expect.objectContaining({ id: middleId }),
+        expect.objectContaining({ id: oldestId }),
       ],
     });
     await expect(
@@ -330,33 +333,9 @@ describe("company project marketplace discovery", () => {
       }),
     ).resolves.toMatchObject({
       page: [
-        expect.objectContaining({ id: lowId }),
-        expect.objectContaining({ id: highId }),
-        expect.objectContaining({ id: midId }),
-      ],
-    });
-    await expect(
-      caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, {
-        ...firstPage,
-        sortBy: "budget_high",
-      }),
-    ).resolves.toMatchObject({
-      page: [
-        expect.objectContaining({ id: highId }),
-        expect.objectContaining({ id: midId }),
-        expect.objectContaining({ id: lowId }),
-      ],
-    });
-    await expect(
-      caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, {
-        ...firstPage,
-        sortBy: "budget_low",
-      }),
-    ).resolves.toMatchObject({
-      page: [
-        expect.objectContaining({ id: lowId }),
-        expect.objectContaining({ id: midId }),
-        expect.objectContaining({ id: highId }),
+        expect.objectContaining({ id: oldestId }),
+        expect.objectContaining({ id: middleId }),
+        expect.objectContaining({ id: newestId }),
       ],
     });
   });
@@ -395,6 +374,22 @@ describe("company project marketplace safe details", () => {
     expect(serialized).not.toContain("attachments");
     expect(serialized).not.toContain('"email"');
     expect(serialized).not.toContain('"phone"');
+  });
+
+  test.each([
+    ["normal", true],
+    ["needs_attention", true],
+    ["suspended", false],
+  ] as const)("returns quote eligibility for a verified %s company", async (operationalStatus, canSubmitQuote) => {
+    const t = convexTest(schema, modules);
+    const clientId = await seedUser(t, "client", `client-${operationalStatus}`);
+    const company = await seedCompany(t, "verified", "completed", operationalStatus);
+    const projectId = await seedProject(t, clientId);
+
+    await expect(asUser(t, company.userId).query(
+      api.projects.marketplace.getCompanyMarketplaceProject,
+      { projectId },
+    )).resolves.toMatchObject({ canSubmitQuote });
   });
 
   test("hides missing, non-published, and invite-only project details", async () => {

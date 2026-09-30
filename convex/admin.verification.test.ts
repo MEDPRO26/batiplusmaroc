@@ -82,6 +82,36 @@ function asUser(t: TestBackend, userId: Id<"users">) {
   return t.withIdentity({ subject: `${userId}|test-session`, tokenIdentifier: `test|${userId}` });
 }
 
+async function seedCompanyMember(
+  t: TestBackend,
+  companyId: Id<"companies">,
+  status: "active" | "inactive",
+) {
+  return await t.run(async (ctx) => {
+    const userId = await ctx.db.insert("users", {
+      email: `${crypto.randomUUID()}@example.test`,
+      accountType: "company",
+      onboardingStatus: "completed",
+      createdAt: 1,
+      updatedAt: 1,
+    });
+    await ctx.db.insert("companyMembers", {
+      companyId,
+      userId,
+      role: "staff",
+      status,
+      createdAt: 1,
+    });
+    return userId;
+  });
+}
+
+async function notificationsFor(t: TestBackend, userId: Id<"users">) {
+  return (await asUser(t, userId).query(api.notifications.index.listMyNotifications, {
+    paginationOpts: { numItems: 20, cursor: null },
+  })).page;
+}
+
 describe("admin company verification", () => {
   test("blocks unauthenticated, client, and company callers from list and review", async () => {
     const t = convexTest(schema, modules);
@@ -158,10 +188,76 @@ describe("admin company verification", () => {
     });
   });
 
-  test("admin can approve pending verification and writes immutable history", async () => {
+  test("approval notifies every active Company member once with a safe payload", async () => {
     const t = convexTest(schema, modules);
     const adminId = await seedAdmin(t);
-    const { companyId } = await seedPendingCompany(t);
+    const { ownerId, companyId, verificationId } = await seedPendingCompany(t);
+    const activeMemberId = await seedCompanyMember(t, companyId, "active");
+    const inactiveMemberId = await seedCompanyMember(t, companyId, "inactive");
+    const unrelatedCompany = await seedPendingCompany(t, { name: "Other Company" });
+    const unrelatedMemberId = unrelatedCompany.ownerId;
+    const unauthorizedMemberIds = await t.run(async (ctx) => {
+      const userIds: Id<"users">[] = [];
+      for (const accountType of ["admin", "client", "seo_team"] as const) {
+        const userId = await ctx.db.insert("users", {
+          email: `${crypto.randomUUID()}@example.test`,
+          accountType,
+          onboardingStatus: "completed",
+          createdAt: 1,
+          updatedAt: 1,
+        });
+        await ctx.db.insert("companyMembers", {
+          companyId,
+          userId,
+          role: "staff",
+          status: "active",
+          createdAt: 1,
+        });
+        userIds.push(userId);
+      }
+      const pendingCompanyUserId = await ctx.db.insert("users", {
+        email: `${crypto.randomUUID()}@example.test`,
+        accountType: "company",
+        onboardingStatus: "pending",
+        createdAt: 1,
+        updatedAt: 1,
+      });
+      await ctx.db.insert("companyMembers", {
+        companyId,
+        userId: pendingCompanyUserId,
+        role: "staff",
+        status: "active",
+        createdAt: 1,
+      });
+      userIds.push(pendingCompanyUserId);
+
+      const duplicateMemberUserId = await ctx.db.insert("users", {
+        email: `${crypto.randomUUID()}@example.test`,
+        accountType: "company",
+        onboardingStatus: "completed",
+        createdAt: 1,
+        updatedAt: 1,
+      });
+      for (const memberCompanyId of [companyId, unrelatedCompany.companyId]) {
+        await ctx.db.insert("companyMembers", {
+          companyId: memberCompanyId,
+          userId: duplicateMemberUserId,
+          role: "staff",
+          status: "active",
+          createdAt: 1,
+        });
+      }
+      userIds.push(duplicateMemberUserId);
+
+      await ctx.db.insert("companyMembers", {
+        companyId,
+        userId: adminId,
+        role: "staff",
+        status: "active",
+        createdAt: 1,
+      });
+      return userIds;
+    });
 
     await expect(
       asUser(t, adminId).mutation(api.admin.verification.approveCompanyVerification, { companyId }),
@@ -178,12 +274,38 @@ describe("admin company verification", () => {
       newStatus: "verified",
       changedBy: adminId,
     });
+
+    for (const recipientUserId of [ownerId, activeMemberId]) {
+      expect(await notificationsFor(t, recipientUserId)).toEqual([
+        expect.objectContaining({
+          type: "company_verification_approved",
+          entity: { type: "company_verification", id: verificationId },
+          actorUserId: adminId,
+          payload: { companyName: "Atlas Build" },
+          readAt: null,
+        }),
+      ]);
+      await expect(
+        asUser(t, recipientUserId).query(api.notifications.index.getMyUnreadCount, {}),
+      ).resolves.toBe(1);
+    }
+    expect(await notificationsFor(t, inactiveMemberId)).toEqual([]);
+    expect(await notificationsFor(t, unrelatedMemberId)).toEqual([]);
+    expect(await notificationsFor(t, adminId)).toEqual([]);
+    for (const userId of unauthorizedMemberIds) {
+      expect(await notificationsFor(t, userId)).toEqual([]);
+    }
+
+    await expect(
+      asUser(t, adminId).mutation(api.admin.verification.approveCompanyVerification, { companyId }),
+    ).rejects.toThrow("VERIFICATION_NOT_PENDING");
+    expect(await notificationsFor(t, ownerId)).toHaveLength(1);
   });
 
-  test("non-admin and company cannot approve or self-verify", async () => {
+  test("anonymous, client, Company, and SEO callers cannot moderate or create notifications", async () => {
     const t = convexTest(schema, modules);
     const { ownerId, companyId } = await seedPendingCompany(t);
-    const clientId = await t.run((ctx) =>
+    const [clientId, seoId] = await t.run(async (ctx) => Promise.all([
       ctx.db.insert("users", {
         email: "client2@example.test",
         accountType: "client",
@@ -191,21 +313,45 @@ describe("admin company verification", () => {
         createdAt: 1,
         updatedAt: 1,
       }),
-    );
+      ctx.db.insert("users", {
+        email: "seo@example.test",
+        accountType: "seo_team",
+        onboardingStatus: "completed",
+        createdAt: 1,
+        updatedAt: 1,
+      }),
+    ]));
 
-    await expect(
-      asUser(t, clientId).mutation(api.admin.verification.approveCompanyVerification, { companyId }),
-    ).rejects.toThrow("ADMIN_REQUIRED");
-    await expect(
-      asUser(t, ownerId).mutation(api.admin.verification.approveCompanyVerification, { companyId }),
-    ).rejects.toThrow("ADMIN_REQUIRED");
+    await expect(t.mutation(
+      api.admin.verification.approveCompanyVerification,
+      { companyId },
+    )).rejects.toThrow("NOT_AUTHENTICATED");
+    await expect(t.mutation(
+      api.admin.verification.rejectCompanyVerification,
+      { companyId, reason: "Not authorized" },
+    )).rejects.toThrow("NOT_AUTHENTICATED");
+    for (const userId of [clientId, ownerId, seoId]) {
+      await expect(
+        asUser(t, userId).mutation(api.admin.verification.approveCompanyVerification, { companyId }),
+      ).rejects.toThrow("ADMIN_REQUIRED");
+      await expect(
+        asUser(t, userId).mutation(api.admin.verification.rejectCompanyVerification, {
+          companyId,
+          reason: "Not authorized",
+        }),
+      ).rejects.toThrow("ADMIN_REQUIRED");
+    }
     expect((await t.run((ctx) => ctx.db.get(companyId)))?.verificationStatus).toBe("pending");
+    expect(await t.run((ctx) => ctx.db.query("notifications").collect())).toEqual([]);
   });
 
-  test("admin can reject with reason and empty reason fails", async () => {
+  test("rejection notifies active members without exposing the Admin-only reason", async () => {
     const t = convexTest(schema, modules);
     const adminId = await seedAdmin(t);
-    const { companyId } = await seedPendingCompany(t);
+    const { ownerId, companyId, verificationId } = await seedPendingCompany(t);
+    const activeMemberId = await seedCompanyMember(t, companyId, "active");
+    const inactiveMemberId = await seedCompanyMember(t, companyId, "inactive");
+    const unrelatedMemberId = (await seedPendingCompany(t, { name: "Other Company" })).ownerId;
     const admin = asUser(t, adminId);
 
     await expect(
@@ -226,6 +372,33 @@ describe("admin company verification", () => {
       rejectionReason: "Incomplete ICE documents",
       changedBy: adminId,
     });
+
+    for (const recipientUserId of [ownerId, activeMemberId]) {
+      expect(await notificationsFor(t, recipientUserId)).toEqual([
+        expect.objectContaining({
+          type: "company_verification_rejected",
+          entity: { type: "company_verification", id: verificationId },
+          actorUserId: adminId,
+          payload: { companyName: "Atlas Build" },
+          readAt: null,
+        }),
+      ]);
+      expect(JSON.stringify(await notificationsFor(t, recipientUserId))).not.toContain(
+        "Incomplete ICE documents",
+      );
+      await expect(
+        asUser(t, recipientUserId).query(api.notifications.index.getMyUnreadCount, {}),
+      ).resolves.toBe(1);
+    }
+    expect(await notificationsFor(t, inactiveMemberId)).toEqual([]);
+    expect(await notificationsFor(t, unrelatedMemberId)).toEqual([]);
+    expect(await notificationsFor(t, adminId)).toEqual([]);
+
+    await expect(admin.mutation(api.admin.verification.rejectCompanyVerification, {
+      companyId,
+      reason: "Repeated retry",
+    })).rejects.toThrow("VERIFICATION_NOT_PENDING");
+    expect(await notificationsFor(t, ownerId)).toHaveLength(1);
   });
 
   test("resubmitted rejected company returns to pending for admin list", async () => {
@@ -248,6 +421,91 @@ describe("admin company verification", () => {
     });
     expect(pending).toEqual([expect.objectContaining({ companyId, status: "pending" })]);
   });
+
+  test("rejection, resubmission, and later approval use distinct transition dedupe keys", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedAdmin(t);
+    const { ownerId, companyId, verificationId } = await seedPendingCompany(t);
+    const admin = asUser(t, adminId);
+
+    await admin.mutation(api.admin.verification.rejectCompanyVerification, {
+      companyId,
+      reason: "Please provide a clearer registration record",
+    });
+    await asUser(t, ownerId).mutation(api.companyVerification.index.submitVerification, {
+      legalName: "Atlas Build SARL",
+      ice: "001234567890123",
+      rcNumber: "RC-88",
+      legalRepresentative: "Sara El Amrani",
+      phone: "+212 6 12 34 56 78",
+      address: "12 avenue Hassan II, Agadir",
+      documents: [],
+    });
+    await admin.mutation(api.admin.verification.approveCompanyVerification, { companyId });
+
+    const stored = await t.run(async (ctx) => ({
+      verification: await ctx.db
+        .query("companyVerifications")
+        .withIndex("by_companyId", (q) => q.eq("companyId", companyId))
+        .unique(),
+      history: await ctx.db
+        .query("companyVerificationHistory")
+        .withIndex("by_companyId_and_changedAt", (q) => q.eq("companyId", companyId))
+        .collect(),
+      notifications: await ctx.db
+        .query("notifications")
+        .withIndex("by_recipientUserId_and_createdAt", (q) => q.eq("recipientUserId", ownerId))
+        .collect(),
+    }));
+    expect(stored.verification?._id).toBe(verificationId);
+    expect(stored.history.map(({ oldStatus, newStatus }) => ({ oldStatus, newStatus }))).toEqual([
+      { oldStatus: "pending", newStatus: "rejected" },
+      { oldStatus: "rejected", newStatus: "pending" },
+      { oldStatus: "pending", newStatus: "verified" },
+    ]);
+    expect(stored.notifications).toHaveLength(2);
+    const rejected = stored.notifications.find(({ type }) => type === "company_verification_rejected");
+    const approved = stored.notifications.find(({ type }) => type === "company_verification_approved");
+    expect(rejected?.dedupeKey).toBe(
+      `company_verification:${verificationId}:rejected:${stored.history[0]?._id}`,
+    );
+    expect(approved?.dedupeKey).toBe(
+      `company_verification:${verificationId}:approved:${stored.history[2]?._id}`,
+    );
+    expect(rejected?.dedupeKey).not.toBe(approved?.dedupeKey);
+    await expect(
+      asUser(t, ownerId).query(api.notifications.index.getMyUnreadCount, {}),
+    ).resolves.toBe(2);
+    expect(await notificationsFor(t, adminId)).toEqual([]);
+  });
+
+  test.each(["approve", "reject"] as const)(
+    "%s rolls back status and history when an active notification recipient is invalid",
+    async (action) => {
+      const t = convexTest(schema, modules);
+      const adminId = await seedAdmin(t);
+      const { ownerId, companyId } = await seedPendingCompany(t);
+      await t.run((ctx) => ctx.db.delete(ownerId));
+      const admin = asUser(t, adminId);
+
+      const moderation = action === "approve"
+        ? admin.mutation(api.admin.verification.approveCompanyVerification, { companyId })
+        : admin.mutation(api.admin.verification.rejectCompanyVerification, {
+            companyId,
+            reason: "Incomplete documents",
+          });
+      await expect(moderation).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+      const state = await t.run(async (ctx) => ({
+        company: await ctx.db.get(companyId),
+        history: await ctx.db.query("companyVerificationHistory").collect(),
+        notifications: await ctx.db.query("notifications").collect(),
+      }));
+      expect(state.company?.verificationStatus).toBe("pending");
+      expect(state.history).toEqual([]);
+      expect(state.notifications).toEqual([]);
+    },
+  );
 
   test("private document url requires admin", async () => {
     const t = convexTest(schema, modules);
@@ -293,5 +551,6 @@ describe("admin company verification", () => {
         reason: "Too late",
       }),
     ).rejects.toThrow("VERIFICATION_NOT_PENDING");
+    expect(await t.run((ctx) => ctx.db.query("notifications").collect())).toEqual([]);
   });
 });

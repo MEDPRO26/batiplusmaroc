@@ -15,6 +15,7 @@ vi.mock("next/font/google", () => ({
 vi.mock("convex/react", () => ({
   useQuery: () => convex.queryResults.shift(),
   useMutation: () => vi.fn(),
+  usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }),
 }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({
@@ -28,6 +29,7 @@ vi.mock("@/i18n/navigation", () => ({
   ),
   usePathname: () => "/admin/projects",
   getPathname: () => "/admin/projects",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 vi.mock("next/navigation", () => ({ useParams: () => ({ locale: "en" }) }));
 
@@ -100,10 +102,6 @@ describe("admin projects interface", () => {
         surface: 95,
         surfaceUnknown: false,
         description: "Renovation complete with electrical work.",
-        budgetRange: "100000_250000",
-        budgetMin: 100000,
-        budgetMax: 250000,
-        budgetUnknown: false,
         timeline: "one_to_three_months",
         submittedAt: 1790000000000,
         publishedAt: null,
@@ -189,6 +187,8 @@ describe("admin projects interface", () => {
     expect(html).toContain("Agdal");
     expect(html).toContain("Approve");
     expect(html).toContain("Request changes");
+    expect(html).not.toContain("100,000–250,000 MAD");
+    expect(html).not.toContain(">Budget<");
     expect(html).toContain("Marketplace timeline");
     expect(html).toContain("Project submitted for review");
     expect(html).toContain("Site visit confirmed");
@@ -216,10 +216,6 @@ describe("admin projects interface", () => {
         surface: 220,
         surfaceUnknown: false,
         description: "Fresh disposable project for timeline QA.",
-        budgetRange: "250000_500000",
-        budgetMin: 250000,
-        budgetMax: 500000,
-        budgetUnknown: false,
         timeline: "one_to_three_months",
         submittedAt: 1_700_000_100_000,
         publishedAt: 1_700_000_200_000,
@@ -304,10 +300,6 @@ describe("admin projects interface", () => {
         surface: 220,
         surfaceUnknown: false,
         description: "Fresh disposable project for timeline QA.",
-        budgetRange: "250000_500000",
-        budgetMin: 250000,
-        budgetMax: 500000,
-        budgetUnknown: false,
         timeline: "one_to_three_months",
         submittedAt: 1_700_000_100_000,
         publishedAt: 1_700_000_200_000,
@@ -364,7 +356,6 @@ describe("admin projects interface", () => {
           city: "rabat",
           category: "renovation",
           customCategoryText: null,
-          budgetRange: "100000_250000",
           submittedAt: 1790000000000,
           status: "pending_review",
         },
@@ -387,5 +378,7 @@ describe("admin projects interface", () => {
     expect(html).toContain("md:block");
     expect(html).toContain("<article");
     expect(html).toContain("<table");
+    expect(html).not.toContain("100,000–250,000 MAD");
+    expect(html).not.toContain(">Budget<");
   });
 });

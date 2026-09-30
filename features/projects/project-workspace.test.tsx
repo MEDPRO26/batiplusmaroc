@@ -8,8 +8,8 @@ import type { PublicProject } from "@/features/projects/components/project-disco
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 
-const queryState = vi.hoisted(() => ({ value: undefined as unknown }));
-vi.mock("convex/react", () => ({ useQuery: () => queryState.value }));
+const queryState = vi.hoisted(() => ({ value: undefined as unknown, values: [] as unknown[] }));
+vi.mock("convex/react", () => ({ useQuery: () => queryState.values.length ? queryState.values.shift() : queryState.value, useMutation: () => vi.fn() }));
 vi.mock("next/image", () => ({ default: ({ alt }: { alt: string }) => <span data-alt={alt} /> }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string | { pathname: string; query?: Record<string, string> } }) => {
@@ -23,7 +23,7 @@ vi.mock("@/i18n/navigation", () => ({
 
 import { ClientDashboardView, ClientProjectCard, ClientProjectsView, greetingPeriod, resolveClientDashboardRedirect } from "@/features/clients/components/client-dashboard";
 import { routes } from "@/lib/routes";
-import { ClientProjectDetailsView } from "@/features/projects/components/client-project-details";
+import { ClientDealCompletion, ClientProjectDetailsView, DealCompletionDialog, ReviewDialog } from "@/features/projects/components/client-project-details";
 import { ProjectDiscoveryEmptyState, ProjectDiscoveryResults } from "@/features/projects/components/project-discovery-empty-state";
 
 const projectId = "project-1" as Id<"projects">;
@@ -32,7 +32,6 @@ const baseProject: Project = {
   title: "Villa build",
   primaryCategory: "houseConstruction",
   city: "casablanca",
-  budgetRange: "50000_100000",
   timeline: "one_to_three_months",
   status: "pending_review",
   createdAt: 1_790_000_000_000,
@@ -48,7 +47,7 @@ function render(locale: "en" | "fr", node: React.ReactNode) {
 }
 
 describe("client project workspace", () => {
-  beforeEach(() => { queryState.value = undefined; });
+  beforeEach(() => { queryState.value = undefined; queryState.values = []; });
 
   test("shows the post-project action when the owner has zero projects", () => {
     const html = render("en", <ClientProjectsView projects={[]} />);
@@ -146,9 +145,11 @@ describe("client project workspace", () => {
       viewerRole: "owner",
     };
     const html = render("en", <ClientProjectDetailsView project={details} />);
-    expect(html).toContain("Project summary");
+    expect(html).toContain("Project information");
     expect(html).toContain("plan.pdf");
     expect(html).toContain("Draft → Pending review");
+    expect(html).not.toContain("50,000–100,000 MAD");
+    expect(html).not.toContain(">Budget<");
     expect(html).not.toContain(details.id);
   });
 
@@ -176,6 +177,68 @@ describe("client project workspace", () => {
     expect(html).toContain("?projectId=project-1");
   });
 
+  test("shows the Client-only completion action and confirmation dialog in EN and FR", () => {
+    const details: ProjectDetails = {
+      ...baseProject,
+      status: "company_selected",
+      customCategoryText: null,
+      neighborhood: null,
+      description: "A complete family villa construction project.",
+      propertyType: "house",
+      surface: 180,
+      surfaceUnknown: false,
+      images: [],
+      attachments: [],
+      history: [],
+      viewerRole: "owner",
+    };
+    queryState.value = { id: "deal-1", status: "active", completedAt: null, reviewEligible: false };
+    const active = render("en", <ClientDealCompletion project={details} />);
+    expect(active).toContain("Confirm completion");
+    expect(active).toContain("Work in progress");
+    const dialog = render("fr", <DealCompletionDialog busy={false} error="" onCancel={() => undefined} onConfirm={() => undefined} />);
+    expect(dialog).toContain('role="dialog"');
+    expect(dialog).toContain("Confirmer que les travaux sont terminés");
+    expect(dialog).toContain("Terminer l’accord");
+  });
+
+  test("shows completion date and review eligibility without another action", () => {
+    const details = {
+      ...baseProject,
+      status: "completed" as const,
+      customCategoryText: null,
+      neighborhood: null,
+      description: "A complete family villa construction project.",
+      propertyType: "house" as const,
+      surface: 180,
+      surfaceUnknown: false,
+      images: [],
+      attachments: [],
+      history: [],
+      viewerRole: "owner" as const,
+    } satisfies ProjectDetails;
+    queryState.values = [{ id: "deal-1", status: "completed", completedAt: 1_790_000_000_000, reviewEligible: true }, null];
+    const html = render("en", <ClientDealCompletion project={details} />);
+    expect(html).toContain("Work completed");
+    expect(html).toContain("eligible for a review");
+    expect(html).toContain("Leave a review");
+    expect(html).not.toContain("Confirm completion");
+  });
+
+  test("renders the accessible review form and immutable reviewed state in EN and FR", () => {
+    const dialog = render("en", <ReviewDialog busy={false} error="" onCancel={() => undefined} onSubmit={() => undefined} />);
+    expect(dialog).toContain('role="dialog"');
+    expect(dialog).toContain('role="radiogroup"');
+    expect(dialog).toContain("Publish review");
+    expect(dialog).toContain("10–2,000 characters");
+    const details = { ...baseProject, status: "completed" as const, customCategoryText: null, neighborhood: null, description: "Completed project.", propertyType: "house" as const, surface: 180, surfaceUnknown: false, images: [], attachments: [], history: [], viewerRole: "owner" as const } satisfies ProjectDetails;
+    queryState.values = [{ id: "deal-1", status: "completed", completedAt: 1_790_000_000_000, reviewEligible: true }, { rating: 5, comment: "Travail soigné et excellente communication.", moderationStatus: "visible", createdAt: 1_790_000_100_000 }];
+    const reviewed = render("fr", <ClientDealCompletion project={details} />);
+    expect(reviewed).toContain("Avis publié");
+    expect(reviewed).toContain("Travail soigné et excellente communication.");
+    expect(reviewed).not.toContain("Laisser un avis");
+  });
+
   test("uses the marketplace empty state and never the personal-project message", () => {
     const html = render("en", <ProjectDiscoveryResults projects={[]} />);
     expect(html).toContain("No projects are available yet.");
@@ -184,7 +247,7 @@ describe("client project workspace", () => {
   });
 
   test("renders discovery results and a translated loading state", () => {
-    const publicProject: PublicProject = { id: projectId, title: "Published villa", description: "A safe public project description.", city: "rabat", primaryCategory: "houseConstruction", budgetRange: null, timeline: null, publishedAt: 1, thumbnailUrl: null };
+    const publicProject: PublicProject = { id: projectId, title: "Published villa", description: "A safe public project description.", city: "rabat", primaryCategory: "houseConstruction", timeline: null, publishedAt: 1, thumbnailUrl: null };
     expect(render("en", <ProjectDiscoveryResults projects={[publicProject]} />)).toContain("Published villa");
     expect(render("en", <ProjectDiscoveryEmptyState />)).toContain("Loading available projects…");
   });

@@ -119,7 +119,6 @@ describe("messages inbox", () => {
             title: "Villa build",
             primaryCategory: "houseConstruction",
             city: "casablanca",
-            budgetRange: "50000_100000",
             timeline: "one_to_three_months",
             status: "pending_review",
             createdAt: 1,
@@ -158,12 +157,16 @@ describe("messages inbox", () => {
     expect(html).toContain("Atlas Construction");
     expect(html).toContain("Villa renovation");
     expect(html).toContain("We can schedule the site visit next week.");
-    expect(html).toContain("Active");
+    // Active is the default state, so only closed threads carry a status tag.
+    expect(html).not.toContain(">Active<");
     expect(html).toContain('<span class="sr-only">Unread</span>');
     expect(html).toContain("divide-y");
     expect(html).toContain("border-l-2");
     expect(html).not.toContain("rounded-xl px-3 py-3");
     expect(html).not.toContain("shadow-sm");
     expect(html).not.toContain("rounded-2xl border border-brand-border bg-[#f7f9fb]");
+
+    const closed = render("en", <MessagesInboxView accountType="client" projects={[]} threads={[{ ...thread, status: "closed" }]} />);
+    expect(closed).toContain(">Closed<");
   });
 });

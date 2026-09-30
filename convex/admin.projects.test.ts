@@ -44,14 +44,10 @@ async function seedProject(
     surface: 95,
     surfaceUnknown: false,
     description: "Renovation complete with electrical and plumbing work.",
-    budgetRange: "100000_250000",
-    budgetMin: 100_000,
-    budgetMax: 250_000,
-    budgetUnknown: false,
     timeline: "one_to_three_months",
     visibility: "marketplace",
     status: options?.status ?? "pending_review",
-    lastCompletedStep: 6,
+    lastCompletedStep: 5,
     createdAt: 100,
     updatedAt: 100,
     submittedAt: options?.submittedAt ?? 200,
@@ -97,6 +93,10 @@ describe("marketplace project backfill", () => {
       title: "Pending project",
       status: "pending_review",
     });
+    const additionalProjectId = await seedProject(t, clientId, {
+      title: "Additional marketplace project",
+      status: "published",
+    });
 
     await expect(
       t.mutation(api.admin.projects.startMarketplaceBackfill, {}),
@@ -115,26 +115,24 @@ describe("marketplace project backfill", () => {
     );
     expect(migrated).toHaveLength(55);
     for (const project of migrated) {
-      expect(project).toMatchObject({
-        marketplaceSearchText: expect.stringContaining("renovation"),
-        marketplaceBudgetRank: 3,
-      });
+      expect(project).toMatchObject({ marketplaceSearchText: expect.stringContaining("renovation") });
     }
     expect(await t.run((ctx) => ctx.db.get(pendingProjectId))).not.toHaveProperty(
       "marketplaceSearchText",
     );
+    const additionalProject = await t.run((ctx) => ctx.db.get(additionalProjectId));
+    expect(additionalProject).toMatchObject({
+      marketplaceSearchText: expect.stringContaining("renovation"),
+    });
 
     await expect(
       asUser(t, adminId).mutation(api.admin.projects.startMarketplaceBackfill, {}),
     ).resolves.toEqual({ scheduled: true });
     await t.finishAllScheduledFunctions(() => {});
-    expect(
-      await t.run(async (ctx) =>
-        (await Promise.all(projectIds.map((projectId) => ctx.db.get(projectId)))).filter(
-          (project) => project?.marketplaceBudgetRank !== 3,
-        ).length,
-      ),
-    ).toBe(0);
+    const afterSecondRun = await t.run(async (ctx) =>
+      Promise.all(projectIds.map((projectId) => ctx.db.get(projectId))),
+    );
+    expect(afterSecondRun.every((project) => project?.marketplaceSearchText)).toBe(true);
   });
 });
 
@@ -186,6 +184,24 @@ describe("admin project list and review", () => {
 });
 
 describe("admin project decisions", () => {
+  test("reviews and publishes a Project while building marketplace search text", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "admin@example.test");
+    const clientId = await seedUser(t, "client", "client@example.test");
+    const projectId = await seedProject(t, clientId);
+    const admin = asUser(t, adminId);
+
+    const review = await admin.query(api.admin.projects.getProjectReview, { projectId });
+    expect(review).toMatchObject({ projectId });
+    await expect(admin.mutation(api.admin.projects.approveProject, { projectId }))
+      .resolves.toEqual({ status: "published" });
+    const stored = await t.run((ctx) => ctx.db.get(projectId));
+    expect(stored).toMatchObject({
+      status: "published",
+      marketplaceSearchText: expect.stringContaining("renovation"),
+    });
+  });
+
   test("approves only pending review, publishes atomically, and exposes the project publicly", async () => {
     const t = convexTest(schema, modules);
     const adminId = await seedUser(t, "admin", "admin@example.test");
@@ -222,7 +238,7 @@ describe("admin project decisions", () => {
     expect(await t.query(api.projects.index.getPublicProject, { projectId })).toBeNull();
 
     await expect(client.query(api.projects.index.getWizard, { projectId })).resolves.toMatchObject({
-      draft: { id: projectId, surface: 95, lastCompletedStep: 6 },
+      draft: { id: projectId, surface: 95, resumeStep: 5 },
     });
     await expect(asUser(t, otherClientId).query(api.projects.index.getWizard, { projectId })).rejects.toThrow("PROJECT_NOT_FOUND");
 

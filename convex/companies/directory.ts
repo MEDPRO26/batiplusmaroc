@@ -7,6 +7,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
 import { getPublicMediaUrl } from "../storage/publicUrl";
+import { getCompanyOperationalStatus } from "./operationalStatus";
 
 export const companyServices = [
   "houseConstruction",
@@ -80,8 +81,8 @@ const publicCompanyResultValidator = v.object({
   logoUrl: v.union(v.string(), v.null()),
   coverImageUrl: v.union(v.string(), v.null()),
   portfolio: v.array(portfolioPreviewValidator),
-  rating: v.null(),
-  reviewCount: v.literal(0),
+  rating: v.union(v.number(), v.null()),
+  reviewCount: v.number(),
 });
 
 export function buildCompanyDirectorySearchText(args: {
@@ -125,6 +126,7 @@ async function resolvePublicMediaUrl(
 
 async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">) {
   if (
+    getCompanyOperationalStatus(company) === "suspended" ||
     company.onboardingStatus !== "completed" ||
     !company.slug ||
     !company.name ||
@@ -178,8 +180,10 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">) {
     logoUrl,
     coverImageUrl: companyCoverUrl ?? portfolio[0]?.url ?? null,
     portfolio,
-    rating: null,
-    reviewCount: 0 as const,
+    rating: company.reviewCount && company.reviewRatingTotal !== undefined
+      ? company.reviewRatingTotal / company.reviewCount
+      : null,
+    reviewCount: company.reviewCount ?? 0,
   };
 }
 
@@ -194,6 +198,9 @@ export const listPublicCompanies = query({
   },
   returns: paginationResultValidator(publicCompanyResultValidator),
   handler: async (ctx, args) => {
+    // Phase 1 keeps all reads on indexes already enabled on origin/main. The
+    // staged directory indexes become eligible only after their backfills and
+    // a second deployment; DTO validation remains the final public boundary.
     const terms = [
       normalizedSearch(args.search),
       normalizedSearch(args.city),
@@ -211,6 +218,7 @@ export const listPublicCompanies = query({
               ? search.eq("verificationStatus", "verified")
               : search;
           })
+          .filter((q) => q.neq(q.field("operationalStatus"), "suspended"))
           .paginate(args.paginationOpts)
       : args.verifiedOnly
         ? await ctx.db
@@ -218,11 +226,13 @@ export const listPublicCompanies = query({
             .withIndex("by_onboardingStatus_and_verificationStatus", (q) =>
               q.eq("onboardingStatus", "completed").eq("verificationStatus", "verified"),
             )
+            .filter((q) => q.neq(q.field("operationalStatus"), "suspended"))
             .order(args.sort === "oldest" ? "asc" : "desc")
             .paginate(args.paginationOpts)
         : await ctx.db
             .query("companies")
             .withIndex("by_onboardingStatus", (q) => q.eq("onboardingStatus", "completed"))
+            .filter((q) => q.neq(q.field("operationalStatus"), "suspended"))
             .order(args.sort === "oldest" ? "asc" : "desc")
             .paginate(args.paginationOpts);
 

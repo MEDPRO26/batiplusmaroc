@@ -1,11 +1,11 @@
 "use client";
 
-import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { OnboardingChrome } from "@/features/auth/components/onboarding-chrome";
+import { useSafeSignOut } from "@/features/auth/hooks/use-safe-sign-out";
 import { consumeOAuthSignupIntent } from "@/features/auth/lib/oauth-signup-intent";
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
@@ -14,7 +14,7 @@ export function OnboardingScreen({ accountType }: { accountType: "client" | "com
   const t = useTranslations("auth.onboarding");
   const tAuth = useTranslations("auth");
   const tErrors = useTranslations("auth.signUpFlow.errors");
-  const { signOut } = useAuthActions();
+  const signOut = useSafeSignOut();
   const user = useQuery(api.users.currentUser);
   const finalizeOAuthSignup = useMutation(api.users.finalizeOAuthSignup);
   const ensureCurrentUserFoundation = useMutation(api.users.ensureCurrentUserFoundation);

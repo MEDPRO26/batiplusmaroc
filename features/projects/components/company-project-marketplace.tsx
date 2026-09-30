@@ -7,7 +7,7 @@ import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { api } from "@/convex/_generated/api";
-import { projectBudgetRanges, projectCategories, projectCities, projectPostedWindows, projectPropertyTypes, projectSurfaceRanges, projectTimelines } from "@/convex/projects/constants";
+import { projectCategories, projectCities, projectPostedWindows, projectPropertyTypes, projectSurfaceRanges, projectTimelines } from "@/convex/projects/constants";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -28,15 +28,14 @@ type User = FunctionReturnType<typeof api.users.currentUser> | undefined;
 type Project = FunctionReturnType<typeof api.projects.marketplace.listCompanyMarketplaceProjects>["page"][number];
 type Details = NonNullable<FunctionReturnType<typeof api.projects.marketplace.getCompanyMarketplaceProject>>;
 type Category = (typeof projectCategories)[number];
-type Budget = (typeof projectBudgetRanges)[number];
 type Timeline = (typeof projectTimelines)[number];
 type PropertyType = (typeof projectPropertyTypes)[number];
 type SurfaceRange = (typeof projectSurfaceRanges)[number];
 type PostedWindow = (typeof projectPostedWindows)[number];
-type SortOption = "newest" | "oldest" | "budget_high" | "budget_low";
+type SortOption = "newest" | "oldest";
 
 const PAGE_SIZE = 10;
-const SORT_OPTIONS: SortOption[] = ["newest", "oldest", "budget_high", "budget_low"];
+const SORT_OPTIONS: SortOption[] = ["newest", "oldest"];
 
 export function resolveCompanyProjectsRedirect(user: User) {
   if (user === undefined) return null;
@@ -55,7 +54,6 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
   const [search, setSearch] = useState(initialSearch);
   const [citySearch, setCitySearch] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [budgetRanges, setBudgetRanges] = useState<Budget[]>([]);
   const [timelines, setTimelines] = useState<Timeline[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
   const [surfaceRanges, setSurfaceRanges] = useState<SurfaceRange[]>([]);
@@ -88,7 +86,6 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
         search: debouncedSearch.trim() || undefined,
         cities: matchingCities,
         categories: categories.length > 0 ? categories : undefined,
-        budgetRanges: budgetRanges.length > 0 ? budgetRanges : undefined,
         timelines: timelines.length > 0 ? timelines : undefined,
         propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
         surfaceRanges: surfaceRanges.length > 0 ? surfaceRanges : undefined,
@@ -98,7 +95,6 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
       };
     },
     [
-      budgetRanges,
       canBrowse,
       categories,
       debouncedSearch,
@@ -124,7 +120,6 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
   const clearFilters = useCallback(() => {
     setCitySearch("");
     setCategories([]);
-    setBudgetRanges([]);
     setTimelines([]);
     setPropertyTypes([]);
     setSurfaceRanges([]);
@@ -143,14 +138,12 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
   const filterProps = {
     citySearch,
     categories,
-    budgetRanges,
     timelines,
     propertyTypes,
     surfaceRanges,
     postedWindows,
     onCitySearchChange: setCitySearch,
     onCategoriesChange: setCategories,
-    onBudgetRangesChange: setBudgetRanges,
     onTimelinesChange: setTimelines,
     onPropertyTypesChange: setPropertyTypes,
     onSurfaceRangesChange: setSurfaceRanges,
@@ -276,7 +269,6 @@ function ProjectCard({ project, selected, onOpen }: { project: Project; selected
           {project.title}
         </h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          <MetaPill>{tWizard(`budgetOptions.${project.budgetRange}`)}</MetaPill>
           <MetaPill>{tWizard(`timelineOptions.${project.timeline}`)}</MetaPill>
           {property ? <MetaPill>{property}</MetaPill> : null}
           {surface ? <MetaPill>{surface}</MetaPill> : null}
@@ -456,7 +448,6 @@ function ProjectSheetContent({ project }: { project: Details }) {
           <section className="mt-9 border-t border-[#e4e8eb] pt-8">
             <h3 className="m-0 text-[1.05rem] font-semibold tracking-[-0.02em] text-ink">{t("detail.projectDetails")}</h3>
             <dl className="mt-5 grid gap-x-8 gap-y-6 sm:grid-cols-2">
-              <SheetDetail label={t("detail.budget")} value={tWizard(`budgetOptions.${project.budgetRange}`)} />
               <SheetDetail label={t("detail.timeline")} value={tWizard(`timelineOptions.${project.timeline}`)} />
               <SheetDetail
                 label={t("detail.propertyType")}
@@ -611,8 +602,6 @@ function MetaPill({ children }: { children: ReactNode }) {
 }
 
 function sortOptionLabelKey(option: SortOption) {
-  if (option === "budget_high") return "sort.options.budgetHigh" as const;
-  if (option === "budget_low") return "sort.options.budgetLow" as const;
   if (option === "oldest") return "sort.options.oldest" as const;
   return "sort.options.newest" as const;
 }
@@ -669,14 +658,12 @@ function SortDropdown({ value, onChange }: { value: SortOption; onChange: (value
 type FilterProps = {
   citySearch: string;
   categories: Category[];
-  budgetRanges: Budget[];
   timelines: Timeline[];
   propertyTypes: PropertyType[];
   surfaceRanges: SurfaceRange[];
   postedWindows: PostedWindow[];
   onCitySearchChange: (value: string) => void;
   onCategoriesChange: (value: Category[]) => void;
-  onBudgetRangesChange: (value: Budget[]) => void;
   onTimelinesChange: (value: Timeline[]) => void;
   onPropertyTypesChange: (value: PropertyType[]) => void;
   onSurfaceRangesChange: (value: SurfaceRange[]) => void;
@@ -687,14 +674,12 @@ type FilterProps = {
 function FilterFields({
   citySearch,
   categories,
-  budgetRanges,
   timelines,
   propertyTypes,
   surfaceRanges,
   postedWindows,
   onCitySearchChange,
   onCategoriesChange,
-  onBudgetRangesChange,
   onTimelinesChange,
   onPropertyTypesChange,
   onSurfaceRangesChange,
@@ -708,7 +693,6 @@ function FilterFields({
   const hasActiveFilters = Boolean(
     citySearch.trim() ||
       categories.length ||
-      budgetRanges.length ||
       timelines.length ||
       propertyTypes.length ||
       surfaceRanges.length ||
@@ -790,16 +774,6 @@ function FilterFields({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-      </FilterSection>
-
-      <FilterSection defaultOpen label={t("filters.budget")}>
-        <FilterCheckboxList
-          idPrefix={`${idPrefix}-budget`}
-          items={projectBudgetRanges}
-          labelFor={(item) => tWizard(`budgetOptions.${item}`)}
-          onChange={onBudgetRangesChange}
-          values={budgetRanges}
-        />
       </FilterSection>
 
       <FilterSection defaultOpen label={t("filters.timeline")}>

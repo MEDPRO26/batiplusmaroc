@@ -1,9 +1,9 @@
 "use client";
 
-import { useAuthActions } from "@convex-dev/auth/react";
 import { useTranslations } from "next-intl";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { useSafeSignOut } from "@/features/auth/hooks/use-safe-sign-out";
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 
@@ -16,7 +16,7 @@ export function OnboardingChrome({
 }) {
   const tBrand = useTranslations("brand");
   const tAuth = useTranslations("auth");
-  const { signOut } = useAuthActions();
+  const signOut = useSafeSignOut();
   const router = useRouter();
   const clamped = Math.min(100, Math.max(0, progressValue));
 
@@ -35,7 +35,9 @@ export function OnboardingChrome({
           <button
             className="cursor-pointer border-0 bg-transparent p-0 text-[0.88rem] font-medium text-ink/70 transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
             onClick={() => {
-              void signOut().then(() => router.push(routes.signIn));
+              void signOut().then((signedOut) => {
+                if (signedOut) router.push(routes.signIn);
+              });
             }}
             type="button"
           >

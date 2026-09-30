@@ -16,6 +16,7 @@ export const routes = {
   categoryStructuralWork: "/category/gros-oeuvre",
   howItWorks: "/comment-ca-marche",
   companies: "/entreprises",
+  companyProfile: "/entreprises/[slug]",
   browseProjects: "/projets",
   postProject: "/publier-un-projet",
   signIn: "/connexion",
@@ -29,6 +30,12 @@ export const routes = {
   clientProject: "/espace-client/projets/[projectId]",
   companyDashboard: "/espace-entreprise",
   companyProjects: "/espace-entreprise/projets",
+  companyInvitations: "/espace-entreprise/invitations",
+  companyCommissions: "/espace-entreprise/commissions",
+  companyBatiplus: "/espace-entreprise/batiplus",
+  companyProposals: "/espace-entreprise/propositions",
+  companyWork: "/espace-entreprise/chantiers",
+  companySettings: "/espace-entreprise/parametres",
   companyProject: "/espace-entreprise/projets/[projectId]",
   companyInitialQuote: "/espace-entreprise/projets/[projectId]/devis",
   companyProfileManagement: "/espace-entreprise/profil",
@@ -38,8 +45,13 @@ export const routes = {
   companyPortfolio: "/espace-entreprise/portfolio",
   admin: "/admin",
   adminProjects: "/admin/projects",
+  adminCompanies: "/admin/companies",
+  adminCompany: "/admin/companies/[companyId]",
+  adminDeals: "/admin/deals",
+  adminReviews: "/admin/reviews",
   adminSiteVisits: "/admin/site-visits",
   adminVerification: "/admin/verification",
+  adminSettings: "/admin/settings",
   seoRoot: "/seo",
   seoDashboard: "/seo/dashboard",
   seoArticles: "/seo/articles",
@@ -57,12 +69,14 @@ export const routes = {
 
 export type AppRoute = Exclude<
   (typeof routes)[keyof typeof routes],
-  typeof routes.clientProject | typeof routes.companyProject | typeof routes.companyInitialQuote | typeof routes.messagesConversation | typeof routes.seoArticle
+  typeof routes.clientProject | typeof routes.companyProject | typeof routes.companyInitialQuote | typeof routes.companyProfile | typeof routes.adminCompany | typeof routes.messagesConversation | typeof routes.seoArticle
 >;
 export type DynamicAppRoute =
   | typeof routes.clientProject
   | typeof routes.companyProject
   | typeof routes.companyInitialQuote
+  | typeof routes.companyProfile
+  | typeof routes.adminCompany
   | typeof routes.messagesConversation
   | typeof routes.seoArticle;
 export type ProtectedRoute = AppRoute;

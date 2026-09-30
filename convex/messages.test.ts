@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
+import type { FunctionArgs } from "convex/server";
 import { exportPKCS8, generateKeyPair } from "jose";
 import { beforeAll, describe, expect, test } from "vitest";
 import { api, internal } from "./_generated/api";
@@ -9,6 +10,7 @@ import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
 type Backend = ReturnType<typeof convexTest>;
+const notificationPage = { paginationOpts: { numItems: 20, cursor: null } };
 
 beforeAll(async () => {
   const { privateKey } = await generateKeyPair("RS256", { extractable: true });
@@ -56,7 +58,6 @@ async function seedProject(t: Backend, clientId: Id<"users">) {
   return await t.run((ctx) => ctx.db.insert("projects", {
     clientId, primaryCategory: "renovation", city: "rabat", countryCode: "MA", title: "Apartment renovation",
     propertyType: "apartment", surface: 90, surfaceUnknown: false, description: "A complete renovation project.",
-    budgetRange: "100000_250000", budgetMin: 100_000, budgetMax: 250_000, budgetUnknown: false,
     timeline: "one_to_three_months", visibility: "marketplace", status: "published", lastCompletedStep: 6,
     createdAt: 1, updatedAt: 1, submittedAt: 1, publishedAt: 1,
   }));
@@ -90,6 +91,29 @@ async function openDiscussion(state: Awaited<ReturnType<typeof setup>>) {
   return await asUser(state.t, state.clientId).mutation(api.quotes.index.reviewInitialQuote, {
     quoteId: state.quoteId, action: "open_discussion",
   });
+}
+
+async function addCompanyMember(
+  state: Awaited<ReturnType<typeof setup>>,
+  status: "active" | "inactive",
+) {
+  const userId = await seedUser(state.t, "company");
+  await state.t.run((ctx) => ctx.db.insert("companyMembers", {
+    companyId: state.company.companyId,
+    userId,
+    role: "staff",
+    status,
+    createdAt: 1,
+  }));
+  return userId;
+}
+
+async function messageNotifications(t: Backend, userId: Id<"users">) {
+  const result = await asUser(t, userId).query(
+    api.notifications.index.listMyNotifications,
+    notificationPage,
+  );
+  return result.page.filter((notification) => notification.type === "message_received");
 }
 
 describe("conversation unlock and uniqueness", () => {
@@ -243,6 +267,40 @@ describe("conversation authorization and privacy", () => {
     await expect(state.t.query(api.messages.index.getConversation, { conversationId })).rejects.toThrow("NOT_AUTHENTICATED");
   });
 
+  test("denies Admin and SEO access to marketplace message bodies, pagination, and read state", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    const sent = await asUser(state.t, state.clientId).mutation(
+      api.messages.index.sendMessage,
+      {
+        conversationId: conversationId!,
+        body: "MARKETPLACE-PRIVATE-SENTINEL",
+        clientMessageId: "private-admin-boundary",
+      },
+    );
+    const adminId = await seedUser(state.t, "admin");
+    const seoId = await seedUser(state.t, "seo_team");
+
+    for (const userId of [adminId, seoId]) {
+      const actor = asUser(state.t, userId);
+      await expect(actor.query(api.messages.index.getConversation, {
+        conversationId: conversationId!,
+      })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+      await expect(actor.query(api.messages.index.listMessages, {
+        conversationId: conversationId!,
+        paginationOpts: { numItems: 20, cursor: null },
+      })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+      await expect(actor.mutation(api.messages.index.markConversationRead, {
+        conversationId: conversationId!,
+      })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+      await expect(actor.query(api.messages.index.listMyThreads, {}))
+        .rejects.toThrow("INVALID_ACCOUNT_TYPE");
+    }
+
+    const stored = await state.t.run((ctx) => ctx.db.get(sent.messageId));
+    expect(stored?.body).toBe("MARKETPLACE-PRIVATE-SENTINEL");
+  });
+
   test("returns safe DTOs without private contact or legal fields", async () => {
     const state = await setup();
     const { conversationId } = await openDiscussion(state);
@@ -357,6 +415,269 @@ describe("message sending, ordering, pagination, and read state", () => {
   });
 });
 
+describe("message notification integration", () => {
+  test("a Client message notifies every active Company member, excludes the sender, and deduplicates retries", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    await asUser(state.t, state.company.userId).mutation(
+      api.notifications.index.markAllNotificationsRead,
+      {},
+    );
+    const activeMemberId = await addCompanyMember(state, "active");
+    const inactiveMemberId = await addCompanyMember(state, "inactive");
+    const company = await state.t.run((ctx) => ctx.db.get(state.company.companyId));
+    if (!company) throw new Error("Missing test company");
+
+    const client = asUser(state.t, state.clientId);
+    const body = "  Bonjour <strong>équipe</strong>\n Voici les détails du chantier.  ";
+    const first = await client.mutation(api.messages.index.sendMessage, {
+      conversationId: conversationId!,
+      body,
+      clientMessageId: "client-message-notification",
+    });
+    const duplicate = await client.mutation(api.messages.index.sendMessage, {
+      conversationId: conversationId!,
+      body,
+      clientMessageId: "client-message-notification",
+    });
+    expect(duplicate).toMatchObject({ messageId: first.messageId, duplicate: true });
+
+    for (const recipientId of [state.company.userId, activeMemberId]) {
+      const notifications = await messageNotifications(state.t, recipientId);
+      expect(notifications).toEqual([
+        expect.objectContaining({
+          type: "message_received",
+          entity: { type: "conversation", id: conversationId },
+          actorUserId: state.clientId,
+          payload: {
+            projectTitle: "Apartment renovation",
+            companyName: company.name,
+            actorDisplayName: "Khadija T.",
+            messagePreview: "Bonjour équipe Voici les détails du chantier.",
+          },
+          readAt: null,
+        }),
+      ]);
+      await expect(asUser(state.t, recipientId).query(
+        api.notifications.index.getMyUnreadCount,
+        {},
+      )).resolves.toBe(1);
+    }
+    expect(await messageNotifications(state.t, state.clientId)).toEqual([]);
+    expect(await messageNotifications(state.t, inactiveMemberId)).toEqual([]);
+    expect(await messageNotifications(state.t, state.otherCompany.userId)).toEqual([]);
+    await expect(client.query(api.notifications.index.getMyUnreadCount, {})).resolves.toBe(0);
+
+    const stored = await state.t.run((ctx) => ctx.db
+      .query("notifications")
+      .withIndex("by_recipientUserId_and_dedupeKey", (q) => q
+        .eq("recipientUserId", state.company.userId)
+        .eq("dedupeKey", `message:${first.messageId}:received`))
+      .unique());
+    expect(stored?._id).toBeTruthy();
+  });
+
+  test("distinct messages with identical text remain distinct notifications", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    await asUser(state.t, state.company.userId).mutation(
+      api.notifications.index.markAllNotificationsRead,
+      {},
+    );
+    const client = asUser(state.t, state.clientId);
+    const first = await client.mutation(api.messages.index.sendMessage, {
+      conversationId: conversationId!,
+      body: "Same visible text",
+      clientMessageId: "same-text-one",
+    });
+    await state.t.run((ctx) => ctx.db.patch(conversationId!, { clientLastSentAt: 0 }));
+    const second = await client.mutation(api.messages.index.sendMessage, {
+      conversationId: conversationId!,
+      body: "Same visible text",
+      clientMessageId: "same-text-two",
+    });
+
+    expect(first.messageId).not.toBe(second.messageId);
+    const notifications = await messageNotifications(state.t, state.company.userId);
+    expect(notifications).toHaveLength(2);
+    expect(notifications.map((notification) => notification.payload.messagePreview)).toEqual([
+      "Same visible text",
+      "Same visible text",
+    ]);
+    await expect(asUser(state.t, state.company.userId).query(
+      api.notifications.index.getMyUnreadCount,
+      {},
+    )).resolves.toBe(2);
+  });
+
+  test("message previews strip markup and controls and stay capped at 120 characters", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    const body = `<script>alert(1)</script>\u0000${" chantier".repeat(30)}`;
+
+    await asUser(state.t, state.clientId).mutation(api.messages.index.sendMessage, {
+      conversationId: conversationId!,
+      body,
+      clientMessageId: "safe-preview",
+    });
+
+    const [notification] = await messageNotifications(state.t, state.company.userId);
+    const preview = notification?.payload.messagePreview;
+    expect(preview).toHaveLength(120);
+    expect(preview).toMatch(/^alert\(1\) chantier/);
+    expect(preview).not.toMatch(/[<>\u0000-\u001f\u007f]/);
+    expect(JSON.stringify(notification?.payload)).not.toContain("<script>");
+  });
+
+  test("a Company message notifies only the Client, never the sender or same-side teammates", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    const activeTeammateId = await addCompanyMember(state, "active");
+    const company = await state.t.run((ctx) => ctx.db.get(state.company.companyId));
+    if (!company) throw new Error("Missing test company");
+
+    const sent = await asUser(state.t, state.company.userId).mutation(
+      api.messages.index.sendMessage,
+      {
+        conversationId: conversationId!,
+        body: "Nous pouvons commencer lundi.",
+        clientMessageId: "company-message-notification",
+      },
+    );
+
+    expect(await messageNotifications(state.t, state.clientId)).toEqual([
+      expect.objectContaining({
+        type: "message_received",
+        entity: { type: "conversation", id: conversationId },
+        actorUserId: state.company.userId,
+        payload: {
+          projectTitle: "Apartment renovation",
+          companyName: company.name,
+          actorDisplayName: company.name,
+          messagePreview: "Nous pouvons commencer lundi.",
+        },
+      }),
+    ]);
+    expect(await messageNotifications(state.t, state.company.userId)).toEqual([]);
+    expect(await messageNotifications(state.t, activeTeammateId)).toEqual([]);
+    await expect(asUser(state.t, state.clientId).query(
+      api.notifications.index.getMyUnreadCount,
+      {},
+    )).resolves.toBe(1);
+
+    const stored = await state.t.run((ctx) => ctx.db
+      .query("notifications")
+      .withIndex("by_recipientUserId_and_dedupeKey", (q) => q
+        .eq("recipientUserId", state.clientId)
+        .eq("dedupeKey", `message:${sent.messageId}:received`))
+      .unique());
+    expect(stored?._id).toBeTruthy();
+  });
+
+  test("locked open-project and direct-Invitation conversations create neither message nor notification", async () => {
+    for (const invitationStatus of [null, "pending", "declined"] as const) {
+      const state = await setup();
+      if (invitationStatus) {
+        await state.t.run((ctx) => ctx.db.insert("invitations", {
+          projectId: state.projectId,
+          clientUserId: state.clientId,
+          companyId: state.company.companyId,
+          status: invitationStatus,
+          createdAt: 1,
+          updatedAt: 1,
+          ...(invitationStatus === "declined" ? { declinedAt: 1 } : {}),
+        }));
+      }
+      const conversationId = await state.t.run((ctx) => ctx.db.insert("conversations", {
+        projectId: state.projectId,
+        quoteId: state.quoteId,
+        clientId: state.clientId,
+        companyId: state.company.companyId,
+        status: "active",
+        createdBy: state.clientId,
+        createdAt: 1,
+        updatedAt: 1,
+      }));
+
+      await expect(asUser(state.t, state.company.userId).mutation(
+        api.messages.index.sendMessage,
+        { conversationId, body: "This conversation is not unlocked." },
+      )).rejects.toThrow("CONVERSATION_LOCKED");
+      const stored = await state.t.run(async (ctx) => ({
+        messages: await ctx.db.query("messages").collect(),
+        notifications: await ctx.db.query("notifications").collect(),
+      }));
+      expect(stored).toEqual({ messages: [], notifications: [] });
+    }
+  });
+
+  test("unauthorized roles and forged recipients cannot trigger message notifications", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    const adminId = await seedUser(state.t, "admin");
+    const seoId = await seedUser(state.t, "seo_team");
+    const forgedArgs = {
+      conversationId: conversationId!,
+      body: "Forged recipient",
+      recipientUserId: state.otherClientId,
+    } as unknown as FunctionArgs<typeof api.messages.index.sendMessage>;
+
+    await expect(asUser(state.t, state.clientId).mutation(
+      api.messages.index.sendMessage,
+      forgedArgs,
+    )).rejects.toThrow();
+    for (const userId of [
+      state.otherClientId,
+      state.otherCompany.userId,
+      adminId,
+      seoId,
+    ]) {
+      await expect(asUser(state.t, userId).mutation(
+        api.messages.index.sendMessage,
+        { conversationId: conversationId!, body: "Unauthorized message" },
+      )).rejects.toThrow("CONVERSATION_NOT_FOUND");
+      expect(await messageNotifications(state.t, userId)).toEqual([]);
+    }
+    await expect(state.t.mutation(api.messages.index.sendMessage, {
+      conversationId: conversationId!,
+      body: "Anonymous message",
+    })).rejects.toThrow("NOT_AUTHENTICATED");
+
+    const stored = await state.t.run(async (ctx) => ({
+      messages: await ctx.db.query("messages").collect(),
+      messageNotifications: (await ctx.db.query("notifications").collect())
+        .filter((notification) => notification.type === "message_received"),
+    }));
+    expect(stored).toEqual({ messages: [], messageNotifications: [] });
+  });
+
+  test("notification recipient failure rolls back the message and conversation metadata", async () => {
+    const state = await setup();
+    const { conversationId } = await openDiscussion(state);
+    const before = await state.t.run((ctx) => ctx.db.get(conversationId!));
+    await state.t.run((ctx) => ctx.db.delete(state.clientId));
+
+    await expect(asUser(state.t, state.company.userId).mutation(
+      api.messages.index.sendMessage,
+      {
+        conversationId: conversationId!,
+        body: "This must roll back.",
+        clientMessageId: "rollback-message-notification",
+      },
+    )).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const after = await state.t.run(async (ctx) => ({
+      conversation: await ctx.db.get(conversationId!),
+      messages: await ctx.db.query("messages").collect(),
+      messageNotifications: (await ctx.db.query("notifications").collect())
+        .filter((notification) => notification.type === "message_received"),
+    }));
+    expect(after.conversation).toEqual(before);
+    expect(after.messages).toEqual([]);
+    expect(after.messageNotifications).toEqual([]);
+  });
+});
+
 describe("private company PDF message attachments", () => {
   test("a verified company sends text with a PDF and a PDF-only message without changing marketplace state", async () => {
     const state = await setup();
@@ -398,6 +719,13 @@ describe("private company PDF message attachments", () => {
     expect(invariants.finalQuotes).toEqual([]);
     expect(invariants.activity).toEqual(activityBefore);
     expect(invariants.attachments).toHaveLength(2);
+    const notifications = await messageNotifications(state.t, state.clientId);
+    expect(notifications).toHaveLength(2);
+    expect(notifications.map((notification) => notification.payload.messagePreview)).toEqual([
+      "document.pdf",
+      "Voici le plan.",
+    ]);
+    expect(await messageNotifications(state.t, state.company.userId)).toEqual([]);
   });
 
   test("only the verified company participant can create upload intents", async () => {

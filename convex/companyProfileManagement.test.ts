@@ -44,6 +44,8 @@ async function seedCompany(
       directorySearchText: `${label} company rabat servicestructural structural work gros oeuvre gros œuvre`,
       onboardingStatus: "completed",
       verificationStatus: "verified",
+      operationalStatus: "normal",
+      directoryListed: true,
       createdAt: now,
       updatedAt: now,
     });
@@ -156,6 +158,96 @@ describe("company public profile management", () => {
     ]);
   });
 
+  test("a delayed image save preserves newer text and every unrelated profile field", async () => {
+    const t = convexTest(schema, modules);
+    const { userId, companyId } = await seedCompany(t, "delayed-image");
+    const logoUploadToken = await uploadedCompanyImage(t, userId, companyId, "companyLogo");
+
+    await asUser(t, userId).mutation(api.companies.index.updatePublicProfile, {
+      description: "This newer profile description must survive a delayed image upload completion.",
+    });
+    await asUser(t, userId).mutation(api.companies.index.setCompanyPublicImage, {
+      kind: "logo",
+      uploadToken: logoUploadToken,
+    });
+
+    const state = await t.run(async (ctx) => ({
+      company: await ctx.db.get(companyId),
+      services: await ctx.db
+        .query("companyServices")
+        .withIndex("by_companyId", (q) => q.eq("companyId", companyId))
+        .collect(),
+    }));
+    expect(state.company).toMatchObject({
+      name: "delayed-image Company",
+      description: "This newer profile description must survive a delayed image upload completion.",
+      city: "Rabat",
+      phone: "0611111111",
+      website: "https://old.example/",
+      yearsExperience: 5,
+      directorySearchText: "delayed-image company rabat servicestructural structural work gros oeuvre gros œuvre",
+    });
+    expect(state.company?.logoMediaId).toBeDefined();
+    expect(state.services.map((row) => row.service)).toEqual(["structural"]);
+  });
+
+  test("a focused text patch preserves a newer image and untouched profile sections", async () => {
+    const t = convexTest(schema, modules);
+    const { userId, companyId } = await seedCompany(t, "newer-image");
+    const logoUploadToken = await uploadedCompanyImage(t, userId, companyId, "companyLogo");
+    await asUser(t, userId).mutation(api.companies.index.setCompanyPublicImage, {
+      kind: "logo",
+      uploadToken: logoUploadToken,
+    });
+    const imageBeforeTextSave = await t.run(async (ctx) =>
+      (await ctx.db.get(companyId))?.logoMediaId,
+    );
+
+    await asUser(t, userId).mutation(api.companies.index.updatePublicProfile, {
+      name: "Newer Image Construction",
+      city: "Casablanca",
+    });
+
+    const state = await t.run(async (ctx) => ({
+      company: await ctx.db.get(companyId),
+      services: await ctx.db
+        .query("companyServices")
+        .withIndex("by_companyId", (q) => q.eq("companyId", companyId))
+        .collect(),
+    }));
+    expect(state.company).toMatchObject({
+      name: "Newer Image Construction",
+      city: "Casablanca",
+      description: "A completed company profile ready for public profile management.",
+      phone: "0611111111",
+      website: "https://old.example/",
+      yearsExperience: 5,
+      logoMediaId: imageBeforeTextSave,
+    });
+    expect(state.company?.directorySearchText).toContain("newer image construction");
+    expect(state.company?.directorySearchText).toContain("casablanca");
+    expect(state.services.map((row) => row.service)).toEqual(["structural"]);
+  });
+
+  test("nullable numeric patches clear only the requested optional field", async () => {
+    const t = convexTest(schema, modules);
+    const { userId, companyId } = await seedCompany(t, "clear-years");
+
+    await asUser(t, userId).mutation(api.companies.index.updatePublicProfile, {
+      yearsExperience: null,
+    });
+
+    const company = await t.run((ctx) => ctx.db.get(companyId));
+    expect(company?.yearsExperience).toBeUndefined();
+    expect(company).toMatchObject({
+      name: "clear-years Company",
+      description: "A completed company profile ready for public profile management.",
+      city: "Rabat",
+      phone: "0611111111",
+      website: "https://old.example/",
+    });
+  });
+
   test("rejects unauthenticated users, clients, and non-owner company members", async () => {
     const t = convexTest(schema, modules);
     const client = await seedCompany(t, "client-edit", { accountType: "client" });
@@ -184,9 +276,9 @@ describe("company public profile management", () => {
     );
 
     await expect(
-      asUser(t, companyA.userId).mutation(api.companies.index.updatePublicProfile, {
-        ...validUpdate,
-        logoUploadToken: companyBLogo,
+      asUser(t, companyA.userId).mutation(api.companies.index.setCompanyPublicImage, {
+        kind: "logo",
+        uploadToken: companyBLogo,
       }),
     ).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
 
@@ -228,10 +320,13 @@ describe("company public profile management", () => {
     const logoUploadToken = await uploadedCompanyImage(t, userId, companyId, "companyLogo");
     const coverUploadToken = await uploadedCompanyImage(t, userId, companyId, "companyCover");
 
-    await asUser(t, userId).mutation(api.companies.index.updatePublicProfile, {
-      ...validUpdate,
-      logoUploadToken,
-      coverUploadToken,
+    await asUser(t, userId).mutation(api.companies.index.setCompanyPublicImage, {
+      kind: "logo",
+      uploadToken: logoUploadToken,
+    });
+    await asUser(t, userId).mutation(api.companies.index.setCompanyPublicImage, {
+      kind: "cover",
+      uploadToken: coverUploadToken,
     });
 
     const state = await t.run(async (ctx) => {

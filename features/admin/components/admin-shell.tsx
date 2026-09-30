@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { NavbarLogo } from "@/components/layout/navbar-logo";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Link, usePathname } from "@/i18n/navigation";
 import { routes, type AppRoute } from "@/lib/routes";
 
@@ -12,7 +13,6 @@ export type AdminNavId =
   | "projects"
   | "siteVisits"
   | "companies"
-  | "verification"
   | "messages"
   | "deals"
   | "reviews"
@@ -25,7 +25,6 @@ type AdminNavLabel =
   | "navProjects"
   | "navSiteVisits"
   | "navCompanies"
-  | "navVerification"
   | "navMessages"
   | "navDeals"
   | "navReviews"
@@ -37,14 +36,13 @@ const ADMIN_NAVIGATION: { id: AdminNavId; label: AdminNavLabel; href?: AppRoute 
   { id: "home", label: "navHome", href: routes.admin },
   { id: "projects", label: "navProjects", href: routes.adminProjects },
   { id: "siteVisits", label: "navSiteVisits", href: routes.adminSiteVisits },
-  { id: "companies", label: "navCompanies" },
-  { id: "verification", label: "navVerification", href: routes.adminVerification },
+  { id: "companies", label: "navCompanies", href: routes.adminCompanies },
   { id: "messages", label: "navMessages" },
-  { id: "deals", label: "navDeals" },
-  { id: "reviews", label: "navReviews" },
+  { id: "deals", label: "navDeals", href: routes.adminDeals },
+  { id: "reviews", label: "navReviews", href: routes.adminReviews },
   { id: "profile", label: "navProfile" },
   { id: "support", label: "navSupport" },
-  { id: "settings", label: "navSettings" },
+  { id: "settings", label: "navSettings", href: routes.adminSettings },
 ];
 
 export const ADMIN_PRESS =
@@ -119,13 +117,19 @@ export function AdminShell({
 
 export function AdminPage({
   breadcrumb,
+  parent,
   title,
+  header,
   headerActions,
   notice,
   children,
 }: {
   breadcrumb: string;
+  /** Parent destination shown in the breadcrumb, e.g. Companies for a company page. */
+  parent?: { label: string; href: AppRoute };
   title: string;
+  /** Replaces the default page title block (used by object pages with their own identity header). */
+  header?: ReactNode;
   headerActions?: ReactNode;
   notice?: string;
   children: ReactNode;
@@ -157,22 +161,33 @@ export function AdminPage({
         </button>
         <nav aria-label={t("breadcrumbLabel")} className="flex min-w-0 flex-1 items-center gap-2 text-sm text-[#8b919a]">
           <NavbarLogo homeAria={tBrand("homeAria")} name={tBrand("name")} />
-          <span aria-hidden className="text-[#c5cad1]">/</span>
-          <span className="truncate">{t("team")}</span>
-          <span aria-hidden className="text-[#c5cad1]">/</span>
-          <span className="truncate">{t("area")}</span>
-          <span aria-hidden className="text-[#c5cad1]">/</span>
-          <span className="truncate font-medium text-[#17191d]">{breadcrumb}</span>
+          <span aria-hidden className="hidden text-[#c5cad1] sm:inline">/</span>
+          <span className="hidden truncate sm:inline">{t("team")}</span>
+          <span aria-hidden className="hidden text-[#c5cad1] sm:inline">/</span>
+          <span className="hidden truncate sm:inline">{t("area")}</span>
+          <span aria-hidden className="hidden text-[#c5cad1] sm:inline">/</span>
+          {parent ? (
+            <>
+              <Link className="truncate hover:text-[#17191d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6bff]" href={parent.href}>
+                {parent.label}
+              </Link>
+              <span aria-hidden className="text-[#c5cad1]">/</span>
+            </>
+          ) : null}
+          <span aria-current="page" className="truncate font-medium text-[#17191d]">{breadcrumb}</span>
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <NotificationBell accountType="admin" tone="internal" />
           <LanguageSwitcher />
           {headerActions}
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 px-4 pb-8 sm:px-6 lg:px-8">
-        <div>
-          <h1 className="text-[1.7rem] font-semibold tracking-[-0.03em]">{title}</h1>
-        </div>
+        {header ?? (
+          <div>
+            <h1 className="text-[1.7rem] font-semibold tracking-[-0.03em]">{title}</h1>
+          </div>
+        )}
         {children}
       </div>
     </>
@@ -341,13 +356,6 @@ function NavIcon({ id }: { id: AdminNavId }) {
     return (
       <Glyph>
         <path {...stroke()} d="M5 20V6l7-2 7 2v14M9 20v-4h6v4M9 9h.01M12 9h.01M15 9h.01M9 12h.01M12 12h.01M15 12h.01" />
-      </Glyph>
-    );
-  if (id === "verification")
-    return (
-      <Glyph>
-        <path {...stroke()} d="M12 3 5 6v6c0 4 3 6.5 7 8 4-1.5 7-4 7-8V6l-7-3Z" />
-        <path {...stroke()} d="m9 12 2 2 4-4" />
       </Glyph>
     );
   if (id === "messages")

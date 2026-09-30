@@ -295,11 +295,6 @@ function ProjectRow({
           {project.title}
         </h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          {project.budgetRange ? (
-            <span className="rounded-md bg-[#eef1f4] px-2.5 py-1 text-xs font-medium text-ink">
-              {tWizard(`budgetOptions.${project.budgetRange}`)}
-            </span>
-          ) : null}
           {project.timeline ? (
             <span className="rounded-md bg-[#eef1f4] px-2.5 py-1 text-xs font-medium text-ink">
               {tWizard(`timelineOptions.${project.timeline}`)}
@@ -486,11 +481,6 @@ function ProjectPreviewSheet({
             {project.title}
           </h2>
           <div className="mt-4 flex flex-wrap gap-2">
-            {project.budgetRange ? (
-              <span className="rounded-md bg-[#eef1f4] px-2.5 py-1 text-xs font-medium text-ink">
-                {tWizard(`budgetOptions.${project.budgetRange}`)}
-              </span>
-            ) : null}
             {project.timeline ? (
               <span className="rounded-md bg-[#eef1f4] px-2.5 py-1 text-xs font-medium text-ink">
                 {tWizard(`timelineOptions.${project.timeline}`)}

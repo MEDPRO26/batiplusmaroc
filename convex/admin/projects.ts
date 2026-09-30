@@ -8,8 +8,6 @@ import {
 } from "../marketplaceActivity/constants";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import {
-  marketplaceBudgetRank,
-  projectBudgetRangeValidator,
   projectCategoryValidator,
   projectCityValidator,
   projectPropertyTypeValidator,
@@ -32,7 +30,6 @@ const listItemValidator = v.object({
   city: v.union(projectCityValidator, v.null()),
   category: v.union(projectCategoryValidator, v.null()),
   customCategoryText: nullableString,
-  budgetRange: v.union(projectBudgetRangeValidator, v.null()),
   submittedAt: nullableNumber,
   status: projectStatusValidator,
 });
@@ -96,10 +93,6 @@ const reviewValidator = v.object({
   surface: nullableNumber,
   surfaceUnknown: v.boolean(),
   description: nullableString,
-  budgetRange: v.union(projectBudgetRangeValidator, v.null()),
-  budgetMin: nullableNumber,
-  budgetMax: nullableNumber,
-  budgetUnknown: v.boolean(),
   timeline: v.union(projectTimelineValidator, v.null()),
   submittedAt: nullableNumber,
   publishedAt: nullableNumber,
@@ -180,7 +173,6 @@ export const listProjects = query({
         city: project.city ?? null,
         category: project.primaryCategory ?? null,
         customCategoryText: project.customCategoryText ?? null,
-        budgetRange: project.budgetRange ?? null,
         submittedAt: project.submittedAt ?? null,
         status: project.status,
       });
@@ -234,10 +226,6 @@ export const getProjectReview = query({
       surface: project.surface ?? null,
       surfaceUnknown: project.surfaceUnknown,
       description: project.description ?? null,
-      budgetRange: project.budgetRange ?? null,
-      budgetMin: project.budgetMin ?? null,
-      budgetMax: project.budgetMax ?? null,
-      budgetUnknown: project.budgetUnknown,
       timeline: project.timeline ?? null,
       submittedAt: project.submittedAt ?? null,
       publishedAt: project.publishedAt ?? null,
@@ -318,7 +306,6 @@ export const approveProject = mutation({
       publishedAt: now,
       updatedAt: now,
       marketplaceSearchText: buildProjectMarketplaceSearchText(project),
-      marketplaceBudgetRank: marketplaceBudgetRank(project.budgetRange),
     });
     await ctx.db.insert("projectStatusHistory", {
       projectId: project._id,

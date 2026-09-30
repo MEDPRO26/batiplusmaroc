@@ -132,6 +132,10 @@ export const routing = defineRouting({
       fr: "/espace-entreprise/projets",
       en: "/company/projects",
     },
+    "/espace-entreprise/invitations": {
+      fr: "/espace-entreprise/invitations",
+      en: "/company/invitations",
+    },
     "/espace-entreprise/projets/[projectId]": {
       fr: "/espace-entreprise/projets/[projectId]",
       en: "/company/projects/[projectId]",
@@ -156,10 +160,46 @@ export const routing = defineRouting({
       fr: "/espace-entreprise/portfolio",
       en: "/company/portfolio",
     },
+    "/espace-entreprise/commissions": {
+      fr: "/espace-entreprise/commissions",
+      en: "/company/commissions",
+    },
+    "/espace-entreprise/batiplus": {
+      fr: "/espace-entreprise/batiplus",
+      en: "/company/batiplus",
+    },
+    "/espace-entreprise/propositions": {
+      fr: "/espace-entreprise/propositions",
+      en: "/company/proposals",
+    },
+    "/espace-entreprise/chantiers": {
+      fr: "/espace-entreprise/chantiers",
+      en: "/company/work",
+    },
+    "/espace-entreprise/parametres": {
+      fr: "/espace-entreprise/parametres",
+      en: "/company/settings",
+    },
     "/admin": "/admin",
     "/admin/projects": {
       fr: "/admin/projets",
       en: "/admin/projects",
+    },
+    "/admin/companies": {
+      fr: "/admin/entreprises",
+      en: "/admin/companies",
+    },
+    "/admin/companies/[companyId]": {
+      fr: "/admin/entreprises/[companyId]",
+      en: "/admin/companies/[companyId]",
+    },
+    "/admin/deals": {
+      fr: "/admin/transactions",
+      en: "/admin/deals",
+    },
+    "/admin/reviews": {
+      fr: "/admin/avis",
+      en: "/admin/reviews",
     },
     "/admin/site-visits": {
       fr: "/admin/visites-techniques",
@@ -168,6 +208,10 @@ export const routing = defineRouting({
     "/admin/verification": {
       fr: "/admin/verification",
       en: "/admin/verification",
+    },
+    "/admin/settings": {
+      fr: "/admin/parametres",
+      en: "/admin/settings",
     },
     "/seo": "/seo",
     "/seo/dashboard": "/seo/dashboard",

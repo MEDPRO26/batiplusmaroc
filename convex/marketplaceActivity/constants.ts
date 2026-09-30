@@ -5,6 +5,9 @@ export const marketplaceActivityEventTypeValidator = v.union(
   v.literal("project_submitted"),
   v.literal("project_approved"),
   v.literal("project_needs_changes"),
+  v.literal("company_invited"),
+  v.literal("company_invitation_accepted"),
+  v.literal("company_invitation_declined"),
   v.literal("initial_quote_submitted"),
   v.literal("quote_viewed"),
   v.literal("quote_shortlisted"),
@@ -31,6 +34,9 @@ export const marketplaceActivityEventTypeValidator = v.union(
   v.literal("company_selected"),
   v.literal("deal_created"),
   v.literal("deal_completed"),
+  v.literal("review_created"),
+  v.literal("review_hidden"),
+  v.literal("review_restored"),
   v.literal("commission_due"),
   v.literal("commission_paid"),
 );
@@ -51,6 +57,9 @@ export type MarketplaceActivityEventType =
   | "project_submitted"
   | "project_approved"
   | "project_needs_changes"
+  | "company_invited"
+  | "company_invitation_accepted"
+  | "company_invitation_declined"
   | "initial_quote_submitted"
   | "quote_viewed"
   | "quote_shortlisted"
@@ -77,6 +86,9 @@ export type MarketplaceActivityEventType =
   | "company_selected"
   | "deal_created"
   | "deal_completed"
+  | "review_created"
+  | "review_hidden"
+  | "review_restored"
   | "commission_due"
   | "commission_paid";
 

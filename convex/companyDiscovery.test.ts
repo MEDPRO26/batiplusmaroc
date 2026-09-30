@@ -24,6 +24,8 @@ async function seedDirectoryCompany(t: TestBackend, options: {
   publishedPortfolio?: number;
   draftPortfolio?: number;
   withSearchText?: boolean;
+  /** `null` creates a legacy row whose missing status means normal. */
+  operationalStatus?: "normal" | "needs_attention" | "suspended" | null;
 }) {
   return t.run(async (ctx) => {
     const now = Date.now();
@@ -50,6 +52,12 @@ async function seedDirectoryCompany(t: TestBackend, options: {
         : buildCompanyDirectorySearchText({ name: options.name, city, services }),
       onboardingStatus: options.onboardingStatus ?? "completed",
       verificationStatus: options.verificationStatus ?? "draft",
+      ...(options.operationalStatus === null
+        ? {}
+        : {
+            operationalStatus: options.operationalStatus ?? "normal",
+            directoryListed: options.operationalStatus !== "suspended",
+          }),
       createdAt: now,
       updatedAt: now,
     });
@@ -142,6 +150,26 @@ describe("public company discovery", () => {
     expect(result.page.map((company) => company.slug)).toEqual(["verified-build"]);
   });
 
+  test("keeps legacy normal rows visible during the eligibility backfill", async () => {
+    const t = convexTest(schema, modules);
+    await seedDirectoryCompany(t, {
+      name: "Legacy Visible",
+      slug: "legacy-visible",
+      verificationStatus: "verified",
+      operationalStatus: null,
+    });
+    await seedDirectoryCompany(t, {
+      name: "Legacy Suspended",
+      slug: "legacy-suspended",
+      verificationStatus: "verified",
+      operationalStatus: "suspended",
+    });
+
+    await expect(list(t, { verifiedOnly: true })).resolves.toMatchObject({
+      page: [expect.objectContaining({ slug: "legacy-visible" })],
+    });
+  });
+
   test("searches by company name, city, free-text service, and exact service filter", async () => {
     const t = convexTest(schema, modules);
     await seedDirectoryCompany(t, { name: "Atlas Habitat", slug: "atlas-habitat", city: "Marrakech", services: ["architecture"] });
@@ -169,6 +197,57 @@ describe("public company discovery", () => {
     expect(third.isDone).toBe(true);
     const companies = [...first.page, ...second.page, ...third.page];
     expect(new Set(companies.map((company) => company.id)).size).toBe(companies.length);
+  });
+
+  test.each([
+    ["unfiltered index", {}],
+    ["verified index", { verifiedOnly: true }],
+    ["search index", { search: "pagination" }],
+  ] as const)("filters suspended companies before paginating the %s path", async (_name, filters) => {
+    const t = convexTest(schema, modules);
+    await seedDirectoryCompany(t, {
+      name: "Pagination Eligible Oldest",
+      slug: "pagination-eligible-oldest",
+      verificationStatus: "verified",
+      operationalStatus: "normal",
+    });
+    await seedDirectoryCompany(t, {
+      name: "Pagination Eligible Newest",
+      slug: "pagination-eligible-newest",
+      verificationStatus: "verified",
+      operationalStatus: "needs_attention",
+    });
+    await seedDirectoryCompany(t, {
+      name: "Pagination Pagination Suspended One",
+      slug: "pagination-suspended-one",
+      verificationStatus: "verified",
+      operationalStatus: "suspended",
+    });
+    await seedDirectoryCompany(t, {
+      name: "Pagination Pagination Suspended Two",
+      slug: "pagination-suspended-two",
+      verificationStatus: "verified",
+      operationalStatus: "suspended",
+    });
+
+    const first = await list(t, { ...filters, numItems: 1 });
+    expect(first.page).toHaveLength(1);
+    expect(first.page[0].slug).not.toContain("suspended");
+    expect(first.isDone).toBe(false);
+
+    const pages = [first];
+    let cursor = first.continueCursor;
+    for (let pageNumber = 0; pageNumber < 10 && !pages.at(-1)!.isDone; pageNumber += 1) {
+      const page = await list(t, { ...filters, numItems: 1, cursor });
+      pages.push(page);
+      cursor = page.continueCursor;
+    }
+    expect(pages.at(-1)?.isDone).toBe(true);
+    const visible = pages.flatMap((page) => page.page);
+    expect(visible.every((company) => !company.slug.includes("suspended"))).toBe(true);
+    expect(new Set(visible.map((company) => company.slug))).toEqual(
+      new Set(["pagination-eligible-oldest", "pagination-eligible-newest"]),
+    );
   });
 
   test("returns only the dedicated public shape and only published portfolio previews", async () => {

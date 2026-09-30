@@ -25,6 +25,13 @@ vi.mock("@/i18n/navigation", () => ({
   ),
   usePathname: () => "/admin",
   getPathname: () => "/admin",
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
+
+vi.mock("convex/react", () => ({
+  useQuery: () => 0,
+  useMutation: () => vi.fn(),
+  usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }),
 }));
 
 vi.mock("next/navigation", () => ({

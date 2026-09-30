@@ -8,6 +8,7 @@ import { SITE_URL } from "@/lib/seo";
 import { routing } from "@/i18n/routing";
 import { ConvexClientProvider } from "@/components/providers/convex-client-provider";
 import { AppFeedback } from "@/features/shared/components/app-feedback";
+import { BrowserPushLocaleReconciler } from "@/features/notifications/components/browser-push-locale-reconciler";
 import "../globals.css";
 
 const siteSans = localFont({
@@ -61,6 +62,7 @@ export default async function LocaleLayout({
       <body className="group/body flex min-h-full flex-col bg-white">
         <ConvexClientProvider>
           <NextIntlClientProvider messages={messages}>
+            <BrowserPushLocaleReconciler />
             <AppFeedback>
               <a
                 className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[60] focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-brand"

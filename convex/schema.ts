@@ -6,6 +6,16 @@ import {
   marketplaceActivityEventTypeValidator,
   marketplaceActivityMetadataValidator,
 } from "./marketplaceActivity/constants";
+import { commissionStatusValidator, dealStatusValidator } from "./deals/constants";
+import { commissionTierValidator } from "./marketplaceSettings/constants";
+import { reviewModerationStatusValidator } from "./reviews/constants";
+import {
+  notificationEntityValidator,
+  notificationPayloadValidator,
+  notificationTypeValidator,
+} from "./notifications/constants";
+import { notificationPushCategoriesValidator } from "./notifications/deliveryPolicy";
+import { companyOperationalStatusValidator } from "./companies/operationalStatus";
 
 const accountType = v.union(
   v.literal("client"),
@@ -46,7 +56,8 @@ const projectCategory = v.union(
   v.literal("pool"), v.literal("electrical"), v.literal("plumbing"), v.literal("painting"), v.literal("other"),
 );
 const projectPropertyType = v.union(v.literal("house"), v.literal("apartment"), v.literal("building"), v.literal("office"), v.literal("shop"), v.literal("land"), v.literal("other"));
-const projectBudgetRange = v.union(v.literal("under_50000"), v.literal("50000_100000"), v.literal("100000_250000"), v.literal("250000_500000"), v.literal("500000_1000000"), v.literal("1000000_plus"), v.literal("unknown"));
+/** Deploy-1 compatibility only. Remove after the production cleanup migration verifies zero legacy fields. */
+const legacyProjectBudgetRange = v.union(v.literal("under_50000"), v.literal("50000_100000"), v.literal("100000_250000"), v.literal("250000_500000"), v.literal("500000_1000000"), v.literal("1000000_plus"), v.literal("unknown"));
 const projectTimeline = v.union(v.literal("asap"), v.literal("within_1_month"), v.literal("one_to_three_months"), v.literal("three_to_six_months"), v.literal("six_plus_months"), v.literal("flexible"));
 const projectStatus = v.union(v.literal("draft"), v.literal("pending_review"), v.literal("needs_changes"), v.literal("published"), v.literal("in_discussion"), v.literal("company_selected"), v.literal("in_progress"), v.literal("completed"), v.literal("cancelled"), v.literal("archived"));
 const initialQuoteStatus = v.union(
@@ -118,6 +129,64 @@ export default defineSchema({
     .index("phone", ["phone"])
     .index("by_accountType", ["accountType"]),
 
+  notifications: defineTable({
+    recipientUserId: v.id("users"),
+    type: notificationTypeValidator,
+    entity: notificationEntityValidator,
+    payload: notificationPayloadValidator,
+    actorUserId: v.optional(v.id("users")),
+    dedupeKey: v.optional(v.string()),
+    createdAt: v.number(),
+    readAt: v.optional(v.number()),
+    pushDeliveryStatus: v.optional(v.union(
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("skipped"),
+    )),
+    /** Identifies the currently active delivery attempt; cleared on terminal states. */
+    pushDeliveryLeaseId: v.optional(v.string()),
+    /** Endpoints still awaiting a retry after a temporary delivery failure. */
+    pushPendingEndpoints: v.optional(v.array(v.string())),
+    pushAttemptCount: v.optional(v.number()),
+    pushAttemptedAt: v.optional(v.number()),
+    pushCompletedAt: v.optional(v.number()),
+    pushDeliveredCount: v.optional(v.number()),
+    pushRemovedCount: v.optional(v.number()),
+    pushFailedCount: v.optional(v.number()),
+  })
+    .index("by_recipientUserId_and_createdAt", ["recipientUserId", "createdAt"])
+    .index("by_recipientUserId_and_dedupeKey", ["recipientUserId", "dedupeKey"]),
+
+  notificationRecipientStates: defineTable({
+    recipientUserId: v.id("users"),
+    /** Logical read boundary used by the O(1) mark-all operation. */
+    readThroughAt: v.optional(v.number()),
+    /** Exact transactional aggregate; notification documents remain canonical. */
+    unreadCount: v.number(),
+    updatedAt: v.number(),
+  }).index("by_recipientUserId", ["recipientUserId"]),
+
+  notificationPreferences: defineTable({
+    userId: v.id("users"),
+    pushEnabled: v.boolean(),
+    pushCategories: notificationPushCategoriesValidator,
+    updatedAt: v.number(),
+  }).index("by_userId", ["userId"]),
+
+  pushSubscriptions: defineTable({
+    userId: v.id("users"),
+    endpoint: v.string(),
+    p256dh: v.string(),
+    auth: v.string(),
+    /** Locale selected on this device; optional while legacy subscriptions refresh. */
+    locale: v.optional(v.union(v.literal("fr"), v.literal("en"))),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    lastUsedAt: v.optional(v.number()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_endpoint", ["endpoint"]),
+
   clientProfiles: defineTable({
     userId: v.id("users"),
     city: v.optional(v.string()),
@@ -151,12 +220,14 @@ export default defineSchema({
     clientId: v.id("users"), primaryCategory: v.optional(projectCategory), customCategoryText: v.optional(v.string()),
     city: v.optional(companyServiceArea), neighborhood: v.optional(v.string()), countryCode: v.literal("MA"),
     title: v.optional(v.string()), propertyType: v.optional(projectPropertyType), surface: v.optional(v.number()),
-    surfaceUnknown: v.boolean(), description: v.optional(v.string()), budgetRange: v.optional(projectBudgetRange),
-    budgetMin: v.optional(v.number()), budgetMax: v.optional(v.number()), budgetUnknown: v.boolean(),
+    surfaceUnknown: v.boolean(), description: v.optional(v.string()),
+    /** Deploy-1 compatibility fields. Current product code must not read or write them. */
+    budgetRange: v.optional(legacyProjectBudgetRange), budgetMin: v.optional(v.number()),
+    budgetMax: v.optional(v.number()), budgetUnknown: v.optional(v.boolean()),
     timeline: v.optional(projectTimeline), visibility: v.union(v.literal("marketplace"), v.literal("invite_only")),
     /** Public-only denormalized text used by the authenticated company marketplace. */
     marketplaceSearchText: v.optional(v.string()),
-    /** Denormalized budget rank for marketplace sorting (0=unknown … 6=1M+). */
+    /** Deploy-1 compatibility field. Current marketplace queries do not use budget ranking. */
     marketplaceBudgetRank: v.optional(v.number()),
     status: projectStatus, lastCompletedStep: v.number(), createdAt: v.number(), updatedAt: v.number(),
     selectedCompanyId: v.optional(v.id("companies")),
@@ -172,18 +243,15 @@ export default defineSchema({
     .index("by_status_visibility_publishedAt", ["status", "visibility", "publishedAt"])
     .index("by_status_visibility_city_publishedAt", ["status", "visibility", "city", "publishedAt"])
     .index("by_status_visibility_category_publishedAt", ["status", "visibility", "primaryCategory", "publishedAt"])
-    .index("by_status_visibility_budget_publishedAt", ["status", "visibility", "budgetRange", "publishedAt"])
     .index("by_status_visibility_timeline_publishedAt", ["status", "visibility", "timeline", "publishedAt"])
     .index("by_status_visibility_propertyType_publishedAt", ["status", "visibility", "propertyType", "publishedAt"])
-    .index("by_status_visibility_budgetRank_publishedAt", ["status", "visibility", "marketplaceBudgetRank", "publishedAt"])
     .index("by_status_visibility_city_category_publishedAt", ["status", "visibility", "city", "primaryCategory", "publishedAt"])
-    .index("by_status_visibility_city_budget_publishedAt", ["status", "visibility", "city", "budgetRange", "publishedAt"])
-    .index("by_status_visibility_category_budget_publishedAt", ["status", "visibility", "primaryCategory", "budgetRange", "publishedAt"])
-    .index("by_status_visibility_city_category_budget_publishedAt", ["status", "visibility", "city", "primaryCategory", "budgetRange", "publishedAt"])
     .index("by_primaryCategory_and_status", ["primaryCategory", "status"])
     .index("by_createdAt", ["createdAt"])
     .searchIndex("search_marketplace", {
       searchField: "marketplaceSearchText",
+      // Phase 1 keeps the enabled origin/main definition unchanged. Removing
+      // budgetRange is deferred until the staged-index rollout is promoted.
       filterFields: ["status", "visibility", "city", "primaryCategory", "budgetRange", "timeline", "propertyType"],
     }),
 
@@ -192,20 +260,45 @@ export default defineSchema({
     changedBy: v.id("users"), changedAt: v.number(), reason: v.optional(v.string()),
   }).index("by_projectId", ["projectId"]).index("by_projectId_and_changedAt", ["projectId", "changedAt"]),
 
+  invitations: defineTable({
+    projectId: v.id("projects"),
+    clientUserId: v.id("users"),
+    companyId: v.id("companies"),
+    message: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    acceptedAt: v.optional(v.number()),
+    declinedAt: v.optional(v.number()),
+  })
+    .index("by_projectId_and_companyId", ["projectId", "companyId"])
+    .index("by_companyId_and_createdAt", ["companyId", "createdAt"]),
+
+  invitationStatusHistory: defineTable({
+    invitationId: v.id("invitations"),
+    projectId: v.id("projects"),
+    companyId: v.id("companies"),
+    fromStatus: v.optional(v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined"))),
+    toStatus: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined")),
+    actorUserId: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_invitationId_and_createdAt", ["invitationId", "createdAt"]),
+
   marketplaceActivity: defineTable({
     projectId: v.id("projects"),
     eventType: marketplaceActivityEventTypeValidator,
     actorUserId: v.id("users"),
     actorType: marketplaceActivityActorTypeValidator,
     companyId: v.optional(v.id("companies")),
+    invitationId: v.optional(v.id("invitations")),
     quoteId: v.optional(v.id("projectQuotes")),
     conversationId: v.optional(v.id("conversations")),
     siteAssessmentId: v.optional(v.id("siteAssessments")),
     siteVisitId: v.optional(v.id("siteVisits")),
     finalQuoteId: v.optional(v.id("finalQuotes")),
     finalQuoteRevisionId: v.optional(v.id("finalQuoteRevisions")),
-    /** Future deal module IDs are stored as opaque IDs until that table exists. */
-    dealId: v.optional(v.string()),
+    dealId: v.optional(v.id("deals")),
+    reviewId: v.optional(v.id("reviews")),
     oldStatus: v.optional(v.string()),
     newStatus: v.optional(v.string()),
     reason: v.optional(v.string()),
@@ -213,9 +306,17 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_projectId_and_createdAt", ["projectId", "createdAt"])
+    .index("by_companyId_and_createdAt", {
+      fields: ["companyId", "createdAt"],
+      staged: true,
+    })
     .index("by_eventType_and_createdAt", ["eventType", "createdAt"])
     .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"])
-    .index("by_finalQuoteId_and_createdAt", ["finalQuoteId", "createdAt"]),
+    .index("by_finalQuoteId_and_createdAt", ["finalQuoteId", "createdAt"])
+    .index("by_dealId_and_createdAt", {
+      fields: ["dealId", "createdAt"],
+      staged: true,
+    }),
 
   siteAssessments: defineTable({
     projectId: v.id("projects"),
@@ -348,7 +449,11 @@ export default defineSchema({
   })
     .index("by_projectId_and_companyId", ["projectId", "companyId"])
     .index("by_projectId_and_status", ["projectId", "status"])
-    .index("by_companyId_and_status", ["companyId", "status"]),
+    .index("by_companyId_and_status", ["companyId", "status"])
+    .index("by_companyId_and_createdAt", {
+      fields: ["companyId", "createdAt"],
+      staged: true,
+    }),
 
   finalQuotes: defineTable({
     projectId: v.id("projects"),
@@ -369,6 +474,8 @@ export default defineSchema({
     changesRequestReason: v.optional(v.string()),
     acceptedAt: v.optional(v.number()),
     acceptedByUserId: v.optional(v.id("users")),
+    /** Transaction-local authorization for atomic Deal creation; removed on success. */
+    dealCreationNonce: v.optional(v.string()),
     declinedAt: v.optional(v.number()),
     declinedByUserId: v.optional(v.id("users")),
     declineReason: v.optional(v.string()),
@@ -419,6 +526,126 @@ export default defineSchema({
     .index("by_token", ["token"])
     .index("by_finalQuoteId", ["finalQuoteId"]),
 
+  deals: defineTable({
+    projectId: v.id("projects"),
+    clientUserId: v.id("users"),
+    companyId: v.id("companies"),
+    createdByUserId: v.id("users"),
+    acceptedFinalQuoteId: v.id("finalQuotes"),
+    acceptedFinalQuoteRevisionId: v.id("finalQuoteRevisions"),
+    /** Operational trace back to the discussion and initial estimate. */
+    conversationId: v.id("conversations"),
+    initialQuoteId: v.id("projectQuotes"),
+    agreedAmountMad: v.number(),
+    currency: v.literal("MAD"),
+    commissionRateBps: v.number(),
+    commissionAmountMad: v.number(),
+    commissionTierMinAmountMad: v.number(),
+    commissionTierMaxAmountMad: v.union(v.number(), v.null()),
+    commissionConfigVersion: v.number(),
+    /** The selected Company owes this frozen amount to the Batiplus platform. */
+    commissionDebtorCompanyId: v.id("companies"),
+    commissionBeneficiary: v.literal("batiplus"),
+    commissionStatus: commissionStatusValidator,
+    commissionPaidAt: v.optional(v.number()),
+    commissionPaidByAdminUserId: v.optional(v.id("users")),
+    commissionPaymentReference: v.optional(v.string()),
+    commissionPaymentNote: v.optional(v.string()),
+    status: dealStatusValidator,
+    completedAt: v.optional(v.number()),
+    completedByUserId: v.optional(v.id("users")),
+    createdAt: v.number(),
+  })
+    .index("by_projectId", ["projectId"])
+    .index("by_clientUserId", ["clientUserId"])
+    .index("by_companyId", ["companyId"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_companyId_and_createdAt", ["companyId", "createdAt"])
+    .index("by_companyId_and_status", ["companyId", "status"])
+    .index("by_commissionDebtorCompanyId_and_createdAt", [
+      "commissionDebtorCompanyId",
+      "createdAt",
+    ])
+    .index("by_commissionStatus_and_createdAt", ["commissionStatus", "createdAt"])
+    .index("by_companyId_and_commissionStatus", ["companyId", "commissionStatus"])
+    .index("by_companyId_and_commissionStatus_and_createdAt", [
+      "companyId",
+      "commissionStatus",
+      "createdAt",
+    ])
+    .index("by_status", ["status"])
+    .index("by_acceptedFinalQuoteId", ["acceptedFinalQuoteId"]),
+
+  /** Transactional totals for Company commission dashboards. */
+  companyCommissionSummaries: defineTable({
+    companyId: v.id("companies"),
+    dueCount: v.number(),
+    dueAmountCentimes: v.number(),
+    paidAmountCentimes: v.number(),
+    updatedAt: v.number(),
+  }).index("by_companyId", ["companyId"]),
+
+  reviews: defineTable({
+    dealId: v.id("deals"),
+    projectId: v.id("projects"),
+    companyId: v.id("companies"),
+    clientUserId: v.id("users"),
+    rating: v.number(),
+    comment: v.string(),
+    moderationStatus: reviewModerationStatusValidator,
+    moderatedAt: v.optional(v.number()),
+    moderatedByAdminUserId: v.optional(v.id("users")),
+    createdAt: v.number(),
+  })
+    .index("by_dealId", ["dealId"])
+    .index("by_companyId_and_createdAt", ["companyId", "createdAt"])
+    .index("by_companyId_and_moderationStatus_and_createdAt", [
+      "companyId",
+      "moderationStatus",
+      "createdAt",
+    ])
+    .index("by_moderationStatus_and_createdAt", ["moderationStatus", "createdAt"])
+    .index("by_createdAt", ["createdAt"]),
+
+  dealStatusHistory: defineTable({
+    dealId: v.id("deals"),
+    fromStatus: v.optional(dealStatusValidator),
+    toStatus: dealStatusValidator,
+    actorUserId: v.id("users"),
+    reason: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_dealId_and_createdAt", ["dealId", "createdAt"]),
+
+  commissionStatusHistory: defineTable({
+    dealId: v.id("deals"),
+    companyId: v.id("companies"),
+    fromStatus: commissionStatusValidator,
+    toStatus: commissionStatusValidator,
+    commissionAmountMad: v.number(),
+    actorAdminUserId: v.id("users"),
+    paymentReference: v.optional(v.string()),
+    paymentNote: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_dealId_and_createdAt", ["dealId", "createdAt"]),
+
+  marketplaceSettings: defineTable({
+    key: v.literal("global"),
+    commissionTiers: v.array(commissionTierValidator),
+    commissionConfigVersion: v.number(),
+    updatedAt: v.number(),
+    updatedByUserId: v.id("users"),
+  }).index("by_key", ["key"]),
+
+  marketplaceSettingsHistory: defineTable({
+    settingKey: v.literal("commission_tiers"),
+    oldCommissionTiers: v.array(commissionTierValidator),
+    newCommissionTiers: v.array(commissionTierValidator),
+    oldCommissionConfigVersion: v.union(v.number(), v.null()),
+    newCommissionConfigVersion: v.number(),
+    actorUserId: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_settingKey_and_createdAt", ["settingKey", "createdAt"]),
+
   quoteStatusHistory: defineTable({
     quoteId: v.id("projectQuotes"),
     oldStatus: initialQuoteStatus,
@@ -432,7 +659,8 @@ export default defineSchema({
 
   conversations: defineTable({
     projectId: v.id("projects"),
-    quoteId: v.id("projectQuotes"),
+    quoteId: v.optional(v.id("projectQuotes")),
+    invitationId: v.optional(v.id("invitations")),
     clientId: v.id("users"),
     companyId: v.id("companies"),
     status: v.union(v.literal("active"), v.literal("closed")),
@@ -464,6 +692,52 @@ export default defineSchema({
       "senderUserId",
       "clientMessageId",
     ]),
+
+  /**
+   * Batiplus operations channel. This is intentionally unrelated to the
+   * project-bound `conversations` table above.
+   */
+  adminCompanyConversations: defineTable({
+    companyId: v.id("companies"),
+    messageCount: v.number(),
+    lastMessageId: v.optional(v.id("adminCompanyMessages")),
+    lastMessageAt: v.optional(v.number()),
+    lastMessagePreview: v.optional(v.string()),
+    lastSenderType: v.optional(v.union(v.literal("admin"), v.literal("company"))),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_companyId", ["companyId"])
+    .index("by_updatedAt", ["updatedAt"]),
+
+  adminCompanyMessages: defineTable({
+    conversationId: v.id("adminCompanyConversations"),
+    companyId: v.id("companies"),
+    senderUserId: v.id("users"),
+    senderType: v.union(v.literal("admin"), v.literal("company")),
+    body: v.string(),
+    idempotencyKey: v.string(),
+    /** Monotonic within one conversation; the authoritative read boundary. */
+    sequence: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_conversationId_and_sequence", ["conversationId", "sequence"])
+    .index("by_senderUserId_and_idempotencyKey", ["senderUserId", "idempotencyKey"]),
+
+  adminCompanyConversationReads: defineTable({
+    conversationId: v.id("adminCompanyConversations"),
+    userId: v.id("users"),
+    readThroughSequence: v.number(),
+    updatedAt: v.number(),
+  }).index("by_conversationId_and_userId", ["conversationId", "userId"]),
+
+  /** Append-only, Admin-visible operational records about one Company. */
+  companyAdminNotes: defineTable({
+    companyId: v.id("companies"),
+    authorAdminUserId: v.id("users"),
+    body: v.string(),
+    createdAt: v.number(),
+  }).index("by_companyId_and_createdAt", ["companyId", "createdAt"]),
 
   messageAttachments: defineTable({
     conversationId: v.id("conversations"),
@@ -509,6 +783,9 @@ export default defineSchema({
     coverMediaId: v.optional(v.id("publicMedia")),
     /** Denormalized public-only text used by the company directory search index. */
     directorySearchText: v.optional(v.string()),
+    /** Visible-review aggregates, maintained transactionally with review moderation. */
+    reviewCount: v.optional(v.number()),
+    reviewRatingTotal: v.optional(v.number()),
     onboardingStatus,
     verificationStatus: v.union(
       v.literal("draft"),
@@ -516,19 +793,45 @@ export default defineSchema({
       v.literal("verified"),
       v.literal("rejected"),
     ),
+    operationalStatus: v.optional(companyOperationalStatusValidator),
+    /** Materialized directory eligibility; optional until legacy rows are backfilled. */
+    directoryListed: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_slug", ["slug"])
+    .index("by_updatedAt", { fields: ["updatedAt"], staged: true })
     .index("by_onboardingStatus", ["onboardingStatus"])
     .index("by_onboardingStatus_and_verificationStatus", [
       "onboardingStatus",
       "verificationStatus",
     ])
+    .index("by_onboardingStatus_and_directoryListed", {
+      fields: ["onboardingStatus", "directoryListed"],
+      staged: true,
+    })
+    .index("by_onboardingStatus_and_verificationStatus_and_directoryListed", {
+      fields: ["onboardingStatus", "verificationStatus", "directoryListed"],
+      staged: true,
+    })
     .index("by_verificationStatus", ["verificationStatus"])
+    .index("by_directoryListed", { fields: ["directoryListed"], staged: true })
+    /** Admin operations filter; a missing value means "normal". */
+    .index("by_operationalStatus", { fields: ["operationalStatus"], staged: true })
     .searchIndex("search_directory", {
       searchField: "directorySearchText",
+      // Keep the already-enabled origin/main index unchanged during phase 1.
       filterFields: ["onboardingStatus", "verificationStatus"],
+    })
+    .searchIndex("search_directory_v2", {
+      searchField: "directorySearchText",
+      filterFields: [
+        "onboardingStatus",
+        "verificationStatus",
+        "operationalStatus",
+        "directoryListed",
+      ],
+      staged: true,
     }),
 
   companyMembers: defineTable({
@@ -630,6 +933,15 @@ export default defineSchema({
   })
     .index("by_companyId", ["companyId"])
     .index("by_companyId_and_changedAt", ["companyId", "changedAt"]),
+
+  companyOperationalStatusHistory: defineTable({
+    companyId: v.id("companies"),
+    fromStatus: companyOperationalStatusValidator,
+    toStatus: companyOperationalStatusValidator,
+    reason: v.string(),
+    changedByAdminUserId: v.id("users"),
+    createdAt: v.number(),
+  }).index("by_companyId_and_createdAt", ["companyId", "createdAt"]),
 
   portfolioProjects: defineTable({
     companyId: v.id("companies"),

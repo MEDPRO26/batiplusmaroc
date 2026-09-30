@@ -10,9 +10,6 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { internalMutation, internalQuery } from "../_generated/server";
 import {
-  budgetValues,
-  marketplaceBudgetRank,
-  projectBudgetRanges,
   projectCategories,
   projectCities,
   projectPropertyTypes,
@@ -34,7 +31,6 @@ type SeedProject = {
   category: (typeof projectCategories)[number];
   propertyType: (typeof projectPropertyTypes)[number];
   surface: number;
-  budgetRange: Exclude<(typeof projectBudgetRanges)[number], "unknown">;
   timeline: (typeof projectTimelines)[number];
   status: SeedStatus;
 };
@@ -44,121 +40,121 @@ export const SEED_PROJECTS: readonly SeedProject[] = [
     title: "Villa R+1 construction in Agadir",
     description: "Construction complète d'une villa R+1 contemporaine avec gros œuvre, étanchéité et finitions durables.",
     city: "agadir", neighborhood: "Founty", category: "houseConstruction", propertyType: "house",
-    surface: 310, budgetRange: "500000_1000000", timeline: "six_plus_months", status: "published",
+    surface: 310, timeline: "six_plus_months", status: "published",
   },
   {
     title: "120 m² apartment renovation in Casablanca",
     description: "Rénovation complète d'un appartement à Maârif avec redistribution des pièces, cuisine et salles de bain.",
     city: "casablanca", neighborhood: "Maârif", category: "renovation", propertyType: "apartment",
-    surface: 120, budgetRange: "100000_250000", timeline: "one_to_three_months", status: "published",
+    surface: 120, timeline: "one_to_three_months", status: "published",
   },
   {
     title: "Structural work for R+3 building in Rabat",
     description: "Réalisation des fondations, poteaux, poutres et dalles en béton armé pour un immeuble résidentiel R+3.",
     city: "rabat", neighborhood: "Hay Riad", category: "buildingConstruction", propertyType: "building",
-    surface: 760, budgetRange: "1000000_plus", timeline: "six_plus_months", status: "published",
+    surface: 760, timeline: "six_plus_months", status: "published",
   },
   {
     title: "Complete electrical renovation of a Marrakech riad",
     description: "Remise aux normes du tableau, recâblage complet, éclairage décoratif et préparation domotique d'un riad.",
     city: "marrakech", neighborhood: "Médina", category: "electrical", propertyType: "house",
-    surface: 280, budgetRange: "100000_250000", timeline: "one_to_three_months", status: "published",
+    surface: 280, timeline: "one_to_three_months", status: "published",
   },
   {
     title: "Swimming pool construction in Tangier",
     description: "Construction d'une piscine familiale en béton, local technique, filtration et plage antidérapante.",
     city: "tangier", neighborhood: "Malabata", category: "pool", propertyType: "house",
-    surface: 55, budgetRange: "250000_500000", timeline: "three_to_six_months", status: "published",
+    surface: 55, timeline: "three_to_six_months", status: "published",
   },
   {
     title: "Office interior fit-out in Fez",
     description: "Aménagement d'un plateau de bureaux avec cloisons acoustiques, faux plafonds et espaces collaboratifs.",
     city: "fes", neighborhood: "Ville Nouvelle", category: "interior", propertyType: "office",
-    surface: 240, budgetRange: "250000_500000", timeline: "three_to_six_months", status: "published",
+    surface: 240, timeline: "three_to_six_months", status: "published",
   },
   {
     title: "Plumbing renewal for Casablanca apartment block",
     description: "Remplacement des colonnes d'eau, évacuations et équipements sanitaires d'un immeuble occupé.",
     city: "casablanca", neighborhood: "Bourgogne", category: "plumbing", propertyType: "building",
-    surface: 900, budgetRange: "500000_1000000", timeline: "three_to_six_months", status: "published",
+    surface: 900, timeline: "three_to_six_months", status: "published",
   },
   {
     title: "Exterior painting for coastal villa in Agadir",
     description: "Préparation des façades, traitement des fissures et peinture extérieure résistante à l'air marin.",
     city: "agadir", neighborhood: "Sonaba", category: "painting", propertyType: "house",
-    surface: 360, budgetRange: "under_50000", timeline: "asap", status: "published",
+    surface: 360, timeline: "asap", status: "published",
   },
   {
     title: "Luxury finishing for Palmeraie villa",
     description: "Second œuvre haut de gamme comprenant plâtre, revêtements, menuiseries intérieures et finitions décoratives.",
     city: "marrakech", neighborhood: "Palmeraie", category: "finishing", propertyType: "house",
-    surface: 420, budgetRange: "500000_1000000", timeline: "three_to_six_months", status: "published",
+    surface: 420, timeline: "three_to_six_months", status: "published",
   },
   {
     title: "Foundation reinforcement in Hay Riad",
     description: "Diagnostic puis renforcement localisé des fondations et voiles porteurs d'une maison en extension.",
     city: "rabat", neighborhood: "Hay Riad", category: "structural", propertyType: "house",
-    surface: 260, budgetRange: "250000_500000", timeline: "one_to_three_months", status: "published",
+    surface: 260, timeline: "one_to_three_months", status: "published",
   },
   {
     title: "R+4 residential building in Malabata",
     description: "Construction tous corps d'état d'un immeuble R+4 avec parking, ascenseur et terrasses communes.",
     city: "tangier", neighborhood: "Malabata", category: "buildingConstruction", propertyType: "building",
-    surface: 1350, budgetRange: "1000000_plus", timeline: "six_plus_months", status: "published",
+    surface: 1350, timeline: "six_plus_months", status: "published",
   },
   {
     title: "Traditional townhouse renovation in Fez Medina",
     description: "Restauration d'une maison traditionnelle avec conservation des zelliges, bois sculpté et ventilation naturelle.",
     city: "fes", neighborhood: "Médina", category: "renovation", propertyType: "house",
-    surface: 190, budgetRange: "250000_500000", timeline: "three_to_six_months", status: "published",
+    surface: 190, timeline: "three_to_six_months", status: "published",
   },
   {
     title: "Retail showroom interior in Casablanca",
     description: "Conception et réalisation d'un showroom avec mobilier intégré, éclairage commercial et parcours client.",
     city: "casablanca", neighborhood: "Aïn Sebaâ", category: "interior", propertyType: "shop",
-    surface: 320, budgetRange: "250000_500000", timeline: "one_to_three_months", status: "published",
+    surface: 320, timeline: "one_to_three_months", status: "published",
   },
   {
     title: "Villa plumbing and solar hot water in Agadir",
     description: "Installation sanitaire complète, réseau multicouche et chauffe-eau solaire pour une villa familiale.",
     city: "agadir", neighborhood: "Hay Mohammadi", category: "plumbing", propertyType: "house",
-    surface: 280, budgetRange: "100000_250000", timeline: "one_to_three_months", status: "published",
+    surface: 280, timeline: "one_to_three_months", status: "published",
   },
   {
     title: "Boutique hotel painting and plaster repair",
     description: "Réparation des enduits et remise en peinture intérieure d'un hôtel avec phasage pour maintenir l'activité.",
     city: "marrakech", neighborhood: "Guéliz", category: "painting", propertyType: "building",
-    surface: 620, budgetRange: "100000_250000", timeline: "one_to_three_months", status: "published",
+    surface: 620, timeline: "one_to_three_months", status: "published",
   },
   {
     title: "Contemporary villa construction in Souissi",
     description: "Construction clé en main d'une villa contemporaine avec sous-sol, isolation performante et jardin aménagé.",
     city: "rabat", neighborhood: "Souissi", category: "houseConstruction", propertyType: "house",
-    surface: 480, budgetRange: "1000000_plus", timeline: "six_plus_months", status: "published",
+    surface: 480, timeline: "six_plus_months", status: "published",
   },
   {
     title: "Bay-view apartment renovation in Tangier",
     description: "Rénovation d'un appartement avec ouverture de la cuisine, isolation phonique et nouvelles menuiseries.",
     city: "tangier", neighborhood: "Marchan", category: "renovation", propertyType: "apartment",
-    surface: 145, budgetRange: "100000_250000", timeline: "one_to_three_months", status: "pending_review",
+    surface: 145, timeline: "one_to_three_months", status: "pending_review",
   },
   {
     title: "Electrical upgrade for artisan workshop in Fez",
     description: "Mise à niveau électrique d'un atelier avec circuit triphasé, protections et éclairage de sécurité.",
     city: "fes", neighborhood: "Aïn Nokbi", category: "electrical", propertyType: "shop",
-    surface: 180, budgetRange: "50000_100000", timeline: "within_1_month", status: "pending_review",
+    surface: 180, timeline: "within_1_month", status: "pending_review",
   },
   {
     title: "Office finishing package in Sidi Maarouf",
     description: "Projet de finitions pour bureaux comprenant faux plafond, sols techniques et peinture intérieure.",
     city: "casablanca", neighborhood: "Sidi Maarouf", category: "finishing", propertyType: "office",
-    surface: 510, budgetRange: "250000_500000", timeline: "flexible", status: "draft",
+    surface: 510, timeline: "flexible", status: "draft",
   },
   {
     title: "Compact courtyard pool in Agadir",
     description: "Projet de petite piscine sur mesure avec banquette immergée, filtration compacte et terrasse en pierre.",
     city: "agadir", neighborhood: "Talborjt", category: "pool", propertyType: "house",
-    surface: 32, budgetRange: "100000_250000", timeline: "flexible", status: "draft",
+    surface: 32, timeline: "flexible", status: "draft",
   },
 ] as const;
 
@@ -229,7 +225,6 @@ async function ensureSeedClientProfile(ctx: MutationCtx, userId: Id<"users">) {
 }
 
 function projectDocument(project: SeedProject, clientId: Id<"users">, index: number, now: number) {
-  const budget = budgetValues[project.budgetRange];
   const createdAt = now - (SEED_PROJECTS.length - index) * 86_400_000;
   const submittedAt = createdAt + 3_600_000;
   const publishedAt = submittedAt + 3_600_000;
@@ -244,14 +239,10 @@ function projectDocument(project: SeedProject, clientId: Id<"users">, index: num
     surface: project.surface,
     surfaceUnknown: false,
     description: project.description,
-    budgetRange: project.budgetRange,
-    budgetMin: budget.min,
-    budgetMax: "max" in budget ? budget.max : undefined,
-    budgetUnknown: budget.unknown,
     timeline: project.timeline,
     visibility: "marketplace" as const,
     status: project.status,
-    lastCompletedStep: 6,
+    lastCompletedStep: 5,
     createdAt,
     updatedAt: project.status === "draft" ? createdAt : project.status === "pending_review" ? submittedAt : publishedAt,
     submittedAt: project.status === "draft" ? undefined : submittedAt,
@@ -260,7 +251,6 @@ function projectDocument(project: SeedProject, clientId: Id<"users">, index: num
   return {
     ...document,
     marketplaceSearchText: buildProjectMarketplaceSearchText(document),
-    marketplaceBudgetRank: marketplaceBudgetRank(project.budgetRange),
   };
 }
 

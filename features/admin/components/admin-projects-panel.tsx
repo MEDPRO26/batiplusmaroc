@@ -212,14 +212,6 @@ export function AdminProjectsPanel() {
                       )}
                     />
                     <CompactField
-                      label={t("columns.budget")}
-                      value={
-                        row.budgetRange
-                          ? tWizard(`budgetOptions.${row.budgetRange}`)
-                          : "—"
-                      }
-                    />
-                    <CompactField
                       label={t("columns.submitted")}
                       value={formatDate(row.submittedAt, locale)}
                     />
@@ -250,9 +242,6 @@ export function AdminProjectsPanel() {
                     <th className="hidden px-3 py-2 font-semibold lg:table-cell">
                       {t("columns.category")}
                     </th>
-                    <th className="hidden px-3 py-2 font-semibold xl:table-cell">
-                      {t("columns.budget")}
-                    </th>
                     <th className="px-3 py-2 font-semibold">
                       {t("columns.submitted")}
                     </th>
@@ -282,11 +271,6 @@ export function AdminProjectsPanel() {
                           row.category,
                           row.customCategoryText,
                         )}
-                      </td>
-                      <td className="hidden px-3 py-3 text-[#626970] xl:table-cell">
-                        {row.budgetRange
-                          ? tWizard(`budgetOptions.${row.budgetRange}`)
-                          : "—"}
                       </td>
                       <td className="px-3 py-3 text-[#626970]">
                         {formatDate(row.submittedAt, locale)}
@@ -492,14 +476,6 @@ export function ProjectReviewDrawer({
                 <Field
                   label={t("fields.description")}
                   value={review.description || "—"}
-                />
-                <Field
-                  label={t("fields.budget")}
-                  value={
-                    review.budgetRange
-                      ? tWizard(`budgetOptions.${review.budgetRange}`)
-                      : "—"
-                  }
                 />
                 <Field
                   label={t("fields.timeline")}

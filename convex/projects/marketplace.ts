@@ -8,13 +8,12 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
+import { isCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
 import { isActiveQuoteStatus } from "../quotes/state";
+import { invitationForPair } from "../invitations/index";
 import { toPublicClientProfile } from "../lib/clientPublicShape";
 import {
-  marketplaceBudgetRank,
   postedWindowMs,
-  projectBudgetRanges,
-  projectBudgetRangeValidator,
   projectCategories,
   projectCategoryValidator,
   projectCities,
@@ -60,7 +59,6 @@ const marketplaceCardValidator = v.object({
   city: projectCityValidator,
   primaryCategory: projectCategoryValidator,
   customCategoryText: nullableString,
-  budgetRange: projectBudgetRangeValidator,
   timeline: projectTimelineValidator,
   propertyType: v.union(projectPropertyTypeValidator, v.null()),
   surface: nullableNumber,
@@ -72,9 +70,6 @@ const marketplaceCardValidator = v.object({
 
 const marketplaceDetailsValidator = marketplaceCardValidator.omit("client").extend({
   neighborhood: nullableString,
-  budgetMin: nullableNumber,
-  budgetMax: nullableNumber,
-  budgetUnknown: v.boolean(),
   canSubmitQuote: v.boolean(),
   myQuoteId: v.union(v.id("projectQuotes"), v.null()),
   client: v.union(safeClientDetailValidator, v.null()),
@@ -85,7 +80,6 @@ type MarketplaceSort = (typeof projectMarketplaceSortOptions)[number];
 type MarketplaceFilters = {
   city?: Doc<"projects">["city"];
   category?: Doc<"projects">["primaryCategory"];
-  budgetRange?: Doc<"projects">["budgetRange"];
   timeline?: Doc<"projects">["timeline"];
   propertyType?: Doc<"projects">["propertyType"];
 };
@@ -93,7 +87,6 @@ type MarketplaceFilters = {
 type MarketplaceSelections = {
   cities?: NonNullable<Doc<"projects">["city"]>[];
   categories?: NonNullable<Doc<"projects">["primaryCategory"]>[];
-  budgetRanges?: NonNullable<Doc<"projects">["budgetRange"]>[];
   timelines?: NonNullable<Doc<"projects">["timeline"]>[];
   propertyTypes?: NonNullable<Doc<"projects">["propertyType"]>[];
   surfaceRanges?: (typeof projectSurfaceRanges)[number][];
@@ -193,7 +186,6 @@ function isCompleteMarketplaceProject(project: Doc<"projects">) {
       project.description &&
       project.city &&
       project.primaryCategory &&
-      project.budgetRange &&
       project.timeline,
   );
 }
@@ -207,7 +199,6 @@ async function toMarketplaceCard(ctx: QueryCtx, project: Doc<"projects">) {
     city: project.city!,
     primaryCategory: project.primaryCategory!,
     customCategoryText: project.customCategoryText ?? null,
-    budgetRange: project.budgetRange!,
     timeline: project.timeline!,
     propertyType: project.propertyType ?? null,
     surface: project.surface ?? null,
@@ -226,7 +217,6 @@ function searchQuery(ctx: QueryCtx, search: string, filters: MarketplaceFilters)
       .eq("visibility", "marketplace");
     if (filters.city) next = next.eq("city", filters.city);
     if (filters.category) next = next.eq("primaryCategory", filters.category);
-    if (filters.budgetRange) next = next.eq("budgetRange", filters.budgetRange);
     if (filters.timeline) next = next.eq("timeline", filters.timeline);
     if (filters.propertyType) next = next.eq("propertyType", filters.propertyType);
     return next;
@@ -240,18 +230,6 @@ function publishedOrder(sortBy: MarketplaceSort) {
 function newestQuery(ctx: QueryCtx, filters: MarketplaceFilters, sortBy: MarketplaceSort) {
   const base = ctx.db.query("projects");
   const order = publishedOrder(sortBy);
-  if (filters.city && filters.category && filters.budgetRange) {
-    return base
-      .withIndex("by_status_visibility_city_category_budget_publishedAt", (q) =>
-        q
-          .eq("status", "published")
-          .eq("visibility", "marketplace")
-          .eq("city", filters.city)
-          .eq("primaryCategory", filters.category)
-          .eq("budgetRange", filters.budgetRange),
-      )
-      .order(order);
-  }
   if (filters.city && filters.category) {
     return base
       .withIndex("by_status_visibility_city_category_publishedAt", (q) =>
@@ -260,28 +238,6 @@ function newestQuery(ctx: QueryCtx, filters: MarketplaceFilters, sortBy: Marketp
           .eq("visibility", "marketplace")
           .eq("city", filters.city)
           .eq("primaryCategory", filters.category),
-      )
-      .order(order);
-  }
-  if (filters.city && filters.budgetRange) {
-    return base
-      .withIndex("by_status_visibility_city_budget_publishedAt", (q) =>
-        q
-          .eq("status", "published")
-          .eq("visibility", "marketplace")
-          .eq("city", filters.city)
-          .eq("budgetRange", filters.budgetRange),
-      )
-      .order(order);
-  }
-  if (filters.category && filters.budgetRange) {
-    return base
-      .withIndex("by_status_visibility_category_budget_publishedAt", (q) =>
-        q
-          .eq("status", "published")
-          .eq("visibility", "marketplace")
-          .eq("primaryCategory", filters.category)
-          .eq("budgetRange", filters.budgetRange),
       )
       .order(order);
   }
@@ -299,16 +255,6 @@ function newestQuery(ctx: QueryCtx, filters: MarketplaceFilters, sortBy: Marketp
           .eq("status", "published")
           .eq("visibility", "marketplace")
           .eq("primaryCategory", filters.category),
-      )
-      .order(order);
-  }
-  if (filters.budgetRange) {
-    return base
-      .withIndex("by_status_visibility_budget_publishedAt", (q) =>
-        q
-          .eq("status", "published")
-          .eq("visibility", "marketplace")
-          .eq("budgetRange", filters.budgetRange),
       )
       .order(order);
   }
@@ -339,15 +285,6 @@ function newestQuery(ctx: QueryCtx, filters: MarketplaceFilters, sortBy: Marketp
     .order(order);
 }
 
-function budgetSortedQuery(ctx: QueryCtx, sortBy: "budget_high" | "budget_low") {
-  return ctx.db
-    .query("projects")
-    .withIndex("by_status_visibility_budgetRank_publishedAt", (q) =>
-      q.eq("status", "published").eq("visibility", "marketplace"),
-    )
-    .order(sortBy === "budget_high" ? "desc" : "asc");
-}
-
 function applyMarketplaceFilters(
   // Convex filter expression builder — typed loosely to keep the helper reusable.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -357,7 +294,7 @@ function applyMarketplaceFilters(
 ) {
   const orField = (
     values: string[] | undefined,
-    field: "city" | "primaryCategory" | "budgetRange" | "timeline" | "propertyType",
+    field: "city" | "primaryCategory" | "timeline" | "propertyType",
   ) => {
     if (values === undefined) return true;
     if (values.length === 0) return false;
@@ -396,7 +333,6 @@ function applyMarketplaceFilters(
   return q.and(
     orField(selections.cities, "city"),
     orField(selections.categories, "primaryCategory"),
-    orField(selections.budgetRanges, "budgetRange"),
     orField(selections.timelines, "timeline"),
     orField(selections.propertyTypes, "propertyType"),
     surface,
@@ -427,15 +363,12 @@ function filteredOrderedQuery(
   sortBy: MarketplaceSort,
   publishedAfter: number | undefined,
 ) {
-  const ordered =
-    sortBy === "budget_high" || sortBy === "budget_low"
-      ? budgetSortedQuery(ctx, sortBy)
-      : ctx.db
-          .query("projects")
-          .withIndex("by_status_visibility_publishedAt", (q) =>
-            q.eq("status", "published").eq("visibility", "marketplace"),
-          )
-          .order(publishedOrder(sortBy));
+  const ordered = ctx.db
+    .query("projects")
+    .withIndex("by_status_visibility_publishedAt", (q) =>
+      q.eq("status", "published").eq("visibility", "marketplace"),
+    )
+    .order(publishedOrder(sortBy));
   return ordered.filter((q) => applyMarketplaceFilters(q, selections, publishedAfter));
 }
 
@@ -446,12 +379,10 @@ export const listCompanyMarketplaceProjects = query({
     search: v.optional(v.string()),
     city: v.optional(projectCityValidator),
     category: v.optional(projectCategoryValidator),
-    budgetRange: v.optional(projectBudgetRangeValidator),
     timeline: v.optional(projectTimelineValidator),
     propertyType: v.optional(projectPropertyTypeValidator),
     cities: v.optional(v.array(projectCityValidator)),
     categories: v.optional(v.array(projectCategoryValidator)),
-    budgetRanges: v.optional(v.array(projectBudgetRangeValidator)),
     timelines: v.optional(v.array(projectTimelineValidator)),
     propertyTypes: v.optional(v.array(projectPropertyTypeValidator)),
     surfaceRanges: v.optional(v.array(projectSurfaceRangeValidator)),
@@ -466,7 +397,6 @@ export const listCompanyMarketplaceProjects = query({
     const selections: MarketplaceSelections = {
       cities: normalizeSelection(args.cities, args.city, projectCities.length),
       categories: normalizeSelection(args.categories, args.category, projectCategories.length),
-      budgetRanges: normalizeSelection(args.budgetRanges, args.budgetRange, projectBudgetRanges.length),
       timelines: normalizeSelection(args.timelines, args.timeline, projectTimelines.length),
       propertyTypes: normalizeSelection(
         args.propertyTypes,
@@ -479,11 +409,10 @@ export const listCompanyMarketplaceProjects = query({
     const filters: MarketplaceFilters = {
       city: singleOrUndefined(selections.cities),
       category: singleOrUndefined(selections.categories),
-      budgetRange: singleOrUndefined(selections.budgetRanges),
       timeline: singleOrUndefined(selections.timelines),
       propertyType: singleOrUndefined(selections.propertyTypes),
     };
-    const sortBy = args.sortBy ?? "newest";
+    const sortBy: MarketplaceSort = args.sortBy ?? "newest";
     const postedWindow = postedSinceMs(selections.postedWindows);
     const publishedAfter =
       postedWindow === undefined ? undefined : Math.max(0, (args.now ?? 0) - postedWindow);
@@ -491,7 +420,6 @@ export const listCompanyMarketplaceProjects = query({
     if (
       selections.cities?.length === 0 ||
       selections.categories?.length === 0 ||
-      selections.budgetRanges?.length === 0 ||
       selections.timelines?.length === 0 ||
       selections.propertyTypes?.length === 0 ||
       selections.surfaceRanges?.length === 0 ||
@@ -510,26 +438,21 @@ export const listCompanyMarketplaceProjects = query({
       selections.postedWindows !== undefined ||
       isMulti(selections.cities) ||
       isMulti(selections.categories) ||
-      isMulti(selections.budgetRanges) ||
       isMulti(selections.timelines) ||
       isMulti(selections.propertyTypes);
-    const usesBudgetSort = sortBy === "budget_high" || sortBy === "budget_low";
     // Indexed equality path only when every active dimension is a single value and sort is by date.
     const canUseIndexedPath =
       !hasExtraFilters &&
-      !usesBudgetSort &&
       !(
         selections.timelines !== undefined &&
         (selections.cities !== undefined ||
           selections.categories !== undefined ||
-          selections.budgetRanges !== undefined ||
           selections.propertyTypes !== undefined)
       ) &&
       !(
         selections.propertyTypes !== undefined &&
         (selections.cities !== undefined ||
           selections.categories !== undefined ||
-          selections.budgetRanges !== undefined ||
           selections.timelines !== undefined)
       );
 
@@ -560,14 +483,17 @@ export const getCompanyMarketplaceProject = query({
     const projectId = ctx.db.normalizeId("projects", args.projectId);
     if (!projectId) return null;
     const project = await ctx.db.get(projectId);
-    if (
-      !project ||
-      project.status !== "published" ||
-      project.visibility !== "marketplace" ||
-      !isCompleteMarketplaceProject(project)
-    ) {
-      return null;
-    }
+    if (!project || !isCompleteMarketplaceProject(project)) return null;
+    const invitation = await invitationForPair(ctx, projectId, company._id);
+    const directInvitation = invitation?.status === "accepted" ? invitation : null;
+    const canUseMarketplacePath =
+      invitation === null &&
+      project.status === "published" &&
+      project.visibility === "marketplace";
+    const canUseInvitationPath =
+      directInvitation !== null &&
+      (project.status === "published" || project.status === "in_discussion");
+    if (!canUseMarketplacePath && !canUseInvitationPath) return null;
     const card = await toMarketplaceCard(ctx, project);
     if (!card) return null;
     const client = await safeClientDetail(ctx, project.clientId);
@@ -583,16 +509,16 @@ export const getCompanyMarketplaceProject = query({
       ...card,
       client,
       neighborhood: project.neighborhood ?? null,
-      budgetMin: project.budgetMin ?? null,
-      budgetMax: project.budgetMax ?? null,
-      budgetUnknown: project.budgetUnknown,
-      canSubmitQuote: company.verificationStatus === "verified" && activeQuote === null,
+      canSubmitQuote:
+        company.verificationStatus === "verified"
+        && isCompanyMarketplaceWriteAllowed(company)
+        && activeQuote === null,
       myQuoteId: recentQuotes[0]?._id ?? null,
     };
   },
 });
 
-/** Bounded, repeatable migration for projects published before marketplace search / budget rank existed. */
+/** Bounded, repeatable migration for projects published before marketplace search existed. */
 export const backfillMarketplaceSearchText = internalMutation({
   args: { cursor: v.union(v.string(), v.null()) },
   returns: v.object({
@@ -611,16 +537,9 @@ export const backfillMarketplaceSearchText = internalMutation({
     let updated = 0;
     for (const project of page.page) {
       const marketplaceSearchText = buildProjectMarketplaceSearchText(project);
-      const rank = marketplaceBudgetRank(project.budgetRange);
-      const patch: {
-        marketplaceSearchText?: string;
-        marketplaceBudgetRank?: number;
-      } = {};
+      const patch: { marketplaceSearchText?: string } = {};
       if (project.marketplaceSearchText !== marketplaceSearchText) {
         patch.marketplaceSearchText = marketplaceSearchText;
-      }
-      if (project.marketplaceBudgetRank !== rank) {
-        patch.marketplaceBudgetRank = rank;
       }
       if (Object.keys(patch).length > 0) {
         await ctx.db.patch(project._id, patch);

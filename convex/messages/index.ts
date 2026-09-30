@@ -4,6 +4,10 @@ import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
+import {
+  createNotification,
+  createNotificationForActiveCompanyMembers,
+} from "../notifications/model";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 
 const MAX_CONVERSATIONS = 100;
@@ -17,7 +21,7 @@ const senderTypeValidator = v.union(v.literal("client"), v.literal("company"));
 const threadValidator = v.object({
   id: v.id("conversations"),
   projectId: v.id("projects"),
-  quoteId: v.id("projectQuotes"),
+  quoteId: v.union(v.id("projectQuotes"), v.null()),
   projectTitle: v.union(v.string(), v.null()),
   otherPartyName: v.string(),
   companySlug: v.union(v.string(), v.null()),
@@ -54,9 +58,111 @@ const messageValidator = v.object({
 type MessageCtx = QueryCtx | MutationCtx;
 type Viewer = { userId: Id<"users">; viewerType: "client" | "company" };
 
+function clientDisplayName(client: Doc<"users">) {
+  const firstName = client.firstName?.trim();
+  const lastInitial = client.lastName?.trim().charAt(0);
+  if (firstName && lastInitial) return `${firstName} ${lastInitial}.`;
+  return firstName || client.name?.trim() || "";
+}
+
+function plainMessagePreview(value: string) {
+  const preview = value
+    .replace(/<[^>]*>/g, "")
+    .replace(/[\u0000-\u001f\u007f]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MESSAGE_PREVIEW_LENGTH);
+  return preview || undefined;
+}
+
+async function createMessageReceivedNotifications(
+  ctx: MutationCtx,
+  conversation: Doc<"conversations">,
+  viewer: Viewer,
+  messageId: Id<"messages">,
+  previewSource: string,
+) {
+  const [project, company, actor] = await Promise.all([
+    ctx.db.get(conversation.projectId),
+    ctx.db.get(conversation.companyId),
+    ctx.db.get(viewer.userId),
+  ]);
+  if (!project || project.clientId !== conversation.clientId || !company || !actor) {
+    throw new ConvexError("CONVERSATION_NOT_FOUND");
+  }
+
+  const projectTitle = project.title?.trim();
+  const companyName = company.name?.trim();
+  const actorDisplayName = viewer.viewerType === "client"
+    ? clientDisplayName(actor)
+    : companyName;
+  const messagePreview = plainMessagePreview(previewSource);
+  const notification = {
+    actorUserId: viewer.userId,
+    type: "message_received" as const,
+    entity: { type: "conversation" as const, id: conversation._id },
+    payload: {
+      ...(projectTitle ? { projectTitle } : {}),
+      ...(companyName ? { companyName } : {}),
+      ...(actorDisplayName ? { actorDisplayName } : {}),
+      ...(messagePreview ? { messagePreview } : {}),
+    },
+    dedupeKey: `message:${messageId}:received`,
+  };
+
+  if (viewer.viewerType === "client") {
+    await createNotificationForActiveCompanyMembers(ctx, {
+      companyId: conversation.companyId,
+      ...notification,
+    });
+  } else {
+    await createNotification(ctx, {
+      recipientUserId: conversation.clientId,
+      ...notification,
+    });
+  }
+}
+
 function isMessagingQuoteStatus(status: Doc<"projectQuotes">["status"]) {
   // Add future accepted/final-quote states here when those flows exist.
   return status === "discussion_open";
+}
+
+async function requireUnlockedConversationRelationship(
+  ctx: MessageCtx,
+  conversation: Doc<"conversations">,
+) {
+  const [project, quote, invitation] = await Promise.all([
+    ctx.db.get(conversation.projectId),
+    conversation.quoteId ? ctx.db.get(conversation.quoteId) : null,
+    conversation.invitationId ? ctx.db.get(conversation.invitationId) : null,
+  ]);
+  if (!project || project.clientId !== conversation.clientId) {
+    throw new ConvexError("CONVERSATION_NOT_FOUND");
+  }
+  if (
+    conversation.quoteId &&
+    (!quote ||
+      quote.projectId !== conversation.projectId ||
+      quote.companyId !== conversation.companyId)
+  ) {
+    throw new ConvexError("CONVERSATION_NOT_FOUND");
+  }
+  if (
+    conversation.invitationId &&
+    (!invitation ||
+      invitation.projectId !== conversation.projectId ||
+      invitation.companyId !== conversation.companyId ||
+      invitation.clientUserId !== conversation.clientId)
+  ) {
+    throw new ConvexError("CONVERSATION_NOT_FOUND");
+  }
+  const unlockedByQuote = quote ? isMessagingQuoteStatus(quote.status) : false;
+  const unlockedByInvitation = invitation?.status === "accepted";
+  if (!unlockedByQuote && !unlockedByInvitation) {
+    throw new ConvexError("CONVERSATION_LOCKED");
+  }
+  return { project, quote, invitation };
 }
 
 export async function requireConversationAccessForUser(
@@ -83,14 +189,7 @@ export async function requireConversationAccessForUser(
     throw new ConvexError("CONVERSATION_NOT_FOUND");
   }
 
-  const [quote, project] = await Promise.all([
-    ctx.db.get(conversation.quoteId),
-    ctx.db.get(conversation.projectId),
-  ]);
-  if (!quote || quote.projectId !== conversation.projectId || quote.companyId !== conversation.companyId || !isMessagingQuoteStatus(quote.status)) {
-    throw new ConvexError("CONVERSATION_LOCKED");
-  }
-  if (!project || project.clientId !== conversation.clientId) throw new ConvexError("CONVERSATION_NOT_FOUND");
+  await requireUnlockedConversationRelationship(ctx, conversation);
   return { conversation, viewer: { userId, viewerType } };
 }
 
@@ -148,6 +247,7 @@ export async function sendAuthorizedMessage(
   if (args.attachment) await ctx.db.patch(args.attachment.uploadIntentId, { claimedAt: now });
   const preview = body || args.attachment?.originalFileName || "";
   await ctx.db.patch(conversation._id, { updatedAt: now, lastMessageAt: now, lastMessagePreview: preview.slice(0, MESSAGE_PREVIEW_LENGTH), ...(viewer.viewerType === "client" ? { clientLastReadAt: now, clientLastSentAt: now } : { companyLastReadAt: now, companyLastSentAt: now }) });
+  await createMessageReceivedNotifications(ctx, conversation, viewer, messageId, preview);
   return { messageId, attachmentId, createdAt: now, duplicate: false };
 }
 
@@ -162,29 +262,26 @@ async function logoUrlFor(ctx: MessageCtx, company: Doc<"companies">) {
   return null;
 }
 
-function clientDisplayName(client: Doc<"users">) {
-  const firstName = client.firstName?.trim();
-  const lastInitial = client.lastName?.trim().charAt(0);
-  if (firstName && lastInitial) return `${firstName} ${lastInitial}.`;
-  return firstName || client.name?.trim() || "";
-}
-
 async function threadFor(ctx: MessageCtx, conversation: Doc<"conversations">, viewerType: Viewer["viewerType"]) {
-  const [project, company, client, quote, clientProfile] = await Promise.all([
-    ctx.db.get(conversation.projectId),
+  let project: Doc<"projects">;
+  try {
+    ({ project } = await requireUnlockedConversationRelationship(ctx, conversation));
+  } catch {
+    return null;
+  }
+  const [company, client, clientProfile] = await Promise.all([
     ctx.db.get(conversation.companyId),
     ctx.db.get(conversation.clientId),
-    ctx.db.get(conversation.quoteId),
     viewerType === "company"
       ? ctx.db.query("clientProfiles").withIndex("by_userId", (q) => q.eq("userId", conversation.clientId)).unique()
       : null,
   ]);
-  if (!project || !company || !client || !quote || project.clientId !== conversation.clientId || quote.projectId !== conversation.projectId || quote.companyId !== conversation.companyId || !isMessagingQuoteStatus(quote.status)) return null;
+  if (!company || !client) return null;
   const lastReadAt = viewerType === "client" ? conversation.clientLastReadAt : conversation.companyLastReadAt;
   return {
     id: conversation._id,
     projectId: conversation.projectId,
-    quoteId: conversation.quoteId,
+    quoteId: conversation.quoteId ?? null,
     projectTitle: project.title ?? null,
     otherPartyName: viewerType === "client" ? company.name?.trim() || "" : clientDisplayName(client),
     companySlug: viewerType === "client" ? company.slug ?? null : null,
@@ -199,6 +296,56 @@ async function threadFor(ctx: MessageCtx, conversation: Doc<"conversations">, vi
     lastMessageAt: conversation.lastMessageAt ?? null,
     unread: conversation.lastMessageAt !== undefined && (lastReadAt === undefined || conversation.lastMessageAt > lastReadAt),
   };
+}
+
+/** Create or return the conversation unlocked by an accepted direct invitation. */
+export async function ensureConversationForAcceptedInvitation(
+  ctx: MutationCtx,
+  invitation: Doc<"invitations">,
+  project: Doc<"projects">,
+  createdBy: Id<"users">,
+) {
+  if (invitation.status !== "accepted") throw new ConvexError("CONVERSATION_LOCKED");
+  if (
+    project._id !== invitation.projectId ||
+    project.clientId !== invitation.clientUserId
+  ) {
+    throw new ConvexError("PROJECT_NOT_FOUND");
+  }
+  const existing = await ctx.db
+    .query("conversations")
+    .withIndex("by_projectId_and_companyId", (q) =>
+      q.eq("projectId", invitation.projectId).eq("companyId", invitation.companyId),
+    )
+    .take(2);
+  if (existing.length > 1) throw new ConvexError("CONVERSATION_INTEGRITY_ERROR");
+  if (existing[0]) {
+    if (
+      existing[0].clientId !== project.clientId ||
+      (existing[0].invitationId && existing[0].invitationId !== invitation._id)
+    ) {
+      throw new ConvexError("CONVERSATION_INTEGRITY_ERROR");
+    }
+    if (!existing[0].invitationId) {
+      await ctx.db.patch(existing[0]._id, {
+        invitationId: invitation._id,
+        updatedAt: Date.now(),
+      });
+    }
+    return existing[0]._id;
+  }
+  const now = Date.now();
+  return await ctx.db.insert("conversations", {
+    projectId: invitation.projectId,
+    invitationId: invitation._id,
+    clientId: project.clientId,
+    companyId: invitation.companyId,
+    status: "active",
+    createdBy,
+    createdAt: now,
+    updatedAt: now,
+    companyLastReadAt: now,
+  });
 }
 
 /** Create or return the single conversation for an already-unlocked quote. */
@@ -216,8 +363,18 @@ export async function ensureConversationForQuote(
     .take(2);
   if (existing.length > 1) throw new ConvexError("CONVERSATION_INTEGRITY_ERROR");
   if (existing[0]) {
-    if (existing[0].quoteId !== quote._id || existing[0].clientId !== project.clientId) {
+    if (
+      (existing[0].quoteId && existing[0].quoteId !== quote._id) ||
+      existing[0].clientId !== project.clientId
+    ) {
       throw new ConvexError("CONVERSATION_INTEGRITY_ERROR");
+    }
+    if (!existing[0].quoteId) {
+      await requireUnlockedConversationRelationship(ctx, existing[0]);
+      await ctx.db.patch(existing[0]._id, {
+        quoteId: quote._id,
+        updatedAt: Date.now(),
+      });
     }
     return existing[0]._id;
   }

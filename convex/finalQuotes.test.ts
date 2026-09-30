@@ -19,16 +19,27 @@ async function user(t: Backend, accountType: "client" | "company" | "admin" | "s
     accountType, onboardingStatus: "completed", countryCode: "MA", createdAt: 1, updatedAt: 1 }));
 }
 
-async function setup() {
+async function setup(options: { visibility?: "marketplace" | "invite_only" } = {}) {
   const t = convexTest(schema, modules); const clientId = await user(t, "client"); const otherClientId = await user(t, "client");
   const companyUserId = await user(t, "company"); const competitorUserId = await user(t, "company"); const seoId = await user(t, "seo_team"); const adminId = await user(t, "admin");
   const companyId = await t.run((ctx) => ctx.db.insert("companies", { name: "Atlas Build", slug: "atlas-build", onboardingStatus: "completed", verificationStatus: "verified", createdAt: 1, updatedAt: 1 }));
   const competitorId = await t.run((ctx) => ctx.db.insert("companies", { name: "Rival Build", slug: "rival-build", onboardingStatus: "completed", verificationStatus: "verified", createdAt: 1, updatedAt: 1 }));
   await t.run(async (ctx) => { await ctx.db.insert("companyMembers", { companyId, userId: companyUserId, role: "owner", status: "active", createdAt: 1 }); await ctx.db.insert("companyMembers", { companyId: competitorId, userId: competitorUserId, role: "owner", status: "active", createdAt: 1 }); });
-  const projectId = await t.run((ctx) => ctx.db.insert("projects", { clientId, primaryCategory: "renovation", city: "rabat", countryCode: "MA", title: "Villa renovation", propertyType: "house", surface: 200, surfaceUnknown: false, description: "Complete renovation project with structural and finishing work.", budgetRange: "250000_500000", budgetMin: 250000, budgetMax: 500000, budgetUnknown: false, timeline: "one_to_three_months", visibility: "marketplace", status: "published", lastCompletedStep: 6, createdAt: 1, updatedAt: 1, submittedAt: 1, publishedAt: 1 }));
+  await t.run((ctx) => ctx.db.insert("marketplaceSettings", {
+    key: "global",
+    commissionTiers: [
+      { minAmountMad: 0, maxAmountMad: 300_000, commissionRateBps: 300 },
+      { minAmountMad: 300_001, maxAmountMad: 500_000, commissionRateBps: 500 },
+      { minAmountMad: 500_001, maxAmountMad: null, commissionRateBps: 1_000 },
+    ],
+    commissionConfigVersion: 1,
+    updatedAt: 1,
+    updatedByUserId: adminId,
+  }));
+  const projectId = await t.run((ctx) => ctx.db.insert("projects", { clientId, primaryCategory: "renovation", city: "rabat", countryCode: "MA", title: "Villa renovation", propertyType: "house", surface: 200, surfaceUnknown: false, description: "Complete renovation project with structural and finishing work.", timeline: "one_to_three_months", visibility: options.visibility ?? "marketplace", status: "published", lastCompletedStep: 6, createdAt: 1, updatedAt: 1, submittedAt: 1, publishedAt: 1 }));
   const initialQuoteId = await t.run((ctx) => ctx.db.insert("projectQuotes", { projectId, companyId, submittedByUserId: companyUserId, message: "We are ready to deliver this complete project.", estimatedPrice: 400000, currency: "MAD", estimatedDuration: 90, availableStartDate: "2099-01-01", scope: "Complete construction and finishing scope for the property.", quoteType: "initial", status: "discussion_open", createdAt: 2, updatedAt: 2, submittedAt: 2 }));
   const conversationId = await t.run((ctx) => ctx.db.insert("conversations", { projectId, quoteId: initialQuoteId, clientId, companyId, status: "active", createdBy: clientId, createdAt: 3, updatedAt: 3 }));
-  return { t, clientId, otherClientId, companyUserId, competitorUserId, seoId, adminId, companyId, projectId, initialQuoteId, conversationId };
+  return { t, clientId, otherClientId, companyUserId, competitorUserId, seoId, adminId, companyId, competitorId, projectId, initialQuoteId, conversationId };
 }
 
 const revision = {
@@ -38,7 +49,84 @@ const revision = {
   paymentTerms: "Twenty percent on signature, monthly milestones, and ten percent at handover.", companyNote: "Prepared after the detailed discussion.",
 } satisfies Omit<FunctionArgs<typeof api.finalQuotes.index.submitRevision>, "conversationId" | "pdf">;
 
+async function prepareSubmittedFinalQuote(
+  s: Awaited<ReturnType<typeof setup>>,
+  price = revision.price,
+) {
+  const requested = await asUser(s.t, s.clientId).mutation(
+    api.finalQuotes.index.request,
+    { conversationId: s.conversationId },
+  );
+  const submitted = await asUser(s.t, s.companyUserId).mutation(
+    api.finalQuotes.index.submitRevision,
+    { conversationId: s.conversationId, ...revision, price },
+  );
+  return { requested, submitted };
+}
+
+async function expectNoDealSelection(
+  s: Awaited<ReturnType<typeof setup>>,
+  finalQuoteId: Id<"finalQuotes">,
+) {
+  const state = await s.t.run(async (ctx) => ({
+    project: await ctx.db.get(s.projectId),
+    finalQuote: await ctx.db.get(finalQuoteId),
+    deals: await ctx.db
+      .query("deals")
+      .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+      .take(2),
+  }));
+  expect(state.project?.selectedCompanyId).toBeUndefined();
+  expect(state.finalQuote?.status).toBe("submitted");
+  expect(state.deals).toHaveLength(0);
+}
+
+async function notificationsFor(t: Backend, recipientUserId: Id<"users">) {
+  const result = await asUser(t, recipientUserId).query(
+    api.notifications.index.listMyNotifications,
+    { paginationOpts: { numItems: 20, cursor: null } },
+  );
+  return result.page;
+}
+
+async function storedNotificationsFor(t: Backend, recipientUserId: Id<"users">) {
+  const rows = await t.run((ctx) => ctx.db.query("notifications").take(100));
+  return rows.filter((row) => row.recipientUserId === recipientUserId);
+}
+
 describe("final quote request and privacy", () => {
+  test("blocks suspended request, upload preparation, and submission paths", async () => {
+    const requestBlocked = await setup();
+    await requestBlocked.t.run((ctx) => ctx.db.patch(requestBlocked.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(requestBlocked.t, requestBlocked.clientId).mutation(
+      api.finalQuotes.index.request,
+      { conversationId: requestBlocked.conversationId },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+
+    const companyBlocked = await setup();
+    const parent = await asUser(companyBlocked.t, companyBlocked.clientId).mutation(
+      api.finalQuotes.index.request,
+      { conversationId: companyBlocked.conversationId },
+    );
+    await companyBlocked.t.run((ctx) => ctx.db.patch(companyBlocked.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(companyBlocked.t, companyBlocked.companyUserId).mutation(
+      api.finalQuotes.index.prepareAfterSiteVisit,
+      { conversationId: companyBlocked.conversationId },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+    await expect(asUser(companyBlocked.t, companyBlocked.companyUserId).mutation(
+      api.finalQuotes.index.generatePdfUploadUrl,
+      { finalQuoteId: parent.finalQuoteId },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+    await expect(asUser(companyBlocked.t, companyBlocked.companyUserId).mutation(
+      api.finalQuotes.index.submitRevision,
+      { conversationId: companyBlocked.conversationId, ...revision },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+  });
+
   test("owner request is idempotent and creates one trusted activity", async () => {
     const s = await setup(); const c = asUser(s.t, s.clientId);
     const first = await c.mutation(api.finalQuotes.index.request, { conversationId: s.conversationId });
@@ -67,11 +155,249 @@ describe("final quote request and privacy", () => {
     await expect(asUser(s.t, s.competitorUserId).mutation(api.finalQuotes.index.submitRevision, { conversationId: s.conversationId, ...revision })).rejects.toThrow("CONVERSATION_NOT_FOUND");
     await s.t.run((ctx) => ctx.db.patch(s.companyId, { verificationStatus: "pending" }));
     await expect(asUser(s.t, s.companyUserId).mutation(api.finalQuotes.index.submitRevision, { conversationId: s.conversationId, ...revision })).rejects.toThrow("COMPANY_VERIFICATION_REQUIRED");
+    expect(await notificationsFor(s.t, s.clientId)).toHaveLength(0);
   });
 });
 
 describe("immutable revision state machine", () => {
-  test("request, submit, request changes, revise, and accept select the company atomically", async () => {
+  test("blocks suspended acceptance and Deal creation while allowing remediation and withdrawal", async () => {
+    const acceptance = await setup();
+    const acceptedCandidate = await prepareSubmittedFinalQuote(acceptance);
+    await acceptance.t.run((ctx) => ctx.db.patch(acceptance.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(acceptance.t, acceptance.clientId).mutation(
+      api.finalQuotes.index.review,
+      {
+        finalQuoteId: acceptedCandidate.requested.finalQuoteId,
+        revisionId: acceptedCandidate.submitted.revisionId,
+        action: "accept",
+      },
+    )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
+    await expectNoDealSelection(acceptance, acceptedCandidate.requested.finalQuoteId);
+
+    const remediation = await setup();
+    const remediationCandidate = await prepareSubmittedFinalQuote(remediation);
+    await remediation.t.run((ctx) => ctx.db.patch(remediation.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(remediation.t, remediation.clientId).mutation(
+      api.finalQuotes.index.review,
+      {
+        finalQuoteId: remediationCandidate.requested.finalQuoteId,
+        revisionId: remediationCandidate.submitted.revisionId,
+        action: "request_changes",
+        reason: "Clarify the remediation scope.",
+      },
+    )).resolves.toMatchObject({ status: "changes_requested" });
+
+    const withdrawal = await setup();
+    const withdrawalCandidate = await prepareSubmittedFinalQuote(withdrawal);
+    await withdrawal.t.run((ctx) => ctx.db.patch(withdrawal.companyId, {
+      operationalStatus: "suspended",
+    }));
+    await expect(asUser(withdrawal.t, withdrawal.companyUserId).mutation(
+      api.finalQuotes.index.withdraw,
+      { finalQuoteId: withdrawalCandidate.requested.finalQuoteId, reason: "Safe withdrawal." },
+    )).resolves.toMatchObject({ status: "withdrawn" });
+  });
+
+  test("submission notifies only the Client with a safe revision-deduplicated payload", async () => {
+    const s = await setup();
+    const client = asUser(s.t, s.clientId);
+    const company = asUser(s.t, s.companyUserId);
+    const requested = await client.mutation(api.finalQuotes.index.request, {
+      conversationId: s.conversationId,
+    });
+    const submitted = await company.mutation(api.finalQuotes.index.submitRevision, {
+      conversationId: s.conversationId,
+      ...revision,
+    });
+
+    const clientNotifications = await notificationsFor(s.t, s.clientId);
+    expect(clientNotifications).toHaveLength(1);
+    expect(clientNotifications[0]).toMatchObject({
+      type: "final_quote_submitted",
+      entity: { type: "final_quote", id: requested.finalQuoteId },
+      actorUserId: s.companyUserId,
+      payload: {
+        projectTitle: "Villa renovation",
+        companyName: "Atlas Build",
+        amountMad: 380_000,
+      },
+    });
+    expect((await storedNotificationsFor(s.t, s.clientId))[0]?.dedupeKey).toBe(
+      `final_quote_revision:${submitted.revisionId}:submitted`,
+    );
+    expect(clientNotifications[0]?.payload).not.toHaveProperty("paymentTerms");
+    expect(clientNotifications[0]?.payload).not.toHaveProperty("commissionRateBps");
+    expect(await notificationsFor(s.t, s.companyUserId)).toHaveLength(0);
+    await expect(client.query(api.notifications.index.getMyUnreadCount, {})).resolves.toBe(1);
+    await expect(company.query(api.notifications.index.getMyUnreadCount, {})).resolves.toBe(0);
+
+    await expect(company.mutation(api.finalQuotes.index.submitRevision, {
+      conversationId: s.conversationId,
+      ...revision,
+    })).rejects.toThrow("FINAL_QUOTE_NOT_SUBMITTABLE");
+    expect(await notificationsFor(s.t, s.clientId)).toHaveLength(1);
+  });
+
+  test("acceptance sends selection and commission notifications without a third Deal notification", async () => {
+    const s = await setup();
+    const teammateUserId = await user(s.t, "company");
+    const inactiveUserId = await user(s.t, "company");
+    await s.t.run(async (ctx) => {
+      await ctx.db.insert("companyMembers", {
+        companyId: s.companyId,
+        userId: teammateUserId,
+        role: "staff",
+        status: "active",
+        createdAt: 2,
+      });
+      await ctx.db.insert("companyMembers", {
+        companyId: s.companyId,
+        userId: inactiveUserId,
+        role: "staff",
+        status: "inactive",
+        createdAt: 2,
+      });
+    });
+    const { requested, submitted } = await prepareSubmittedFinalQuote(s);
+    const client = asUser(s.t, s.clientId);
+    const args = {
+      finalQuoteId: requested.finalQuoteId,
+      revisionId: submitted.revisionId,
+      action: "accept" as const,
+    };
+
+    await expect(client.mutation(api.finalQuotes.index.review, args)).resolves.toEqual({
+      status: "accepted",
+      duplicate: false,
+    });
+    await expect(client.mutation(api.finalQuotes.index.review, args)).resolves.toEqual({
+      status: "accepted",
+      duplicate: true,
+    });
+
+    for (const recipientUserId of [s.companyUserId, teammateUserId]) {
+      const notifications = await notificationsFor(s.t, recipientUserId);
+      expect(notifications).toHaveLength(2);
+      expect(notifications.find((item) => item.type === "final_quote_accepted")).toMatchObject({
+        type: "final_quote_accepted",
+        entity: { type: "final_quote", id: requested.finalQuoteId },
+        actorUserId: s.clientId,
+        payload: {
+          projectTitle: "Villa renovation",
+          companyName: "Atlas Build",
+          amountMad: 380_000,
+        },
+      });
+      expect(notifications.find((item) => item.type === "commission_due")).toMatchObject({
+        type: "commission_due",
+        entity: { type: "deal", id: expect.any(String) },
+        actorUserId: null,
+        payload: {
+          projectTitle: "Villa renovation",
+          companyName: "Atlas Build",
+          amountMad: 19_000,
+        },
+      });
+      expect((await storedNotificationsFor(s.t, recipientUserId))
+        .find((item) => item.type === "final_quote_accepted")?.dedupeKey).toBe(
+        `final_quote:${requested.finalQuoteId}:accepted`,
+      );
+      expect(notifications.map((notification) => notification.type).sort()).toEqual([
+        "commission_due",
+        "final_quote_accepted",
+      ]);
+      await expect(
+        asUser(s.t, recipientUserId).query(api.notifications.index.getMyUnreadCount, {}),
+      ).resolves.toBe(2);
+    }
+    expect(await notificationsFor(s.t, inactiveUserId)).toHaveLength(0);
+    expect(await notificationsFor(s.t, s.competitorUserId)).toHaveLength(0);
+    expect((await notificationsFor(s.t, s.clientId)).map((item) => item.type)).toEqual([
+      "final_quote_submitted",
+    ]);
+  });
+
+  test("notification recipient failure rolls back Final Quote submission", async () => {
+    const s = await setup();
+    const requested = await asUser(s.t, s.clientId).mutation(
+      api.finalQuotes.index.request,
+      { conversationId: s.conversationId },
+    );
+    await s.t.run((ctx) => ctx.db.delete(s.clientId));
+
+    await expect(
+      asUser(s.t, s.companyUserId).mutation(api.finalQuotes.index.submitRevision, {
+        conversationId: s.conversationId,
+        ...revision,
+      }),
+    ).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const state = await s.t.run(async (ctx) => ({
+      parent: await ctx.db.get(requested.finalQuoteId),
+      revisions: await ctx.db
+        .query("finalQuoteRevisions")
+        .withIndex("by_finalQuoteId_and_createdAt", (q) =>
+          q.eq("finalQuoteId", requested.finalQuoteId),
+        )
+        .take(2),
+      events: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_finalQuoteId_and_createdAt", (q) =>
+          q.eq("finalQuoteId", requested.finalQuoteId),
+        )
+        .take(10),
+    }));
+    expect(state.parent).toMatchObject({ status: "draft" });
+    expect(state.parent?.currentRevisionId).toBeUndefined();
+    expect(state.revisions).toHaveLength(0);
+    expect(state.events.map((event) => event.eventType)).toEqual(["final_quote_requested"]);
+  });
+
+  test("notification recipient failure rolls back acceptance, Deal, commission, and audit writes", async () => {
+    const s = await setup();
+    const { requested, submitted } = await prepareSubmittedFinalQuote(s);
+    await s.t.run((ctx) => ctx.db.delete(s.companyUserId));
+
+    await expect(
+      asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      }),
+    ).rejects.toThrow("NOTIFICATION_RECIPIENT_NOT_FOUND");
+
+    const state = await s.t.run(async (ctx) => ({
+      project: await ctx.db.get(s.projectId),
+      finalQuote: await ctx.db.get(requested.finalQuoteId),
+      deals: await ctx.db
+        .query("deals")
+        .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+        .take(2),
+      dealHistory: await ctx.db.query("dealStatusHistory").take(2),
+      events: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_finalQuoteId_and_createdAt", (q) =>
+          q.eq("finalQuoteId", requested.finalQuoteId),
+        )
+        .take(20),
+    }));
+    expect(state.project).toMatchObject({ status: "published" });
+    expect(state.project?.selectedCompanyId).toBeUndefined();
+    expect(state.finalQuote).toMatchObject({ status: "submitted" });
+    expect(state.finalQuote?.acceptedRevisionId).toBeUndefined();
+    expect(state.deals).toHaveLength(0);
+    expect(state.dealHistory).toHaveLength(0);
+    expect(state.events.map((event) => event.eventType)).toEqual([
+      "final_quote_requested",
+      "final_quote_submitted",
+    ]);
+  });
+
+  test("request, submit, revise, and accept atomically select the company and create the Deal obligation", async () => {
     const s = await setup(); const client = asUser(s.t, s.clientId); const company = asUser(s.t, s.companyUserId);
     const requested = await client.mutation(api.finalQuotes.index.request, { conversationId: s.conversationId });
     const first = await company.mutation(api.finalQuotes.index.submitRevision, { conversationId: s.conversationId, ...revision });
@@ -79,11 +405,39 @@ describe("immutable revision state machine", () => {
     const second = await company.mutation(api.finalQuotes.index.submitRevision, { conversationId: s.conversationId, ...revision, price: 350000, scope: `${revision.scope} Pool work is excluded.` });
     await expect(client.mutation(api.finalQuotes.index.review, { finalQuoteId: requested.finalQuoteId, revisionId: first.revisionId, action: "accept" })).rejects.toThrow("FINAL_QUOTE_REVISION_NOT_CURRENT");
     await client.mutation(api.finalQuotes.index.review, { finalQuoteId: requested.finalQuoteId, revisionId: second.revisionId, action: "accept" });
-    const state = await s.t.run(async (ctx) => ({ project: await ctx.db.get(s.projectId), parent: await ctx.db.get(requested.finalQuoteId), first: await ctx.db.get(first.revisionId), second: await ctx.db.get(second.revisionId), events: await ctx.db.query("marketplaceActivity").withIndex("by_finalQuoteId_and_createdAt", (q) => q.eq("finalQuoteId", requested.finalQuoteId)).order("asc").take(20) }));
+    const state = await s.t.run(async (ctx) => ({
+      project: await ctx.db.get(s.projectId),
+      initialQuote: await ctx.db.get(s.initialQuoteId),
+      parent: await ctx.db.get(requested.finalQuoteId),
+      first: await ctx.db.get(first.revisionId),
+      second: await ctx.db.get(second.revisionId),
+      deal: await ctx.db.query("deals").withIndex("by_projectId", (q) => q.eq("projectId", s.projectId)).unique(),
+      events: await ctx.db.query("marketplaceActivity").withIndex("by_finalQuoteId_and_createdAt", (q) => q.eq("finalQuoteId", requested.finalQuoteId)).order("asc").take(20),
+    }));
     expect(state.first).toMatchObject({ revisionNumber: 1, price: 380000 }); expect(state.second).toMatchObject({ revisionNumber: 2, price: 350000 });
+    expect(state.initialQuote).toMatchObject({ estimatedPrice: 400_000 });
     expect(state.parent).toMatchObject({ status: "accepted", currentRevisionId: second.revisionId, acceptedRevisionId: second.revisionId });
     expect(state.project).toMatchObject({ status: "company_selected", selectedCompanyId: s.companyId, selectedFinalQuoteId: requested.finalQuoteId });
-    expect(state.events.map((event) => event.eventType)).toEqual(["final_quote_requested", "final_quote_submitted", "final_quote_changes_requested", "final_quote_revised", "final_quote_accepted", "company_selected"]);
+    expect(state.deal).toMatchObject({
+      projectId: s.projectId,
+      clientUserId: s.clientId,
+      companyId: s.companyId,
+      createdByUserId: s.clientId,
+      acceptedFinalQuoteId: requested.finalQuoteId,
+      acceptedFinalQuoteRevisionId: second.revisionId,
+      initialQuoteId: s.initialQuoteId,
+      agreedAmountMad: 350_000,
+      commissionRateBps: 500,
+      commissionAmountMad: 17_500,
+      commissionTierMinAmountMad: 300_001,
+      commissionTierMaxAmountMad: 500_000,
+      commissionConfigVersion: 1,
+      commissionDebtorCompanyId: s.companyId,
+      commissionBeneficiary: "batiplus",
+      commissionStatus: "due",
+      status: "active",
+    });
+    expect(state.events.map((event) => event.eventType)).toEqual(["final_quote_requested", "final_quote_submitted", "final_quote_changes_requested", "final_quote_revised", "final_quote_accepted", "company_selected", "deal_created", "commission_due"]);
   });
 
   test("change reason is required and accepted quotes are terminal", async () => {
@@ -115,6 +469,7 @@ describe("immutable revision state machine", () => {
     const submitted = await company.mutation(api.finalQuotes.index.submitRevision, { conversationId: s.conversationId, ...revision });
     await s.t.run((ctx) => ctx.db.patch(submitted.revisionId, { validUntil: "2000-01-01" }));
     await expect(client.mutation(api.finalQuotes.index.review, { finalQuoteId: parent.finalQuoteId, revisionId: submitted.revisionId, action: "accept" })).rejects.toThrow("FINAL_QUOTE_EXPIRED");
+    expect(await notificationsFor(s.t, s.companyUserId)).toHaveLength(0);
   });
 
   test("owning company can withdraw submitted quote and cannot reopen it", async () => {
@@ -144,6 +499,455 @@ describe("immutable revision state machine", () => {
     const row = activity.find((item) => item.eventType === "final_quote_submitted");
     expect(row).toMatchObject({ finalQuoteId: parent.finalQuoteId, finalQuoteRevisionId: submitted.revisionId, company: { id: s.companyId }, metadata: { revisionNumber: 1, price: revision.price, currency: "MAD" } });
     expect(JSON.stringify(row)).not.toContain("paymentTerms"); expect(JSON.stringify(row)).not.toContain("pdfStorageId");
+  });
+});
+
+describe("atomic Deal creation at Final Quote acceptance", () => {
+  test("replaying a legacy accepted Final Quote without a Deal requires migration", async () => {
+    const s = await setup();
+    const { requested, submitted } = await prepareSubmittedFinalQuote(s, 450_000);
+    await s.t.run(async (ctx) => {
+      await ctx.db.patch(requested.finalQuoteId, {
+        status: "accepted",
+        acceptedAt: 10,
+        acceptedByUserId: s.clientId,
+        acceptedRevisionId: submitted.revisionId,
+        updatedAt: 10,
+      });
+      await ctx.db.patch(s.projectId, {
+        status: "company_selected",
+        selectedCompanyId: s.companyId,
+        selectedFinalQuoteId: requested.finalQuoteId,
+        selectedAt: 10,
+        updatedAt: 10,
+      });
+      const setting = await ctx.db
+        .query("marketplaceSettings")
+        .withIndex("by_key", (q) => q.eq("key", "global"))
+        .unique();
+      if (!setting) throw new Error("missing marketplace settings fixture");
+      await ctx.db.patch(setting._id, {
+        commissionTiers: [
+          { minAmountMad: 0, maxAmountMad: null, commissionRateBps: 700 },
+        ],
+        commissionConfigVersion: 2,
+      });
+    });
+
+    await expect(
+      asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      }),
+    ).rejects.toThrow("DEAL_RETROACTIVE_CREATION_REQUIRES_MIGRATION");
+
+    const deals = await s.t.run((ctx) =>
+      ctx.db
+        .query("deals")
+        .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+        .take(2),
+    );
+    expect(deals).toHaveLength(0);
+  });
+
+  test.each([
+    [299_999, 300, 8_999.97],
+    [300_000, 300, 9_000],
+    [300_001, 500, 15_000.05],
+    [450_000, 500, 22_500],
+    [499_999, 500, 24_999.95],
+    [500_000, 500, 25_000],
+    [500_001, 1_000, 50_000.1],
+    [800_000, 1_000, 80_000],
+    [1_000_000, 1_000, 100_000],
+  ])(
+    "snapshots %i MAD at %i bps with %f MAD commission",
+    async (price, commissionRateBps, commissionAmountMad) => {
+      const s = await setup();
+      const requested = await asUser(s.t, s.clientId).mutation(
+        api.finalQuotes.index.request,
+        { conversationId: s.conversationId },
+      );
+      const submitted = await asUser(s.t, s.companyUserId).mutation(
+        api.finalQuotes.index.submitRevision,
+        { conversationId: s.conversationId, ...revision, price },
+      );
+      await asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      });
+      const deal = await s.t.run((ctx) =>
+        ctx.db
+          .query("deals")
+          .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+          .unique(),
+      );
+      expect(deal).toMatchObject({
+        agreedAmountMad: price,
+        commissionRateBps,
+        commissionAmountMad,
+        commissionConfigVersion: 1,
+        commissionDebtorCompanyId: s.companyId,
+        commissionBeneficiary: "batiplus",
+        commissionStatus: "due",
+      });
+    },
+  );
+
+  test("missing commission configuration rolls back acceptance and selection", async () => {
+    const s = await setup();
+    const requested = await asUser(s.t, s.clientId).mutation(
+      api.finalQuotes.index.request,
+      { conversationId: s.conversationId },
+    );
+    const submitted = await asUser(s.t, s.companyUserId).mutation(
+      api.finalQuotes.index.submitRevision,
+      { conversationId: s.conversationId, ...revision },
+    );
+    await s.t.run(async (ctx) => {
+      const setting = await ctx.db
+        .query("marketplaceSettings")
+        .withIndex("by_key", (q) => q.eq("key", "global"))
+        .unique();
+      if (!setting) throw new Error("missing commission setting");
+      await ctx.db.delete(setting._id);
+    });
+
+    await expect(
+      asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      }),
+    ).rejects.toThrow("COMMISSION_CONFIGURATION_REQUIRED");
+
+    const state = await s.t.run(async (ctx) => ({
+      project: await ctx.db.get(s.projectId),
+      finalQuote: await ctx.db.get(requested.finalQuoteId),
+      deals: await ctx.db
+        .query("deals")
+        .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+        .take(2),
+      events: await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_finalQuoteId_and_createdAt", (q) =>
+          q.eq("finalQuoteId", requested.finalQuoteId),
+        )
+        .take(20),
+    }));
+    expect(state.project).toMatchObject({ status: "published" });
+    expect(state.project?.selectedCompanyId).toBeUndefined();
+    expect(state.finalQuote).toMatchObject({ status: "submitted" });
+    expect(state.finalQuote?.acceptedRevisionId).toBeUndefined();
+    expect(state.deals).toHaveLength(0);
+    expect(state.events.map((event) => event.eventType)).toEqual([
+      "final_quote_requested",
+      "final_quote_submitted",
+    ]);
+  });
+
+  test("corrupt commission configuration rolls back acceptance and selection", async () => {
+    const s = await setup();
+    const { requested, submitted } = await prepareSubmittedFinalQuote(s);
+    await s.t.run(async (ctx) => {
+      const setting = await ctx.db
+        .query("marketplaceSettings")
+        .withIndex("by_key", (q) => q.eq("key", "global"))
+        .unique();
+      if (!setting) throw new Error("missing commission setting");
+      await ctx.db.patch(setting._id, { commissionConfigVersion: 0 });
+    });
+
+    await expect(
+      asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      }),
+    ).rejects.toThrow("COMMISSION_CONFIGURATION_INVALID");
+    await expectNoDealSelection(s, requested.finalQuoteId);
+  });
+
+  test("a Proposal linked to another Project cannot create a Deal", async () => {
+    const s = await setup();
+    const { requested, submitted } = await prepareSubmittedFinalQuote(s);
+    const otherProjectId = await s.t.run((ctx) =>
+      ctx.db.insert("projects", {
+        clientId: s.clientId,
+        countryCode: "MA",
+        surfaceUnknown: true,
+        visibility: "marketplace",
+        status: "published",
+        lastCompletedStep: 6,
+        createdAt: 2,
+        updatedAt: 2,
+      }),
+    );
+    await s.t.run((ctx) =>
+      ctx.db.patch(s.initialQuoteId, { projectId: otherProjectId }),
+    );
+
+    await expect(
+      asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      }),
+    ).rejects.toThrow("FINAL_QUOTE_NOT_REVIEWABLE");
+    await expectNoDealSelection(s, requested.finalQuoteId);
+  });
+
+  test("a Final Quote linked to another Project cannot create a Deal", async () => {
+    const s = await setup();
+    const { requested, submitted } = await prepareSubmittedFinalQuote(s);
+    const otherProjectId = await s.t.run((ctx) =>
+      ctx.db.insert("projects", {
+        clientId: s.clientId,
+        countryCode: "MA",
+        surfaceUnknown: true,
+        visibility: "marketplace",
+        status: "published",
+        lastCompletedStep: 6,
+        createdAt: 2,
+        updatedAt: 2,
+      }),
+    );
+    await s.t.run((ctx) =>
+      ctx.db.patch(requested.finalQuoteId, { projectId: otherProjectId }),
+    );
+
+    await expect(
+      asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      }),
+    ).rejects.toThrow("FINAL_QUOTE_NOT_REVIEWABLE");
+    await expectNoDealSelection(s, requested.finalQuoteId);
+  });
+
+  test("a selected Company mismatch cannot create a Deal", async () => {
+    const s = await setup();
+    const { requested, submitted } = await prepareSubmittedFinalQuote(s);
+    await s.t.run((ctx) =>
+      ctx.db.patch(requested.finalQuoteId, { companyId: s.competitorId }),
+    );
+
+    await expect(
+      asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      }),
+    ).rejects.toThrow("FINAL_QUOTE_NOT_REVIEWABLE");
+    await expectNoDealSelection(s, requested.finalQuoteId);
+  });
+
+  test("later commission changes do not alter a Deal created by acceptance", async () => {
+    const s = await setup();
+    const { requested, submitted } = await prepareSubmittedFinalQuote(s, 450_000);
+    await asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+      finalQuoteId: requested.finalQuoteId,
+      revisionId: submitted.revisionId,
+      action: "accept",
+    });
+    await asUser(s.t, s.adminId).mutation(
+      api.marketplaceSettings.index.updateCommissionTiers,
+      {
+        commissionTiers: [
+          { minAmountMad: 0, maxAmountMad: null, commissionRateBps: 700 },
+        ],
+      },
+    );
+
+    await expect(
+      asUser(s.t, s.adminId).query(api.deals.index.getByProject, {
+        projectId: s.projectId,
+      }),
+    ).resolves.toMatchObject({
+      projectId: s.projectId,
+      companyId: s.companyId,
+      agreedAmountMad: 450_000,
+      commissionRateBps: 500,
+      commissionAmountMad: 22_500,
+      commissionTierMinAmountMad: 300_001,
+      commissionTierMaxAmountMad: 500_000,
+      commissionConfigVersion: 1,
+      commissionDebtorCompanyId: s.companyId,
+      commissionBeneficiary: "batiplus",
+      commissionStatus: "due",
+    });
+  });
+
+  test("only the owning Client can execute the Deal-creating acceptance command", async () => {
+    const s = await setup();
+    const requested = await asUser(s.t, s.clientId).mutation(
+      api.finalQuotes.index.request,
+      { conversationId: s.conversationId },
+    );
+    const submitted = await asUser(s.t, s.companyUserId).mutation(
+      api.finalQuotes.index.submitRevision,
+      { conversationId: s.conversationId, ...revision },
+    );
+    const args = {
+      finalQuoteId: requested.finalQuoteId,
+      revisionId: submitted.revisionId,
+      action: "accept" as const,
+    };
+
+    await expect(asUser(s.t, s.otherClientId).mutation(api.finalQuotes.index.review, args))
+      .rejects.toThrow("FINAL_QUOTE_NOT_FOUND");
+    for (const userId of [s.companyUserId, s.competitorUserId, s.seoId, s.adminId]) {
+      await expect(asUser(s.t, userId).mutation(api.finalQuotes.index.review, args))
+        .rejects.toThrow("CLIENT_ACCOUNT_REQUIRED");
+    }
+    await expect(s.t.mutation(api.finalQuotes.index.review, args))
+      .rejects.toThrow("NOT_AUTHENTICATED");
+
+    const state = await s.t.run(async (ctx) => ({
+      project: await ctx.db.get(s.projectId),
+      finalQuote: await ctx.db.get(requested.finalQuoteId),
+      deals: await ctx.db
+        .query("deals")
+        .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+        .take(2),
+    }));
+    expect(state.project?.selectedCompanyId).toBeUndefined();
+    expect(state.finalQuote?.status).toBe("submitted");
+    expect(state.deals).toHaveLength(0);
+    expect(await notificationsFor(s.t, s.companyUserId)).toHaveLength(0);
+  });
+
+  test("a repeated acceptance returns idempotently without duplicating Deal or obligation", async () => {
+    const s = await setup();
+    const client = asUser(s.t, s.clientId);
+    const requested = await client.mutation(api.finalQuotes.index.request, {
+      conversationId: s.conversationId,
+    });
+    const submitted = await asUser(s.t, s.companyUserId).mutation(
+      api.finalQuotes.index.submitRevision,
+      { conversationId: s.conversationId, ...revision },
+    );
+    const args = {
+      finalQuoteId: requested.finalQuoteId,
+      revisionId: submitted.revisionId,
+      action: "accept" as const,
+    };
+    await expect(client.mutation(api.finalQuotes.index.review, args)).resolves.toEqual({
+      status: "accepted",
+      duplicate: false,
+    });
+    await expect(client.mutation(api.finalQuotes.index.review, args)).resolves.toEqual({
+      status: "accepted",
+      duplicate: true,
+    });
+
+    const state = await s.t.run(async (ctx) => {
+      const deals = await ctx.db
+        .query("deals")
+        .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+        .take(2);
+      const events = await ctx.db
+        .query("marketplaceActivity")
+        .withIndex("by_finalQuoteId_and_createdAt", (q) =>
+          q.eq("finalQuoteId", requested.finalQuoteId),
+        )
+        .take(20);
+      return { deals, events };
+    });
+    expect(state.deals).toHaveLength(1);
+    expect(state.events.filter((event) => event.eventType === "deal_created")).toHaveLength(1);
+    expect(state.events.filter((event) => event.eventType === "commission_due")).toHaveLength(1);
+  });
+
+  test("invalid participation and project state abort before any Deal is created", async () => {
+    const s = await setup();
+    const requested = await asUser(s.t, s.clientId).mutation(
+      api.finalQuotes.index.request,
+      { conversationId: s.conversationId },
+    );
+    const submitted = await asUser(s.t, s.companyUserId).mutation(
+      api.finalQuotes.index.submitRevision,
+      { conversationId: s.conversationId, ...revision },
+    );
+    await s.t.run((ctx) => ctx.db.patch(s.initialQuoteId, { status: "declined" }));
+    await expect(
+      asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      }),
+    ).rejects.toThrow("FINAL_QUOTE_NOT_REVIEWABLE");
+    await s.t.run(async (ctx) => {
+      await ctx.db.patch(s.initialQuoteId, { status: "discussion_open" });
+      await ctx.db.patch(s.projectId, { status: "cancelled" });
+    });
+    await expect(
+      asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      }),
+    ).rejects.toThrow("INVALID_PROJECT_STATUS_TRANSITION");
+    const deals = await s.t.run((ctx) =>
+      ctx.db
+        .query("deals")
+        .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+        .take(2),
+    );
+    expect(deals).toHaveLength(0);
+  });
+
+  test("invite-only and open marketplace paths converge through commission, completion, and review notifications", async () => {
+    for (const visibility of ["marketplace", "invite_only"] as const) {
+      const s = await setup({ visibility });
+      const requested = await asUser(s.t, s.clientId).mutation(
+        api.finalQuotes.index.request,
+        { conversationId: s.conversationId },
+      );
+      const submitted = await asUser(s.t, s.companyUserId).mutation(
+        api.finalQuotes.index.submitRevision,
+        { conversationId: s.conversationId, ...revision },
+      );
+      await asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      });
+      const deal = await s.t.run((ctx) =>
+        ctx.db
+          .query("deals")
+          .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+          .unique(),
+      );
+      expect(deal).toMatchObject({
+        projectId: s.projectId,
+        companyId: s.companyId,
+        initialQuoteId: s.initialQuoteId,
+        commissionDebtorCompanyId: s.companyId,
+        commissionBeneficiary: "batiplus",
+      });
+      if (!deal) throw new Error("missing Deal");
+      await asUser(s.t, s.clientId).mutation(api.deals.index.completeDeal, {
+        dealId: deal._id,
+      });
+      await asUser(s.t, s.clientId).mutation(api.reviews.index.createReview, {
+        dealId: deal._id,
+        rating: 5,
+        comment: "Excellent construction work and clear communication.",
+      });
+      expect((await notificationsFor(s.t, s.clientId)).map((item) => item.type)).toEqual([
+        "final_quote_submitted",
+      ]);
+      expect((await notificationsFor(s.t, s.companyUserId)).map((item) => item.type).sort()).toEqual([
+        "commission_due",
+        "deal_completed",
+        "final_quote_accepted",
+        "review_received",
+      ]);
+    }
   });
 });
 

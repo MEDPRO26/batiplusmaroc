@@ -1,14 +1,16 @@
 import type { FunctionReturnType } from "convex/server";
 import { Check, ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import type { api } from "@/convex/_generated/api";
+import { InviteCompanyButton } from "@/features/invitations/components/invite-company-button";
 
 type PublicCompany = NonNullable<FunctionReturnType<typeof api.portfolio.index.getPublicCompanyProfile>>;
 
 export async function PublicCompanyProfile({ company }: { company: PublicCompany }) {
   const t = await getTranslations("publicCompany");
+  const format = await getFormatter();
   const initials = company.name
     .split(/\s+/)
     .slice(0, 2)
@@ -17,8 +19,8 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
 
   return (
     <div className="min-h-[calc(100dvh-4.5rem)]">
-      <div className="mx-auto w-full max-w-[1120px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <article className="overflow-hidden rounded-2xl border border-[#d5d9dc] bg-white shadow-[0_1px_2px_rgb(23_61_99/0.04)]">
+      <div className="mx-auto w-full max-w-[1240px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <article className="overflow-hidden rounded-2xl border border-brand-border bg-white shadow-[0_1px_2px_rgb(23_61_99/0.04)]">
           {company.coverImageUrl ? (
             <div className="relative aspect-[3.2/1] min-h-[140px] bg-[#e8eef3] sm:min-h-[180px]">
               <Image
@@ -26,7 +28,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                 className="object-cover"
                 fill
                 priority
-                sizes="(max-width: 1120px) 100vw, 1120px"
+                sizes="(max-width: 1240px) 100vw, 1240px"
                 src={company.coverImageUrl}
               />
             </div>
@@ -34,7 +36,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
             <div className="relative aspect-[3.2/1] min-h-[120px] bg-[linear-gradient(135deg,rgb(5_79_132/0.18),rgb(5_79_132/0.04))] sm:min-h-[160px]" />
           )}
 
-          <header className="relative border-b border-[#e4e8eb] px-4 pt-0 pb-5 sm:px-6 sm:pb-6 lg:px-8">
+          <header className="relative border-b border-brand-border px-4 pt-0 pb-5 sm:px-6 sm:pb-6 lg:px-8">
             <div className="flex flex-col py-5  gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex min-w-0 flex-1 gap-4 sm:gap-5 ">
                 <div className="-mt-10 shrink-0 sm:-mt-12 ">
@@ -70,17 +72,14 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                     <MapPin aria-hidden className="size-3.5 shrink-0" strokeWidth={1.8} />
                     <span>{company.city}</span>
                   </p>
+                  <p className="mt-2 mb-0 text-sm font-semibold text-ink">
+                    {company.rating === null ? t("reviewsNone") : <><span className="text-amber-600">★ {format.number(company.rating, { maximumFractionDigits: 1 })}</span> <span className="font-normal text-muted">{t("reviewCount", { count: company.reviewCount })}</span></>}
+                  </p>
                 </div>
               </div>
 
               <div className="flex flex-col gap-2 sm:min-w-[220px]">
-                <button
-                  className="inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white opacity-70"
-                  disabled
-                  type="button"
-                >
-                  {t("invite")}
-                </button>
+                <InviteCompanyButton companyEligible={company.isVerified && company.marketplaceAvailable} companyId={company.id} className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white" />
                 <button
                   className="inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center rounded-full border border-[#c5c8cb] bg-white px-5 text-sm font-semibold text-ink opacity-70"
                   disabled
@@ -88,15 +87,15 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                 >
                   {t("quote")}
                 </button>
-                <p className="m-0 text-center text-xs leading-5 text-muted">{t("ctaSoon")}</p>
+                <p className="m-0 text-center text-xs leading-5 text-muted">{t("quoteSoon")}</p>
               </div>
             </div>
           </header>
 
           <div className="grid lg:grid-cols-[minmax(240px,28%)_minmax(0,1fr)]">
-            <aside className="border-b border-[#e4e8eb] px-4 py-6 lg:border-r lg:border-b-0 sm:px-6 lg:px-6 lg:py-7">
+            <aside className="order-2 border-t border-brand-border px-4 py-6 sm:px-6 lg:order-1 lg:border-t-0 lg:border-r lg:px-6 lg:py-7">
               <SidebarBlock title={t("stats")}>
-                <div className="grid grid-cols-3 divide-x divide-[#e4e8eb]">
+                <div className="grid grid-cols-3 divide-x divide-brand-border">
                   <StatBox
                     label={t("statYears")}
                     value={
@@ -186,7 +185,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
               </SidebarBlock>
             </aside>
 
-            <div className="min-w-0 px-4 py-6 sm:px-6 lg:px-8 lg:py-7">
+            <div className="order-1 min-w-0 px-4 py-6 sm:px-6 lg:order-2 lg:px-8 lg:py-7">
               <MainSection title={t("overview")}>
                 <p className="m-0 whitespace-pre-wrap text-[0.95rem] leading-7 text-ink/90">
                   {company.description}
@@ -210,6 +209,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                 )}
               </MainSection>
 
+
               <MainSection
                 title={
                   company.portfolio.length > 0
@@ -218,7 +218,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                 }
               >
                 {company.portfolio.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-[#d5d9dc] bg-[#fafbfc] px-4 py-10 text-center text-sm text-muted">
+                  <div className="rounded-[12px] border border-dashed border-brand-border bg-[#fafbfc] px-4 py-10 text-center text-sm text-muted">
                     {t("portfolioEmpty")}
                   </div>
                 ) : (
@@ -226,7 +226,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                     {company.portfolio.map((project) => (
                       <li key={project.id}>
                         <article className="group">
-                          <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-[#e8eef3] ring-1 ring-[#e4e8eb]">
+                          <div className="relative aspect-[4/3] overflow-hidden rounded-[12px] bg-[#e8eef3] ring-1 ring-brand-border">
                             <Image
                               alt={t("projectImageAlt", { title: project.title })}
                               className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
@@ -252,6 +252,19 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                   </ul>
                 )}
               </MainSection>
+              <MainSection title={t("reviewsTitle", { count: company.reviewCount })}>
+                {company.reviews.length === 0 ? <p className="m-0 text-sm text-muted">{t("reviewsEmpty")}</p> : (
+                  <ul className="m-0 grid list-none gap-4 p-0">
+                    {company.reviews.map((review, index) => (
+                      <li className="rounded-[12px] border border-brand-border p-4" key={`${review.createdAt}-${index}`}>
+                        <div className="flex flex-wrap items-center justify-between gap-2"><span aria-label={t("ratingOutOfFive", { rating: review.rating })} className="font-semibold text-amber-600">{"★".repeat(review.rating)}<span className="text-slate-300">{"★".repeat(5 - review.rating)}</span></span><time className="text-xs text-muted" dateTime={new Date(review.createdAt).toISOString()}>{format.dateTime(review.createdAt, { dateStyle: "medium", timeZone: "Africa/Casablanca" })}</time></div>
+                        <p className="mt-3 mb-0 whitespace-pre-wrap text-sm leading-6 text-ink/90">{review.comment}</p>
+                        <p className="mt-3 mb-0 text-xs font-medium text-muted">{t("reviewBy", { name: [review.reviewerFirstName, review.reviewerLastInitial ? `${review.reviewerLastInitial}.` : null].filter(Boolean).join(" ") || t("reviewerAnonymous") })}{review.projectTitle ? ` · ${review.projectTitle}` : ""}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </MainSection>
             </div>
           </div>
         </article>
@@ -262,7 +275,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
 
 function SidebarBlock({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="border-b border-[#e4e8eb] py-5 first:pt-0 last:border-b-0 last:pb-0">
+    <section className="border-b border-brand-border py-5 first:pt-0 last:border-b-0 last:pb-0">
       <h2 className="m-0 text-[0.95rem] font-semibold tracking-[-0.01em] text-ink">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
@@ -271,7 +284,7 @@ function SidebarBlock({ title, children }: { title: string; children: ReactNode 
 
 function MainSection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="border-b border-[#e4e8eb] py-7 first:pt-0 last:border-b-0 last:pb-0">
+    <section className="border-b border-brand-border py-7 first:pt-0 last:border-b-0 last:pb-0">
       <h2 className="m-0 text-[1.15rem] font-semibold tracking-[-0.02em] text-ink">{title}</h2>
       <div className="mt-5">{children}</div>
     </section>

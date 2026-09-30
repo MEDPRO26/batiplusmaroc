@@ -3,8 +3,17 @@ import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
-import { requireCompanyUser, requireVerifiedCompanyUser } from "../companies/access";
+import { requireCompanyUser, requireVerifiedCompanyMarketplaceUser } from "../companies/access";
+import { assertCompanyMarketplaceWriteAllowed, getCompanyOperationalStatus, requireCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
+import {
+  createDealFromFreshFinalQuoteAcceptance,
+  reuseDealFromAcceptedFinalQuote,
+} from "../deals/index";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
+import {
+  createNotification,
+  createNotificationForActiveCompanyMembers,
+} from "../notifications/model";
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import { assertProjectTransition } from "../projects/state";
 import { assertFinalQuoteTransition } from "./state";
@@ -68,8 +77,10 @@ function dateValue(value: string, now: number, allowToday: boolean, code: string
 async function contextForConversation(ctx: Ctx, conversationId: Id<"conversations">) {
   const conversation = await ctx.db.get(conversationId);
   if (!conversation) throw new ConvexError("CONVERSATION_NOT_FOUND");
+  const quoteId = conversation.quoteId;
+  if (!quoteId) throw new ConvexError("CONVERSATION_LOCKED");
   const [project, initialQuote, company] = await Promise.all([
-    ctx.db.get(conversation.projectId), ctx.db.get(conversation.quoteId), ctx.db.get(conversation.companyId),
+    ctx.db.get(conversation.projectId), ctx.db.get(quoteId), ctx.db.get(conversation.companyId),
   ]);
   if (!project || !initialQuote || !company || conversation.status !== "active" || project.clientId !== conversation.clientId ||
     initialQuote.projectId !== project._id || initialQuote.companyId !== company._id || initialQuote.status !== "discussion_open") {
@@ -140,6 +151,61 @@ async function activitySiteRefs(parent: Doc<"finalQuotes">) {
     siteAssessmentId: parent.siteAssessmentId,
     siteVisitId: parent.siteVisitId,
   };
+}
+
+function notificationPayload(
+  project: Doc<"projects">,
+  company: Doc<"companies">,
+  amountMad: number,
+) {
+  const projectTitle = project.title?.trim();
+  const companyName = company.name?.trim();
+  return {
+    ...(projectTitle ? { projectTitle } : {}),
+    ...(companyName ? { companyName } : {}),
+    amountMad,
+  };
+}
+
+async function createFinalQuoteSubmittedNotification(
+  ctx: MutationCtx,
+  args: {
+    parent: Doc<"finalQuotes">;
+    project: Doc<"projects">;
+    company: Doc<"companies">;
+    revisionId: Id<"finalQuoteRevisions">;
+    actorUserId: Id<"users">;
+    amountMad: number;
+  },
+) {
+  await createNotification(ctx, {
+    recipientUserId: args.parent.clientId,
+    actorUserId: args.actorUserId,
+    type: "final_quote_submitted",
+    entity: { type: "final_quote", id: args.parent._id },
+    payload: notificationPayload(args.project, args.company, args.amountMad),
+    dedupeKey: `final_quote_revision:${args.revisionId}:submitted`,
+  });
+}
+
+async function createFinalQuoteAcceptedNotifications(
+  ctx: MutationCtx,
+  args: {
+    parent: Doc<"finalQuotes">;
+    project: Doc<"projects">;
+    company: Doc<"companies">;
+    actorUserId: Id<"users">;
+    amountMad: number;
+  },
+) {
+  await createNotificationForActiveCompanyMembers(ctx, {
+    companyId: args.parent.companyId,
+    actorUserId: args.actorUserId,
+    type: "final_quote_accepted",
+    entity: { type: "final_quote", id: args.parent._id },
+    payload: notificationPayload(args.project, args.company, args.amountMad),
+    dedupeKey: `final_quote:${args.parent._id}:accepted`,
+  });
 }
 
 async function createVisitTriggeredParent(ctx: MutationCtx, context: Awaited<ReturnType<typeof contextForConversation>>, userId: Id<"users">) {
@@ -233,15 +299,17 @@ export const getForConversation = query({
     const parent = await parentForRelationship(ctx, context.project._id, context.company._id);
     const accepted = await ctx.db.query("finalQuotes").withIndex("by_projectId_and_status", (q) => q.eq("projectId", context.project._id).eq("status", "accepted")).take(1);
     const incompleteVisit = await hasIncompleteSiteVisitWorkflow(ctx, context.conversation._id);
+    const marketplaceAvailable = getCompanyOperationalStatus(context.company) !== "suspended";
     const completedVisit = parent || incompleteVisit ? null : await completedVisitForConversation(ctx, context.conversation._id);
     const canSubmit =
       viewer.viewerType === "company" &&
+      marketplaceAvailable &&
       !incompleteVisit &&
       parent !== null &&
       (parent.status === "draft" || parent.status === "changes_requested");
     return { viewerType: viewer.viewerType,
-      canRequest: viewer.viewerType === "client" && !parent && accepted.length === 0 && !incompleteVisit,
-      canPrepare: viewer.viewerType === "company" && !parent && accepted.length === 0 && !incompleteVisit && completedVisit !== null,
+      canRequest: viewer.viewerType === "client" && marketplaceAvailable && !parent && accepted.length === 0 && !incompleteVisit,
+      canPrepare: viewer.viewerType === "company" && marketplaceAvailable && !parent && accepted.length === 0 && !incompleteVisit && completedVisit !== null,
       finalQuote: parent ? await finalQuoteDto(ctx, parent, viewer.viewerType, canSubmit) : null };
   },
 });
@@ -252,6 +320,7 @@ export const request = mutation({
   handler: async (ctx, args) => {
     const client = await requireClientUser(ctx);
     const context = await contextForConversation(ctx, args.conversationId);
+    await requireCompanyMarketplaceWriteAllowed(ctx, context.company._id);
     await requireOwnedProject(ctx, client.userId, context.project._id);
     assertEligibleProject(context.project.status);
     if (context.project.status === "company_selected") throw new ConvexError("FINAL_QUOTE_PROJECT_ALREADY_SELECTED");
@@ -274,7 +343,7 @@ export const request = mutation({
 export const prepareAfterSiteVisit = mutation({
   args: { conversationId: v.id("conversations") }, returns: v.object({ finalQuoteId: v.id("finalQuotes"), duplicate: v.boolean() }),
   handler: async (ctx, args) => {
-    const access = await requireVerifiedCompanyUser(ctx);
+    const access = await requireVerifiedCompanyMarketplaceUser(ctx);
     const context = await contextForConversation(ctx, args.conversationId);
     if (access.company._id !== context.company._id) throw new ConvexError("CONVERSATION_NOT_FOUND");
     assertEligibleProject(context.project.status);
@@ -289,7 +358,7 @@ export const prepareAfterSiteVisit = mutation({
 export const generatePdfUploadUrl = mutation({
   args: { finalQuoteId: v.id("finalQuotes") }, returns: v.object({ uploadUrl: v.string(), uploadToken: v.string() }),
   handler: async (ctx, args) => {
-    const access = await requireVerifiedCompanyUser(ctx);
+    const access = await requireVerifiedCompanyMarketplaceUser(ctx);
     const parent = await ctx.db.get(args.finalQuoteId);
     if (!parent || parent.companyId !== access.company._id || (parent.status !== "draft" && parent.status !== "changes_requested")) throw new ConvexError("FINAL_QUOTE_NOT_FOUND");
     const token = `${crypto.randomUUID()}${crypto.randomUUID()}`; const now = Date.now();
@@ -304,7 +373,7 @@ export const submitRevision = mutation({
     pdf: v.optional(v.object({ storageId: v.id("_storage"), uploadToken: v.string(), fileName: v.string() })) },
   returns: v.object({ finalQuoteId: v.id("finalQuotes"), revisionId: v.id("finalQuoteRevisions"), revisionNumber: v.number() }),
   handler: async (ctx, args) => {
-    const access = await requireVerifiedCompanyUser(ctx); const context = await contextForConversation(ctx, args.conversationId);
+    const access = await requireVerifiedCompanyMarketplaceUser(ctx); const context = await contextForConversation(ctx, args.conversationId);
     if (access.company._id !== context.company._id) throw new ConvexError("CONVERSATION_NOT_FOUND");
     assertEligibleProject(context.project.status);
     if (context.project.status === "company_selected") throw new ConvexError("FINAL_QUOTE_PROJECT_ALREADY_SELECTED");
@@ -348,6 +417,14 @@ export const submitRevision = mutation({
       actorUserId: access.userId, actorType: "company", companyId: parent.companyId, quoteId: parent.initialQuoteId, conversationId: parent.conversationId,
       ...siteRefs, finalQuoteId: parent._id, finalQuoteRevisionId: revisionId, oldStatus: parent.status, newStatus: "submitted",
       metadata: { revisionNumber, price: Math.round(args.price * 100) / 100, currency: "MAD" }, createdAt: now });
+    await createFinalQuoteSubmittedNotification(ctx, {
+      parent,
+      project: context.project,
+      company: context.company,
+      revisionId,
+      actorUserId: access.userId,
+      amountMad: Math.round(args.price * 100) / 100,
+    });
     return { finalQuoteId: parent._id, revisionId, revisionNumber };
   },
 });
@@ -363,14 +440,27 @@ export const review = mutation({
       ctx.db.get(parent.conversationId), ctx.db.get(parent.companyId),
     ]);
     if (!revision || revision.finalQuoteId !== parent._id || parent.currentRevisionId !== revision._id) throw new ConvexError("FINAL_QUOTE_REVISION_NOT_CURRENT");
-    if (parent.status === "accepted" && args.action === "accept" && parent.acceptedRevisionId === revision._id) return { status: "accepted" as const, duplicate: true };
+    if (parent.status === "accepted" && args.action === "accept" && parent.acceptedRevisionId === revision._id) {
+      await reuseDealFromAcceptedFinalQuote(ctx, parent._id);
+      if (!company) throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");
+      await createFinalQuoteAcceptedNotifications(ctx, {
+        parent,
+        project,
+        company,
+        actorUserId: client.userId,
+        amountMad: revision.price,
+      });
+      return { status: "accepted" as const, duplicate: true };
+    }
     if (parent.status !== "submitted") throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");
+    if (args.action === "accept" && company) assertCompanyMarketplaceWriteAllowed(company);
     if (!initialQuote || !conversation || !company || initialQuote.projectId !== project._id || initialQuote.companyId !== parent.companyId || initialQuote.status !== "discussion_open" ||
       conversation.projectId !== project._id || conversation.quoteId !== initialQuote._id || conversation.companyId !== parent.companyId || conversation.clientId !== client.userId || conversation.status !== "active" ||
       company.verificationStatus !== "verified" || company.onboardingStatus !== "completed") throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");
     const activeCompanyMember = await ctx.db.query("companyMembers")
-      .withIndex("by_companyId", (q) => q.eq("companyId", parent.companyId))
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .withIndex("by_companyId_and_status", (q) =>
+        q.eq("companyId", parent.companyId).eq("status", "active"),
+      )
       .first();
     if (!activeCompanyMember) throw new ConvexError("FINAL_QUOTE_NOT_REVIEWABLE");
     if (project.status === "company_selected") throw new ConvexError("FINAL_QUOTE_PROJECT_ALREADY_SELECTED");
@@ -378,8 +468,9 @@ export const review = mutation({
     if (args.action === "accept" && revision.validUntil < new Date(now).toISOString().slice(0, 10)) throw new ConvexError("FINAL_QUOTE_EXPIRED");
     const next = args.action === "accept" ? "accepted" as const : args.action === "request_changes" ? "changes_requested" as const : "declined" as const;
     assertFinalQuoteTransition(parent.status, next);
+    const dealCreationNonce = next === "accepted" ? crypto.randomUUID() : undefined;
     await ctx.db.patch(parent._id, { status: next, updatedAt: now,
-      ...(next === "accepted" ? { acceptedAt: now, acceptedByUserId: client.userId, acceptedRevisionId: revision._id } : {}),
+      ...(next === "accepted" ? { acceptedAt: now, acceptedByUserId: client.userId, acceptedRevisionId: revision._id, dealCreationNonce } : {}),
       ...(next === "changes_requested" ? { changesRequestedAt: now, changesRequestedByUserId: client.userId, changesRequestReason: reason } : {}),
       ...(next === "declined" ? { declinedAt: now, declinedByUserId: client.userId, declineReason: reason } : {}) });
     const eventType = next === "accepted" ? "final_quote_accepted" as const : next === "changes_requested" ? "final_quote_changes_requested" as const : "final_quote_declined" as const;
@@ -388,12 +479,21 @@ export const review = mutation({
       quoteId: parent.initialQuoteId, conversationId: parent.conversationId, ...siteRefs, finalQuoteId: parent._id, finalQuoteRevisionId: revision._id,
       oldStatus: parent.status, newStatus: next, reason, metadata: { revisionNumber: revision.revisionNumber, price: revision.price, currency: "MAD" }, createdAt: now });
     if (next === "accepted") {
+      if (!dealCreationNonce) throw new ConvexError("DEAL_CREATION_AUTHORIZATION_FAILED");
       assertProjectTransition(project.status, "company_selected");
       await ctx.db.patch(project._id, { status: "company_selected", selectedCompanyId: parent.companyId, selectedFinalQuoteId: parent._id, selectedAt: now, updatedAt: now });
       await ctx.db.insert("projectStatusHistory", { projectId: project._id, oldStatus: project.status, newStatus: "company_selected", changedBy: client.userId, changedAt: now });
       await appendMarketplaceActivity(ctx, { projectId: parent.projectId, eventType: "company_selected", actorUserId: client.userId, actorType: "client", companyId: parent.companyId,
         quoteId: parent.initialQuoteId, conversationId: parent.conversationId, ...siteRefs, finalQuoteId: parent._id, finalQuoteRevisionId: revision._id,
         oldStatus: project.status, newStatus: "company_selected", metadata: { revisionNumber: revision.revisionNumber, price: revision.price, currency: "MAD" }, createdAt: now });
+      await createDealFromFreshFinalQuoteAcceptance(ctx, parent._id, dealCreationNonce);
+      await createFinalQuoteAcceptedNotifications(ctx, {
+        parent,
+        project,
+        company,
+        actorUserId: client.userId,
+        amountMad: revision.price,
+      });
     }
     return { status: next, duplicate: false };
   },

@@ -1,22 +1,14 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { AdminVerificationPanel } from "@/features/admin/components/admin-verification-panel";
+import { redirect } from "@/i18n/navigation";
 import { resolveLocale } from "@/lib/page-meta";
+import { routes } from "@/lib/routes";
 
 type Props = { params: Promise<{ locale: string }> };
 
-export async function generateMetadata({ params }: Props) {
-  const locale = await resolveLocale(params);
-  const t = await getTranslations({ locale, namespace: "adminVerification" });
-  return {
-    title: t("metaTitle"),
-    description: t("metaDescription"),
-    robots: { index: false, follow: false },
-  };
-}
-
+/**
+ * Verification now lives inside Admin → Companies. The old destination stays
+ * reachable (bookmarks, notification links) and lands on the pending queue.
+ */
 export default async function AdminVerificationPage({ params }: Props) {
   const locale = await resolveLocale(params);
-  setRequestLocale(locale);
-
-  return <AdminVerificationPanel />;
+  redirect({ href: { pathname: routes.adminCompanies, query: { verification: "pending" } }, locale });
 }

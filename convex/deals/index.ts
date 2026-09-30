@@ -1,5 +1,487 @@
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { ConvexError, v } from "convex/values";
+import type { Doc, Id } from "../_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { internalMutation, mutation, query } from "../_generated/server";
+import { assertCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
+import { appendMarketplaceActivity } from "../marketplaceActivity/model";
+import { resolveCommissionForDealAmount } from "../marketplaceSettings/index";
+import { createNotificationForActiveCompanyMembers } from "../notifications/model";
+import { requireClientUser } from "../projects/access";
+import { assertProjectTransition } from "../projects/state";
+import { commissionStatusValidator, dealStatusValidator } from "./constants";
+import { recordCommissionDue } from "./commissionSummary";
+import { assertDealCompletable, isDealReviewEligible } from "./state";
+
+const dealValidator = v.object({
+  id: v.id("deals"),
+  projectId: v.id("projects"),
+  clientUserId: v.id("users"),
+  companyId: v.id("companies"),
+  createdByUserId: v.id("users"),
+  acceptedFinalQuoteId: v.id("finalQuotes"),
+  acceptedFinalQuoteRevisionId: v.id("finalQuoteRevisions"),
+  conversationId: v.id("conversations"),
+  initialQuoteId: v.id("projectQuotes"),
+  agreedAmountMad: v.number(),
+  currency: v.literal("MAD"),
+  commissionRateBps: v.number(),
+  commissionAmountMad: v.number(),
+  commissionTierMinAmountMad: v.number(),
+  commissionTierMaxAmountMad: v.union(v.number(), v.null()),
+  commissionConfigVersion: v.number(),
+  commissionDebtorCompanyId: v.id("companies"),
+  commissionBeneficiary: v.literal("batiplus"),
+  commissionStatus: commissionStatusValidator,
+  status: dealStatusValidator,
+  completedAt: v.union(v.number(), v.null()),
+  completedByUserId: v.union(v.id("users"), v.null()),
+  reviewEligible: v.boolean(),
+  createdAt: v.number(),
+});
+
+type Ctx = QueryCtx | MutationCtx;
+
+function dealNotificationPayload(
+  project: Doc<"projects">,
+  company: Doc<"companies">,
+  amountMad?: number,
+) {
+  const projectTitle = project.title?.trim();
+  const companyName = company.name?.trim() || company.legalName?.trim();
+  return {
+    ...(projectTitle ? { projectTitle } : {}),
+    ...(companyName ? { companyName } : {}),
+    ...(amountMad === undefined ? {} : { amountMad }),
+  };
+}
+
+async function requireDealViewer(ctx: Ctx, deal: Doc<"deals">) {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) throw new ConvexError("NOT_AUTHENTICATED");
+  const user = await ctx.db.get(userId);
+  if (!user) throw new ConvexError("USER_NOT_FOUND");
+
+  if (
+    user.accountType === "client" &&
+    user.onboardingStatus === "completed" &&
+    deal.clientUserId === userId
+  ) {
+    return;
+  }
+  if (user.accountType === "company" && user.onboardingStatus === "completed") {
+    const membership = await ctx.db
+      .query("companyMembers")
+      .withIndex("by_companyId_and_userId", (q) =>
+        q.eq("companyId", deal.companyId).eq("userId", userId),
+      )
+      .unique();
+    if (membership?.status === "active") return;
+  }
+  if (user.accountType === "admin") return;
+
+  // Do not disclose whether another party's commercial record exists.
+  throw new ConvexError("DEAL_NOT_FOUND");
+}
+
+function toDealDto(deal: Doc<"deals">) {
+  return {
+    id: deal._id,
+    projectId: deal.projectId,
+    clientUserId: deal.clientUserId,
+    companyId: deal.companyId,
+    createdByUserId: deal.createdByUserId,
+    acceptedFinalQuoteId: deal.acceptedFinalQuoteId,
+    acceptedFinalQuoteRevisionId: deal.acceptedFinalQuoteRevisionId,
+    conversationId: deal.conversationId,
+    initialQuoteId: deal.initialQuoteId,
+    agreedAmountMad: deal.agreedAmountMad,
+    currency: deal.currency,
+    commissionRateBps: deal.commissionRateBps,
+    commissionAmountMad: deal.commissionAmountMad,
+    commissionTierMinAmountMad: deal.commissionTierMinAmountMad,
+    commissionTierMaxAmountMad: deal.commissionTierMaxAmountMad,
+    commissionConfigVersion: deal.commissionConfigVersion,
+    commissionDebtorCompanyId: deal.commissionDebtorCompanyId,
+    commissionBeneficiary: deal.commissionBeneficiary,
+    commissionStatus: deal.commissionStatus,
+    status: deal.status,
+    completedAt: deal.completedAt ?? null,
+    completedByUserId: deal.completedByUserId ?? null,
+    reviewEligible: isDealReviewEligible(deal.status),
+    createdAt: deal.createdAt,
+  };
+}
+
+/** Participant/admin read. The project ID is a lookup key, never an authorization claim. */
+export const getByProject = query({
+  args: { projectId: v.id("projects") },
+  returns: v.union(dealValidator, v.null()),
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new ConvexError("NOT_AUTHENTICATED");
+    const deal = await ctx.db
+      .query("deals")
+      .withIndex("by_projectId", (q) => q.eq("projectId", args.projectId))
+      .unique();
+    if (!deal) return null;
+    await requireDealViewer(ctx, deal);
+    return toDealDto(deal);
+  },
+});
+
+/** Owning Client command that completes the Deal and its Project atomically. */
+export const completeDeal = mutation({
+  args: { dealId: v.id("deals") },
+  returns: v.object({
+    dealId: v.id("deals"),
+    projectId: v.id("projects"),
+    status: v.literal("completed"),
+    completedAt: v.number(),
+    reviewEligible: v.literal(true),
+  }),
+  handler: async (ctx, args) => {
+    const { userId } = await requireClientUser(ctx);
+    const deal = await ctx.db.get(args.dealId);
+    if (!deal || deal.clientUserId !== userId) throw new ConvexError("DEAL_NOT_FOUND");
+
+    assertDealCompletable(deal.status);
+    const [project, company, initialQuote, conversation, finalQuote, revision] = await Promise.all([
+      ctx.db.get(deal.projectId),
+      ctx.db.get(deal.companyId),
+      ctx.db.get(deal.initialQuoteId),
+      ctx.db.get(deal.conversationId),
+      ctx.db.get(deal.acceptedFinalQuoteId),
+      ctx.db.get(deal.acceptedFinalQuoteRevisionId),
+    ]);
+    if (!project || project.clientId !== userId) throw new ConvexError("DEAL_COMPLETION_INTEGRITY_ERROR");
+    if (
+      !company ||
+      !initialQuote ||
+      initialQuote.projectId !== project._id ||
+      initialQuote.companyId !== deal.companyId ||
+      !conversation ||
+      conversation.projectId !== project._id ||
+      conversation.clientId !== userId ||
+      conversation.companyId !== deal.companyId ||
+      conversation.quoteId !== deal.initialQuoteId ||
+      !finalQuote ||
+      finalQuote.projectId !== project._id ||
+      finalQuote.clientId !== userId ||
+      finalQuote.companyId !== deal.companyId ||
+      finalQuote.initialQuoteId !== deal.initialQuoteId ||
+      finalQuote.conversationId !== deal.conversationId ||
+      finalQuote.status !== "accepted" ||
+      finalQuote.acceptedRevisionId !== deal.acceptedFinalQuoteRevisionId ||
+      !revision ||
+      revision.finalQuoteId !== finalQuote._id ||
+      project.selectedCompanyId !== deal.companyId ||
+      project.selectedFinalQuoteId !== deal.acceptedFinalQuoteId ||
+      deal.commissionDebtorCompanyId !== deal.companyId ||
+      deal.commissionBeneficiary !== "batiplus"
+    ) {
+      throw new ConvexError("DEAL_COMPLETION_INTEGRITY_ERROR");
+    }
+    try {
+      assertProjectTransition(project.status, "completed");
+    } catch {
+      throw new ConvexError("DEAL_NOT_COMPLETABLE");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(deal._id, {
+      status: "completed",
+      completedAt: now,
+      completedByUserId: userId,
+    });
+    await ctx.db.patch(project._id, { status: "completed", updatedAt: now });
+    await ctx.db.insert("dealStatusHistory", {
+      dealId: deal._id,
+      fromStatus: "active",
+      toStatus: "completed",
+      actorUserId: userId,
+      createdAt: now,
+    });
+    await ctx.db.insert("projectStatusHistory", {
+      projectId: project._id,
+      oldStatus: project.status,
+      newStatus: "completed",
+      changedBy: userId,
+      changedAt: now,
+    });
+    await appendMarketplaceActivity(ctx, {
+      projectId: project._id,
+      eventType: "deal_completed",
+      actorUserId: userId,
+      actorType: "client",
+      companyId: deal.companyId,
+      quoteId: deal.initialQuoteId,
+      conversationId: deal.conversationId,
+      finalQuoteId: deal.acceptedFinalQuoteId,
+      finalQuoteRevisionId: deal.acceptedFinalQuoteRevisionId,
+      dealId: deal._id,
+      oldStatus: "active",
+      newStatus: "completed",
+      metadata: {
+        projectOldStatus: project.status,
+        projectNewStatus: "completed",
+        commissionStatus: deal.commissionStatus,
+        reviewEligible: true,
+      },
+      createdAt: now,
+    });
+    await createNotificationForActiveCompanyMembers(ctx, {
+      companyId: deal.companyId,
+      actorUserId: userId,
+      type: "deal_completed",
+      entity: { type: "deal", id: deal._id },
+      payload: dealNotificationPayload(project, company),
+      dedupeKey: `deal:${deal._id}:completed`,
+    });
+    return {
+      dealId: deal._id,
+      projectId: project._id,
+      status: "completed" as const,
+      completedAt: now,
+      reviewEligible: true as const,
+    };
+  },
+});
+
+async function validateCreationSource(
+  ctx: MutationCtx,
+  finalQuoteId: Id<"finalQuotes">,
+  dealCreationNonce: string,
+) {
+  const finalQuote = await ctx.db.get(finalQuoteId);
+  if (
+    !finalQuote ||
+    finalQuote.status !== "accepted" ||
+    !finalQuote.acceptedRevisionId ||
+    !finalQuote.currentRevisionId ||
+    finalQuote.acceptedRevisionId !== finalQuote.currentRevisionId ||
+    !finalQuote.acceptedByUserId
+  ) {
+    throw new ConvexError("DEAL_REQUIRES_ACCEPTED_CURRENT_FINAL_QUOTE");
+  }
+  if (finalQuote.dealCreationNonce !== dealCreationNonce) {
+    throw new ConvexError("DEAL_RETROACTIVE_CREATION_REQUIRES_MIGRATION");
+  }
+
+  const [project, revision, initialQuote, conversation, company, acceptedBy] = await Promise.all([
+    ctx.db.get(finalQuote.projectId),
+    ctx.db.get(finalQuote.acceptedRevisionId),
+    ctx.db.get(finalQuote.initialQuoteId),
+    ctx.db.get(finalQuote.conversationId),
+    ctx.db.get(finalQuote.companyId),
+    ctx.db.get(finalQuote.acceptedByUserId),
+  ]);
+  const activeCompanyMember = company
+    ? await ctx.db
+        .query("companyMembers")
+        .withIndex("by_companyId_and_status", (q) =>
+          q.eq("companyId", company._id).eq("status", "active"),
+        )
+        .first()
+    : null;
+
+  if (
+    !project ||
+    project.status !== "company_selected" ||
+    project.clientId !== finalQuote.clientId ||
+    project.selectedCompanyId !== finalQuote.companyId ||
+    project.selectedFinalQuoteId !== finalQuote._id ||
+    !revision ||
+    revision.finalQuoteId !== finalQuote._id ||
+    revision.currency !== "MAD" ||
+    !initialQuote ||
+    initialQuote.projectId !== project._id ||
+    initialQuote.companyId !== finalQuote.companyId ||
+    initialQuote.status !== "discussion_open" ||
+    !conversation ||
+    conversation.status !== "active" ||
+    conversation.projectId !== project._id ||
+    conversation.clientId !== project.clientId ||
+    conversation.companyId !== finalQuote.companyId ||
+    conversation.quoteId !== initialQuote._id ||
+    !company ||
+    company.verificationStatus !== "verified" ||
+    company.onboardingStatus !== "completed" ||
+    !activeCompanyMember ||
+    !acceptedBy ||
+    acceptedBy.accountType !== "client" ||
+    acceptedBy.onboardingStatus !== "completed" ||
+    finalQuote.acceptedByUserId !== project.clientId
+  ) {
+    throw new ConvexError("DEAL_SOURCE_INTEGRITY_ERROR");
+  }
+  assertCompanyMarketplaceWriteAllowed(company);
+
+  return {
+    finalQuote,
+    project,
+    revision,
+    company,
+    actorUserId: finalQuote.acceptedByUserId,
+  };
+}
+
 /**
- * Deals domain module.
- * Accepted proposals becoming deals belong here.
+ * Trusted command used by the Final Quote acceptance transaction. It accepts
+ * only a relationship ID; all commercial values are resolved server-side.
  */
-export {};
+export async function createDealFromFreshFinalQuoteAcceptance(
+  ctx: MutationCtx,
+  finalQuoteId: Id<"finalQuotes">,
+  dealCreationNonce: string,
+) {
+  const { finalQuote, project, revision, company, actorUserId } = await validateCreationSource(
+    ctx,
+    finalQuoteId,
+    dealCreationNonce,
+  );
+  const existingForQuote = await ctx.db
+    .query("deals")
+    .withIndex("by_acceptedFinalQuoteId", (q) => q.eq("acceptedFinalQuoteId", finalQuoteId))
+    .unique();
+  if (existingForQuote) {
+    await ctx.db.patch(finalQuote._id, { dealCreationNonce: undefined });
+    return { dealId: existingForQuote._id, duplicate: true };
+  }
+  const existingForProject = await ctx.db
+    .query("deals")
+    .withIndex("by_projectId", (q) => q.eq("projectId", project._id))
+    .unique();
+  if (existingForProject) {
+    if (existingForProject.acceptedFinalQuoteId === finalQuote._id) {
+      await ctx.db.patch(finalQuote._id, { dealCreationNonce: undefined });
+      return { dealId: existingForProject._id, duplicate: true };
+    }
+    throw new ConvexError("DEAL_ALREADY_EXISTS_FOR_PROJECT");
+  }
+
+  const commission = await resolveCommissionForDealAmount(ctx, revision.price);
+  const now = Date.now();
+  const dealId = await ctx.db.insert("deals", {
+    projectId: project._id,
+    clientUserId: project.clientId,
+    companyId: finalQuote.companyId,
+    createdByUserId: actorUserId,
+    acceptedFinalQuoteId: finalQuote._id,
+    acceptedFinalQuoteRevisionId: revision._id,
+    conversationId: finalQuote.conversationId,
+    initialQuoteId: finalQuote.initialQuoteId,
+    agreedAmountMad: commission.agreedAmountMad,
+    currency: "MAD",
+    commissionRateBps: commission.commissionRateBps,
+    commissionAmountMad: commission.commissionAmountMad,
+    commissionTierMinAmountMad: commission.matchedTier.minAmountMad,
+    commissionTierMaxAmountMad: commission.matchedTier.maxAmountMad,
+    commissionConfigVersion: commission.configurationVersion,
+    commissionDebtorCompanyId: finalQuote.companyId,
+    commissionBeneficiary: "batiplus",
+    commissionStatus: "due",
+    status: "active",
+    createdAt: now,
+  });
+  await recordCommissionDue(
+    ctx,
+    finalQuote.companyId,
+    commission.commissionAmountMad,
+    now,
+  );
+  await ctx.db.insert("dealStatusHistory", {
+    dealId,
+    toStatus: "active",
+    actorUserId,
+    createdAt: now,
+  });
+  await appendMarketplaceActivity(ctx, {
+    projectId: project._id,
+    eventType: "deal_created",
+    actorUserId,
+    actorType: "client",
+    companyId: finalQuote.companyId,
+    quoteId: finalQuote.initialQuoteId,
+    conversationId: finalQuote.conversationId,
+    finalQuoteId: finalQuote._id,
+    finalQuoteRevisionId: revision._id,
+    dealId,
+    newStatus: "active",
+    metadata: {
+      agreedAmountMad: commission.agreedAmountMad,
+      commissionRateBps: commission.commissionRateBps,
+      commissionAmountMad: commission.commissionAmountMad,
+      commissionTierMinAmountMad: commission.matchedTier.minAmountMad,
+      commissionConfigVersion: commission.configurationVersion,
+      ...(commission.matchedTier.maxAmountMad === null
+        ? {}
+        : { commissionTierMaxAmountMad: commission.matchedTier.maxAmountMad }),
+      currency: "MAD",
+    },
+    createdAt: now,
+  });
+  await appendMarketplaceActivity(ctx, {
+    projectId: project._id,
+    eventType: "commission_due",
+    actorUserId,
+    actorType: "client",
+    companyId: finalQuote.companyId,
+    quoteId: finalQuote.initialQuoteId,
+    conversationId: finalQuote.conversationId,
+    finalQuoteId: finalQuote._id,
+    finalQuoteRevisionId: revision._id,
+    dealId,
+    newStatus: "due",
+    metadata: {
+      debtor: "company",
+      beneficiary: "batiplus",
+      agreedAmountMad: commission.agreedAmountMad,
+      commissionRateBps: commission.commissionRateBps,
+      commissionAmountMad: commission.commissionAmountMad,
+      commissionTierMinAmountMad: commission.matchedTier.minAmountMad,
+      commissionConfigVersion: commission.configurationVersion,
+      ...(commission.matchedTier.maxAmountMad === null
+        ? {}
+        : { commissionTierMaxAmountMad: commission.matchedTier.maxAmountMad }),
+      currency: "MAD",
+    },
+    createdAt: now,
+  });
+  await createNotificationForActiveCompanyMembers(ctx, {
+    companyId: finalQuote.companyId,
+    type: "commission_due",
+    entity: { type: "deal", id: dealId },
+    payload: dealNotificationPayload(project, company, commission.commissionAmountMad),
+    dedupeKey: `deal:${dealId}:commission_due`,
+  });
+  await ctx.db.patch(finalQuote._id, { dealCreationNonce: undefined });
+  return { dealId, duplicate: false };
+}
+
+/**
+ * Replays may reuse an existing Deal, but must never manufacture historical
+ * commission facts for an acceptance that predates atomic Deal creation.
+ */
+export async function reuseDealFromAcceptedFinalQuote(
+  ctx: MutationCtx,
+  finalQuoteId: Id<"finalQuotes">,
+) {
+  const existing = await ctx.db
+    .query("deals")
+    .withIndex("by_acceptedFinalQuoteId", (q) => q.eq("acceptedFinalQuoteId", finalQuoteId))
+    .unique();
+  if (existing) return { dealId: existing._id, duplicate: true };
+
+  const finalQuote = await ctx.db.get(finalQuoteId);
+  const company = finalQuote ? await ctx.db.get(finalQuote.companyId) : null;
+  if (company) assertCompanyMarketplaceWriteAllowed(company);
+  throw new ConvexError("DEAL_RETROACTIVE_CREATION_REQUIRES_MIGRATION");
+}
+
+/** Compatibility retry entrypoint: it can reuse, but never create, a Deal. */
+export const createFromAcceptedFinalQuote = internalMutation({
+  args: { finalQuoteId: v.id("finalQuotes") },
+  returns: v.object({ dealId: v.id("deals"), duplicate: v.boolean() }),
+  handler: async (ctx, args) => reuseDealFromAcceptedFinalQuote(ctx, args.finalQuoteId),
+});
