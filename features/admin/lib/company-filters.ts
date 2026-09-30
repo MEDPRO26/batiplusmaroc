@@ -2,7 +2,7 @@
 
 export type AdminVerificationFilter = "draft" | "pending" | "verified" | "rejected";
 export type AdminOnboardingFilter = "pending" | "completed";
-export type AdminOperationalFilter = "needs_attention" | "suspended";
+export type AdminOperationalFilter = "normal" | "needs_attention" | "suspended";
 
 export type AdminCompanyFilters = {
   search: string;
@@ -13,7 +13,7 @@ export type AdminCompanyFilters = {
 
 export const VERIFICATIONS: AdminVerificationFilter[] = ["draft", "pending", "verified", "rejected"];
 export const ONBOARDINGS: AdminOnboardingFilter[] = ["pending", "completed"];
-export const OPERATIONALS: AdminOperationalFilter[] = ["needs_attention", "suspended"];
+export const OPERATIONALS: AdminOperationalFilter[] = ["normal", "needs_attention", "suspended"];
 
 /** Session key the company detail page reads to return to the same filtered list. */
 export const COMPANIES_RETURN_KEY = "batiplus.admin.companies.query";

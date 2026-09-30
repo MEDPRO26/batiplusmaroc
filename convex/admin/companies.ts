@@ -1,9 +1,10 @@
 import {
   paginationOptsValidator,
   paginationResultValidator,
+  type FilterBuilder,
 } from "convex/server";
 import { ConvexError, v } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
+import type { DataModel, Doc, Id } from "../_generated/dataModel";
 import { query, type QueryCtx } from "../_generated/server";
 import {
   companyOperationalStatusValidator,
@@ -85,8 +86,7 @@ const companyListItemValidator = v.object({
   operationalStatus: companyOperationalStatusValidator,
 });
 
-/** Only non-default states are filterable: "normal" is also stored as a missing value. */
-const operationalFilterValidator = v.union(v.literal("needs_attention"), v.literal("suspended"));
+const operationalFilterValidator = companyOperationalStatusValidator;
 
 const memberValidator = v.object({
   userId: v.id("users"),
@@ -181,6 +181,16 @@ function displayName(user: Doc<"users"> | null) {
   return [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() || "—";
 }
 
+function matchesOperationalStatus(
+  q: FilterBuilder<DataModel["companies"]>,
+  selectedStatus: typeof operationalFilterValidator.type,
+) {
+  const status = q.field("operationalStatus");
+  return selectedStatus === "normal"
+    ? q.or(q.eq(status, "normal"), q.eq(status, undefined))
+    : q.eq(status, selectedStatus);
+}
+
 async function listCompaniesPage(
   ctx: QueryCtx,
   args: {
@@ -203,7 +213,7 @@ async function listCompaniesPage(
           if (args.onboardingStatus) filtered = filtered.eq("onboardingStatus", args.onboardingStatus);
           return filtered;
         })
-        .filter((q) => q.eq(q.field("operationalStatus"), operationalStatus))
+        .filter((q) => matchesOperationalStatus(q, operationalStatus))
         .paginate(args.paginationOpts);
     }
     if (args.onboardingStatus && args.verificationStatus) {
@@ -212,7 +222,7 @@ async function listCompaniesPage(
         .withIndex("by_onboardingStatus_and_verificationStatus", (q) => q
           .eq("onboardingStatus", args.onboardingStatus!)
           .eq("verificationStatus", args.verificationStatus!))
-        .filter((q) => q.eq(q.field("operationalStatus"), operationalStatus))
+        .filter((q) => matchesOperationalStatus(q, operationalStatus))
         .order("desc")
         .paginate(args.paginationOpts);
     }
@@ -220,7 +230,7 @@ async function listCompaniesPage(
       return await ctx.db
         .query("companies")
         .withIndex("by_onboardingStatus", (q) => q.eq("onboardingStatus", args.onboardingStatus!))
-        .filter((q) => q.eq(q.field("operationalStatus"), operationalStatus))
+        .filter((q) => matchesOperationalStatus(q, operationalStatus))
         .order("desc")
         .paginate(args.paginationOpts);
     }
@@ -228,13 +238,13 @@ async function listCompaniesPage(
       return await ctx.db
         .query("companies")
         .withIndex("by_verificationStatus", (q) => q.eq("verificationStatus", args.verificationStatus!))
-        .filter((q) => q.eq(q.field("operationalStatus"), operationalStatus))
+        .filter((q) => matchesOperationalStatus(q, operationalStatus))
         .order("desc")
         .paginate(args.paginationOpts);
     }
     return await ctx.db
       .query("companies")
-      .filter((q) => q.eq(q.field("operationalStatus"), operationalStatus))
+      .filter((q) => matchesOperationalStatus(q, operationalStatus))
       .order("desc")
       .paginate(args.paginationOpts);
   }

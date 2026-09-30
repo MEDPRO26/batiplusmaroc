@@ -33,6 +33,7 @@ vi.mock("@/i18n/navigation", () => ({
 import { AdminCompaniesPanel } from "./components/admin-companies-panel";
 import { AdminCompanyDetailPanel } from "./components/admin-company-detail-panel";
 import { AdminShell } from "./components/admin-shell";
+import { parseCompanyFilters, toQuery } from "./lib/company-filters";
 
 const companyId = "company-atlas" as never;
 const noFilters = { search: "", verification: null, onboarding: null, operational: null };
@@ -71,6 +72,14 @@ describe("Admin companies UI", () => {
     expect(html).toContain(title);
     expect(html).toContain(empty);
     expect(html).toContain(search);
+  });
+
+  test("offers and preserves the normal operational filter in the URL", () => {
+    const html = render("en", <AdminCompaniesPanel initialFilters={{ ...noFilters, operational: "normal" }} />);
+    expect(html).toContain('<option value="normal" selected="">Normal</option>');
+    const parsed = parseCompanyFilters({ operational: "normal" });
+    expect(parsed.operational).toBe("normal");
+    expect(toQuery(parsed)).toMatchObject({ operational: "normal" });
   });
 
   test("Verification is no longer a sidebar destination; Companies is", () => {

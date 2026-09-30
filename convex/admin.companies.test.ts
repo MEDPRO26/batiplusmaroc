@@ -148,6 +148,48 @@ describe("admin company list and summary", () => {
       .rejects.toThrow("NOT_AUTHENTICATED");
   });
 
+  test("includes legacy and explicit normal Companies across Admin filter paths", async () => {
+    const t = convexTest(schema, modules);
+    const adminId = await seedUser(t, "admin", "Admin");
+    await seedCompany(t, "Legacy Atlas");
+    const explicitNormal = await seedCompany(t, "Explicit Atlas");
+    await seedCompany(t, "Legacy Review", "pending");
+    await seedCompany(t, "Legacy Draft", "draft", "pending");
+    const attention = await seedCompany(t, "Attention Atlas");
+    const suspended = await seedCompany(t, "Suspended Atlas");
+    await t.run(async (ctx) => {
+      await ctx.db.patch(explicitNormal, { operationalStatus: "normal" });
+      await ctx.db.patch(attention, { operationalStatus: "needs_attention" });
+      await ctx.db.patch(suspended, { operationalStatus: "suspended" });
+    });
+
+    const admin = asUser(t, adminId);
+    const names = async (filters: Record<string, string>) =>
+      (await admin.query(api.admin.companies.listCompanies, { ...listArgs(), ...filters }))
+        .page.map((row) => row.name).sort();
+
+    expect(await names({ operationalStatus: "normal" })).toEqual([
+      "Explicit Atlas", "Legacy Atlas", "Legacy Draft", "Legacy Review",
+    ]);
+    expect(await names({ operationalStatus: "normal", search: "atlas" })).toEqual([
+      "Explicit Atlas", "Legacy Atlas",
+    ]);
+    expect(await names({ operationalStatus: "normal", onboardingStatus: "completed" })).toEqual([
+      "Explicit Atlas", "Legacy Atlas", "Legacy Review",
+    ]);
+    expect(await names({ operationalStatus: "normal", verificationStatus: "verified" })).toEqual([
+      "Explicit Atlas", "Legacy Atlas",
+    ]);
+    expect(await names({ operationalStatus: "normal", onboardingStatus: "completed", verificationStatus: "verified" })).toEqual([
+      "Explicit Atlas", "Legacy Atlas",
+    ]);
+    expect(await names({ operationalStatus: "normal", search: "review", onboardingStatus: "completed", verificationStatus: "pending" })).toEqual([
+      "Legacy Review",
+    ]);
+    expect(await names({ operationalStatus: "needs_attention" })).toEqual(["Attention Atlas"]);
+    expect(await names({ operationalStatus: "suspended" })).toEqual(["Suspended Atlas"]);
+  });
+
   test("loads draft, pending, verified and rejected companies and returns a safe missing result", async () => {
     const t = convexTest(schema, modules);
     const admin = await seedUser(t, "admin", "Admin");
