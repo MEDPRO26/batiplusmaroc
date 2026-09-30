@@ -326,6 +326,28 @@ function compareCandidates(left: Candidate, right: Candidate) {
   return compareOrderingKeys(candidateOrderingKey(left), candidateOrderingKey(right));
 }
 
+async function loadMarketplaceBatch(
+  ctx: QueryCtx,
+  companyId: Id<"companies">,
+  cursor: SourceCursor,
+  batchSize: number,
+) {
+  if (cursor.done) return [];
+  if (cursor.beforeAt === null) {
+    return await ctx.db.query("marketplaceActivity")
+      .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId))
+      .order("desc").take(batchSize);
+  }
+  const sameTimestamp = await ctx.db.query("marketplaceActivity")
+    .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId).eq("createdAt", cursor.beforeAt!).lt("_creationTime", cursor.beforeCreationTime!))
+    .order("desc").take(batchSize);
+  if (sameTimestamp.length >= batchSize) return sameTimestamp;
+  const older = await ctx.db.query("marketplaceActivity")
+    .withIndex("by_companyId_and_createdAt", (q) => q.eq("companyId", companyId).lt("createdAt", cursor.beforeAt!))
+    .order("desc").take(batchSize - sameTimestamp.length);
+  return [...sameTimestamp, ...older];
+}
+
 async function loadVerificationBatch(
   ctx: QueryCtx,
   companyId: Id<"companies">,
@@ -422,6 +444,42 @@ async function loadVerificationWindow(
   };
 }
 
+async function loadMarketplaceWindow(
+  ctx: QueryCtx,
+  companyId: Id<"companies">,
+  cursor: SourceCursor,
+  batchSize: number,
+  targetEligibleRows: number,
+) {
+  const rows: Doc<"marketplaceActivity">[] = [];
+  let scanCursor = cursor;
+  let eligibleRows = 0;
+
+  while (rows.length < MAX_SOURCE_SCAN_ROWS && eligibleRows < targetEligibleRows) {
+    const requestSize = Math.min(
+      Math.max(batchSize, MIN_SOURCE_SCAN_BATCH_SIZE),
+      MAX_SOURCE_SCAN_ROWS - rows.length,
+    );
+    const batch = await loadMarketplaceBatch(ctx, companyId, scanCursor, requestSize);
+    rows.push(...batch);
+    eligibleRows += batch.filter((row) => normalizeMarketplaceEventType(row.eventType) !== null).length;
+    if (batch.length < requestSize) return { rows, frontierUnknown: false };
+    scanCursor = nextSourceCursor(
+      scanCursor,
+      batch,
+      [],
+      true,
+      requestSize,
+      (row) => row.createdAt,
+    );
+  }
+
+  return {
+    rows,
+    frontierUnknown: rows.length >= MAX_SOURCE_SCAN_ROWS && eligibleRows < targetEligibleRows,
+  };
+}
+
 function nextSourceCursor<T extends { _id: string; _creationTime: number }>(
   current: SourceCursor,
   rows: T[],
@@ -509,11 +567,7 @@ async function loadProjectMap(ctx: QueryCtx, candidates: Candidate[]) {
   return new Map(projectIds.map((id, index) => [id, projects[index] ?? null]));
 }
 
-/**
- * Admin-only, bounded phase-one merge of Company-scoped verification and
- * operational histories. The cursor retains the deferred marketplace source
- * position so phase two can restore it without changing the public shape.
- */
+/** Admin-only, bounded merge of Company-scoped marketplace and status histories. */
 export const listCompanyActivity = query({
   args: {
     companyId: v.id("companies"),
@@ -535,14 +589,8 @@ export const listCompanyActivity = query({
     const batchSize = pageSize * SOURCE_BATCH_MULTIPLIER;
     const cursor = decodeCursor(args.paginationOpts.cursor);
 
-    // Phase 1 deliberately defers marketplace activity. The only Company-scoped
-    // access path is staged, and filtering the global event index can exceed
-    // Convex read limits. Phase 2 restores this source after index promotion.
-    const marketplaceWindow = {
-      rows: [] as Doc<"marketplaceActivity">[],
-      frontierUnknown: false,
-    };
-    const [verificationWindow, operationalRows] = await Promise.all([
+    const [marketplaceWindow, verificationWindow, operationalRows] = await Promise.all([
+      loadMarketplaceWindow(ctx, args.companyId, cursor.marketplace, batchSize, pageSize),
       loadVerificationWindow(ctx, args.companyId, cursor.verification, batchSize, pageSize),
       loadOperationalBatch(ctx, args.companyId, cursor.operational, batchSize),
     ]);

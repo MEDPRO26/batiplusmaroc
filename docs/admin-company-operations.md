@@ -23,26 +23,26 @@ the timeline is a read-only normalized projection.
 
 ### Indexes and bounds
 
-- During phase one, marketplace activity is deliberately absent from the
-  timeline. Filtering the global `by_eventType_and_createdAt` index by Company
-  is not read-bounded, while `marketplaceActivity.by_companyId_and_createdAt`
-  remains staged and unavailable until phase two.
+- Phase-two code reads `marketplaceActivity.by_companyId_and_createdAt` directly;
+  it never filters the global event index by Company. Excluded event types are
+  advanced through bounded windows so they cannot starve older eligible rows.
 - `companyVerificationHistory.by_companyId_and_changedAt` and
   `companyOperationalStatusHistory.by_companyId_and_createdAt` remain enabled,
   Company-scoped timeline sources.
-- The public query clamps logical pages to 30 items. Verification reads advance
-  through bounded windows of at most 900 Company-scoped rows. Same-timestamp
-  continuation uses Convex's implicit `_creationTime` index tiebreaker.
+- The public query clamps logical pages to 30 items. Marketplace and
+  verification reads each advance through bounded windows of at most 900
+  Company-scoped rows. Same-timestamp continuation uses Convex's implicit
+  `_creationTime` index tiebreaker.
 - The cursor stores an independent `(timestamp, creation time, document ID)`
-  boundary for each source. The backend merges the two bounded batches and
+  boundary for each source. The backend merges the three bounded batches and
   returns the standard Convex pagination result shape used by
   `usePaginatedQuery`.
 
 ### Existing-table index rollout
 
-This branch uses a two-deployment rollout for every index added to a table that
-already exists on `origin/main`. Production must not receive phase-two query
-code until Convex reports every phase-one staged index as backfilled.
+Phase one staged every new index on an existing table. The nine staged indexes
+were reported fully backfilled in production before this local phase-two change.
+This branch promotes and queries them, but does not deploy production.
 
 Phase one declares these indexes with `staged: true` and does not query them:
 
@@ -81,11 +81,11 @@ only indexes that are already enabled on `origin/main`:
   the indexed read. A filtered search can return an empty progress page before
   `isDone`; callers continue with `continueCursor`.
 
-Phase two is a separate change and deployment:
+Phase two remains a separate production deployment:
 
 1. Confirm all nine staged indexes are fully backfilled in the target
    deployment; never infer this from a successful phase-one code push.
-2. Remove `staged: true` and deploy that schema change.
+2. Remove `staged: true` locally and validate the schema and query changes.
 3. Switch Company activity and latest-activity reads to
    `marketplaceActivity.by_companyId_and_createdAt`, Deal-scoped activity reads
    to `marketplaceActivity.by_dealId_and_createdAt`, Admin project history to
@@ -94,8 +94,15 @@ Phase two is a separate change and deployment:
 4. Run the full quality gates and verify Company activity ordering, directory
    pagination, and Admin Company filters against the target development
    deployment.
-5. Remove phase-one fallbacks in that phase-two change. Remove the legacy
-   `search_directory` only after every caller uses `search_directory_v2`.
+5. Remove phase-one fallbacks once replacements preserve ordering and legacy
+   compatibility. Existing public-directory cursors may finish on
+   `search_directory`; remove that index only in a later compatible rollout.
+
+The public directory uses exact `directoryListed` partitions only when no
+legacy row lacks materialized eligibility. Until the separately approved
+operational-status backfill finishes, it keeps the legacy ordered path; its
+cursor pins that choice across pages so a mid-session backfill cannot change
+the underlying index. Public eligibility is filtered before pagination.
 
 Never combine phase-one staging and phase-two query activation in one
 deployment. Never use `--prod` or `convex deploy` while validating this plan.
@@ -106,7 +113,7 @@ deployment. Never use `--prod` or `convex deploy` while validating this plan.
 - Operational status: needs attention, suspension, reactivation, and return to
   normal.
 
-After phase-two index promotion, the timeline also restores:
+The local phase-two implementation restores:
 
 - Marketplace: Company invited, invitation accepted/declined, initial quote
   submitted, discussion opened.
@@ -134,8 +141,8 @@ canonical stored names.
 
 ### Source precedence and duplicate handling
 
-In phase one, only the two Company-scoped history tables are merged. After
-phase-two promotion, `marketplaceActivity` wins for every event family it
+The three Company-scoped sources are merged. `marketplaceActivity` wins for
+every event family it
 represents; quote, invitation, Deal, commission, and review histories are not
 merged a second time. This prevents duplicate semantic transitions.
 
@@ -158,7 +165,7 @@ Raw domain documents and arbitrary metadata are never returned.
 
 `admin.companyActivity.listCompanyActivity` calls `requireAdminUser()` before
 reading the requested Company. Anonymous, Client, Company, and SEO accounts are
-denied. Both source queries use a Company equality constraint in their indexes;
+denied. All three source queries use a Company equality constraint in their indexes;
 activity for another Company cannot enter the merge.
 
 ### Privacy boundary
