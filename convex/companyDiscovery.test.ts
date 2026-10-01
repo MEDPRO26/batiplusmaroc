@@ -3,7 +3,7 @@
 import { convexTest } from "convex-test";
 import { beforeAll, describe, expect, test } from "vitest";
 import { api, internal } from "./_generated/api";
-import { buildCompanyDirectorySearchText } from "./companies/directory";
+import { buildCompanyDirectorySearchText, companyServices } from "./companies/directory";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -186,6 +186,14 @@ describe("public company discovery", () => {
     expect((await list(t, { city: "Casablanca" })).page.map((company) => company.slug)).toEqual(["casa-renov"]);
     expect((await list(t, { search: "rénovation" })).page.map((company) => company.slug)).toEqual(["casa-renov"]);
     expect((await list(t, { service: "architecture" })).page.map((company) => company.slug)).toEqual(["atlas-habitat"]);
+  });
+
+  test.each(companyServices)("filters legacy %s selections before catalog mapping", async (service) => {
+    const t = convexTest(schema, modules);
+    const matching = await seedDirectoryCompany(t, { name: "Selected Service", slug: "selected-service", services: [service] });
+    const otherService = service === "plumbing" ? "renovation" : "plumbing";
+    await seedDirectoryCompany(t, { name: "Other Service", slug: "other-service", services: [otherService] });
+    expect((await list(t, { service })).page.map(row => row.id)).toEqual([matching.companyId]);
   });
 
   test("paginates without loading every company", async () => {
@@ -466,7 +474,7 @@ describe("public company discovery", () => {
     expect(company).not.toHaveProperty("verificationDocuments");
     expect(Object.keys(company).sort()).toEqual([
       "city", "coverImageUrl", "description", "id", "isVerified", "logoUrl", "name",
-      "portfolio", "rating", "reviewCount", "serviceAreas", "services", "slug", "yearsExperience",
+      "portfolio", "rating", "reviewCount", "serviceAreas", "serviceNames", "services", "slug", "yearsExperience",
     ].sort());
   });
 

@@ -8,6 +8,7 @@ import type { DataModel, Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
 import { getPublicMediaUrl } from "../storage/publicUrl";
+import { resolvedServiceNames } from "../serviceCatalog";
 import { getCompanyOperationalStatus } from "./operationalStatus";
 
 export const companyServices = [
@@ -23,18 +24,7 @@ export const companyServices = [
   "pool",
 ] as const;
 
-const companyServiceValidator = v.union(
-  v.literal("houseConstruction"),
-  v.literal("renovation"),
-  v.literal("structural"),
-  v.literal("finishing"),
-  v.literal("architecture"),
-  v.literal("interior"),
-  v.literal("electrical"),
-  v.literal("plumbing"),
-  v.literal("joinery"),
-  v.literal("pool"),
-);
+const companyServiceValidator = v.string();
 
 const companyServiceAreaValidator = v.union(
   v.literal("agadir"),
@@ -49,9 +39,9 @@ const companyServiceAreaValidator = v.union(
   v.literal("tetouan"),
 );
 
-type CompanyService = (typeof companyServices)[number];
+type CompanyService = string;
 
-const serviceSearchTerms: Record<CompanyService, string> = {
+const serviceSearchTerms = new Map<string, string>(Object.entries({
   houseConstruction: "servicehouseconstruction house construction construction maison",
   renovation: "servicerenovation renovation rénovation",
   structural: "servicestructural structural work gros oeuvre gros œuvre",
@@ -62,7 +52,7 @@ const serviceSearchTerms: Record<CompanyService, string> = {
   plumbing: "serviceplumbing plumbing plomberie",
   joinery: "servicejoinery joinery menuiserie",
   pool: "servicepool pool pools piscine piscines",
-};
+}));
 
 const portfolioPreviewValidator = v.object({
   title: v.string(),
@@ -78,6 +68,7 @@ const publicCompanyResultValidator = v.object({
   isVerified: v.boolean(),
   yearsExperience: v.union(v.number(), v.null()),
   services: v.array(companyServiceValidator),
+  serviceNames: v.array(v.object({ slug: v.string(), nameFr: v.string(), nameEn: v.string() })),
   serviceAreas: v.array(companyServiceAreaValidator),
   logoUrl: v.union(v.string(), v.null()),
   coverImageUrl: v.union(v.string(), v.null()),
@@ -96,7 +87,7 @@ export function buildCompanyDirectorySearchText(args: {
     args.name,
     args.city,
     ...(args.serviceAreas ?? []),
-    ...args.services.map((service) => serviceSearchTerms[service]),
+    ...args.services.map((service) => serviceSearchTerms.get(service) ?? service),
   ]
     .join(" ")
     .normalize("NFKC")
@@ -107,9 +98,14 @@ function normalizedSearch(value: string | undefined) {
   return value?.trim().replace(/\s+/g, " ").normalize("NFKC").toLowerCase().slice(0, 100) ?? "";
 }
 
-function serviceMarker(service: CompanyService | undefined) {
-  return service ? `service${service.toLowerCase()}` : "";
+function serviceFilterSearchTerm(slug: CompanyService | undefined) {
+  if (!slug) return "";
+  // Retain the tokens already indexed for the ten legacy services. Dynamic
+  // catalog services are indexed by their actual slug, without a prefix.
+  return serviceSearchTerms.get(slug)?.split(" ")[0] ?? normalizedSearch(slug);
 }
+
+type ServiceFilter = { slug: string; id?: Id<"serviceCatalog"> };
 
 type DirectoryCursorMode = "legacy" | "exact" | "previous";
 const DIRECTORY_CURSOR_PREFIX = "directory-v2:";
@@ -173,7 +169,7 @@ async function resolvePublicMediaUrl(
   return reference.storageId ? await ctx.storage.getUrl(reference.storageId) : null;
 }
 
-async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">) {
+async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, serviceFilter?: ServiceFilter) {
   if (
     getCompanyOperationalStatus(company) === "suspended" ||
     company.onboardingStatus !== "completed" ||
@@ -189,7 +185,7 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">) {
     ctx.db
       .query("companyServices")
       .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
-      .take(companyServices.length),
+      .take(200),
     ctx.db
       .query("portfolioProjects")
       .withIndex("by_companyId_and_status", (q) =>
@@ -203,6 +199,12 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">) {
     }),
     resolvePublicMediaUrl(ctx, { publicMediaId: company.coverMediaId }),
   ]);
+  if (serviceFilter && !serviceRows.some(row => row.serviceId
+    ? row.serviceId === serviceFilter.id
+    : row.service === serviceFilter.slug)) {
+    return null;
+  }
+  const serviceNames = await resolvedServiceNames(ctx, serviceRows);
 
   const portfolio = (
     await Promise.all(
@@ -225,6 +227,7 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">) {
     isVerified: company.verificationStatus === "verified",
     yearsExperience: company.yearsExperience ?? null,
     services: serviceRows.map((row) => row.service),
+    serviceNames,
     serviceAreas: company.serviceAreas ?? [],
     logoUrl,
     coverImageUrl: companyCoverUrl ?? portfolio[0]?.url ?? null,
@@ -282,10 +285,15 @@ export const listPublicCompanies = query({
           cursor: decodedCursor.nativeCursor,
           endCursor: decodedEndCursor.nativeCursor!,
         };
+    const serviceSlug = args.service || undefined;
+    const serviceFilter = serviceSlug === undefined ? undefined : {
+      slug: serviceSlug,
+      id: (await ctx.db.query("serviceCatalog").withIndex("by_slug", q => q.eq("slug", serviceSlug)).unique())?._id,
+    };
     const terms = [
       normalizedSearch(args.search),
       normalizedSearch(args.city),
-      serviceMarker(args.service),
+      serviceFilterSearchTerm(serviceSlug),
     ].filter(Boolean);
 
     const page = terms.length > 0
@@ -339,7 +347,7 @@ export const listPublicCompanies = query({
               .paginate(paginationOpts);
 
     const publicPage = (
-      await Promise.all(page.page.map((company) => toPublicCompanyResult(ctx, company)))
+      await Promise.all(page.page.map((company) => toPublicCompanyResult(ctx, company, serviceFilter)))
     ).filter((company): company is NonNullable<typeof company> => company !== null);
 
     return {
@@ -377,7 +385,7 @@ export const backfillDirectorySearchText = internalMutation({
       const serviceRows = await ctx.db
         .query("companyServices")
         .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
-        .take(companyServices.length);
+        .take(200);
       const directorySearchText = buildCompanyDirectorySearchText({
         name: company.name,
         city: company.city,

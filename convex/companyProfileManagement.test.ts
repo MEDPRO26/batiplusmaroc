@@ -25,6 +25,9 @@ async function seedCompany(
 ) {
   return await t.run(async (ctx) => {
     const now = 100;
+    for (const [index, slug] of ["houseConstruction", "renovation", "structural", "finishing", "architecture", "interior", "electrical", "plumbing", "joinery", "pool"].entries()) {
+      if (!(await ctx.db.query("serviceCatalog").take(20)).some(row => row.slug === slug)) await ctx.db.insert("serviceCatalog", { slug, nameFr: slug, nameEn: slug, isActive: true, sortOrder: index * 10, createdAt: now, updatedAt: now });
+    }
     const userId = await ctx.db.insert("users", {
       email: `${label}@example.test`,
       accountType: options?.accountType ?? "company",

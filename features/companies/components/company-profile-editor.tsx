@@ -3,9 +3,10 @@
 import { useQuery } from "convex/react";
 import { Check, ExternalLink, Loader2, MapPin, Pencil, Plus } from "lucide-react";
 import Image from "next/image";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
+import { serviceName } from "@/features/companies/lib/service-label";
 import { ProfileSectionSkeleton } from "@/features/shared/components/skeletons";
 import { WorkspaceTabs, workspaceButton } from "@/features/shared/components/workspace-page";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -48,6 +49,7 @@ export function CompanyProfileEditor() {
 
 export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
   const t = useTranslations("companyProfileManager");
+  const locale = useLocale();
   const tPublic = useTranslations("publicCompany");
   const isVerified = profile.legal.verificationStatus === "verified";
 
@@ -64,7 +66,7 @@ export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
               </MainSection>
 
               <MainSection action={<ServicesEditor profile={profile} />} title={t("services.title")}>
-                <ChipList empty={t("profileView.notSpecified")} items={profile.services.map((service) => t(`serviceOptions.${service}`))} />
+                <ChipList empty={t("profileView.notSpecified")} items={profile.services.map((service) => serviceName(service, profile.catalogServices, locale, key => t(`serviceOptions.${key}`)))} />
               </MainSection>
 
               <PortfolioShowcase />

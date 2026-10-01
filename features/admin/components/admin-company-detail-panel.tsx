@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { DropdownMenu } from "radix-ui";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
+import { serviceName } from "@/features/companies/lib/service-label";
 import type { Id } from "@/convex/_generated/dataModel";
 import { OperationalPill, VerificationPill } from "@/features/admin/components/admin-companies-panel";
 import { ADMIN_PRESS, AdminPage } from "@/features/admin/components/admin-shell";
@@ -215,6 +216,7 @@ function Overview({ summary, currentStatus, unreadMessages, onSelectTab, onChang
 }) {
   const t = useTranslations("adminCompanies");
   const locale = useLocale();
+  const catalog = useQuery(api.serviceCatalog.listActive);
   const actions: { key: string; text: string; cta: string; tab: AdminCompanyTab; tone: "amber" | "red" | "blue" }[] = [];
   if (summary.verificationStatus === "pending") actions.push({ key: "verification", text: t("attention.verificationPending"), cta: t("attention.review"), tab: "verification", tone: "amber" });
   if (currentStatus === "suspended") actions.push({ key: "suspended", text: t("attention.suspended"), cta: t("attention.viewHistory"), tab: "activity", tone: "red" });
@@ -251,7 +253,7 @@ function Overview({ summary, currentStatus, unreadMessages, onSelectTab, onChang
             <Field label={t("overview.created")} value={date(summary.createdAt, locale)} />
             <div className="sm:col-span-2">
               <dt className="text-xs font-semibold text-[#8b919a]">{t("overview.services")}</dt>
-              <dd className="mt-1.5 flex flex-wrap gap-1.5">{summary.services.length ? summary.services.map((service) => <span className="rounded-full bg-[#f4f6f8] px-2.5 py-1 text-xs font-medium text-[#30343a]" key={service}>{t(`services.${service}`)}</span>) : <span className="text-sm">—</span>}</dd>
+              <dd className="mt-1.5 flex flex-wrap gap-1.5">{summary.services.length ? summary.services.map((service) => <span className="rounded-full bg-[#f4f6f8] px-2.5 py-1 text-xs font-medium text-[#30343a]" key={service}>{serviceName(service, catalog ?? [], locale, key => t(`services.${key}`))}</span>) : <span className="text-sm">—</span>}</dd>
             </div>
             <Field label={t("overview.serviceAreas")} value={summary.serviceAreas.join(", ") || "—"} />
           </dl>

@@ -5,6 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
+import { serviceName } from "@/features/companies/lib/service-label";
 import { projectCategories, projectCities } from "@/convex/projects/constants";
 import { DashboardCardsSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -362,11 +363,13 @@ function Tag({ children }: { children: ReactNode }) {
 function CompanySidebar({ profile, verification }: { profile: Profile; verification: VerificationStatus }) {
   const t = useTranslations("auth.companyDashboard");
   const tServices = useTranslations("auth.companyOnboarding.services");
+  const locale = useLocale();
+  const catalog = useQuery(api.serviceCatalog.listActive);
   const [reachOpen, setReachOpen] = useState(true);
   const completion = profileCompletion(profile);
   const serviceLine = profile.services
     .slice(0, 2)
-    .map((service) => (tServices.has(service) ? tServices(service) : service))
+    .map((service) => serviceName(service, catalog ?? [], locale, key => tServices(key)))
     .join(" · ");
   const showVerificationCta = verification === "draft" || verification === "rejected";
 

@@ -96,6 +96,7 @@ import type * as seo_model from "../seo/model.js";
 import type * as seo_pageRegistry from "../seo/pageRegistry.js";
 import type * as seo_public from "../seo/public.js";
 import type * as seo_validators from "../seo/validators.js";
+import type * as serviceCatalog from "../serviceCatalog.js";
 import type * as siteVisits_index from "../siteVisits/index.js";
 import type * as siteVisits_state from "../siteVisits/state.js";
 import type * as storage_constants from "../storage/constants.js";
@@ -201,6 +202,7 @@ declare const fullApi: ApiFromModules<{
   "seo/pageRegistry": typeof seo_pageRegistry;
   "seo/public": typeof seo_public;
   "seo/validators": typeof seo_validators;
+  serviceCatalog: typeof serviceCatalog;
   "siteVisits/index": typeof siteVisits_index;
   "siteVisits/state": typeof siteVisits_state;
   "storage/constants": typeof storage_constants;

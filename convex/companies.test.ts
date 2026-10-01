@@ -31,6 +31,9 @@ async function seedCompany(
 ) {
   return await t.run(async (ctx) => {
     const now = 123;
+    for (const [index, slug] of ["houseConstruction", "renovation", "structural", "finishing", "architecture", "interior", "electrical", "plumbing", "joinery", "pool"].entries()) {
+      if (!(await ctx.db.query("serviceCatalog").take(20)).some(row => row.slug === slug)) await ctx.db.insert("serviceCatalog", { slug, nameFr: slug, nameEn: slug, isActive: true, sortOrder: index * 10, createdAt: now, updatedAt: now });
+    }
     const accountType = options?.accountType ?? "company";
     const userId = await ctx.db.insert("users", {
       email: `${accountType}@example.test`,
@@ -139,7 +142,7 @@ describe("company onboarding", () => {
       onboardingStatus: "pending",
       verificationStatus: "draft",
     });
-    expect(profile?.serviceOptions).toContain("houseConstruction");
+    expect(profile?.catalogServices.some(item => item.slug === "houseConstruction")).toBe(true);
   });
 
   test("rejects unauthenticated and client callers", async () => {

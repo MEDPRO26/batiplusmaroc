@@ -11,21 +11,9 @@ import { getPathname } from "@/i18n/navigation";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { CompanyDiscoveryCardSkeleton } from "./company-directory-skeleton";
 import { InviteCompanyButton } from "@/features/invitations/components/invite-company-button";
+import { catalogServiceName, serviceName } from "@/features/companies/lib/service-label";
 
-const services = [
-  "houseConstruction",
-  "renovation",
-  "structural",
-  "finishing",
-  "architecture",
-  "interior",
-  "electrical",
-  "plumbing",
-  "joinery",
-  "pool",
-] as const;
-
-type Service = (typeof services)[number];
+type Catalog = FunctionReturnType<typeof api.serviceCatalog.listActive>;
 type Sort = "newest" | "oldest";
 type CompanyResult = FunctionReturnType<
   typeof api.companies.directory.listPublicCompanies
@@ -34,9 +22,10 @@ const COMPANY_PAGE_SIZE = 12;
 
 export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: string }) {
   const t = useTranslations("companyDirectory");
+  const catalog = useQuery(api.serviceCatalog.listActive) ?? [];
   const [search, setSearch] = useState(initialSearch);
   const [city, setCity] = useState("");
-  const [service, setService] = useState<Service | "">("");
+  const [service, setService] = useState("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sort, setSort] = useState<Sort>("newest");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -77,6 +66,7 @@ export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: strin
   };
 
   const filterProps = {
+    catalog,
     city,
     service,
     verifiedOnly,
@@ -194,6 +184,7 @@ function useDebouncedValue(value: string, delay: number) {
 }
 
 function FilterFields({
+  catalog,
   city,
   service,
   verifiedOnly,
@@ -204,17 +195,19 @@ function FilterFields({
   idPrefix,
   showHeading = true,
 }: {
+  catalog: Catalog;
   city: string;
-  service: Service | "";
+  service: string;
   verifiedOnly: boolean;
   onCityChange: (value: string) => void;
-  onServiceChange: (value: Service | "") => void;
+  onServiceChange: (value: string) => void;
   onVerifiedChange: (value: boolean) => void;
   onClear: () => void;
   idPrefix: string;
   showHeading?: boolean;
 }) {
   const t = useTranslations("companyDirectory");
+  const locale = useLocale();
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
@@ -238,10 +231,10 @@ function FilterFields({
             <input checked={service === ""} className="size-4 accent-brand" id={`${idPrefix}-service-all`} name={`${idPrefix}-service`} onChange={() => onServiceChange("")} type="radio" />
             {t("service.all")}
           </label>
-          {services.map((item) => (
-            <label className="flex min-h-8 cursor-pointer items-center gap-2 text-sm font-normal text-ink" htmlFor={`${idPrefix}-service-${item}`} key={item}>
-              <input checked={service === item} className="size-4 accent-brand" id={`${idPrefix}-service-${item}`} name={`${idPrefix}-service`} onChange={() => onServiceChange(item)} type="radio" />
-              {t(`service.options.${item}`)}
+          {catalog.map((item) => (
+            <label className="flex min-h-8 cursor-pointer items-center gap-2 text-sm font-normal text-ink" htmlFor={`${idPrefix}-service-${item.slug}`} key={item._id}>
+              <input checked={service === item.slug} className="size-4 accent-brand" id={`${idPrefix}-service-${item.slug}`} name={`${idPrefix}-service`} onChange={() => onServiceChange(item.slug)} type="radio" />
+              {catalogServiceName(item, locale)}
             </label>
           ))}
         </fieldset>
@@ -385,8 +378,8 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
                 <section>
                   <h3 className="m-0 text-base font-semibold text-ink">{tProfile("services")}</h3>
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {profile.services.filter(isService).map((item) => (
-                      <span className="rounded-full bg-[#eef1f4] px-2.5 py-1 text-xs font-medium text-ink" key={item}>{t(`service.options.${item}`)}</span>
+                    {profile.services.map((item) => (
+                      <span className="rounded-full bg-[#eef1f4] px-2.5 py-1 text-xs font-medium text-ink" key={item}>{serviceName(item, profile.serviceNames, locale, key => t(`service.options.${key}`))}</span>
                     ))}
                   </div>
                 </section>
@@ -443,10 +436,6 @@ function isAppLocale(value: string): value is AppLocale {
   return routing.locales.includes(value as AppLocale);
 }
 
-function isService(value: string): value is Service {
-  return (services as readonly string[]).includes(value);
-}
-
 function BackIcon() {
   return (
     <svg aria-hidden className="size-5" fill="none" viewBox="0 0 20 20">
@@ -467,6 +456,7 @@ function ExternalIcon() {
 
 function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onViewProfile: () => void }) {
   const t = useTranslations("companyDirectory");
+  const locale = useLocale();
   const initials = company.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("");
   const meta = [
     company.city,
@@ -507,7 +497,7 @@ function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onVie
         <p className="mt-2.5 mb-0 line-clamp-2 max-w-[54rem] text-sm leading-6 text-ink/75">{company.description}</p>
         <div className="mt-3.5 flex flex-wrap gap-1.5">
           {company.services.slice(0, 6).map((item) => (
-            <span className="rounded-md bg-[#eef1f4] px-2.5 py-1 text-xs font-medium text-ink/90" key={item}>{t(`service.options.${item}`)}</span>
+            <span className="rounded-md bg-[#eef1f4] px-2.5 py-1 text-xs font-medium text-ink/90" key={item}>{serviceName(item, company.serviceNames, locale, key => t(`service.options.${key}`))}</span>
           ))}
         </div>
         {company.portfolio.length > 0 ? (
