@@ -52,6 +52,7 @@ export const routes = {
   adminSiteVisits: "/admin/site-visits",
   adminVerification: "/admin/verification",
   adminSettings: "/admin/settings",
+  adminServices: "/admin/services",
   seoRoot: "/seo",
   seoDashboard: "/seo/dashboard",
   seoArticles: "/seo/articles",

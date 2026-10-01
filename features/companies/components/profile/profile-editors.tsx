@@ -1,6 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { catalogServiceName } from "@/features/companies/lib/service-label";
 import {
   EditDialog,
   MultiSelectField,
@@ -12,7 +13,7 @@ import {
 } from "./profile-editing";
 
 type Props = { profile: ProfileManager };
-type Service = ProfileManager["serviceOptions"][number];
+type Service = ProfileManager["selectedServiceIds"][number];
 type Area = ProfileManager["serviceAreaOptions"][number];
 type Language = ProfileManager["languageOptions"][number];
 type Size = ProfileManager["companySizeOptions"][number];
@@ -139,13 +140,14 @@ export function LanguagesEditor({ profile }: Props) {
 
 export function ServicesEditor({ profile }: Props) {
   const { t, save, fail } = useEditor();
+  const locale = useLocale();
   return (
     <EditDialog
       lead={t("dialogs.servicesLead")}
       onSave={async (form) => {
-        const services = readList<Service>(form, "services");
-        if (services.length === 0) fail("validation.services");
-        await save({ services });
+        const serviceIds = readList<Service>(form, "services");
+        if (serviceIds.length === 0) fail("validation.services");
+        await save({ serviceIds });
       }}
       title={t("services.title")}
       triggerLabel={t("dialogs.editServices")}
@@ -153,10 +155,10 @@ export function ServicesEditor({ profile }: Props) {
     >
       {() => (
         <MultiSelectField<Service>
-          initial={profile.services}
-          labelFor={(value) => t(`serviceOptions.${value}`)}
+          initial={profile.selectedServiceIds}
+          labelFor={(value) => { const row = profile.catalogServices.find(item => item._id === value); return row ? catalogServiceName(row, locale) : value; }}
           name="services"
-          options={profile.serviceOptions}
+          options={profile.catalogServices.filter(item => item.isActive).map(item => item._id)}
           selectedLabel={t("dialogs.selected")}
         />
       )}

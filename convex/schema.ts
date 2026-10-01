@@ -830,25 +830,32 @@ export default defineSchema({
     .index("by_companyId_and_status", ["companyId", "status"])
     .index("by_companyId_and_userId", ["companyId", "userId"]),
 
+  serviceCatalog: defineTable({
+    slug: v.string(), nameFr: v.string(), nameEn: v.string(),
+    isActive: v.boolean(), sortOrder: v.number(), createdAt: v.number(), updatedAt: v.number(),
+  }).index("by_slug", ["slug"]).index("by_isActive_and_sortOrder", ["isActive", "sortOrder"]),
+
+  serviceCatalogHistory: defineTable({
+    serviceId: v.id("serviceCatalog"),
+    changedBy: v.id("users"),
+    action: v.union(v.literal("created"), v.literal("updated")),
+    before: v.optional(v.object({ slug: v.string(), nameFr: v.string(), nameEn: v.string(), isActive: v.boolean(), sortOrder: v.number() })),
+    after: v.object({ slug: v.string(), nameFr: v.string(), nameEn: v.string(), isActive: v.boolean(), sortOrder: v.number() }),
+    changedAt: v.number(),
+  }).index("by_serviceId_and_changedAt", ["serviceId", "changedAt"]),
+
   companyServices: defineTable({
     companyId: v.id("companies"),
-    service: v.union(
-      v.literal("houseConstruction"),
-      v.literal("renovation"),
-      v.literal("structural"),
-      v.literal("finishing"),
-      v.literal("architecture"),
-      v.literal("interior"),
-      v.literal("electrical"),
-      v.literal("plumbing"),
-      v.literal("joinery"),
-      v.literal("pool"),
-    ),
+    /** Legacy slug is retained for existing directory consumers; serviceId is canonical. */
+    service: v.string(),
+    serviceId: v.optional(v.id("serviceCatalog")),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_companyId", ["companyId"])
-    .index("by_companyId_and_service", ["companyId", "service"]),
+    .index("by_companyId_and_service", ["companyId", "service"])
+    .index("by_service", ["service"])
+    .index("by_serviceId", ["serviceId"]),
 
   companyVerifications: defineTable({
     companyId: v.id("companies"),

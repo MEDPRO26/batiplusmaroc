@@ -2,12 +2,13 @@
 
 import { useAction, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { api } from "@/convex/_generated/api";
 import { OnboardingChrome } from "@/features/auth/components/onboarding-chrome";
 import { consumeOAuthSignupIntent } from "@/features/auth/lib/oauth-signup-intent";
 import { FriendlyAlert } from "@/features/shared/components/error-state";
+import { catalogServiceName } from "@/features/companies/lib/service-label";
 import { FormSkeleton } from "@/features/shared/components/skeletons";
 import { useRouter } from "@/i18n/navigation";
 import { mapConvexFailure } from "@/lib/errors";
@@ -23,10 +24,11 @@ type Step = 1 | 2 | 3;
 type CompanyOnboardingProfile = NonNullable<
   FunctionReturnType<typeof api.companies.index.getOnboardingProfile>
 >;
-type CompanyService = CompanyOnboardingProfile["serviceOptions"][number];
+type CompanyServiceId = CompanyOnboardingProfile["catalogServices"][number]["_id"];
 
 export function CompanyOnboardingForm() {
   const t = useTranslations("auth.companyOnboarding");
+  const locale = useLocale();
   const tUx = useTranslations("ux");
   const tOnboarding = useTranslations("auth.onboarding");
   const user = useQuery(api.users.currentUser);
@@ -191,7 +193,9 @@ export function CompanyOnboardingForm() {
         phone: String(formData.get("phone") ?? ""),
         city: String(formData.get("city") ?? ""),
         description: String(formData.get("description") ?? ""),
-        services: formData.getAll("services").map(String) as CompanyService[],
+        ...(profile && profile.fallbackServices.length > 0
+          ? { services: formData.getAll("services").map(String) }
+          : { serviceIds: formData.getAll("services").map(String) as CompanyServiceId[] }),
         yearsExperience: yearsValue === "" ? undefined : Number(yearsValue),
         website: String(formData.get("website") ?? ""),
         logoUploadToken,
@@ -240,6 +244,10 @@ export function CompanyOnboardingForm() {
   }
 
   const ownerName = [profile.ownerFirstName, profile.ownerLastName].filter(Boolean).join(" ");
+  const serviceChoices = [
+    ...profile.catalogServices.map(service => ({ ...service, value: service._id, selected: profile.selectedServiceIds.includes(service._id) })),
+    ...profile.fallbackServices.map(service => ({ ...service, value: service.slug, selected: profile.services.includes(service.slug) })),
+  ];
   const heading = step === 1 ? t("titleProfile") : step === 2 ? t("titleServices") : t("titleContact");
   const lead = step === 1 ? t("leadProfile") : step === 2 ? t("leadServices") : t("leadContact");
 
@@ -310,17 +318,17 @@ export function CompanyOnboardingForm() {
             <p className="m-0 text-[0.95rem] font-semibold text-ink">{t("servicesTitle")}</p>
             <p className="mt-1 mb-5 text-[0.88rem] leading-5 text-muted">{t("servicesLead")}</p>
             <div className="grid gap-2.5 sm:grid-cols-2">
-              {profile.serviceOptions.map((service) => (
-                <label className="block" key={service}>
+              {serviceChoices.map((service) => (
+                <label className="block" key={service.slug}>
                   <input
                     className="peer sr-only"
-                    defaultChecked={profile.services.includes(service)}
+                    defaultChecked={service.selected}
                     name="services"
                     type="checkbox"
-                    value={service}
+                    value={service.value}
                   />
                   <span className="flex min-h-12 cursor-pointer items-center rounded-[10px] border border-brand-border px-3.5 py-2.5 text-sm font-medium text-ink transition-colors peer-checked:border-brand peer-checked:bg-brand-soft peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand hover:border-brand/50">
-                    {t(`services.${service}`)}
+                    {catalogServiceName(service, locale)}
                   </span>
                 </label>
               ))}

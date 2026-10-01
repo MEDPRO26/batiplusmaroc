@@ -2,7 +2,8 @@
 
 import { useQuery } from "convex/react";
 import { Check, ExternalLink } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { serviceName } from "@/features/companies/lib/service-label";
 import { useEffect, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import { FriendlyAlert } from "@/features/shared/components/error-state";
@@ -83,6 +84,7 @@ export function CompanySettings({ section }: { section: SettingsSection }) {
 
 function ProfileSettings({ profile }: { profile: ProfileManager }) {
   const t = useTranslations("companyProfileManager");
+  const locale = useLocale();
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -117,7 +119,7 @@ function ProfileSettings({ profile }: { profile: ProfileManager }) {
       </SettingsCard>
 
       <SettingsCard action={<ServicesEditor profile={profile} />} title={t("services.title")}>
-        <Chips items={profile.services.map((service) => t(`serviceOptions.${service}`))} />
+        <Chips items={profile.services.map((service) => serviceName(service, profile.catalogServices, locale, key => t(`serviceOptions.${key}`)))} />
       </SettingsCard>
 
       <SettingsCard action={<ServiceAreasEditor profile={profile} />} title={t("serviceAreas.title")}>

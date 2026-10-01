@@ -7,6 +7,7 @@ import { createUniqueCompanySlug, requireOwnerCompany } from "../companies/index
 import { consumeVerifiedPublicMediaIntent } from "../storage/publicMediaModel";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { getCompanyOperationalStatus } from "../companies/operationalStatus";
+import { resolvedServiceNames } from "../serviceCatalog";
 
 const projectTypeValidator = v.union(
   v.literal("construction"),
@@ -150,6 +151,7 @@ export const getPublicCompanyProfile = query({
     city: v.string(),
     description: v.string(),
     services: v.array(v.string()),
+    serviceNames: v.array(v.object({ slug: v.string(), nameFr: v.string(), nameEn: v.string() })),
     serviceAreas: v.array(v.string()),
     yearsExperience: v.union(v.number(), v.null()),
     foundedYear: v.union(v.number(), v.null()),
@@ -165,7 +167,7 @@ export const getPublicCompanyProfile = query({
     const company = await ctx.db.query("companies").withIndex("by_slug", (q) => q.eq("slug", args.slug)).unique();
     if (!company || company.onboardingStatus !== "completed" || !company.slug || !company.name || !company.city || !company.description) return null;
     const [services, projects, logoMedia, coverMedia, reviewRows] = await Promise.all([
-      ctx.db.query("companyServices").withIndex("by_companyId", (q) => q.eq("companyId", company._id)).take(11),
+      ctx.db.query("companyServices").withIndex("by_companyId", (q) => q.eq("companyId", company._id)).take(200),
       ctx.db.query("portfolioProjects").withIndex("by_companyId_and_status", (q) => q.eq("companyId", company._id).eq("status", "published")).order("desc").take(24),
       company.logoMediaId ? ctx.db.get(company.logoMediaId) : Promise.resolve(null),
       company.coverMediaId ? ctx.db.get(company.coverMediaId) : Promise.resolve(null),
@@ -176,6 +178,7 @@ export const getPublicCompanyProfile = query({
         .order("desc")
         .take(20),
     ]);
+    const serviceNames = await resolvedServiceNames(ctx, services);
     const logoUrl = logoMedia && logoMedia.companyId === company._id && logoMedia.purpose === "companyLogo"
       ? getPublicMediaUrl(logoMedia.objectKey)
       : company.logoStorageId
@@ -214,6 +217,7 @@ export const getPublicCompanyProfile = query({
       city: company.city,
       description: company.description,
       services: services.map((item) => item.service),
+      serviceNames,
       serviceAreas: company.serviceAreas ?? [],
       yearsExperience: company.yearsExperience ?? null,
       foundedYear: company.foundedYear ?? null,

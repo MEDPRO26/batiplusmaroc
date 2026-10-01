@@ -1,16 +1,19 @@
 import type { FunctionReturnType } from "convex/server";
 import { Check, ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import type { api } from "@/convex/_generated/api";
 import { InviteCompanyButton } from "@/features/invitations/components/invite-company-button";
+import { serviceName } from "@/features/companies/lib/service-label";
 
 type PublicCompany = NonNullable<FunctionReturnType<typeof api.portfolio.index.getPublicCompanyProfile>>;
 
 export async function PublicCompanyProfile({ company }: { company: PublicCompany }) {
   const t = await getTranslations("publicCompany");
+  const tDirectory = await getTranslations("companyDirectory");
   const format = await getFormatter();
+  const locale = await getLocale();
   const initials = company.name
     .split(/\s+/)
     .slice(0, 2)
@@ -200,7 +203,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                         className="rounded-full bg-[#eef1f4] px-3 py-1.5 text-sm font-medium text-ink"
                         key={service}
                       >
-                        {t(`service.${service}`)}
+                        {serviceName(service, company.serviceNames, locale, key => tDirectory(`service.options.${key}`))}
                       </span>
                     ))}
                   </div>

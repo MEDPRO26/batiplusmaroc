@@ -8,34 +8,15 @@ import { consumeVerifiedPublicMediaIntent } from "../storage/publicMediaModel";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { buildCompanyDirectorySearchText } from "./directory";
 import { getCompanyOperationalStatus } from "./operationalStatus";
+import { existingServiceIds, listCatalog, validateNewServiceIds } from "../serviceCatalog";
+import { defaultServiceCatalog } from "../../lib/service-catalog-defaults";
 
-const companyServices = [
-  "houseConstruction",
-  "renovation",
-  "structural",
-  "finishing",
-  "architecture",
-  "interior",
-  "electrical",
-  "plumbing",
-  "joinery",
-  "pool",
-] as const;
+// Keep the original translation keys for browser sessions opened before rollout.
+// New clients use catalogServices; remove this compatibility field only later.
+const legacyServiceOptions = defaultServiceCatalog.map(service => service.slug);
+const companyServiceValidator = v.string();
 
-const companyServiceValidator = v.union(
-  v.literal("houseConstruction"),
-  v.literal("renovation"),
-  v.literal("structural"),
-  v.literal("finishing"),
-  v.literal("architecture"),
-  v.literal("interior"),
-  v.literal("electrical"),
-  v.literal("plumbing"),
-  v.literal("joinery"),
-  v.literal("pool"),
-);
-
-type CompanyService = (typeof companyServices)[number];
+type CompanyService = string;
 
 const companyServiceAreas = [
   "agadir",
@@ -110,6 +91,9 @@ const onboardingProfileValidator = v.union(
     publicSlug: v.union(v.string(), v.null()),
     services: v.array(companyServiceValidator),
     serviceOptions: v.array(companyServiceValidator),
+    catalogServices: v.array(v.object({ _id: v.id("serviceCatalog"), slug: v.string(), nameFr: v.string(), nameEn: v.string(), isActive: v.boolean(), sortOrder: v.number() })),
+    fallbackServices: v.array(v.object({ slug: v.string(), nameFr: v.string(), nameEn: v.string(), sortOrder: v.number() })),
+    selectedServiceIds: v.array(v.id("serviceCatalog")),
     onboardingStatus: v.union(v.literal("pending"), v.literal("completed")),
     verificationStatus: v.union(
       v.literal("draft"),
@@ -135,6 +119,8 @@ const profileManagerValidator = v.object({
   serviceAreas: v.array(companyServiceAreaValidator),
   services: v.array(companyServiceValidator),
   serviceOptions: v.array(companyServiceValidator),
+  catalogServices: v.array(v.object({ _id: v.id("serviceCatalog"), slug: v.string(), nameFr: v.string(), nameEn: v.string(), isActive: v.boolean(), sortOrder: v.number() })),
+  selectedServiceIds: v.array(v.id("serviceCatalog")),
   serviceAreaOptions: v.array(companyServiceAreaValidator),
   languageOptions: v.array(companyLanguageValidator),
   companySizeOptions: v.array(companySizeValidator),
@@ -231,7 +217,7 @@ function validateFoundedYear(value: number | undefined) {
 }
 
 function validateServices(services: readonly CompanyService[]) {
-  if (services.length < 1 || services.length > companyServices.length) {
+  if (services.length < 1 || services.length > 200) {
     throw new ConvexError("INVALID_SERVICES");
   }
   if (new Set(services).size !== services.length) {
@@ -340,13 +326,16 @@ export const getOnboardingProfile = query({
     const selectedServices = await ctx.db
       .query("companyServices")
       .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
-      .take(companyServices.length + 1);
-    if (selectedServices.length > companyServices.length) {
+      .take(201);
+    if (selectedServices.length > 200) {
       throw new ConvexError("INVALID_SERVICES");
     }
     if (new Set(selectedServices.map((item) => item.service)).size !== selectedServices.length) {
       throw new ConvexError("DUPLICATE_COMPANY_SERVICE");
     }
+    const catalog = await listCatalog(ctx, false);
+    const bySlug = new Map(catalog.map(item => [item.slug, item]));
+    const selectedServiceIds = selectedServices.map(row => row.serviceId ?? bySlug.get(row.service)?._id).filter((id): id is Id<"serviceCatalog"> => id !== undefined);
     const logoMedia = company.logoMediaId ? await ctx.db.get(company.logoMediaId) : null;
 
     return {
@@ -366,7 +355,10 @@ export const getOnboardingProfile = query({
           : null,
       publicSlug: company.slug ?? null,
       services: selectedServices.map((item) => item.service),
-      serviceOptions: [...companyServices],
+      serviceOptions: [...legacyServiceOptions],
+      catalogServices: catalog.filter(item => item.isActive).map(({ _id, slug, nameFr, nameEn, isActive, sortOrder }) => ({ _id, slug, nameFr, nameEn, isActive, sortOrder })),
+      fallbackServices: catalog.length === 0 ? [...defaultServiceCatalog] : [],
+      selectedServiceIds,
       onboardingStatus: company.onboardingStatus,
       verificationStatus: company.verificationStatus,
       accountRestricted: getCompanyOperationalStatus(company) === "suspended",
@@ -387,7 +379,7 @@ export const getProfileManager = query({
       ctx.db
         .query("companyServices")
         .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
-        .take(companyServices.length + 1),
+        .take(201),
       ctx.db
         .query("companyVerifications")
         .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
@@ -400,11 +392,14 @@ export const getProfileManager = query({
       resolveManagedImageUrl(ctx, company._id, company.coverMediaId, "companyCover"),
     ]);
 
-    if (selectedServices.length > companyServices.length) {
+    if (selectedServices.length > 200) {
       throw new ConvexError("DUPLICATE_COMPANY_SERVICE");
     }
 
     const services = selectedServices.map((item) => item.service);
+    const catalog = await listCatalog(ctx, false);
+    const bySlug = new Map(catalog.map(item => [item.slug, item]));
+    const selectedServiceIds = selectedServices.map(row => row.serviceId ?? bySlug.get(row.service)?._id).filter((id): id is Id<"serviceCatalog"> => id !== undefined);
     if (new Set(services).size !== services.length) {
       throw new ConvexError("DUPLICATE_COMPANY_SERVICE");
     }
@@ -426,7 +421,9 @@ export const getProfileManager = query({
       languages: company.languages ?? [],
       serviceAreas: company.serviceAreas ?? [],
       services,
-      serviceOptions: [...companyServices],
+      serviceOptions: [...legacyServiceOptions],
+      catalogServices: catalog.map(({ _id, slug, nameFr, nameEn, isActive, sortOrder }) => ({ _id, slug, nameFr, nameEn, isActive, sortOrder })),
+      selectedServiceIds,
       serviceAreaOptions: [...companyServiceAreas],
       languageOptions: [...companyLanguages],
       companySizeOptions: [...companySizes],
@@ -458,6 +455,7 @@ export const updatePublicProfile = mutation({
     companySize: v.optional(companySizeValidator),
     languages: v.optional(v.array(companyLanguageValidator)),
     services: v.optional(v.array(companyServiceValidator)),
+    serviceIds: v.optional(v.array(v.id("serviceCatalog"))),
     serviceAreas: v.optional(v.array(companyServiceAreaValidator)),
   },
   returns: v.object({ slug: v.string() }),
@@ -498,37 +496,32 @@ export const updatePublicProfile = mutation({
     const currentServices = await ctx.db
       .query("companyServices")
       .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
-      .take(companyServices.length * 2 + 1);
-    if (currentServices.length > companyServices.length * 2) {
+      .take(401);
+    if (currentServices.length > 400) {
       throw new ConvexError("DUPLICATE_COMPANY_SERVICE");
     }
 
-    const existingByService = new Map<CompanyService, (typeof currentServices)[number]>();
-    for (const row of currentServices) {
-      if (!existingByService.has(row.service)) existingByService.set(row.service, row);
-    }
-
-    const services = args.services === undefined
-      ? [...existingByService.keys()]
-      : validateServices(args.services);
-    if (args.services !== undefined) {
-      const selectedServices = new Set<CompanyService>(services);
-      const seenServices = new Set<CompanyService>();
+    if (args.services !== undefined && args.serviceIds !== undefined) throw new ConvexError("INVALID_SERVICES");
+    const requestedIds = args.serviceIds ?? (args.services === undefined ? undefined : await Promise.all(validateServices(args.services).map(async slug => {
+      const item = await ctx.db.query("serviceCatalog").withIndex("by_slug", q => q.eq("slug", slug)).unique();
+      if (!item) throw new ConvexError("INVALID_SERVICES");
+      return item._id;
+    })));
+    const selectedCatalog = requestedIds === undefined ? null : await validateNewServiceIds(ctx, requestedIds, await existingServiceIds(ctx, currentServices));
+    const services = selectedCatalog ? selectedCatalog.map(item => item.slug) : currentServices.map(item => item.service);
+    if (selectedCatalog) {
+      const selected = new Set(selectedCatalog.map(item => item._id));
       for (const row of currentServices) {
-        if (!selectedServices.has(row.service) || seenServices.has(row.service)) {
+        const currentCatalog = row.serviceId ? await ctx.db.get(row.serviceId) : await ctx.db.query("serviceCatalog").withIndex("by_slug", q => q.eq("slug", row.service)).unique();
+        if (currentCatalog && selected.has(currentCatalog._id)) {
+          if (!row.serviceId) await ctx.db.patch(row._id, { serviceId: currentCatalog._id, updatedAt: now });
+        } else if (currentCatalog) {
           await ctx.db.delete(row._id);
-        } else {
-          seenServices.add(row.service);
         }
       }
-      for (const service of services) {
-        if (!seenServices.has(service)) {
-          await ctx.db.insert("companyServices", {
-            companyId: company._id,
-            service,
-            createdAt: now,
-            updatedAt: now,
-          });
+      for (const item of selectedCatalog) {
+        if (!currentServices.some(row => row.serviceId === item._id || row.service === item.slug)) {
+          await ctx.db.insert("companyServices", { companyId: company._id, service: item.slug, serviceId: item._id, createdAt: now, updatedAt: now });
         }
       }
     }
@@ -551,6 +544,7 @@ export const updatePublicProfile = mutation({
       args.name !== undefined ||
       args.city !== undefined ||
       args.services !== undefined ||
+      args.serviceIds !== undefined ||
       args.serviceAreas !== undefined
     ) {
       patch.directorySearchText = buildCompanyDirectorySearchText({
@@ -573,7 +567,8 @@ export const completeOnboarding = mutation({
     phone: v.string(),
     city: v.string(),
     description: v.string(),
-    services: v.array(companyServiceValidator),
+    services: v.optional(v.array(companyServiceValidator)),
+    serviceIds: v.optional(v.array(v.id("serviceCatalog"))),
     yearsExperience: v.optional(v.number()),
     website: v.string(),
     logoUploadToken: v.optional(v.string()),
@@ -588,7 +583,17 @@ export const completeOnboarding = mutation({
     const description = normalizeText(args.description, 20, 1000, "INVALID_DESCRIPTION");
     const yearsExperience = validateYearsExperience(args.yearsExperience);
     const website = normalizeWebsite(args.website);
-    const services = validateServices(args.services);
+    if ((args.services === undefined) === (args.serviceIds === undefined)) throw new ConvexError("INVALID_SERVICES");
+    // Read the entire catalog's emptiness, not just the active list. Admin
+    // deactivation must never re-enable default choices through the fallback.
+    const catalogEmpty = await ctx.db.query("serviceCatalog").withIndex("by_slug").first() === null;
+    const fallbackServices = catalogEmpty && args.services !== undefined ? validateServices(args.services) : null;
+    if (fallbackServices?.some(slug => !defaultServiceCatalog.some(item => item.slug === slug))) throw new ConvexError("INVALID_SERVICES");
+    const requestedIds = fallbackServices !== null ? null : args.serviceIds ?? await Promise.all(validateServices(args.services ?? []).map(async slug => {
+      const row = await ctx.db.query("serviceCatalog").withIndex("by_slug", q => q.eq("slug", slug)).unique();
+      if (!row) throw new ConvexError("INVALID_SERVICES");
+      return row._id;
+    }));
     const now = Date.now();
     const slug = company.slug ?? await createUniqueCompanySlug(ctx, name, company._id);
 
@@ -599,27 +604,46 @@ export const completeOnboarding = mutation({
     const currentServices = await ctx.db
       .query("companyServices")
       .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
-      .take(companyServices.length + 1);
-    if (currentServices.length > companyServices.length) {
+      .take(201);
+    if (currentServices.length > 200) {
       throw new ConvexError("INVALID_SERVICES");
     }
     if (new Set(currentServices.map((item) => item.service)).size !== currentServices.length) {
       throw new ConvexError("DUPLICATE_COMPANY_SERVICE");
     }
-    const selected = new Set<CompanyService>(services);
-    const existing = new Map(currentServices.map((item) => [item.service, item]));
-
-    for (const item of currentServices) {
-      if (!selected.has(item.service)) await ctx.db.delete(item._id);
-    }
-    for (const service of services) {
-      if (!existing.has(service)) {
-        await ctx.db.insert("companyServices", {
-          companyId: company._id,
-          service,
-          createdAt: now,
-          updatedAt: now,
-        });
+    const catalogRows = requestedIds === null ? [] : await validateNewServiceIds(ctx, requestedIds, await existingServiceIds(ctx, currentServices));
+    const services = fallbackServices ?? catalogRows.map(row => row.slug);
+    if (fallbackServices !== null) {
+      const selectedSlugs = new Set(fallbackServices);
+      for (const row of currentServices) {
+        if (!row.serviceId && defaultServiceCatalog.some(item => item.slug === row.service) && !selectedSlugs.has(row.service)) {
+          await ctx.db.delete(row._id);
+        }
+      }
+      for (const service of fallbackServices) {
+        if (!currentServices.some(row => row.service === service)) {
+          await ctx.db.insert("companyServices", { companyId: company._id, service, createdAt: now, updatedAt: now });
+        }
+      }
+    } else {
+      const selected = new Set(catalogRows.map(row => row._id));
+      const existingById = new Map(currentServices.map(row => [row.serviceId, row]));
+      for (const item of currentServices) {
+        const catalogRow = item.serviceId ? await ctx.db.get(item.serviceId) : await ctx.db.query("serviceCatalog").withIndex("by_slug", q => q.eq("slug", item.service)).unique();
+        const mapped = catalogRow?._id;
+        if (mapped && selected.has(mapped)) {
+          if (!item.serviceId) await ctx.db.patch(item._id, { serviceId: mapped, updatedAt: now });
+        } else if (catalogRow?.isActive === true) {
+          await ctx.db.delete(item._id);
+        }
+      }
+      for (const row of catalogRows) {
+        if (!existingById.has(row._id) && !currentServices.some(item => item.service === row.slug)) {
+          await ctx.db.insert("companyServices", {
+            companyId: company._id, service: row.slug, serviceId: row._id,
+            createdAt: now, updatedAt: now,
+          });
+        }
       }
     }
 

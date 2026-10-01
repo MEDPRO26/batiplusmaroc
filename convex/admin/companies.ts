@@ -26,18 +26,7 @@ const verificationStatusValidator = v.union(
   v.literal("verified"),
   v.literal("rejected"),
 );
-const companyServiceValidator = v.union(
-  v.literal("houseConstruction"),
-  v.literal("renovation"),
-  v.literal("structural"),
-  v.literal("finishing"),
-  v.literal("architecture"),
-  v.literal("interior"),
-  v.literal("electrical"),
-  v.literal("plumbing"),
-  v.literal("joinery"),
-  v.literal("pool"),
-);
+const companyServiceValidator = v.string();
 const initialQuoteStatusValidator = v.union(
   v.literal("draft"),
   v.literal("submitted"),
@@ -321,7 +310,7 @@ export const listCompanies = query({
         ctx.db
           .query("companyServices")
           .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
-          .take(11),
+          .take(200),
         ctx.db
           .query("companyMembers")
           .withIndex("by_companyId_and_status", (q) =>
@@ -391,7 +380,7 @@ export const getCompanySummary = query({
     if (!company) return null;
 
     const [services, activeMembers, portfolioRows, activeDeals, completedDeals, dueDeals, resolvedLogo] = await Promise.all([
-      ctx.db.query("companyServices").withIndex("by_companyId", (q) => q.eq("companyId", company._id)).take(11),
+      ctx.db.query("companyServices").withIndex("by_companyId", (q) => q.eq("companyId", company._id)).take(200),
       ctx.db.query("companyMembers").withIndex("by_companyId_and_status", (q) => q.eq("companyId", company._id).eq("status", "active")).take(51),
       ctx.db.query("portfolioProjects").withIndex("by_companyId_and_status", (q) => q.eq("companyId", company._id).eq("status", "published")).order("desc").take(4),
       ctx.db.query("deals").withIndex("by_companyId_and_status", (q) => q.eq("companyId", company._id).eq("status", "active")).take(101),

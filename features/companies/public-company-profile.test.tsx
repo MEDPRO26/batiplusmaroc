@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
+const localeState = vi.hoisted(() => ({ locale: "en" }));
 
 vi.mock("next/image", () => ({
   default: ({ alt, src }: { alt: string; src: string }) => (
@@ -10,6 +11,7 @@ vi.mock("next/image", () => ({
 }));
 vi.mock("next-intl/server", () => ({
   getTranslations: async () => (key: string, values?: Record<string, unknown>) => key === "reviewBy" ? `reviewBy ${String(values?.name ?? "")}` : key,
+  getLocale: async () => localeState.locale,
   getFormatter: async () => ({ number: (value: number) => String(value), dateTime: () => "Sep 26, 2026" }),
 }));
 vi.mock("@/features/invitations/components/invite-company-button", () => ({
@@ -40,6 +42,7 @@ const company = {
   city: "Rabat",
   description: "Construction services for residential and commercial clients across Morocco.",
   services: ["structural", "finishing"],
+  serviceNames: [{ slug: "structural", nameFr: "Gros œuvre", nameEn: "Structural work" }, { slug: "finishing", nameFr: "Second œuvre", nameEn: "Finishing work" }],
   serviceAreas: ["rabat", "sale"],
   yearsExperience: 12,
   foundedYear: 2012,
@@ -68,6 +71,23 @@ const company = {
 } as const;
 
 describe("public company profile UX contract", () => {
+  test.each([
+    ["en", "Roofing", "Structural work"],
+    ["fr", "Toiture", "Gros œuvre"],
+  ] as const)("renders custom and seeded catalog names in %s", async (locale, customName, originalName) => {
+    localeState.locale = locale;
+    const profile = {
+      ...company,
+      services: ["roofing", "structural"],
+      serviceNames: [
+        { slug: "roofing", nameFr: "Toiture", nameEn: "Roofing" },
+        { slug: "structural", nameFr: "Gros œuvre", nameEn: "Structural work" },
+      ],
+    };
+    const html = renderToStaticMarkup(await PublicCompanyProfile({ company: profile as never }));
+    expect(html).toContain(customName);
+    expect(html).toContain(originalName);
+  });
   test("FR and EN expose the same publicCompany translation shape without contact leakage keys", () => {
     expect(objectShape(fr.publicCompany)).toEqual(objectShape(en.publicCompany));
     expect(en.publicCompany).not.toHaveProperty("publicPhone");

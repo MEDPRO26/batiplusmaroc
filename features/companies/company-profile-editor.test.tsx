@@ -8,6 +8,7 @@ import fr from "@/messages/fr.json";
 vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => "en",
   useFormatter: () => ({ number: String, dateTime: String }),
 }));
 vi.mock("convex/react", () => ({ useAction: vi.fn(), useMutation: vi.fn(), useQuery: vi.fn() }));
@@ -123,6 +124,8 @@ const profileFixture = {
   serviceAreas: ["rabat", "sale"],
   services: ["structural", "finishing"],
   serviceOptions: Object.keys(en.companyProfileManager.serviceOptions),
+  catalogServices: [],
+  selectedServiceIds: [],
   serviceAreaOptions: Object.keys(en.companyProfileManager.serviceAreaOptions),
   languageOptions: Object.keys(en.companyProfileManager.languages),
   companySizeOptions: Object.keys(en.companyProfileManager.companySize),

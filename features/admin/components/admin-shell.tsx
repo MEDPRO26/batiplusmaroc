@@ -13,6 +13,7 @@ export type AdminNavId =
   | "projects"
   | "siteVisits"
   | "companies"
+  | "services"
   | "messages"
   | "deals"
   | "reviews"
@@ -25,6 +26,7 @@ type AdminNavLabel =
   | "navProjects"
   | "navSiteVisits"
   | "navCompanies"
+  | "navServices"
   | "navMessages"
   | "navDeals"
   | "navReviews"
@@ -37,6 +39,7 @@ const ADMIN_NAVIGATION: { id: AdminNavId; label: AdminNavLabel; href?: AppRoute 
   { id: "projects", label: "navProjects", href: routes.adminProjects },
   { id: "siteVisits", label: "navSiteVisits", href: routes.adminSiteVisits },
   { id: "companies", label: "navCompanies", href: routes.adminCompanies },
+  { id: "services", label: "navServices", href: routes.adminServices },
   { id: "messages", label: "navMessages" },
   { id: "deals", label: "navDeals", href: routes.adminDeals },
   { id: "reviews", label: "navReviews", href: routes.adminReviews },
