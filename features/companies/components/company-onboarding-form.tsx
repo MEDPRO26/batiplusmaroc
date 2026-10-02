@@ -34,8 +34,9 @@ export function CompanyOnboardingForm() {
   const user = useQuery(api.users.currentUser);
   const profile = useQuery(
     api.companies.index.getOnboardingProfile,
-    user?.accountType === "company" ? {} : "skip",
+    user?.accountType === "company" && user.onboardingStatus !== "completed" ? {} : "skip",
   );
+  const onboardingCompleted = user?.onboardingStatus === "completed" || profile?.onboardingStatus === "completed";
   const finalizeOAuthSignup = useMutation(api.users.finalizeOAuthSignup);
   const completeOnboarding = useMutation(api.companies.index.completeOnboarding);
   const requestUpload = useAction(api.storage.r2.requestPublicMediaUpload);
@@ -55,12 +56,20 @@ export function CompanyOnboardingForm() {
   }, [logoPreviewUrl]);
 
   useEffect(() => {
-    if (!user || finalized.current) return;
-    if (user.accountType === "company") return;
+    if (user === null) {
+      router.replace(routes.signIn);
+      return;
+    }
+    if (!user) return;
+    if (user.accountType === "company") {
+      if (onboardingCompleted) router.replace(routes.companyDashboard);
+      return;
+    }
     if (user.accountType !== null) {
       router.replace(workspaceRouteForUser(user));
       return;
     }
+    if (finalized.current) return;
 
     const intent = consumeOAuthSignupIntent();
     if (!intent || intent.accountType !== "company") {
@@ -77,7 +86,7 @@ export function CompanyOnboardingForm() {
       finalized.current = false;
       setError(mapConvexFailure(caught, tUx).message);
     });
-  }, [finalizeOAuthSignup, router, tUx, user]);
+  }, [finalizeOAuthSignup, router, tUx, user, onboardingCompleted]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -168,7 +177,7 @@ export function CompanyOnboardingForm() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting) return;
+    if (submitting || onboardingCompleted) return;
     const form = event.currentTarget;
     setError(null);
     setFieldError(null);
@@ -226,7 +235,8 @@ export function CompanyOnboardingForm() {
     user === undefined ||
     profile === undefined ||
     profile === null ||
-    user?.accountType !== "company"
+    user?.accountType !== "company" ||
+    onboardingCompleted
   ) {
     return (
       <>

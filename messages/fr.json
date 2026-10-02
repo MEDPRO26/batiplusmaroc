@@ -1238,23 +1238,24 @@
     "companyVerification": {
       "eyebrow": "Vérification entreprise",
       "step": "Étape {current} sur {total}",
-      "title": "Vérifiez votre entreprise",
-      "lead": "Renseignez les informations légales utilisées pour examiner votre entreprise.",
+      "title": "Vérification de l’entreprise",
+      "lead": "Obtenez un badge vérifié sur votre profil après examen et approbation de votre dossier par Batiplus.",
       "titleLegal": "Confirmez l’identité de votre entreprise",
-      "leadLegal": "Nous les examinons avant d’afficher un badge vérifié. Cela prend généralement quelques minutes.",
+      "leadLegal": "Utilisez les informations figurant sur vos documents officiels.",
       "titleDocuments": "Ajoutez des justificatifs",
-      "leadDocuments": "Les documents sont facultatifs pour le moment. Vous pouvez envoyer le dossier sans fichier, puis en ajouter si nous vous le demandons.",
-      "rejectedLead": "Votre dernière demande doit être corrigée. Mettez à jour les informations ci-dessous puis renvoyez-la.",
+      "leadDocuments": "Ajoutez l’attestation de régularité fiscale obligatoire et les justificatifs facultatifs.",
+      "rejectedLead": "Consultez le motif ci-dessous, corrigez vos informations ou remplacez les documents concernés, puis renvoyez votre dossier pour examen.",
       "legalSection": "Informations légales",
       "legalSectionLead": "Utilisez les mêmes informations que sur vos documents officiels.",
       "iceHint": "15 chiffres, sans espaces.",
       "phoneHint": "Un numéro marocain que nous pourrons utiliser si une confirmation est nécessaire.",
       "documentsSection": "Documents",
-      "documentsOptional": "Ajoutez un fichier seulement s’il est déjà prêt.",
-      "documentHint": "PDF, JPG ou PNG · 10 Mo maximum par fichier. Ces documents restent privés.",
+      "documentsOptional": "L’attestation de régularité fiscale est obligatoire. Les autres documents sont facultatifs.",
+      "documentHint": "PDF, JPG, JPEG, PNG · Maximum 10 Mio par fichier.",
+      "required": "Obligatoire",
       "optional": "Facultatif",
       "chooseFile": "Choisir un fichier",
-      "replaceFile": "Remplacer",
+      "replaceFile": "Remplacer le fichier",
       "noFile": "Aucun fichier",
       "fields": {
         "legalName": "Raison sociale",
@@ -1265,7 +1266,8 @@
         "address": "Adresse"
       },
       "documents": {
-        "rc": "Document RC",
+        "tax_compliance": "Attestation de régularité fiscale",
+        "rc": "RC / Registre du commerce",
         "ice": "Document ICE",
         "insurance": "Assurance",
         "other": "Autre justificatif"
@@ -1281,20 +1283,44 @@
         "draft": "Brouillon",
         "pending": "Vérification en attente",
         "verified": "Entreprise vérifiée",
-        "rejected": "Demande à corriger"
+        "rejected": "Vérification rejetée"
       },
       "pending": {
-        "title": "Votre demande est en cours d’examen",
-        "lead": "Rien d’autre n’est demandé pour le moment. Le statut sera mis à jour dans votre espace."
+        "title": "Vérification en attente",
+        "lead": "Votre dossier est en cours d’examen.",
+        "noAction": "Aucune action n’est nécessaire pour le moment. Le statut sera mis à jour dans votre espace."
       },
       "verified": {
-        "title": "Votre entreprise est vérifiée",
-        "lead": "Votre profil affiche maintenant le statut vérifié sur Batiplus."
+        "title": "Entreprise vérifiée",
+        "lead": "Votre entreprise a été vérifiée par Batiplus.",
+        "badge": "Vérifiée"
       },
       "validation": {
+        "taxCertificate": "Ajoutez votre attestation de régularité fiscale avant de soumettre.",
         "required": "Veuillez renseigner ce champ.",
         "ice": "Saisissez un numéro ICE valide de 15 chiffres.",
-        "document": "Choisissez un fichier PDF, JPG ou PNG de 10 Mo maximum."
+        "document": "Choisissez un fichier PDF, JPG, JPEG ou PNG non vide de 10 Mio maximum."
+      },
+      "resubmit": "Renvoyer pour examen",
+      "privacy": "Vos documents sont privés. Seuls le propriétaire de votre entreprise et les administrateurs Batiplus autorisés peuvent y accéder.",
+      "staffLead": "Seul le propriétaire de votre entreprise peut gérer la vérification et accéder aux documents. Vous pouvez consulter le statut ici.",
+      "rejectionReason": "Motif du rejet",
+      "viewDocument": "Voir le document",
+      "uploading": "Envoi en cours…",
+      "uploaded": "Envoyé",
+      "awaitingFile": "En attente d’un fichier",
+      "chooseDocument": "Choisir un fichier pour {document}",
+      "replaceDocument": "Remplacer le fichier pour {document}",
+      "keepCurrentFile": "Conserver le fichier actuel",
+      "removeFile": "Retirer le fichier",
+      "rejected": {
+        "title": "Vérification rejetée",
+        "noReason": "Contactez Batiplus pour connaître les corrections à effectuer avant de renvoyer votre dossier."
+      },
+      "error": {
+        "title": "Impossible de charger la vérification",
+        "description": "Veuillez réessayer. Vos documents restent privés.",
+        "retry": "Réessayer"
       }
     }
   },
@@ -1584,6 +1610,7 @@
     "empty": "Aucune entreprise ne correspond à votre recherche.",
     "emptyLead": "Essayez un autre terme ou effacez les filtres pour voir plus d’entreprises.",
     "verified": "Vérifiée",
+    "unverified": "Entreprise non vérifiée",
     "years": "{count, plural, =0 {Nouvelle entreprise} one {# an d’expérience} other {# ans d’expérience}}",
     "viewProfile": "Voir le profil",
     "openInNewWindow": "Ouvrir le profil dans une nouvelle fenêtre",
@@ -1665,7 +1692,8 @@
     "saving": "Enregistrement…",
     "save": "Enregistrer les modifications",
     "badge": {
-      "verified": "Vérifiée"
+      "verified": "Vérifiée",
+      "unverified": "Non vérifiée"
     },
     "sidebar": {
       "stats": "Chiffres clés",
@@ -1778,6 +1806,7 @@
       "documentsLabel": "Documents envoyés",
       "noDocuments": "Aucun document de vérification n’a été envoyé.",
       "documentTypes": {
+        "tax_compliance": "Attestation de régularité fiscale",
         "rc": "Registre de commerce",
         "ice": "Document ICE",
         "insurance": "Assurance",
@@ -1813,6 +1842,7 @@
     "coverAlt": "Image de couverture de {name}",
     "logoAlt": "Logo de {name}",
     "verified": "Entreprise vérifiée",
+    "unverified": "Entreprise non vérifiée",
     "invite": "Inviter à un projet",
     "quote": "Demander un devis",
     "ctaSoon": "Cette action sera disponible prochainement.",
@@ -2917,6 +2947,7 @@
     },
     "noDocuments": "Aucun document n’a été ajouté.",
     "documentTypes": {
+      "tax_compliance": "Attestation de régularité fiscale",
       "rc": "RC",
       "ice": "ICE",
       "insurance": "Assurance",
@@ -2998,8 +3029,8 @@
       "deal_completed": "Contrat terminé",
       "review_received": "Avis reçu",
       "review_hidden": "Avis masqué",
-      "review_restored": "Avis restauré"
-      ,"operational_status_changed": "Statut opérationnel marketplace modifié"
+      "review_restored": "Avis restauré",
+      "operational_status_changed": "Statut opérationnel marketplace modifié"
     }
   },
   "adminProjects": {
@@ -4306,6 +4337,7 @@
         "INVALID_LEGAL_REPRESENTATIVE": "Saisissez le nom du représentant légal.",
         "INVALID_ADDRESS": "Saisissez une adresse valide.",
         "INVALID_VERIFICATION_DOCUMENT": "Choisissez un document PDF, JPG ou PNG valide de 10 Mo maximum.",
+        "TAX_COMPLIANCE_CERTIFICATE_REQUIRED": "Ajoutez votre attestation de régularité fiscale avant de soumettre.",
         "VERIFICATION_NOT_PENDING": "Seules les vérifications en attente peuvent être examinées.",
         "VERIFICATION_DOCUMENT_NOT_FOUND": "Ce document de vérification est introuvable.",
         "REJECTION_REASON_REQUIRED": "Saisissez un motif de refus d’au moins 3 caractères.",
@@ -4657,7 +4689,45 @@
       "noHistory": "Aucun historique de vérification.",
       "decision": "Décision",
       "confirmApproveLead": "Approuver la vérification de {company} ? L’entreprise apparaîtra comme vérifiée auprès des clients.",
-      "reasonHelp": "Expliquez ce que l’entreprise doit corriger. Le motif lui est communiqué."
+      "reasonHelp": "Expliquez ce que le propriétaire doit corriger (3 à 500 caractères). Ce motif est réservé aux examinateurs autorisés et au propriétaire de l’entreprise.",
+      "loading": "Chargement de la vérification…",
+      "saving": "Enregistrement…",
+      "required": "Obligatoire",
+      "optional": "Facultatif",
+      "requiredDocuments": "Document obligatoire",
+      "optionalDocuments": "Documents facultatifs",
+      "viewDocument": "Voir le document",
+      "notUploaded": "Aucun document ajouté.",
+      "notProvided": "Non renseigné",
+      "uploaded": "Ajouté le {date}",
+      "missingRequired": "L’approbation exige l’attestation de régularité fiscale. Le document obligatoire est manquant.",
+      "privateDocuments": "Ces documents sont privés et réservés au propriétaire de l’entreprise et aux administrateurs Batiplus autorisés.",
+      "confirmRejectLead": "Rejeter la vérification de {company} ? Le propriétaire de l’entreprise pourra consulter le motif et corriger son dossier.",
+      "unknownActor": "Auteur inconnu",
+      "actor": "Par {actor}",
+      "historyReason": "Motif du rejet : {reason}",
+      "state": {
+        "draft": "L’entreprise n’a pas encore soumis son dossier de vérification.",
+        "pending": "Examinez l’attestation obligatoire et les documents justificatifs avant de prendre une décision.",
+        "verified": "Cette entreprise a été vérifiée par Batiplus. Les détails de l’approbation figurent dans l’historique.",
+        "rejected": "En attente de la correction et du renvoi des documents par le propriétaire de l’entreprise."
+      },
+      "documentTypes": {
+        "tax_compliance": "Attestation de régularité fiscale",
+        "rc": "RC / Registre de commerce",
+        "ice": "ICE",
+        "insurance": "Assurance",
+        "other": "Autre document justificatif"
+      },
+      "actions": {
+        "document_uploaded": "Document ajouté",
+        "document_replaced": "Document remplacé",
+        "verification_submitted": "Vérification soumise",
+        "verification_resubmitted": "Vérification renvoyée",
+        "verification_rejected": "Vérification rejetée",
+        "verification_approved": "Vérification approuvée",
+        "status_changed": "Statut modifié"
+      }
     },
     "projects": {
       "title": "Projets et Deals",

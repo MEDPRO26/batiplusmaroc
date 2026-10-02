@@ -28,11 +28,11 @@ export function MobileNav({ inverted = false, projectCta }: { inverted?: boolean
       <button
         aria-controls="mobile-menu"
         aria-expanded={open}
-        className={`flex min-h-11 items-center gap-3 border-0 bg-transparent font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand ${inverted ? "text-white" : "text-ink"}`}
+        className={`flex min-h-11 min-w-11 items-center justify-center gap-3 border-0 sm:min-w-0 bg-transparent font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand ${inverted ? "text-white" : "text-ink"}`}
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
-        <span>{open ? tCommon("close") : tCommon("menu")}</span>
+        <span className="sr-only sm:not-sr-only">{open ? tCommon("close") : tCommon("menu")}</span>
         <span className="grid gap-1.5" aria-hidden="true">
           <i className="block h-px w-[22px] bg-current" />
           <i className="block h-px w-[22px] bg-current" />

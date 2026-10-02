@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useState } from "react";
+import { VerificationDocumentDownload } from "@/features/companies/components/verification-document-download";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
@@ -418,14 +419,12 @@ function ReviewDrawer({
                           </span>
                         </span>
                         {document.downloadUrl ? (
-                          <a
+                          <VerificationDocumentDownload
                             className={`inline-flex min-h-10 items-center rounded-full border border-[#e6e9ee] px-3 text-sm font-semibold ${ADMIN_PRESS}`}
-                            href={document.downloadUrl}
-                            rel="noopener noreferrer"
-                            target="_blank"
-                          >
-                            {t("openDocument")}
-                          </a>
+                            url={document.downloadUrl}
+                            fileName={document.fileName}
+                            label={t("openDocument")}
+                          />
                         ) : (
                           <span className="text-xs text-[#8b919a]">
                             {t("documentUnavailable")}
@@ -602,6 +601,7 @@ function documentTypeLabel(
   t: ReturnType<typeof useTranslations<"adminVerification">>,
   type: DocumentType,
 ) {
+  if (type === "tax_compliance") return t("documentTypes.tax_compliance");
   if (type === "rc") return t("documentTypes.rc");
   if (type === "ice") return t("documentTypes.ice");
   if (type === "insurance") return t("documentTypes.insurance");

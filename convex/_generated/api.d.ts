@@ -30,6 +30,7 @@ import type * as companies_access from "../companies/access.js";
 import type * as companies_directory from "../companies/directory.js";
 import type * as companies_index from "../companies/index.js";
 import type * as companies_operationalStatus from "../companies/operationalStatus.js";
+import type * as companyVerification_httpAccess from "../companyVerification/httpAccess.js";
 import type * as companyVerification_index from "../companyVerification/index.js";
 import type * as deals_commissionSummary from "../deals/commissionSummary.js";
 import type * as deals_company from "../deals/company.js";
@@ -105,6 +106,7 @@ import type * as storage_publicMediaModel from "../storage/publicMediaModel.js";
 import type * as storage_publicUrl from "../storage/publicUrl.js";
 import type * as storage_r2 from "../storage/r2.js";
 import type * as storage_r2Client from "../storage/r2Client.js";
+import type * as storage_verificationPrivacy from "../storage/verificationPrivacy.js";
 import type * as users from "../users.js";
 
 import type {
@@ -136,6 +138,7 @@ declare const fullApi: ApiFromModules<{
   "companies/directory": typeof companies_directory;
   "companies/index": typeof companies_index;
   "companies/operationalStatus": typeof companies_operationalStatus;
+  "companyVerification/httpAccess": typeof companyVerification_httpAccess;
   "companyVerification/index": typeof companyVerification_index;
   "deals/commissionSummary": typeof deals_commissionSummary;
   "deals/company": typeof deals_company;
@@ -211,6 +214,7 @@ declare const fullApi: ApiFromModules<{
   "storage/publicUrl": typeof storage_publicUrl;
   "storage/r2": typeof storage_r2;
   "storage/r2Client": typeof storage_r2Client;
+  "storage/verificationPrivacy": typeof storage_verificationPrivacy;
   users: typeof users;
 }>;
 

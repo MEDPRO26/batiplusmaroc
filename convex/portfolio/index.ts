@@ -1,3 +1,4 @@
+import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
 import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
@@ -87,7 +88,7 @@ async function resolveMediaUrl(
     const media = await ctx.db.get(reference.publicMediaId);
     return media ? getPublicMediaUrl(media.objectKey) : null;
   }
-  return reference.storageId ? await ctx.storage.getUrl(reference.storageId) : null;
+  return reference.storageId ? await getNonVerificationStorageUrl(ctx, reference.storageId) : null;
 }
 
 async function resolveProject(ctx: QueryCtx, project: {
@@ -182,7 +183,7 @@ export const getPublicCompanyProfile = query({
     const logoUrl = logoMedia && logoMedia.companyId === company._id && logoMedia.purpose === "companyLogo"
       ? getPublicMediaUrl(logoMedia.objectKey)
       : company.logoStorageId
-        ? await ctx.storage.getUrl(company.logoStorageId)
+        ? await getNonVerificationStorageUrl(ctx, company.logoStorageId)
         : null;
     const coverImageUrl = coverMedia && coverMedia.companyId === company._id && coverMedia.purpose === "companyCover"
       ? getPublicMediaUrl(coverMedia.objectKey)

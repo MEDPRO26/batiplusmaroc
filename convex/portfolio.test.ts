@@ -123,7 +123,7 @@ const fields = {
 
 describe("public company profile", () => {
   test("loads only completed companies and exposes verified badge accurately", async () => {
-    for (const verificationStatus of ["verified", "pending", "rejected"] as const) {
+    for (const verificationStatus of ["draft", "verified", "pending", "rejected"] as const) {
       const t = convexTest(schema, modules);
       const slug = `profile-${verificationStatus}`;
       await seedCompany(t, { slug, verificationStatus });

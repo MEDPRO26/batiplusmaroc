@@ -1,7 +1,8 @@
 "use client";
 
+import { VerifiedBadge } from "./verified-badge";
 import { useQuery } from "convex/react";
-import { Check, ExternalLink, Loader2, MapPin, Pencil, Plus } from "lucide-react";
+import { ExternalLink, Loader2, MapPin, Pencil, Plus } from "lucide-react";
 import Image from "next/image";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
@@ -84,14 +85,7 @@ export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
               </SidebarSection>
 
               <SidebarSection title={t("sidebar.verifications")}>
-                <p className="m-0 flex items-center gap-2 text-sm text-ink">
-                  {isVerified ? (
-                    <Check aria-hidden className="size-4 text-brand" strokeWidth={2.4} />
-                  ) : (
-                    <span aria-hidden className="grid size-4 place-items-center rounded-full border border-[#c5c8cb] text-[0.6rem] text-muted">!</span>
-                  )}
-                  <span className="font-medium">{t(`verificationStatus.${profile.legal.verificationStatus}`)}</span>
-                </p>
+                <div>{isVerified ? <VerifiedBadge label={t("badge.verified")} isVerified={isVerified} /> : <span className="text-sm text-muted">{t(`verificationStatus.${profile.legal.verificationStatus}`)}</span>}</div>
                 <Link className="mt-2 inline-flex min-h-9 items-center text-sm font-semibold text-brand hover:underline" href={{ pathname: routes.companySettings, query: { section: "verification" } }}>
                   {isVerified ? t("profileView.verificationDetails") : t("sidebar.verifyAction")}
                 </Link>
@@ -168,12 +162,7 @@ function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVer
           <div className="min-w-0 pt-3 sm:pt-4">
             <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="m-0 text-[1.5rem] leading-8 font-semibold tracking-[-0.03em] text-ink sm:text-[1.9rem] sm:leading-10">{profile.name}</h1>
-              {isVerified ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand">
-                  <Check aria-hidden className="size-3.5" strokeWidth={2.4} />
-                  {t("badge.verified")}
-                </span>
-              ) : null}
+              <VerifiedBadge label={t("badge.verified")} isVerified={isVerified} />
               <IdentityEditor profile={profile} />
             </div>
             <p className="mt-1.5 mb-0 flex items-center gap-1.5 text-sm text-muted">

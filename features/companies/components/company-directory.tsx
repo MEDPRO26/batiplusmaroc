@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import { api } from "@/convex/_generated/api";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type AppLocale } from "@/i18n/routing";
+import { VerifiedBadge } from "./verified-badge";
 import { CompanyDiscoveryCardSkeleton } from "./company-directory-skeleton";
 import { InviteCompanyButton } from "@/features/invitations/components/invite-company-button";
 import { catalogServiceName, serviceName } from "@/features/companies/lib/service-label";
@@ -349,7 +350,7 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="m-0 text-xl leading-7 font-semibold tracking-[-0.03em] text-ink sm:text-2xl" id="company-profile-sheet-title">{profile.name}</h2>
-                      {profile.isVerified ? <span className="inline-flex items-center rounded-full bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand">{tProfile("verified")}</span> : null}
+                      <VerifiedBadge label={tProfile("verified")} isVerified={profile.isVerified} />
                     </div>
                     <p className="mt-1.5 mb-0 text-sm leading-5 text-muted">{profile.city}</p>
                     <p className="mt-1 mb-0 text-sm font-semibold text-ink">{profile.rating === null ? tProfile("reviewsNone") : <><span className="text-amber-600">★ {profile.rating.toFixed(1)}</span> <span className="font-normal text-muted">{tProfile("reviewCount", { count: profile.reviewCount })}</span></>}</p>
@@ -472,12 +473,7 @@ function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onVie
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <h2 className="m-0 text-[1.05rem] leading-6 font-semibold tracking-[-0.025em] text-ink sm:text-[1.125rem]">{company.name}</h2>
-              {company.isVerified ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[0.7rem] font-semibold tracking-[0.01em] text-brand">
-                  <VerifiedIcon />
-                  {t("verified")}
-                </span>
-              ) : null}
+              <VerifiedBadge label={t("verified")} isVerified={company.isVerified} />
             </div>
             {meta.length > 0 ? <p className="mt-1 mb-0 text-sm leading-5 text-muted">{meta.join(" · ")}</p> : null}
             {company.rating !== null ? <p className="mt-1 mb-0 text-xs font-semibold text-amber-700">★ {company.rating.toFixed(1)} <span className="font-normal text-muted">{t("reviewCount", { count: company.reviewCount })}</span></p> : null}
@@ -544,10 +540,3 @@ function CompanyResultsSkeleton({ label, compact = false }: { label: string; com
 function SearchIcon({ staticPosition = false }: { staticPosition?: boolean }) { return <svg aria-hidden className={staticPosition ? "size-5" : "pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted"} fill="none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" /><path d="m16 16 4 4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" /></svg>; }
 function FilterIcon() { return <svg aria-hidden className="size-4" fill="none" viewBox="0 0 16 16"><path d="M2 4h12M4 8h8m-6 4h4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" /></svg>; }
 function CloseIcon() { return <svg aria-hidden className="size-4" fill="none" viewBox="0 0 16 16"><path d="m4 4 8 8m0-8-8 8" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" /></svg>; }
-function VerifiedIcon() {
-  return (
-    <svg aria-hidden className="size-3" fill="none" viewBox="0 0 12 12">
-      <path d="M2.5 6.2 4.7 8.4 9.5 3.6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" />
-    </svg>
-  );
-}

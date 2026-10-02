@@ -1,3 +1,4 @@
+import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
@@ -65,6 +66,7 @@ const companySizeValidator = v.union(
 );
 
 const verificationDocumentTypeValidator = v.union(
+  v.literal("tax_compliance"),
   v.literal("rc"),
   v.literal("ice"),
   v.literal("insurance"),
@@ -351,7 +353,7 @@ export const getOnboardingProfile = query({
       logoUrl: logoMedia
         ? getPublicMediaUrl(logoMedia.objectKey)
         : company.logoStorageId
-          ? await ctx.storage.getUrl(company.logoStorageId)
+          ? await getNonVerificationStorageUrl(ctx, company.logoStorageId)
           : null,
       publicSlug: company.slug ?? null,
       services: selectedServices.map((item) => item.service),
@@ -405,7 +407,7 @@ export const getProfileManager = query({
     }
 
     const legacyLogoUrl = !logoUrl && company.logoStorageId
-      ? await ctx.storage.getUrl(company.logoStorageId)
+      ? await getNonVerificationStorageUrl(ctx, company.logoStorageId)
       : null;
 
     return {

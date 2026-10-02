@@ -123,6 +123,52 @@ const validQuote = {
 };
 
 describe("direct company invitation authorization and creation", () => {
+  test.each(["draft", "pending", "rejected", "verified"] as const)("invitation DTO exposes only the live safe badge flag for %s", async (verificationStatus) => {
+    const state = await setup();
+    const invitation = await asUser(state.t, state.clientId).mutation(api.invitations.index.inviteCompanyToProject, {
+      companyId: state.company.companyId, projectId: state.projectId,
+    });
+    await asUser(state.t, state.company.userId).mutation(api.invitations.index.acceptInvitation, { invitationId: invitation.invitationId });
+    await asUser(state.t, state.company.userId).mutation(api.quotes.index.submitInitialQuote, { projectId: state.projectId, ...validQuote });
+    // Previously invited Companies can change status; display must use current source of truth.
+    const storageId = await state.t.run(ctx => ctx.storage.store(new Blob(["private certificate"], { type: "application/pdf" })));
+    await state.t.run(async ctx => {
+      await ctx.db.patch(state.company.companyId, { verificationStatus });
+      const verificationId = await ctx.db.insert("companyVerifications", {
+        companyId: state.company.companyId,
+        legalName: "Private legal name", ice: "private-ice", rcNumber: "private-rc",
+        legalRepresentative: "Private representative", phone: "private-phone", address: "Private address",
+        submittedAt: 1, createdAt: 1, updatedAt: 1,
+      });
+      await ctx.db.insert("companyVerificationDocuments", {
+        companyId: state.company.companyId, verificationId, documentType: "tax_compliance", storageId,
+        fileName: "sensitive-tax.pdf", contentType: "application/pdf", size: 19, createdAt: 1, updatedAt: 1,
+      });
+      await ctx.db.insert("companyVerificationHistory", {
+        companyId: state.company.companyId, action: "verification_rejected", oldStatus: "pending", newStatus: "rejected",
+        changedBy: state.company.userId, changedAt: 1, rejectionReason: "Private history reason",
+      });
+    });
+    const rows = await asUser(state.t, state.clientId).query(api.invitations.index.listProjectInvitations, { projectId: state.projectId });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ companyId: state.company.companyId, isVerified: verificationStatus === "verified" });
+    expect(JSON.stringify(rows)).not.toMatch(/storageId|sensitive-tax|private-|Private |rejectionReason|verificationHistory|verificationStatus|documents|convex\.site/);
+    expect(JSON.stringify(rows)).not.toContain(storageId);
+    const storedCompany = await state.t.run(ctx => ctx.db.get(state.company.companyId));
+    const profile = await state.t.query(api.portfolio.index.getPublicCompanyProfile, { slug: storedCompany!.slug! });
+    const directory = await state.t.query(api.companies.directory.listPublicCompanies, { verifiedOnly: false, sort: "newest", paginationOpts: { numItems: 20, cursor: null } });
+    const proposals = await asUser(state.t, state.clientId).query(api.quotes.index.listReceivedInitialQuotes, { projectId: state.projectId });
+    expect(profile?.isVerified).toBe(verificationStatus === "verified");
+    expect(directory.page.find(row => row.id === state.company.companyId)?.isVerified).toBe(verificationStatus === "verified");
+    expect(proposals[0].company.isVerified).toBe(verificationStatus === "verified");
+    for (const dto of [profile, directory, proposals]) {
+      expect(JSON.stringify(dto)).not.toMatch(/storageId|sensitive-tax|private-|Private |rejectionReason|verificationHistory|verificationStatus|documents|convex\.site/);
+      expect(JSON.stringify(dto)).not.toContain(storageId);
+    }
+    const companyRows = await asUser(state.t, state.company.userId).query(api.invitations.index.listMyCompanyInvitations, {});
+    expect(companyRows[0].isVerified).toBe(verificationStatus === "verified");
+  });
+
   test("blocks a suspended Company from accepting while preserving decline", async () => {
     const accepting = await setup();
     const invitation = await asUser(accepting.t, accepting.clientId).mutation(

@@ -1,3 +1,4 @@
+import { verificationDocumentUrl } from "../companyVerification/httpAccess";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { createNotificationForActiveCompanyMembers } from "../notifications/model";
@@ -17,6 +18,7 @@ const historyStatusValidator = v.union(
 );
 
 const documentTypeValidator = v.union(
+  v.literal("tax_compliance"),
   v.literal("rc"),
   v.literal("ice"),
   v.literal("insurance"),
@@ -41,10 +43,16 @@ const documentValidator = v.object({
   fileName: v.string(),
   contentType: v.string(),
   size: v.number(),
+  uploadedAt: v.number(),
   downloadUrl: v.union(v.string(), v.null()),
 });
 
 const historyItemValidator = v.object({
+  action: v.optional(v.union(
+    v.literal("document_uploaded"), v.literal("document_replaced"),
+    v.literal("verification_submitted"), v.literal("verification_resubmitted"),
+    v.literal("verification_rejected"), v.literal("verification_approved"),
+  )),
   historyId: v.id("companyVerificationHistory"),
   oldStatus: historyStatusValidator,
   newStatus: historyStatusValidator,
@@ -182,6 +190,7 @@ export const getCompanyVerificationReview = query({
     for (const row of historyRows) {
       const actor = await ctx.db.get(row.changedBy);
       history.push({
+        ...(row.action ? { action: row.action } : {}),
         historyId: row._id,
         oldStatus: row.oldStatus,
         newStatus: row.newStatus,
@@ -204,7 +213,8 @@ export const getCompanyVerificationReview = query({
         fileName: document.fileName,
         contentType: document.contentType,
         size: document.size,
-        downloadUrl: await ctx.storage.getUrl(document.storageId),
+        uploadedAt: document.updatedAt,
+        downloadUrl: verificationDocumentUrl(document._id),
       });
     }
 
@@ -240,7 +250,7 @@ export const getVerificationDocumentUrl = query({
     await requireAdminUser(ctx);
     const document = await ctx.db.get(args.documentId);
     if (!document) throw new ConvexError("VERIFICATION_DOCUMENT_NOT_FOUND");
-    return await ctx.storage.getUrl(document.storageId);
+    return verificationDocumentUrl(document._id);
   },
 });
 
@@ -260,10 +270,15 @@ export const approveCompanyVerification = mutation({
       .unique();
     if (!verification) throw new ConvexError("VERIFICATION_RECORD_NOT_FOUND");
 
+    const tax = await ctx.db.query("companyVerificationDocuments")
+      .withIndex("by_companyId_and_documentType", q => q.eq("companyId", company._id).eq("documentType", "tax_compliance")).unique();
+    if (!tax || !(await ctx.db.system.get("_storage", tax.storageId))) throw new ConvexError("TAX_COMPLIANCE_CERTIFICATE_REQUIRED");
+
     const now = Date.now();
     await ctx.db.patch(company._id, { verificationStatus: "verified", updatedAt: now });
     const historyId = await ctx.db.insert("companyVerificationHistory", {
       companyId: company._id,
+      action: "verification_approved",
       oldStatus: "pending",
       newStatus: "verified",
       changedBy: admin._id,
@@ -306,6 +321,7 @@ export const rejectCompanyVerification = mutation({
     await ctx.db.patch(company._id, { verificationStatus: "rejected", updatedAt: now });
     const historyId = await ctx.db.insert("companyVerificationHistory", {
       companyId: company._id,
+      action: "verification_rejected",
       oldStatus: "pending",
       newStatus: "rejected",
       changedBy: admin._id,

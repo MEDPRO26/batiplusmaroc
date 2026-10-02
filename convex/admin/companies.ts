@@ -1,3 +1,4 @@
+import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
 import {
   paginationOptsValidator,
   paginationResultValidator,
@@ -351,7 +352,7 @@ async function logoUrl(ctx: QueryCtx, company: Doc<"companies">) {
       return getPublicMediaUrl(media.objectKey);
     }
   }
-  return company.logoStorageId ? await ctx.storage.getUrl(company.logoStorageId) : null;
+  return company.logoStorageId ? await getNonVerificationStorageUrl(ctx, company.logoStorageId) : null;
 }
 
 async function portfolioCoverUrl(ctx: QueryCtx, project: Doc<"portfolioProjects">) {
@@ -367,7 +368,7 @@ async function portfolioCoverUrl(ctx: QueryCtx, project: Doc<"portfolioProjects"
     }
   }
   return project.coverImageStorageId
-    ? await ctx.storage.getUrl(project.coverImageStorageId)
+    ? await getNonVerificationStorageUrl(ctx, project.coverImageStorageId)
     : null;
 }
 

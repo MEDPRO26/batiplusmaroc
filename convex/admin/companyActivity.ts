@@ -223,6 +223,7 @@ function normalizeMarketplaceEventType(
 function normalizeVerificationEventType(
   row: Doc<"companyVerificationHistory">,
 ): TimelineEventType | null {
+  if (row.action === "document_uploaded" || row.action === "document_replaced") return null;
   if (row.newStatus === "pending") return "verification_submitted";
   if (row.newStatus === "verified") return "verification_approved";
   if (row.newStatus === "rejected") return "verification_rejected";

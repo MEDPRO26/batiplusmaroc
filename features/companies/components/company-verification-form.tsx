@@ -1,432 +1,224 @@
 "use client";
 
+import { useAuthToken } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import { Clock3, FileCheck2, FileText, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { api } from "@/convex/_generated/api";
-import { OnboardingChrome } from "@/features/auth/components/onboarding-chrome";
+import type { Id } from "@/convex/_generated/dataModel";
+import { BrandLogo } from "@/components/layout/brand-logo";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { FriendlyAlert } from "@/features/shared/components/error-state";
 import { FormSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { mapConvexFailure } from "@/lib/errors";
+import { saveVerificationBlob, uploadVerificationFile } from "@/lib/files/company-verification";
 import { focusFirstInvalidField } from "@/lib/forms/submit";
 import { routes } from "@/lib/routes";
-import { joinClassNames } from "@/lib/utils";
+import { VerificationDocumentDownload } from "./verification-document-download";
+import { VerifiedBadge, VerifiedGlyph, type VerificationStatus } from "./verified-badge";
 
-const documentTypes = ["rc", "ice", "insurance", "other"] as const;
+const documentTypes = ["tax_compliance", "rc", "ice", "insurance", "other"] as const;
 type DocumentType = (typeof documentTypes)[number];
-const allowedMimeTypes = new Set(["application/pdf", "image/jpeg", "image/png"]);
-const maxDocumentSize = 10 * 1024 * 1024;
-const totalSteps = 2;
-type Step = 1 | 2;
+type Verification = FunctionReturnType<typeof api.companyVerification.index.getVerificationForm>;
+type UploadedFile = { file: File; storageId: Id<"_storage">; uploadToken: string; uploadedAt: number };
+type FileState = { file: File; uploading: boolean; uploaded?: UploadedFile; error?: string };
+const primaryClass = "inline-flex min-h-12 items-center justify-center rounded-[10px] bg-brand px-5 text-[0.95rem] font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-brand/40 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand";
+const actionClass = "inline-flex min-h-10 items-center justify-center rounded-lg border border-brand-border px-3 text-sm font-semibold text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
 
 export function CompanyVerificationForm() {
   const t = useTranslations("auth.companyVerification");
   const tUx = useTranslations("ux");
   const router = useRouter();
-  const formId = useId();
-  const formRef = useRef<HTMLFormElement>(null);
   const user = useQuery(api.users.currentUser);
   const canLoad = user?.accountType === "company" && user.onboardingStatus === "completed";
-  const verification = useQuery(api.companyVerification.index.getVerificationForm, canLoad ? {} : "skip");
-  const generateUploadUrl = useMutation(api.companyVerification.index.generateDocumentUploadUrl);
-  const submitVerification = useMutation(api.companyVerification.index.submitVerification);
-  const [step, setStep] = useState<Step>(1);
-  const [error, setError] = useState<string | null>(null);
-  const [fieldError, setFieldError] = useState<{ name: string; message: string } | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [fileNames, setFileNames] = useState<Partial<Record<DocumentType, string>>>({});
-
+  const access = useQuery(api.companyVerification.index.getVerificationStatus, canLoad ? {} : "skip");
+  // Staff never subscribe to an owner-only DTO, even though the backend also guards it.
+  const verification = useQuery(api.companyVerification.index.getVerificationForm, canLoad && access?.canManageDocuments ? {} : "skip");
   useEffect(() => {
     if (user === null) router.replace(routes.signIn);
-    else if (user && !(user.accountType === "company" && user.onboardingStatus === "completed")) {
-      router.replace(workspaceRouteForUser(user));
-    }
-  }, [router, user]);
+    else if (user && !canLoad) router.replace(workspaceRouteForUser(user));
+  }, [router, user, canLoad]);
 
-  useEffect(() => {
-    if (!verification) return;
-    window.scrollTo({ top: 0, behavior: "auto" });
-    const form = formRef.current;
-    const first = form?.querySelector<HTMLElement>(`[data-step="${step}"] input, [data-step="${step}"] textarea`);
-    first?.focus();
-  }, [step, verification]);
+  return <>
+    <VerificationHeader />
+    <section className="mx-auto w-full min-w-0 max-w-[760px] flex-1 px-5 py-10 sm:px-6 sm:py-14">
+      {!canLoad || !access || (access.canManageDocuments && !verification)
+        ? <FormSkeleton label={tUx("loading.form")} />
+        : !access.canManageDocuments
+          ? <VerificationStatusScreen status={access.status} staff />
+          : <VerificationEditor key={`${verification!.status}:${verification!.submittedAt}`} verification={verification!} />}
+      <p className="mt-7 flex items-start justify-center gap-2 text-center text-xs leading-5 text-muted">
+        <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />{t("privacy")}
+      </p>
+    </section>
+  </>;
+}
 
-  const chrome = (
-    <OnboardingChrome
-      progressLabel={t("step", { current: step, total: totalSteps })}
-      progressValue={verification?.status === "pending" || verification?.status === "verified" ? 100 : Math.round((step / totalSteps) * 100)}
-    />
-  );
+function VerificationHeader() {
+  const tBrand = useTranslations("brand");
+  const t = useTranslations("auth.companyVerification");
+  return <header className="border-b border-brand-border bg-white">
+    <div className="mx-auto flex min-h-16 max-w-[1120px] flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-8">
+      <Link href={routes.home} aria-label={tBrand("homeAria")} className="text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"><BrandLogo className="text-[1.4rem]" name={tBrand("name")} /></Link>
+      <div className="flex flex-wrap items-center gap-4"><LanguageSwitcher /><Link className="text-sm font-medium text-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand" href={routes.companyDashboard}>{t("backToWorkspace")}</Link></div>
+    </div>
+  </header>;
+}
 
-  if (!canLoad || verification === undefined) {
-    return (
-      <>
-        {chrome}
-        <section className="mx-auto flex w-full max-w-[560px] flex-1 flex-col px-5 py-10 sm:px-6 sm:py-14">
-          <FormSkeleton label={tUx("loading.form")} />
-        </section>
-      </>
-    );
+export function VerificationStatusScreen({ status, staff = false }: { status: VerificationStatus; staff?: boolean }) {
+  const t = useTranslations("auth.companyVerification");
+  const verified = status === "verified";
+  return <div className="mx-auto max-w-[560px] rounded-2xl border border-brand-border bg-white p-6 text-center sm:p-10">
+    {verified ? <VerifiedGlyph className="mx-auto size-20" /> : <div className="mx-auto grid size-16 place-items-center rounded-full bg-brand-soft text-brand"><Clock3 aria-hidden="true" className="size-8" /></div>}
+    <div className="mt-5"><StatusBadge status={status} /></div>
+    <h1 className="mt-4 text-[1.75rem] font-semibold tracking-[-0.03em] text-ink sm:text-[2rem]">{t(status === "pending" || verified ? `${status}.title` : `status.${status}`)}</h1>
+    <p className="mt-3 text-[0.98rem] leading-6 text-muted">{t(status === "pending" || verified ? `${status}.lead` : "staffLead")}</p>
+    {status === "pending" ? <p className="mt-3 text-sm leading-6 text-muted">{t("pending.noAction")}</p> : null}
+    {staff && (status === "pending" || verified) ? <p className="mt-3 text-sm leading-6 text-muted">{t("staffLead")}</p> : null}
+    <Link className={`${primaryClass} mt-8 w-full`} href={routes.companyDashboard}>{t("backToWorkspace")}</Link>
+  </div>;
+}
+
+function StatusBadge({ status }: { status: VerificationStatus }) {
+  const t = useTranslations("auth.companyVerification");
+  if (status === "verified") return <VerifiedBadge label={t("verified.badge")} verificationStatus={status} />;
+  return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${status === "rejected" ? "bg-red-50 text-red-800" : "bg-brand-soft text-brand"}`}>{t(`status.${status}`)}</span>;
+}
+
+function ExistingDocumentDownload({ document }: { document: Verification["documents"][number] }) {
+  const t = useTranslations("auth.companyVerification");
+  const url = useQuery(api.companyVerification.index.getDocumentDownloadUrl, { documentId: document.documentId });
+  return url ? <VerificationDocumentDownload className={actionClass} url={url} fileName={document.fileName} label={t("viewDocument")} /> : null;
+}
+
+function VerificationEditor({ verification }: { verification: Verification }) {
+  const t = useTranslations("auth.companyVerification");
+  const tUx = useTranslations("ux");
+  const sessionToken = useAuthToken();
+  const generateUpload = useMutation(api.companyVerification.index.generateDocumentUploadUrl);
+  const submit = useMutation(api.companyVerification.index.submitVerification);
+  const formId = useId();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [files, setFiles] = useState<Partial<Record<DocumentType, FileState>>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState<{ status: VerificationStatus; submittedAt: number | null } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<{ name: string; message: string } | null>(null);
+  const uploading = Object.values(files).some(file => file?.uploading);
+  const uploadFailed = Object.values(files).some(file => file?.error);
+  const hasTax = Boolean(files.tax_compliance?.uploaded || verification.documents.some(doc => doc.documentType === "tax_compliance"));
+
+  async function upload(documentType: DocumentType, file: File): Promise<UploadedFile> {
+    const { uploadUrl, uploadToken } = await generateUpload({ documentType });
+    const storageId = await uploadVerificationFile({ uploadUrl, uploadToken, sessionToken, file });
+    return { file, storageId, uploadToken, uploadedAt: Date.now() };
   }
 
-  if (verification.status === "pending" || verification.status === "verified") {
-    const isVerified = verification.status === "verified";
-    return (
-      <>
-        {chrome}
-        <section className="mx-auto flex w-full max-w-[560px] flex-1 flex-col px-5 py-10 sm:px-6 sm:py-14">
-          <div className="step-enter rounded-2xl border border-brand-border bg-white p-6 sm:p-8">
-            <StatusGlyph verified={isVerified} />
-            <p className="mt-5 mb-0 text-[0.8rem] font-semibold tracking-[0.04em] text-brand uppercase">
-              {t(`status.${verification.status}`)}
-            </p>
-            <h1 className="mt-2 mb-0 text-[1.75rem] font-semibold tracking-[-0.03em] text-ink sm:text-[2rem]">
-              {t(`${verification.status}.title`)}
-            </h1>
-            <p className="mt-3 mb-0 text-[0.98rem] leading-6 text-muted">{t(`${verification.status}.lead`)}</p>
-            <Link
-              className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-[10px] bg-brand px-5 text-[0.95rem] font-semibold text-white transition-[background-color,transform] duration-150 ease-out hover:bg-brand-hover active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-              href={routes.companyDashboard}
-            >
-              {t("backToWorkspace")}
-            </Link>
-          </div>
-        </section>
-      </>
-    );
-  }
-
-  function invalid(name: string) {
-    return fieldError?.name === name;
-  }
-
-  const fieldClass =
-    "mt-1.5 min-h-12 w-full rounded-[10px] border border-brand-border bg-white px-3.5 py-2.5 text-[0.95rem] text-ink outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-muted/65 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]";
-
-  function inputClass(name: string) {
-    return joinClassNames(fieldClass, invalid(name) && "border-red-400");
-  }
-
-  function goToStep(next: Step) {
+  async function chooseFile(documentType: DocumentType, file?: File) {
+    if (!file) return;
     setError(null);
-    setFieldError(null);
-    setStep(next);
-  }
-
-  function validateLegal(form: HTMLFormElement) {
-    const formData = new FormData(form);
-    const required = ["legalName", "ice", "rcNumber", "legalRepresentative", "phone", "address"] as const;
-    for (const name of required) {
-      const value = String(formData.get(name) ?? "").trim();
-      if (!value) {
-        setFieldError({ name, message: t("validation.required") });
-        focusFirstInvalidField(form, name);
-        return false;
-      }
+    if (!file.size || file.size > 10 * 1024 * 1024 || !["application/pdf", "image/jpeg", "image/png"].includes(file.type)) {
+      setFiles(previous => ({ ...previous, [documentType]: { file, uploading: false, error: t("validation.document") } }));
+      return;
     }
-    const ice = String(formData.get("ice") ?? "").replace(/\s/g, "");
-    if (!/^\d{15}$/.test(ice)) {
-      setFieldError({ name: "ice", message: t("validation.ice") });
-      focusFirstInvalidField(form, "ice");
-      return false;
+    setFiles(previous => ({ ...previous, [documentType]: { file, uploading: true } }));
+    try {
+      const uploaded = await upload(documentType, file);
+      setFiles(previous => ({ ...previous, [documentType]: { file, uploading: false, uploaded } }));
+    } catch (caught) {
+      setFiles(previous => ({ ...previous, [documentType]: { file, uploading: false, error: mapConvexFailure(caught, tUx).message } }));
     }
-    return true;
-  }
-
-  function validateFiles(form: HTMLFormElement) {
-    for (const type of documentTypes) {
-      const input = form.elements.namedItem(`document-${type}`);
-      const file = input instanceof HTMLInputElement ? input.files?.[0] : undefined;
-      if (file && (!allowedMimeTypes.has(file.type) || file.size > maxDocumentSize)) {
-        setFieldError({ name: `document-${type}`, message: t("validation.document") });
-        setError(t("validation.document"));
-        if (input instanceof HTMLInputElement) input.focus();
-        return false;
-      }
-    }
-    return true;
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting) return;
+    if (submitting || uploading || uploadFailed || !hasTax) return;
     const form = event.currentTarget;
-    setError(null);
-    setFieldError(null);
-
-    if (step === 1) {
-      if (validateLegal(form)) goToStep(2);
-      return;
+    const data = new FormData(form);
+    setError(null); setFieldError(null);
+    for (const name of ["legalName", "ice", "rcNumber", "legalRepresentative", "phone", "address"] as const) {
+      if (!String(data.get(name) ?? "").trim()) {
+        setFieldError({ name, message: t("validation.required") }); focusFirstInvalidField(form, name); return;
+      }
     }
-    if (!validateLegal(form)) {
-      goToStep(1);
-      return;
+    if (!/^\d{15}$/.test(String(data.get("ice")).replace(/\s/g, ""))) {
+      setFieldError({ name: "ice", message: t("validation.ice") }); focusFirstInvalidField(form, "ice"); return;
     }
-    if (!validateFiles(form)) return;
-
-    const formData = new FormData(form);
     setSubmitting(true);
     try {
-      const selectedFiles = documentTypes.flatMap((documentType) => {
-        const value = formData.get(`document-${documentType}`);
-        return value instanceof File && value.size > 0 ? [{ documentType, file: value }] : [];
-      });
-      const documents = await Promise.all(
-        selectedFiles.map(async ({ documentType, file }) => {
-          const { uploadUrl, uploadToken } = await generateUploadUrl({ documentType });
-          const response = await fetch(uploadUrl, {
-            method: "POST",
-            headers: { "Content-Type": file.type },
-            body: file,
-          });
-          if (!response.ok) throw new Error("DOCUMENT_UPLOAD_FAILED");
-          const payload = (await response.json()) as { storageId?: string };
-          if (!payload.storageId) throw new Error("DOCUMENT_UPLOAD_FAILED");
-          return {
-            documentType,
-            fileName: file.name,
-            uploadToken,
-            storageId: payload.storageId as never,
-          };
-        }),
-      );
-
-      await submitVerification({
-        legalName: String(formData.get("legalName") ?? ""),
-        ice: String(formData.get("ice") ?? ""),
-        rcNumber: String(formData.get("rcNumber") ?? ""),
-        legalRepresentative: String(formData.get("legalRepresentative") ?? ""),
-        phone: String(formData.get("phone") ?? ""),
-        address: String(formData.get("address") ?? ""),
-        documents,
-      });
-      router.replace(routes.companyDashboard);
+      const documents = await Promise.all(documentTypes.flatMap(documentType => {
+        const uploaded = files[documentType]?.uploaded;
+        if (!uploaded) return [];
+        return [(async () => {
+          // Refresh a staged upload before its backend token expires.
+          const current = Date.now() - uploaded.uploadedAt >= 14 * 60 * 1000 ? await upload(documentType, uploaded.file) : uploaded;
+          setFiles(previous => ({ ...previous, [documentType]: { file: current.file, uploading: false, uploaded: current } }));
+          return { documentType, storageId: current.storageId, uploadToken: current.uploadToken, fileName: current.file.name };
+        })()];
+      }));
+      await submit({ legalName: String(data.get("legalName")), ice: String(data.get("ice")), rcNumber: String(data.get("rcNumber")), legalRepresentative: String(data.get("legalRepresentative")), phone: String(data.get("phone")), address: String(data.get("address")), documents });
+      setSubmitted({ status: verification.status, submittedAt: verification.submittedAt });
     } catch (caught) {
       const mapped = mapConvexFailure(caught, tUx);
-      if (mapped.field) {
-        const fieldStep = mapped.field.startsWith("document-") ? 2 : 1;
-        if (fieldStep !== step) setStep(fieldStep as Step);
-        setFieldError({ name: mapped.field, message: mapped.message });
-      } else {
-        setError(mapped.message);
-      }
-      focusFirstInvalidField(form, mapped.field);
-      setSubmitting(false);
-    }
+      if (mapped.field) setFieldError({ name: mapped.field, message: mapped.message });
+      setError(mapped.message); focusFirstInvalidField(form, mapped.field);
+    } finally { setSubmitting(false); }
   }
 
-  const heading = step === 1 ? t("titleLegal") : t("titleDocuments");
-  const lead = step === 1 ? t("leadLegal") : t("leadDocuments");
-  const legalFields = [
-    { name: "legalName" as const, autoComplete: "organization", type: "text", hint: null, inputMode: undefined },
-    { name: "ice" as const, autoComplete: "off", type: "text", hint: t("iceHint"), inputMode: "numeric" as const },
-    { name: "rcNumber" as const, autoComplete: "off", type: "text", hint: null, inputMode: undefined },
-    { name: "legalRepresentative" as const, autoComplete: "name", type: "text", hint: null, inputMode: undefined },
-    { name: "phone" as const, autoComplete: "tel", type: "tel", hint: t("phoneHint"), inputMode: "tel" as const },
-  ];
-
-  return (
-    <>
-      {chrome}
-      <section className="mx-auto flex w-full max-w-[560px] flex-1 flex-col px-5 py-10 sm:px-6 sm:py-14">
-        <p className="step-enter m-0 text-[0.8rem] font-medium text-muted">
-          {t("step", { current: step, total: totalSteps })}
-        </p>
-        <h1 className="step-enter step-enter-delay mt-3 mb-0 text-[1.75rem] font-semibold tracking-[-0.03em] text-ink sm:text-[2rem]">
-          {heading}
-        </h1>
-        <p className="step-enter step-enter-delay mt-2.5 mb-0 max-w-[34rem] text-[0.98rem] leading-6 text-muted">{lead}</p>
-        {verification.status === "rejected" ? (
-          <p className="mt-4 mb-0 rounded-[10px] bg-red-50 px-3.5 py-3 text-[0.88rem] leading-5 text-red-800" role="status">
-            {t("rejectedLead")}
-          </p>
-        ) : null}
-
-        <form className="mt-8" noValidate onSubmit={onSubmit} ref={formRef}>
-          <div
-            className={joinClassNames(
-              "rounded-2xl border border-brand-border bg-white p-5 sm:p-7",
-              step !== 1 && "hidden",
-            )}
-            data-step="1"
-          >
-            <p className="m-0 text-[0.95rem] font-semibold text-ink">{t("legalSection")}</p>
-            <p className="mt-1 mb-6 text-[0.88rem] leading-5 text-muted">{t("legalSectionLead")}</p>
-
-            {legalFields.map((field) => (
-              <label
-                className="mt-4 block text-[0.88rem] font-medium text-ink first:mt-0"
-                htmlFor={`${formId}-${field.name}`}
-                key={field.name}
-              >
-                <span>
-                  {t(`fields.${field.name}`)}
-                  <span className="text-brand"> *</span>
-                </span>
-                <input
-                  aria-describedby={field.hint ? `${formId}-${field.name}-hint` : undefined}
-                  aria-invalid={invalid(field.name)}
-                  autoComplete={field.autoComplete}
-                  className={inputClass(field.name)}
-                  defaultValue={verification[field.name]}
-                  id={`${formId}-${field.name}`}
-                  inputMode={field.inputMode}
-                  maxLength={field.name === "ice" ? 15 : 160}
-                  name={field.name}
-                  required
-                  type={field.type}
-                />
-                {field.hint ? (
-                  <span className="mt-1.5 block text-[0.8rem] font-normal leading-5 text-muted" id={`${formId}-${field.name}-hint`}>
-                    {field.hint}
-                  </span>
-                ) : null}
-                {invalid(field.name) ? (
-                  <span className="mt-1.5 block text-[0.8rem] font-normal text-red-700" role="alert">
-                    {fieldError?.message}
-                  </span>
-                ) : null}
-              </label>
-            ))}
-
-            <label className="mt-4 block text-[0.88rem] font-medium text-ink" htmlFor={`${formId}-address`}>
-              <span>
-                {t("fields.address")}
-                <span className="text-brand"> *</span>
-              </span>
-              <textarea
-                aria-invalid={invalid("address")}
-                className={`${inputClass("address")} min-h-24 resize-y`}
-                defaultValue={verification.address}
-                id={`${formId}-address`}
-                maxLength={300}
-                name="address"
-                required
-              />
-              {invalid("address") ? (
-                <span className="mt-1.5 block text-[0.8rem] font-normal text-red-700" role="alert">
-                  {fieldError?.message}
-                </span>
-              ) : null}
-            </label>
-          </div>
-
-          <div
-            className={joinClassNames(
-              "rounded-2xl border border-brand-border bg-white p-5 sm:p-7",
-              step !== 2 && "hidden",
-            )}
-            data-step="2"
-          >
-            <p className="m-0 text-[0.95rem] font-semibold text-ink">{t("documentsSection")}</p>
-            <p className="mt-1 mb-5 text-[0.88rem] leading-5 text-muted">{t("documentsOptional")}</p>
-
-            <ul className="m-0 flex list-none flex-col gap-3 p-0">
-              {documentTypes.map((documentType) => {
-                const existing = verification.documents.find((item) => item.documentType === documentType);
-                const name = `document-${documentType}`;
-                const selectedName = fileNames[documentType];
-                const shownName = selectedName ?? existing?.fileName;
-                return (
-                  <li key={documentType}>
-                    <label
-                      className="flex cursor-pointer flex-col gap-2 rounded-[10px] border border-brand-border px-4 py-3.5 transition-[border-color,background-color] duration-150 ease-out hover:border-brand/45 hover:bg-brand-soft/40 has-[:focus-visible]:border-brand"
-                      htmlFor={`${formId}-${name}`}
-                    >
-                      <span className="flex items-center justify-between gap-3">
-                        <span className="text-[0.9rem] font-medium text-ink">{t(`documents.${documentType}`)}</span>
-                        <span className="shrink-0 rounded-full bg-brand-soft px-2.5 py-0.5 text-[0.7rem] font-semibold text-brand">
-                          {t("optional")}
-                        </span>
-                      </span>
-                      <span className="flex items-center justify-between gap-3">
-                        <span className="min-w-0 truncate text-[0.8rem] font-normal text-muted">
-                          {shownName ? t("currentFile", { name: shownName }) : t("noFile")}
-                        </span>
-                        <span className="shrink-0 rounded-md bg-brand-soft px-3 py-1.5 text-[0.78rem] font-semibold text-brand">
-                          {shownName ? t("replaceFile") : t("chooseFile")}
-                        </span>
-                      </span>
-                      <input
-                        accept="application/pdf,image/jpeg,image/png"
-                        aria-invalid={invalid(name)}
-                        className="sr-only"
-                        id={`${formId}-${name}`}
-                        name={name}
-                        onChange={(event) => {
-                          const file = event.currentTarget.files?.[0];
-                          setFileNames((current) => ({ ...current, [documentType]: file?.name }));
-                        }}
-                        type="file"
-                      />
-                    </label>
-                    {invalid(name) ? (
-                      <p className="mt-1.5 mb-0 px-1 text-[0.8rem] text-red-700" role="alert">
-                        {fieldError?.message}
-                      </p>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="mt-4 mb-0 text-[0.8rem] leading-5 text-muted">{t("documentHint")}</p>
-          </div>
-
-          {error ? (
-            <div className="mt-5">
-              <FriendlyAlert>{error}</FriendlyAlert>
-            </div>
-          ) : null}
-
-          <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row">
-            {step > 1 ? (
-              <button
-                className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-[10px] border border-brand-border bg-white px-5 text-[0.95rem] font-semibold text-ink transition-[background-color,transform] duration-150 ease-out hover:bg-brand-soft active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-                onClick={() => goToStep(1)}
-                type="button"
-              >
-                {t("back")}
-              </button>
-            ) : (
-              <Link
-                className="inline-flex min-h-12 flex-1 items-center justify-center rounded-[10px] border border-brand-border bg-white px-5 text-center text-[0.95rem] font-semibold text-ink transition-[background-color,transform] duration-150 ease-out hover:bg-brand-soft active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
-                href={routes.companyDashboard}
-              >
-                {t("cancel")}
-              </Link>
-            )}
-            <button
-              className="inline-flex min-h-12 flex-[2] cursor-pointer items-center justify-center rounded-[10px] bg-brand px-5 text-[0.95rem] font-semibold text-white transition-[background-color,transform] duration-150 ease-out hover:bg-brand-hover active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={submitting}
-              type="submit"
-            >
-              {submitting ? t("submitting") : step === totalSteps ? t("submit") : t("continue")}
-            </button>
-          </div>
-        </form>
-      </section>
-    </>
-  );
-}
-
-function StatusGlyph({ verified }: { verified: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className="grid size-12 place-items-center rounded-full bg-brand-soft text-brand"
-    >
-      <svg className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        {verified ? (
-          <path d="M5 12.5l4.2 4.2L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
-        ) : (
-          <>
-            <circle cx="12" cy="12" r="8" />
-            <path d="M12 7.5v5l3 1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </>
-        )}
-      </svg>
-    </span>
-  );
+  // The optimistic pending screen applies only to the previous submission snapshot.
+  // A later Admin rejection must immediately restore the editable rejected screen.
+  const waitingForPending = submitted?.status === verification.status && submitted?.submittedAt === verification.submittedAt;
+  if (verification.status === "pending" || verification.status === "verified" || waitingForPending) {
+    return <VerificationStatusScreen status={verification.status === "verified" ? "verified" : "pending"} />;
+  }
+  const rejected = verification.status === "rejected";
+  return <>
+    <StatusBadge status={verification.status} />
+    <h1 className="mt-4 mb-0 text-[1.75rem] font-semibold tracking-[-0.03em] text-ink sm:text-[2rem]">{t(rejected ? "rejected.title" : "title")}</h1>
+    <p className="mt-3 text-[0.98rem] leading-6 text-muted">{t(rejected ? "rejectedLead" : "lead")}</p>
+    {rejected ? <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4" role="status"><h2 className="text-sm font-semibold text-red-900">{t("rejectionReason")}</h2><p className="mt-2 break-words text-sm leading-6 text-red-800">{verification.rejectionReason || t("rejected.noReason")}</p></div> : null}
+    <form className="mt-7 space-y-5" noValidate onSubmit={onSubmit} ref={formRef} aria-busy={submitting}>
+      <fieldset disabled={submitting} className="min-w-0 rounded-2xl border border-brand-border bg-white p-5 sm:p-7">
+        <legend className="sr-only">{t("legalSection")}</legend><h2 className="text-base font-semibold text-ink">{t("legalSection")}</h2><p className="mt-1 text-sm leading-5 text-muted">{t("legalSectionLead")}</p>
+        <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2">
+          {(["legalName", "ice", "rcNumber", "legalRepresentative", "phone", "address"] as const).map(name => <label key={name} htmlFor={`${formId}-${name}`} className={`min-w-0 text-sm font-medium text-ink ${name === "address" ? "sm:col-span-2" : ""}`}>
+            {t(`fields.${name}`)} <span className="text-brand" aria-hidden="true">*</span>
+            <input id={`${formId}-${name}`} name={name} defaultValue={verification[name]} required maxLength={name === "address" ? 300 : name === "legalName" || name === "legalRepresentative" ? 160 : 80} type={name === "phone" ? "tel" : "text"} inputMode={name === "ice" ? "numeric" : name === "phone" ? "tel" : "text"} autoComplete={name === "legalName" ? "organization" : name === "phone" ? "tel" : "off"} aria-invalid={fieldError?.name === name} aria-describedby={fieldError?.name === name ? `${formId}-${name}-error` : undefined} className="mt-2 min-h-12 w-full min-w-0 rounded-[10px] border border-brand-border px-3.5 text-base font-normal outline-none focus:border-brand focus:ring-2 focus:ring-brand/20" />
+            {fieldError?.name === name ? <span id={`${formId}-${name}-error`} className="mt-1 block text-xs text-red-700" role="alert">{fieldError.message}</span> : null}
+          </label>)}
+        </div>
+      </fieldset>
+      <fieldset disabled={submitting} className="min-w-0 rounded-2xl border border-brand-border bg-white p-5 sm:p-7">
+        <legend className="sr-only">{t("documentsSection")}</legend><h2 className="text-base font-semibold text-ink">{t("documentsSection")}</h2><p className="mt-1 text-sm leading-5 text-muted">{t("documentsOptional")}</p><p id={`${formId}-formats`} className="mt-2 text-xs leading-5 text-muted">{t("documentHint")}</p>
+        <ul className="mt-5 space-y-3">
+          {documentTypes.map(documentType => {
+            const existing = verification.documents.find(doc => doc.documentType === documentType);
+            const selected = files[documentType];
+            const shownName = selected?.file.name ?? existing?.fileName;
+            const title = t(`documents.${documentType}`);
+            return <li key={documentType} className={`min-w-0 rounded-xl border p-4 ${documentType === "tax_compliance" ? "border-brand/25 bg-brand-soft/20" : "border-brand-border"}`}>
+              <div className="flex items-start gap-3"><FileText aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="min-w-0 break-words text-sm font-semibold text-ink">{title}</h3><span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-[0.7rem] font-semibold text-brand">{t(documentType === "tax_compliance" ? "required" : "optional")}</span></div><p className="mt-2 break-all text-xs leading-5 text-muted">{shownName || t("noFile")}</p>
+                <p id={`${formId}-${documentType}-state`} className="mt-1 flex items-center gap-1 text-xs text-brand" role="status">{selected?.uploading ? t("uploading") : selected?.error ? selected.error : selected?.uploaded || existing ? <><FileCheck2 aria-hidden="true" className="size-3.5 shrink-0" />{t("uploaded")}</> : t("awaitingFile")}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <label className={`${actionClass} relative cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand ${selected?.uploading ? "pointer-events-none opacity-50" : ""}`} htmlFor={`${formId}-document-${documentType}`}>
+                    {t(shownName ? "replaceFile" : "chooseFile")}<span className="sr-only">{` — ${title}`}</span>
+                    <input id={`${formId}-document-${documentType}`} name={`document-${documentType}`} aria-label={t(shownName ? "replaceDocument" : "chooseDocument", { document: title })} aria-describedby={`${formId}-formats ${formId}-${documentType}-state`} className="sr-only" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" disabled={selected?.uploading || submitting} onChange={event => { void chooseFile(documentType, event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
+                  </label>
+                  {selected?.uploaded ? <button className={actionClass} type="button" onClick={() => saveVerificationBlob(selected.uploaded!.file, selected.uploaded!.file.name)}>{t("viewDocument")}</button> : existing ? <ExistingDocumentDownload document={existing} /> : null}
+                  {selected ? <button className={actionClass} disabled={selected.uploading} type="button" onClick={() => setFiles(previous => ({ ...previous, [documentType]: undefined }))}>{t(existing ? "keepCurrentFile" : "removeFile")}</button> : null}
+                </div>
+              </div></div>
+            </li>;
+          })}
+        </ul>
+      </fieldset>
+      {!hasTax ? <p className="text-sm text-muted" role="status">{t("validation.taxCertificate")}</p> : null}
+      {error ? <FriendlyAlert>{error}</FriendlyAlert> : null}
+      <button className={`${primaryClass} w-full`} disabled={!hasTax || uploading || uploadFailed || submitting} type="submit">{t(submitting ? "submitting" : rejected ? "resubmit" : "submit")}</button>
+    </form>
+  </>;
 }

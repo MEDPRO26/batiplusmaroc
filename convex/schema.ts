@@ -874,6 +874,7 @@ export default defineSchema({
     verificationId: v.id("companyVerifications"),
     companyId: v.id("companies"),
     documentType: v.union(
+      v.literal("tax_compliance"),
       v.literal("rc"),
       v.literal("ice"),
       v.literal("insurance"),
@@ -887,24 +888,33 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_companyId", ["companyId"])
-    .index("by_companyId_and_documentType", ["companyId", "documentType"]),
+    .index("by_companyId_and_documentType", ["companyId", "documentType"])
+    .index("by_storageId", ["storageId"]),
 
   companyVerificationUploadIntents: defineTable({
     companyId: v.id("companies"),
     userId: v.id("users"),
     documentType: v.union(
+      v.literal("tax_compliance"),
       v.literal("rc"),
       v.literal("ice"),
       v.literal("insurance"),
       v.literal("other"),
     ),
+    storageId: v.optional(v.id("_storage")),
+    contentType: v.optional(v.union(v.literal("application/pdf"), v.literal("image/jpeg"), v.literal("image/png"))),
     token: v.string(),
     expiresAt: v.number(),
     claimedAt: v.optional(v.number()),
     createdAt: v.number(),
-  }).index("by_token", ["token"]),
+  }).index("by_token", ["token"]).index("by_storageId", ["storageId"]),
 
   companyVerificationHistory: defineTable({
+    action: v.optional(v.union(
+      v.literal("document_uploaded"), v.literal("document_replaced"),
+      v.literal("verification_submitted"), v.literal("verification_resubmitted"),
+      v.literal("verification_approved"), v.literal("verification_rejected"),
+    )),
     companyId: v.id("companies"),
     oldStatus: v.union(
       v.literal("draft"),
@@ -923,7 +933,8 @@ export default defineSchema({
     rejectionReason: v.optional(v.string()),
   })
     .index("by_companyId", ["companyId"])
-    .index("by_companyId_and_changedAt", ["companyId", "changedAt"]),
+    .index("by_companyId_and_changedAt", ["companyId", "changedAt"])
+    .index("by_companyId_and_action_and_changedAt", ["companyId", "action", "changedAt"]),
 
   companyOperationalStatusHistory: defineTable({
     companyId: v.id("companies"),

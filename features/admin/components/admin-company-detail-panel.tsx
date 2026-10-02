@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { DropdownMenu } from "radix-ui";
 import { useEffect, useId, useState, type ReactNode } from "react";
+import { AdminCompanyVerification } from "./admin-company-verification";
 import { api } from "@/convex/_generated/api";
 import { serviceName } from "@/features/companies/lib/service-label";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -115,7 +116,7 @@ export function AdminCompanyDetailPanel({ companyId, initialTab = "overview" }: 
       </div>
       <section aria-labelledby={`company-tab-${tab}`} id={`company-panel-${tab}`} role="tabpanel">
         {tab === "overview" ? <Overview currentStatus={currentStatus} onChangeStatus={setStatusTarget} onSelectTab={selectTab} summary={summary} unreadMessages={operationalSummary?.unreadCount ?? 0} /> : null}
-        {tab === "verification" ? <VerificationPanel companyId={companyId} companyName={summary.name} /> : null}
+        {tab === "verification" ? <AdminCompanyVerification companyId={companyId} companyName={summary.name} /> : null}
         {tab === "projectsDeals" ? <ProjectsDeals companyId={companyId} /> : null}
         {tab === "commissions" ? <Commissions companyId={companyId} /> : null}
         {tab === "reviews" ? <Reviews companyId={companyId} /> : null}
@@ -383,74 +384,6 @@ function OperationalStatusDialog({ companyId, currentStatus, target, onClose }: 
   );
 }
 
-function VerificationPanel({ companyId, companyName }: { companyId: Id<"companies">; companyName: string }) {
-  const t = useTranslations("adminCompanies");
-  const tVerification = useTranslations("adminVerification");
-  const locale = useLocale();
-  const review = useQuery(api.admin.verification.getCompanyVerificationReview, { companyId });
-  const approve = useMutation(api.admin.verification.approveCompanyVerification);
-  const reject = useMutation(api.admin.verification.rejectCompanyVerification);
-  const [reason, setReason] = useState("");
-  const [confirm, setConfirm] = useState<"approve" | "reject" | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [error, setError] = useState("");
-  if (review === undefined) return <Loading />;
-  if (review === null) return <Empty text={t("verification.notFound")} />;
-  async function run(action: "approve" | "reject") {
-    setBusy(true); setError(""); setNotice("");
-    try {
-      if (action === "approve") await approve({ companyId });
-      else await reject({ companyId, reason });
-      setNotice(t(`verification.${action}Success`)); setReason(""); setConfirm(null);
-    } catch { setError(t("verification.actionError")); }
-    finally { setBusy(false); }
-  }
-  return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,380px)]">
-      <section className="rounded-[14px] border border-[#e7eaee] bg-white p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">{t("verification.title")}</h2><VerificationPill value={review.status} /></div>
-        <dl className="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2"><Field label={tVerification("fields.legalName")} value={review.legalName || "—"} /><Field label={tVerification("fields.ice")} value={review.ice || "—"} /><Field label={tVerification("fields.rc")} value={review.rcNumber || "—"} /><Field label={tVerification("fields.representative")} value={review.legalRepresentative || "—"} /><Field label={tVerification("fields.phone")} value={review.phone || "—"} /><Field label={tVerification("fields.address")} value={review.address || "—"} /></dl>
-        {review.submittedAt ? <p className="mt-4 text-xs text-[#8b919a]">{t("verification.submitted", { date: date(review.submittedAt, locale) })}</p> : null}
-        {review.latestRejectionReason ? <p className="mt-4 rounded-[12px] bg-red-50 p-3 text-sm text-red-800">{review.latestRejectionReason}</p> : null}
-        {review.status === "pending" ? (
-          <div className="mt-5 border-t border-[#eef1f4] pt-5">
-            <h3 className="text-sm font-semibold">{t("verification.decision")}</h3>
-            {confirm === null ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button className={`min-h-11 rounded-full bg-emerald-700 px-5 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`} disabled={busy} onClick={() => setConfirm("approve")} type="button">{tVerification("approve")}</button>
-                <button className={`min-h-11 rounded-full border border-red-200 px-5 text-sm font-semibold text-red-700 disabled:opacity-50 ${ADMIN_PRESS}`} disabled={busy} onClick={() => setConfirm("reject")} type="button">{tVerification("reject")}</button>
-              </div>
-            ) : confirm === "approve" ? (
-              <div className="mt-3 rounded-[12px] bg-emerald-50 p-4" role="group" aria-label={tVerification("confirmApprove")}>
-                <p className="text-sm text-emerald-900">{t("verification.confirmApproveLead", { company: companyName })}</p>
-                <div className="mt-3 flex flex-wrap gap-2"><button className={`min-h-11 rounded-full bg-emerald-700 px-5 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`} disabled={busy} onClick={() => void run("approve")} type="button">{tVerification("confirmApprove")}</button><button className={`min-h-11 rounded-full border bg-white px-4 text-sm font-semibold ${ADMIN_PRESS}`} disabled={busy} onClick={() => setConfirm(null)} type="button">{tVerification("cancel")}</button></div>
-              </div>
-            ) : (
-              <div className="mt-3 rounded-[12px] bg-red-50 p-4" role="group" aria-label={tVerification("confirmReject")}>
-                <label className="block text-sm font-semibold text-red-900" htmlFor="company-rejection-reason">{t("verification.reason")}</label>
-                <textarea autoFocus className="mt-2 min-h-24 w-full rounded-[12px] border bg-white p-3 text-sm outline-none focus-visible:outline-2 focus-visible:outline-[#2f6bff]" id="company-rejection-reason" maxLength={500} onChange={(event) => setReason(event.target.value)} value={reason} />
-                <p className="mt-1 text-xs text-red-900/80">{t("verification.reasonHelp")}</p>
-                <div className="mt-3 flex flex-wrap gap-2"><button className={`min-h-11 rounded-full bg-red-700 px-5 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`} disabled={busy || reason.trim().length < 3} onClick={() => void run("reject")} type="button">{tVerification("confirmReject")}</button><button className={`min-h-11 rounded-full border bg-white px-4 text-sm font-semibold ${ADMIN_PRESS}`} disabled={busy} onClick={() => { setConfirm(null); setReason(""); }} type="button">{tVerification("cancel")}</button></div>
-              </div>
-            )}
-          </div>
-        ) : null}
-        {notice ? <p className="mt-4 rounded-[12px] bg-emerald-50 p-3 text-sm text-emerald-800" role="status">{notice}</p> : null}{error ? <p className="mt-4 rounded-[12px] bg-red-50 p-3 text-sm text-red-800" role="alert">{error}</p> : null}
-      </section>
-      <div className="grid content-start gap-4">
-        <section className="rounded-[14px] border border-[#e7eaee] bg-white p-5">
-          <h2 className="font-semibold">{t("verification.documents")}</h2>
-          {review.documents.length ? <ul className="mt-3 space-y-2">{review.documents.map((document) => <li className="flex flex-wrap items-center justify-between gap-2 border-b border-[#eef1f4] pb-2 text-sm last:border-0" key={document.documentId}><span className="min-w-0 break-all">{tVerification(`documentTypes.${document.documentType}`)} · {document.fileName}</span>{document.downloadUrl ? <a className={`font-semibold text-[#2456c7] ${ADMIN_PRESS}`} href={document.downloadUrl} rel="noreferrer" target="_blank">{tVerification("openDocument")}</a> : null}</li>)}</ul> : <p className="mt-3 text-sm text-[#8b919a]">{t("verification.noDocuments")}</p>}
-        </section>
-        <section className="rounded-[14px] border border-[#e7eaee] bg-white p-5">
-          <h2 className="font-semibold">{t("verification.history")}</h2>
-          {review.history.length ? <ol className="mt-3 grid gap-3">{review.history.map((item) => <li className="border-l-2 border-[#e7eaee] pl-3 text-sm" key={item.historyId}><span className="font-semibold">{t(`status.verification.${item.oldStatus}`)} → {t(`status.verification.${item.newStatus}`)}</span><span className="mt-0.5 block text-xs text-[#8b919a]">{date(item.changedAt, locale)}</span></li>)}</ol> : <p className="mt-3 text-sm text-[#8b919a]">{t("verification.noHistory")}</p>}
-        </section>
-      </div>
-    </div>
-  );
-}
 
 function ProjectsDeals({ companyId }: { companyId: Id<"companies"> }) {
   const t = useTranslations("adminCompanies");

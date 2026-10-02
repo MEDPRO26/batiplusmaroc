@@ -10,7 +10,7 @@ vi.mock("next/image", () => ({
   ),
 }));
 vi.mock("next-intl/server", () => ({
-  getTranslations: async () => (key: string, values?: Record<string, unknown>) => key === "reviewBy" ? `reviewBy ${String(values?.name ?? "")}` : key,
+  getTranslations: async () => (key: string, values?: Record<string, unknown>) => key === "verified" ? (localeState.locale === "fr" ? fr : en).publicCompany.verified : key === "reviewBy" ? `reviewBy ${String(values?.name ?? "")}` : key,
   getLocale: async () => localeState.locale,
   getFormatter: async () => ({ number: (value: number) => String(value), dateTime: () => "Sep 26, 2026" }),
 }));
@@ -18,6 +18,7 @@ vi.mock("@/features/invitations/components/invite-company-button", () => ({
   InviteCompanyButton: () => <button type="button">invite</button>,
 }));
 
+import { VerifiedBadge } from "./components/verified-badge";
 import { PublicCompanyProfile } from "./components/public-company-profile";
 
 function objectShape(value: unknown): unknown {
@@ -88,6 +89,17 @@ describe("public company profile UX contract", () => {
     expect(html).toContain(customName);
     expect(html).toContain(originalName);
   });
+  for (const locale of ["en", "fr"] as const) {
+    test.each(["verified", "draft", "pending", "rejected"])(`public profile badges are verified-only in ${locale}: %s`, async (status) => {
+      localeState.locale = locale;
+      const isVerified = status === "verified";
+      const html = renderToStaticMarkup(await PublicCompanyProfile({ company: { ...company, isVerified } as never }));
+      expect(html.match(/data-verification="verified"/g) ?? []).toHaveLength(isVerified ? 2 : 0);
+      expect(html).not.toContain('data-verification="unverified"');
+      expect(html).not.toMatch(/Unverified company|Entreprise non vérifiée|storageId|verificationPending/);
+      if (isVerified) expect(html).toContain(renderToStaticMarkup(<VerifiedBadge isVerified label={(locale === "en" ? en : fr).publicCompany.verified} />));
+    });
+  }
   test("FR and EN expose the same publicCompany translation shape without contact leakage keys", () => {
     expect(objectShape(fr.publicCompany)).toEqual(objectShape(en.publicCompany));
     expect(en.publicCompany).not.toHaveProperty("publicPhone");

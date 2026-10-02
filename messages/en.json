@@ -1238,23 +1238,24 @@
     "companyVerification": {
       "eyebrow": "Company verification",
       "step": "Step {current} of {total}",
-      "title": "Verify your company",
-      "lead": "Enter the legal information used to review your company.",
+      "title": "Company Verification",
+      "lead": "Get a verified badge on your Company profile after Batiplus reviews and approves your submission.",
       "titleLegal": "Confirm your company identity",
-      "leadLegal": "We review this before clients see a verified badge. It usually takes a few minutes.",
+      "leadLegal": "Use the details shown on your official Company documents.",
       "titleDocuments": "Add supporting documents",
-      "leadDocuments": "Documents are optional for now. You can submit without them and add files later if we ask.",
-      "rejectedLead": "Your last submission needs changes. Update the details below and send it again.",
+      "leadDocuments": "Upload your required Tax Compliance Certificate and any optional supporting documents.",
+      "rejectedLead": "Review the reason below, correct your details or replace the relevant documents, then resubmit for review.",
       "legalSection": "Legal details",
       "legalSectionLead": "Use the same information as on your official company documents.",
       "iceHint": "15 digits, with no spaces.",
       "phoneHint": "A Moroccan number we can use if we need to confirm your file.",
       "documentsSection": "Documents",
-      "documentsOptional": "Upload a file only if you have it ready.",
-      "documentHint": "PDF, JPG, or PNG · 10 MB max per file. These stay private to Batiplus.",
+      "documentsOptional": "A Tax Compliance Certificate is required. Other documents are optional.",
+      "documentHint": "PDF, JPG, JPEG, PNG · Maximum 10 MiB per file.",
+      "required": "Required",
       "optional": "Optional",
       "chooseFile": "Choose file",
-      "replaceFile": "Replace",
+      "replaceFile": "Replace file",
       "noFile": "No file selected",
       "fields": {
         "legalName": "Legal company name",
@@ -1265,7 +1266,8 @@
         "address": "Address"
       },
       "documents": {
-        "rc": "RC document",
+        "tax_compliance": "Tax Compliance Certificate",
+        "rc": "RC / Trade Register",
         "ice": "ICE document",
         "insurance": "Insurance document",
         "other": "Other supporting document"
@@ -1281,20 +1283,44 @@
         "draft": "Draft",
         "pending": "Verification pending",
         "verified": "Company verified",
-        "rejected": "Changes required"
+        "rejected": "Verification rejected"
       },
       "pending": {
-        "title": "Your submission is under review",
-        "lead": "Nothing else is needed right now. We’ll update the status in your workspace."
+        "title": "Verification pending",
+        "lead": "Your submission is under review.",
+        "noAction": "No action is needed now. We’ll update the status in your workspace."
       },
       "verified": {
-        "title": "Your company is verified",
-        "lead": "Your profile now shows as verified on Batiplus."
+        "title": "Company verified",
+        "lead": "Your Company has been verified by Batiplus.",
+        "badge": "Verified"
       },
       "validation": {
+        "taxCertificate": "Upload your Tax Compliance Certificate before submitting.",
         "required": "Please complete this field.",
         "ice": "Enter a valid 15-digit ICE number.",
-        "document": "Choose a PDF, JPG, or PNG file no larger than 10 MB."
+        "document": "Choose a non-empty PDF, JPG, JPEG or PNG file no larger than 10 MiB."
+      },
+      "resubmit": "Resubmit for review",
+      "privacy": "Your documents are private. Only your Company owner and authorized Batiplus Admins can access them.",
+      "staffLead": "Only your Company owner can manage verification and access documents. You can check the status here.",
+      "rejectionReason": "Reason for rejection",
+      "viewDocument": "View document",
+      "uploading": "Uploading…",
+      "uploaded": "Uploaded",
+      "awaitingFile": "Ready for upload",
+      "chooseDocument": "Choose file for {document}",
+      "replaceDocument": "Replace file for {document}",
+      "keepCurrentFile": "Keep current file",
+      "removeFile": "Remove file",
+      "rejected": {
+        "title": "Verification rejected",
+        "noReason": "Contact Batiplus for details before resubmitting."
+      },
+      "error": {
+        "title": "Unable to load verification",
+        "description": "Please try again. Your documents remain private.",
+        "retry": "Try again"
       }
     }
   },
@@ -1584,6 +1610,7 @@
     "empty": "No companies match your search.",
     "emptyLead": "Try another term or clear the filters to see more companies.",
     "verified": "Verified",
+    "unverified": "Unverified company",
     "years": "{count, plural, =0 {New company} one {# year of experience} other {# years of experience}}",
     "viewProfile": "View profile",
     "openInNewWindow": "Open profile in a new window",
@@ -1665,7 +1692,8 @@
     "saving": "Saving…",
     "save": "Save changes",
     "badge": {
-      "verified": "Verified"
+      "verified": "Verified",
+      "unverified": "Unverified"
     },
     "sidebar": {
       "stats": "Company stats",
@@ -1778,6 +1806,7 @@
       "documentsLabel": "Submitted documents",
       "noDocuments": "No verification documents have been submitted.",
       "documentTypes": {
+        "tax_compliance": "Tax Compliance Certificate",
         "rc": "Trade register",
         "ice": "ICE document",
         "insurance": "Insurance",
@@ -1813,6 +1842,7 @@
     "coverAlt": "Cover image for {name}",
     "logoAlt": "{name} logo",
     "verified": "Verified company",
+    "unverified": "Unverified company",
     "invite": "Invite to a project",
     "quote": "Request a quote",
     "ctaSoon": "This action will be available soon.",
@@ -2917,6 +2947,7 @@
     },
     "noDocuments": "No documents were uploaded.",
     "documentTypes": {
+      "tax_compliance": "Tax Compliance Certificate",
       "rc": "RC",
       "ice": "ICE",
       "insurance": "Insurance",
@@ -2998,8 +3029,8 @@
       "deal_completed": "Deal completed",
       "review_received": "Review received",
       "review_hidden": "Review hidden",
-      "review_restored": "Review restored"
-      ,"operational_status_changed": "Marketplace operational status changed"
+      "review_restored": "Review restored",
+      "operational_status_changed": "Marketplace operational status changed"
     }
   },
   "adminProjects": {
@@ -4306,6 +4337,7 @@
         "INVALID_LEGAL_REPRESENTATIVE": "Enter the legal representative’s name.",
         "INVALID_ADDRESS": "Enter a valid address.",
         "INVALID_VERIFICATION_DOCUMENT": "Choose a valid PDF, JPG, or PNG document no larger than 10 MB.",
+        "TAX_COMPLIANCE_CERTIFICATE_REQUIRED": "Upload your Tax Compliance Certificate before submitting.",
         "VERIFICATION_NOT_PENDING": "Only pending verifications can be reviewed.",
         "VERIFICATION_DOCUMENT_NOT_FOUND": "This verification document was not found.",
         "REJECTION_REASON_REQUIRED": "Enter a rejection reason of at least 3 characters.",
@@ -4657,7 +4689,45 @@
       "noHistory": "No verification history yet.",
       "decision": "Decision",
       "confirmApproveLead": "Approve verification for {company}? The company will show as verified to clients.",
-      "reasonHelp": "Explain what the company must correct. The reason is shared with the company."
+      "reasonHelp": "Explain what the Company owner must correct (3–500 characters). This reason is private to authorized reviewers and the Company owner.",
+      "loading": "Loading verification…",
+      "saving": "Saving…",
+      "required": "Required",
+      "optional": "Optional",
+      "requiredDocuments": "Required document",
+      "optionalDocuments": "Optional documents",
+      "viewDocument": "View document",
+      "notUploaded": "No document uploaded.",
+      "notProvided": "Not provided",
+      "uploaded": "Uploaded {date}",
+      "missingRequired": "Approval requires the Tax Compliance Certificate. The required document is missing.",
+      "privateDocuments": "These documents are private and reserved for the Company owner and authorized Batiplus Admins.",
+      "confirmRejectLead": "Reject verification for {company}? The Company owner will receive the reason and can correct the submission.",
+      "unknownActor": "Unknown actor",
+      "actor": "By {actor}",
+      "historyReason": "Rejection reason: {reason}",
+      "state": {
+        "draft": "The Company has not submitted verification yet.",
+        "pending": "Review the required certificate and supporting documents before making a decision.",
+        "verified": "This Company has been verified by Batiplus. Approval details are recorded in the history.",
+        "rejected": "Waiting for the Company owner to correct and resubmit the documents."
+      },
+      "documentTypes": {
+        "tax_compliance": "Tax Compliance Certificate",
+        "rc": "RC / Trade Register",
+        "ice": "ICE",
+        "insurance": "Insurance",
+        "other": "Other supporting document"
+      },
+      "actions": {
+        "document_uploaded": "Document uploaded",
+        "document_replaced": "Document replaced",
+        "verification_submitted": "Verification submitted",
+        "verification_resubmitted": "Verification resubmitted",
+        "verification_rejected": "Verification rejected",
+        "verification_approved": "Verification approved",
+        "status_changed": "Status changed"
+      }
     },
     "projects": {
       "title": "Projects and Deals",
