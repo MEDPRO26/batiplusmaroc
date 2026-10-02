@@ -1,3 +1,4 @@
+import { assertNotVerificationStorage } from "../storage/verificationPrivacy";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { internal } from "../_generated/api";
@@ -96,6 +97,7 @@ export const inspectUpload = internalQuery({
   handler: async (ctx, args) => {
     await requireVerifiedCompanyConversation(ctx, args.userId, args.conversationId);
     const intent = await ctx.db.query("messageAttachmentUploadIntents").withIndex("by_token", (q) => q.eq("token", args.uploadToken)).unique();
+    await assertNotVerificationStorage(ctx, args.storageId);
     const metadata = await ctx.db.system.get("_storage", args.storageId);
     const existing = await ctx.db.query("messages").withIndex("by_conversationId_and_senderUserId_and_clientMessageId", (q) => q.eq("conversationId", args.conversationId).eq("senderUserId", args.userId).eq("clientMessageId", args.clientMessageId)).unique();
     const existingAttachment = existing
@@ -137,6 +139,7 @@ export const commitAttachmentMessage = internalMutation({
       return { messageId: existing._id, attachmentId: attachment._id, createdAt: existing.createdAt, duplicate: true };
     }
     const intent = await ctx.db.query("messageAttachmentUploadIntents").withIndex("by_token", (q) => q.eq("token", args.uploadToken)).unique();
+    await assertNotVerificationStorage(ctx, args.storageId);
     const metadata = await ctx.db.system.get("_storage", args.storageId);
     if (!intent || intent.conversationId !== args.conversationId || intent.userId !== args.userId || intent.claimedAt || intent.expiresAt < Date.now() || !metadata) {
       throw new ConvexError("INVALID_MESSAGE_PDF");
@@ -223,7 +226,10 @@ export const discardAttachmentUpload = mutation({
     if (!intent || intent.conversationId !== args.conversationId || intent.userId !== access.viewer.userId || intent.claimedAt) {
       throw new ConvexError("INVALID_MESSAGE_PDF");
     }
-    if (args.storageId) await ctx.storage.delete(args.storageId);
+    if (args.storageId) {
+      await assertNotVerificationStorage(ctx, args.storageId);
+      await ctx.storage.delete(args.storageId);
+    }
     await ctx.db.delete(intent._id);
     return null;
   },

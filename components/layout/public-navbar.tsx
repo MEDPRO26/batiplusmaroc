@@ -70,7 +70,7 @@ export function PublicNavbar() {
         <div className="flex items-center justify-end gap-2 sm:gap-3 lg:gap-4">
           <AuthSessionControls className={authLink} inverted={overHero} />
           <Link
-            className="inline-flex min-h-11 items-center justify-center rounded-[11px] bg-brand px-3 text-[0.82rem] font-semibold whitespace-nowrap text-white! transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:text-white! focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:px-4 sm:text-sm lg:min-h-12 lg:px-5"
+            className="hidden min-h-11 items-center justify-center rounded-[11px] bg-brand px-3 text-[0.82rem] font-semibold whitespace-nowrap text-white! transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-brand-hover hover:text-white! focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:inline-flex sm:px-4 sm:text-sm lg:min-h-12 lg:px-5"
             href={projectCta.href}
           >
             {t(projectCta.labelKey)}

@@ -26,6 +26,8 @@ vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
 }));
 
+import { ClientProjectInvitations } from "./components/client-project-invitations";
+import { VerifiedBadge } from "@/features/companies/components/verified-badge";
 import { CompanyInvitations } from "./components/company-invitations";
 import { InviteCompanyButton } from "./components/invite-company-button";
 
@@ -52,6 +54,7 @@ const rows = (["pending", "accepted", "declined"] as const).map(
     category: "renovation",
     companyId: "company-1" as Id<"companies">,
     companyName: "Atlas Build",
+    isVerified: true,
     clientDisplayName: "Khadija C.",
     message: index === 0 ? "Please review our project." : null,
     status,
@@ -63,6 +66,18 @@ const rows = (["pending", "accepted", "declined"] as const).map(
 );
 
 describe("direct invitation UI", () => {
+  for (const locale of ["en", "fr"] as const) {
+    test.each(["verified", "draft", "pending", "rejected"])(`client invitation identity badge in ${locale}: %s`, (status) => {
+      const isVerified = status === "verified";
+      state.queryResult = [{ ...rows[0], isVerified }];
+      const html = render(locale, <ClientProjectInvitations projectId={"project-0" as Id<"projects">} />);
+      expect(html).toContain("Atlas Build");
+      expect(html.match(/data-verification="verified"/g) ?? []).toHaveLength(isVerified ? 1 : 0);
+      expect(html).not.toMatch(/data-verification="unverified"|Unverified company|Entreprise non vérifiée/);
+      if (isVerified) expect(html).toContain(renderToStaticMarkup(<VerifiedBadge isVerified label={(locale === "en" ? en : fr).publicCompany.verified} />));
+    });
+  }
+
   test("FR and EN invitation namespaces stay aligned", () => {
     expect(Object.keys(fr.invitations)).toEqual(Object.keys(en.invitations));
     expect(Object.keys(fr.invitations.client)).toEqual(

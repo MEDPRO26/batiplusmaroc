@@ -1,3 +1,4 @@
+import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { paginationOptsValidator, paginationResultValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
@@ -258,7 +259,7 @@ async function logoUrlFor(ctx: MessageCtx, company: Doc<"companies">) {
       return getPublicMediaUrl(media.objectKey);
     }
   }
-  if (company.logoStorageId) return await ctx.storage.getUrl(company.logoStorageId);
+  if (company.logoStorageId) return await getNonVerificationStorageUrl(ctx, company.logoStorageId);
   return null;
 }
 

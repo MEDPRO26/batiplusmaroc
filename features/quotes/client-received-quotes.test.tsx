@@ -15,6 +15,7 @@ vi.mock("@/i18n/navigation", () => ({
   },
 }));
 
+import { VerifiedBadge } from "@/features/companies/components/verified-badge";
 import { QuoteReviewContent, ReceivedQuoteCard } from "@/features/quotes/components/client-received-quotes";
 
 const quote: ReceivedQuote = {
@@ -48,6 +49,20 @@ function render(locale: "en" | "fr", node: React.ReactNode) {
 }
 
 describe("client received quote UI", () => {
+  for (const locale of ["en", "fr"] as const) {
+    test.each(["verified", "draft", "pending", "rejected"])(`proposal card and detail share the verified-only badge in ${locale}: %s`, (status) => {
+      const isVerified = status === "verified";
+      const current = { ...quote, company: { ...quote.company, isVerified } };
+      const card = render(locale, <ReceivedQuoteCard onOpen={vi.fn()} quote={current} />);
+      const detail = render(locale, <QuoteReviewContent confirmDecline={false} error={null} onCancelDecline={vi.fn()} onConfirmDecline={vi.fn()} onReview={vi.fn()} pendingAction={null} quote={{ ...current, history: [] }} success={null} />);
+      for (const html of [card, detail]) {
+        expect(html.match(/data-verification="verified"/g) ?? []).toHaveLength(isVerified ? 1 : 0);
+        expect(html).not.toMatch(/data-verification="unverified"|Unverified company|Entreprise non vérifiée/);
+        if (isVerified) expect(html).toContain(renderToStaticMarkup(<VerifiedBadge isVerified label={(locale === "en" ? en : fr).receivedQuotes.verified} />));
+      }
+    });
+  }
+
   test("renders the real quote summary and profile action in English", () => {
     const html = render("en", <ReceivedQuoteCard onOpen={vi.fn()} quote={quote} />);
     expect(html).toContain("Atlas Construction");

@@ -33,7 +33,7 @@ async function seedAdmin(t: TestBackend) {
 
 async function seedPendingCompany(
   t: TestBackend,
-  options?: { name?: string; city?: string; status?: "pending" | "verified" | "rejected" },
+  options?: { name?: string; city?: string; status?: "draft" | "pending" | "verified" | "rejected" },
 ) {
   return await t.run(async (ctx) => {
     const now = 1_000;
@@ -73,6 +73,11 @@ async function seedPendingCompany(
       submittedAt: now,
       createdAt: now,
       updatedAt: now,
+    });
+    const storageId = await ctx.storage.store(new Blob(["%PDF-1.7 tax"], { type: "application/pdf" }));
+    await ctx.db.insert("companyVerificationDocuments", {
+      verificationId, companyId, storageId, documentType: "tax_compliance", fileName: "tax.pdf",
+      contentType: "application/pdf", size: 12, createdAt: now, updatedAt: now,
     });
     return { ownerId, companyId, verificationId };
   });
@@ -174,7 +179,7 @@ describe("admin company verification", () => {
     ).resolves.toHaveLength(1);
   });
 
-  test("admin can open review with history and empty documents message path", async () => {
+  test("admin can open review with history and required document", async () => {
     const t = convexTest(schema, modules);
     const adminId = await seedAdmin(t);
     const { companyId } = await seedPendingCompany(t);
@@ -184,7 +189,7 @@ describe("admin company verification", () => {
       companyName: "Atlas Build",
       ice: "001234567890123",
       status: "pending",
-      documents: [],
+      documents: [{ documentType: "tax_compliance", fileName: "tax.pdf" }],
     });
   });
 
@@ -534,8 +539,8 @@ describe("admin company verification", () => {
     expect(typeof url === "string" || url === null).toBe(true);
 
     const review = await asUser(t, adminId).query(api.admin.verification.getCompanyVerificationReview, { companyId });
-    expect(review?.documents).toHaveLength(1);
-    expect(review?.documents[0]).toMatchObject({ fileName: "rc.pdf", documentType: "rc" });
+    expect(review?.documents).toHaveLength(2);
+    expect(review?.documents.find(document => document.documentType === "rc")).toMatchObject({ fileName: "rc.pdf", documentType: "rc" });
   });
 
   test("approve and reject only work from pending", async () => {
@@ -553,4 +558,69 @@ describe("admin company verification", () => {
     ).rejects.toThrow("VERIFICATION_NOT_PENDING");
     expect(await t.run((ctx) => ctx.db.query("notifications").collect())).toEqual([]);
   });
+});
+
+for (const status of ["draft", "rejected", "verified"] as const) {
+  test(`Admin cannot approve or reject ${status} even by direct mutation`, async () => {
+    const t = convexTest(schema, modules);
+    const admin = asUser(t, await seedAdmin(t));
+    const { companyId } = await seedPendingCompany(t, { status });
+    await expect(admin.mutation(api.admin.verification.approveCompanyVerification, { companyId })).rejects.toThrow("VERIFICATION_NOT_PENDING");
+    await expect(admin.mutation(api.admin.verification.rejectCompanyVerification, { companyId, reason: "Please correct certificate" })).rejects.toThrow("VERIFICATION_NOT_PENDING");
+    expect((await t.run(ctx => ctx.db.get(companyId)))?.verificationStatus).toBe(status);
+    expect(await t.run(ctx => ctx.db.query("companyVerificationHistory").collect())).toEqual([]);
+  });
+}
+
+test("Admin approval requires a tax certificate with an existing private storage object", async () => {
+  for (const remove of ["document", "file"] as const) {
+    const t = convexTest(schema, modules);
+    const admin = asUser(t, await seedAdmin(t));
+    const { companyId } = await seedPendingCompany(t);
+    await t.run(async ctx => {
+      const doc = await ctx.db.query("companyVerificationDocuments").withIndex("by_companyId", q => q.eq("companyId", companyId)).unique();
+      if (remove === "document") await ctx.db.delete(doc!._id);
+      else await ctx.storage.delete(doc!.storageId);
+    });
+    await expect(admin.mutation(api.admin.verification.approveCompanyVerification, { companyId })).rejects.toThrow("TAX_COMPLIANCE_CERTIFICATE_REQUIRED");
+    expect((await t.run(ctx => ctx.db.get(companyId)))?.verificationStatus).toBe("pending");
+  }
+});
+
+test("private Admin review and document lookup deny SEO, Client, owner, staff, other Company and anonymous", async () => {
+  const t = convexTest(schema, modules);
+  const { companyId, ownerId } = await seedPendingCompany(t);
+  const staff = await seedCompanyMember(t, companyId, "active");
+  const otherOwner = (await seedPendingCompany(t)).ownerId;
+  const roles = await t.run(async ctx => Promise.all((["client", "seo_team"] as const).map(accountType => ctx.db.insert("users", { accountType, onboardingStatus: "completed", createdAt: 1, updatedAt: 1 }))));
+  const document = await t.run(ctx => ctx.db.query("companyVerificationDocuments").withIndex("by_companyId", q => q.eq("companyId", companyId)).unique());
+  await expect(t.query(api.admin.verification.getCompanyVerificationReview, { companyId })).rejects.toThrow("NOT_AUTHENTICATED");
+  expect((await t.fetch(`/company-verification/documents/${document!._id}`)).status).toBe(404);
+  for (const userId of [ownerId, staff, otherOwner, ...roles]) {
+    const caller = asUser(t, userId);
+    await expect(caller.query(api.admin.verification.getCompanyVerificationReview, { companyId })).rejects.toThrow("ADMIN_REQUIRED");
+    await expect(caller.query(api.admin.verification.getVerificationDocumentUrl, { documentId: document!._id })).rejects.toThrow("ADMIN_REQUIRED");
+    // Owner retains the Company download path, but never Admin review access.
+    expect((await caller.fetch(`/company-verification/documents/${document!._id}`)).status).toBe(userId === ownerId ? 200 : 404);
+  }
+});
+
+test("Admin review returns uploaded dates and safe audit data; private downloads reauthorize and guessed IDs are safe 404", async () => {
+  const t = convexTest(schema, modules);
+  const adminId = await seedAdmin(t);
+  const admin = asUser(t, adminId);
+  const { companyId } = await seedPendingCompany(t);
+  await admin.mutation(api.admin.verification.rejectCompanyVerification, { companyId, reason: "Replace expired certificate" });
+  const review = await admin.query(api.admin.verification.getCompanyVerificationReview, { companyId });
+  expect(review?.documents[0].uploadedAt).toBe(1000);
+  expect(review?.history[0]).toMatchObject({ action: "verification_rejected", rejectionReason: "Replace expired certificate", changedBy: { firstName: "Ada", lastName: "Admin" } });
+  expect(JSON.stringify(review)).not.toContain('"storageId"'); expect(JSON.stringify(review?.history)).not.toContain("https://");
+  const document = review!.documents[0];
+  expect(document.downloadUrl).toBe(`https://example.convex.site/company-verification/documents/${document.documentId}`);
+  expect(document.downloadUrl).not.toContain("/api/storage/");
+  const response = await admin.fetch(new URL(document.downloadUrl!).pathname);
+  expect(response.status).toBe(200); expect(await response.text()).toBe("%PDF-1.7 tax");
+  expect(response.headers.get("cache-control")).toContain("private, no-store"); expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+  const guessed = await admin.fetch("/company-verification/documents/guessed");
+  expect(guessed.status).toBe(404); expect(await guessed.text()).toBe("Not found");
 });

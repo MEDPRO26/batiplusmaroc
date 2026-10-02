@@ -17,9 +17,10 @@ const mocks: Plugin = {
       "next/font/google": "next-font-google",
       "next/image": "image",
       "next/navigation": "next-navigation",
+      "next-intl/server": "next-intl-server",
       "@convex-dev/auth/react": "convex-auth",
     };
-    builder.onResolve({ filter: /^(convex\/react|@\/i18n\/navigation|@\/convex\/_generated\/api|next\/font\/google|next\/image|next\/navigation|@convex-dev\/auth\/react)$/ }, (args) => ({ path: mocked[args.path], namespace: "mock" }));
+    builder.onResolve({ filter: /^(convex\/react|@\/i18n\/navigation|@\/convex\/_generated\/api|next\/font\/google|next\/image|next\/navigation|next-intl\/server|@convex-dev\/auth\/react)$/ }, (args) => ({ path: mocked[args.path], namespace: "mock" }));
     builder.onLoad({ filter: /.*/, namespace: "mock" }, (args) => {
       const contents: Record<string, string> = {
         api: `
@@ -39,6 +40,7 @@ const mocks: Plugin = {
           export function useQuery(query, args) {
             useHarnessVersion();
             if (args === "skip") return undefined;
+            window.__queryCalls = [...(window.__queryCalls || []), query.__path];
             return window.__queries[query.__path];
           }
           export function usePaginatedQuery(query) {
@@ -54,6 +56,7 @@ const mocks: Plugin = {
             };
           }
           export function useAction(action) { return useMutation(action); }
+          export function useConvexAuth() { return { isAuthenticated: false, isLoading: false }; }
           export function useConvexConnectionState() { return { isWebSocketConnected: true, hasEverConnected: true, connectionRetries: 0 }; }
           export function useMutation(mutation) {
             return async (args) => {
@@ -84,9 +87,18 @@ const mocks: Plugin = {
         `,
         "convex-auth": `
           export function useAuthActions() { return { signIn: async () => undefined, signOut: async () => undefined }; }
+          export function useAuthToken() { return window.__authToken ?? null; }
         `,
         "next-navigation": `
           export function useParams() { return { locale: window.__locale }; }
+        `,
+        "next-intl-server": `
+          import { createTranslator, createFormatter } from "next-intl";
+          import en from "@/messages/en.json";
+          import fr from "@/messages/fr.json";
+          export async function getTranslations(namespace) { return createTranslator({ locale: window.__locale, messages: window.__locale === "fr" ? fr : en, namespace }); }
+          export async function getLocale() { return window.__locale; }
+          export async function getFormatter() { return createFormatter({ locale: window.__locale, timeZone: "Africa/Casablanca" }); }
         `,
         "next-font-google": `
           export function Outfit() { return { className: "font-outfit", variable: "--font-outfit", style: { fontFamily: "Outfit" } }; }
@@ -105,7 +117,7 @@ const mocks: Plugin = {
 export async function buildHarness(imports: string, render: string) {
   const result = await build({
     bundle: true,
-    define: { "process.env.NODE_ENV": '"test"' },
+    define: { "process.env.NODE_ENV": '"test"', "process.env.NEXT_PUBLIC_CONVEX_SITE_URL": '"https://verification-test.convex.site"' },
     format: "iife",
     jsx: "automatic",
     platform: "browser",

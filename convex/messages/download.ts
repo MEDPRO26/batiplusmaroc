@@ -1,3 +1,4 @@
+import { assertNotVerificationStorage } from "../storage/verificationPrivacy";
 import { ConvexError, v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
@@ -15,6 +16,7 @@ export const authorizeAttachmentDownload = internalQuery({
     if (!message || message.conversationId !== attachment.conversationId || message.senderUserId !== attachment.uploadedByUserId) {
       throw new ConvexError("MESSAGE_ATTACHMENT_NOT_FOUND");
     }
+    await assertNotVerificationStorage(ctx, attachment.storageId);
     return { storageId: attachment.storageId, fileName: attachment.originalFileName, sizeBytes: attachment.sizeBytes };
   },
 });

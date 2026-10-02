@@ -1,3 +1,4 @@
+import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
 import {
   paginationOptsValidator,
   paginationResultValidator,
@@ -166,7 +167,7 @@ async function resolvePublicMediaUrl(
     const media = await ctx.db.get(reference.publicMediaId);
     return media ? getPublicMediaUrl(media.objectKey) : null;
   }
-  return reference.storageId ? await ctx.storage.getUrl(reference.storageId) : null;
+  return reference.storageId ? await getNonVerificationStorageUrl(ctx, reference.storageId) : null;
 }
 
 async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, serviceFilter?: ServiceFilter) {

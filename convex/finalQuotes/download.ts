@@ -1,3 +1,4 @@
+import { assertNotVerificationStorage } from "../storage/verificationPrivacy";
 import { ConvexError, v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
@@ -16,6 +17,7 @@ export const authorizePdfDownload = internalQuery({
     const parent = await ctx.db.get(revision.finalQuoteId);
     if (!parent) throw new ConvexError("FINAL_QUOTE_PDF_NOT_FOUND");
     await requireFinalQuoteParticipant(ctx, parent);
+    await assertNotVerificationStorage(ctx, revision.pdfStorageId);
     return {
       storageId: revision.pdfStorageId,
       fileName: revision.pdfFileName ?? `final-quote-revision-${revision.revisionNumber}.pdf`,

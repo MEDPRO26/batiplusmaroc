@@ -1,3 +1,4 @@
+import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
@@ -231,7 +232,7 @@ async function companySummary(ctx: QuoteCtx, companyId: Id<"companies">) {
   const logoUrl = logoMedia && logoMedia.companyId === company._id && logoMedia.purpose === "companyLogo"
     ? getPublicMediaUrl(logoMedia.objectKey)
     : company.logoStorageId
-      ? await ctx.storage.getUrl(company.logoStorageId)
+      ? await getNonVerificationStorageUrl(ctx, company.logoStorageId)
       : null;
   return {
     name: company.name,

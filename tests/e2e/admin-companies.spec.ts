@@ -36,7 +36,7 @@ function state(locale: "en" | "fr") {
         companyId, companyName: "Atlas Build", slug: "atlas-build", city: "Rabat", description: "Construction and renovation company.",
         publicPhone: "+212612345678", legalName: "Atlas Build SARL", ice: "001234567890123", rcNumber: "RC-88",
         legalRepresentative: "Sara El Amrani", phone: "+212612345678", address: "12 avenue Hassan II, Rabat",
-        submittedAt: createdAt, status: "pending", latestRejectionReason: null, documents: [], history: [],
+        submittedAt: createdAt, status: "pending", latestRejectionReason: null, documents: [{ documentId: "tax-atlas", documentType: "tax_compliance", fileName: "tax.pdf", contentType: "application/pdf", size: 12, uploadedAt: createdAt, downloadUrl: null }], history: [],
       },
       "adminCompanyMessaging.getAdminConversation": null,
       "admin.companyOperationalStatus.get": { status: "needs_attention" },

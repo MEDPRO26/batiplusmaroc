@@ -1,10 +1,11 @@
 import type { FunctionReturnType } from "convex/server";
-import { Check, ExternalLink, MapPin } from "lucide-react";
+import { ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import type { api } from "@/convex/_generated/api";
 import { InviteCompanyButton } from "@/features/invitations/components/invite-company-button";
+import { VerifiedBadge } from "./verified-badge";
 import { serviceName } from "@/features/companies/lib/service-label";
 
 type PublicCompany = NonNullable<FunctionReturnType<typeof api.portfolio.index.getPublicCompanyProfile>>;
@@ -64,12 +65,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                     <h1 className="m-0 text-[1.45rem] leading-8 font-semibold tracking-[-0.03em] text-ink sm:text-[1.75rem] sm:leading-9">
                       {company.name}
                     </h1>
-                    {company.isVerified ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand">
-                        <Check aria-hidden className="size-3.5" strokeWidth={2.4} />
-                        {t("verified")}
-                      </span>
-                    ) : null}
+                    <VerifiedBadge label={t("verified")} isVerified={company.isVerified} />
                   </div>
                   <p className="mt-2 mb-0 flex flex-wrap items-center gap-2 text-sm text-muted">
                     <MapPin aria-hidden className="size-3.5 shrink-0" strokeWidth={1.8} />
@@ -136,23 +132,9 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                 )}
               </SidebarBlock>
 
-              <SidebarBlock title={t("verifications")}>
-                <p className="m-0 flex items-center gap-2 text-sm text-ink">
-                  {company.isVerified ? (
-                    <Check aria-hidden className="size-4 text-brand" strokeWidth={2.4} />
-                  ) : (
-                    <span
-                      aria-hidden
-                      className="grid size-4 place-items-center rounded-full border border-[#c5c8cb] text-[0.6rem] text-muted"
-                    >
-                      !
-                    </span>
-                  )}
-                  <span className="font-medium">
-                    {company.isVerified ? t("verificationVerified") : t("verificationPending")}
-                  </span>
-                </p>
-              </SidebarBlock>
+              {company.isVerified ? <SidebarBlock title={t("verifications")}>
+                <VerifiedBadge label={t("verified")} isVerified={company.isVerified} />
+              </SidebarBlock> : null}
 
               <SidebarBlock title={t("website")}>
                 {company.website ? (

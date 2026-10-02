@@ -7,13 +7,14 @@ import fr from "@/messages/fr.json";
 import { defaultServiceCatalog } from "@/lib/service-catalog-defaults";
 
 const selected = "catalog-1";
-const queryState = vi.hoisted(() => ({ fallback: false }));
+const queryState = vi.hoisted(() => ({ fallback: false, userCompleted: false, companyCompleted: false }));
 vi.mock("next/font/google", () => ({ Outfit: () => ({ className: "font-outfit" }) }));
 vi.mock("@/features/auth/components/onboarding-chrome", () => ({ OnboardingChrome: () => null }));
 vi.mock("convex/react", () => ({
-  useQuery: (reference: unknown) => {
+  useQuery: (reference: unknown, args: unknown) => {
+    if (args === "skip") return undefined;
     const name = getFunctionName(reference as never);
-    if (name === "users:currentUser") return { accountType: "company", onboardingStatus: "pending" };
+    if (name === "users:currentUser") return { accountType: "company", onboardingStatus: queryState.userCompleted ? "completed" : "pending" };
     if (name === "companies/index:getOnboardingProfile") return {
       ownerFirstName: "Ada", ownerLastName: "Build", name: "Atlas", legalName: "Atlas SARL",
       phone: "0612345678", city: "Rabat", description: "A construction company with residential projects.",
@@ -23,7 +24,7 @@ vi.mock("convex/react", () => ({
       catalogServices: queryState.fallback ? [] : [
         { _id: selected, slug: "structural", nameFr: "Gros œuvre", nameEn: "Structural work", isActive: true, sortOrder: 0 },
         { _id: "catalog-2", slug: "roofing", nameFr: "Toiture", nameEn: "Roofing", isActive: true, sortOrder: 10 },
-      ], onboardingStatus: "pending", verificationStatus: "draft", accountRestricted: false,
+      ], onboardingStatus: queryState.companyCompleted ? "completed" : "pending", verificationStatus: "draft", accountRestricted: false,
     };
     return undefined;
   },
@@ -34,7 +35,17 @@ vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) })
 import { CompanyOnboardingForm } from "./components/company-onboarding-form";
 
 describe("company onboarding service catalog", () => {
-  beforeEach(() => { queryState.fallback = false; });
+  beforeEach(() => { queryState.fallback = false; queryState.userCompleted = false; queryState.companyCompleted = false; });
+  for (const [locale, messages] of [["fr", fr], ["en", en]] as const) {
+    for (const [userCompleted, companyCompleted] of [[true, false], [false, true], [true, true]]) {
+      test(`${locale}: completed user=${userCompleted}/company=${companyCompleted} cannot render wizard controls`, () => {
+        queryState.userCompleted = userCompleted; queryState.companyCompleted = companyCompleted;
+        const html = renderToStaticMarkup(<NextIntlClientProvider locale={locale} messages={messages}><CompanyOnboardingForm /></NextIntlClientProvider>);
+        expect(html).not.toContain("<form"); expect(html).not.toContain('name="name"');
+        expect(html).toContain('aria-busy="true"');
+      });
+    }
+  }
   test("Admin labels exist in both locales", () => {
     expect(Object.keys(fr.adminServices).sort()).toEqual(Object.keys(en.adminServices).sort());
   });

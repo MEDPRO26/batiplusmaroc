@@ -32,6 +32,12 @@ const profile = {
   languages: ["arabic", "french"],
   serviceAreas: ["agadir", "marrakech"],
   services: ["structural", "finishing"],
+  selectedServiceIds: ["service-structural", "service-finishing"],
+  catalogServices: [
+    { _id: "service-structural", slug: "structural", nameEn: "Structural work", nameFr: "Gros œuvre", isActive: true },
+    { _id: "service-finishing", slug: "finishing", nameEn: "Finishing work", nameFr: "Second œuvre", isActive: true },
+    { _id: "service-plumbing", slug: "plumbing", nameEn: "Plumbing", nameFr: "Plomberie", isActive: true },
+  ],
   serviceOptions: Object.keys(en.companyProfileManager.serviceOptions),
   serviceAreaOptions: Object.keys(en.companyProfileManager.serviceAreaOptions),
   languageOptions: Object.keys(en.companyProfileManager.languages),
@@ -90,7 +96,7 @@ test("services are edited in a focused dialog that saves only that section", asy
   expect(calls).toHaveLength(1);
   expect(calls[0].path).toBe("companies.index.updatePublicProfile");
   expect(calls[0].args).toEqual({
-    services: ["structural", "finishing", "plumbing"],
+    serviceIds: ["service-structural", "service-finishing", "service-plumbing"],
   });
 });
 
@@ -124,3 +130,22 @@ for (const width of [375, 1024]) {
     expect(await hasHorizontalOverflow(page)).toBe(false);
   });
 }
+
+test("Company badges use the verified flag while preserving private verification states in both locales", async ({ page }) => {
+  for (const locale of ["en", "fr"] as const) {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await mountHarness(page, profileBundle, state(locale));
+    for (const status of ["verified", "draft", "pending", "rejected"]) {
+      await page.evaluate(status => {
+        const w = window as unknown as { __queries: Record<string, { legal: { verificationStatus: string } }> };
+        w.__queries["companies.index.getProfileManager"].legal.verificationStatus = status;
+        window.dispatchEvent(new Event("convex-harness-update"));
+      }, status);
+      await expect(page.locator('[data-verification="verified"]')).toHaveCount(status === "verified" ? 2 : 0);
+      await expect(page.locator('[data-verification="unverified"]')).toHaveCount(0);
+      if (status !== "verified") await expect(page.getByText((locale === "en" ? en : fr).companyProfileManager.verificationStatus[status as "draft" | "pending" | "rejected"], { exact: true })).toBeVisible();
+      await page.setViewportSize({ width: 320, height: 900 });
+      expect(await hasHorizontalOverflow(page)).toBe(false);
+    }
+  }
+});

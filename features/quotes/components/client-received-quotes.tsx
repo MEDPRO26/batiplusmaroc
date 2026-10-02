@@ -2,8 +2,9 @@
 
 import type { FunctionReturnType } from "convex/server";
 import { useMutation, useQuery } from "convex/react";
-import { ArrowRight, BadgeCheck, CalendarDays, Check, Clock3, ExternalLink, LockKeyhole, MapPin, MessageSquareText, RefreshCw, Star, WalletCards, X } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, Clock3, ExternalLink, LockKeyhole, MapPin, MessageSquareText, RefreshCw, Star, WalletCards, X } from "lucide-react";
 import Image from "next/image";
+import { VerifiedBadge } from "@/features/companies/components/verified-badge";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
@@ -309,7 +310,7 @@ function CompanyIdentity({ company }: { company: ReceivedQuote["company"] }) {
     <div className="min-w-0">
       <h3 className="m-0 truncate text-base font-semibold text-ink">{company.name}</h3>
       <p className="mt-1 mb-0 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-        {company.isVerified ? <span className="inline-flex items-center gap-1 font-medium whitespace-nowrap text-brand"><BadgeCheck aria-hidden className="size-3.5" />{t("verified")}</span> : null}
+        <VerifiedBadge isVerified={company.isVerified} label={t("verified")} />
         <span className="inline-flex items-center gap-1"><MapPin aria-hidden className="size-3.5" />{company.city ?? t("cityUnavailable")}</span>
       </p>
     </div>

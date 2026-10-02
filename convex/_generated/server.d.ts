@@ -33,6 +33,7 @@ type Env = {
   readonly NEXT_PUBLIC_VAPID_PUBLIC_KEY: string | undefined;
   readonly VAPID_PRIVATE_KEY: string | undefined;
   readonly VAPID_SUBJECT: string | undefined;
+  readonly VERIFICATION_WEB_ORIGINS: string | undefined;
 };
 
 /**

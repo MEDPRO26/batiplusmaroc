@@ -34,6 +34,7 @@ vi.mock("@/i18n/navigation", () => ({
   getPathname: () => "/companies/atlas",
 }));
 
+import { VerifiedBadge } from "./components/verified-badge";
 import { CompanyDirectory } from "./components/company-directory";
 
 const company = {
@@ -68,6 +69,21 @@ describe("company directory states", () => {
     queryState.initialNumItems = 0;
     queryState.catalog = [];
   });
+
+  for (const locale of ["en", "fr"] as const) {
+    test.each(["verified", "draft", "pending", "rejected"])(`directory badges are verified-only in ${locale}: %s`, (status) => {
+      const isVerified = status === "verified";
+      queryState.results = [{ ...company, isVerified }];
+      const html = renderDirectory(locale);
+      expect(html.match(/data-verification="verified"/g) ?? []).toHaveLength(isVerified ? 1 : 0);
+      expect(html).not.toContain('data-verification="unverified"');
+      expect(html).not.toMatch(/Unverified company|Entreprise non vérifiée/);
+      if (isVerified) {
+        const label = (locale === "en" ? en : fr).companyDirectory.verified;
+        expect(html).toContain(renderToStaticMarkup(<VerifiedBadge isVerified label={label} />));
+      }
+    });
+  }
 
   test("renders the translated empty state and clear-filters action", () => {
     const html = renderDirectory();
