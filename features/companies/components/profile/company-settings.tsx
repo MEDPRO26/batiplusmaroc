@@ -23,8 +23,7 @@ import {
   ServicesEditor,
 } from "./profile-editors";
 
-export type SettingsSection = "profile" | "contact" | "verification";
-export const SETTINGS_SECTIONS: SettingsSection[] = ["profile", "contact", "verification"];
+import { SETTINGS_SECTIONS, type SettingsSection } from "@/features/companies/lib/settings-sections";
 
 const VERIFICATION_TONE: Record<ProfileManager["legal"]["verificationStatus"], BadgeTone> = {
   verified: "success",

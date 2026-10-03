@@ -1,10 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import { SiteHeader } from "@/components/layout/site-header";
-import {
-  CompanySettings,
-  SETTINGS_SECTIONS,
-  type SettingsSection,
-} from "@/features/companies/components/profile/company-settings";
+import { CompanySettings } from "@/features/companies/components/profile/company-settings";
+import { SETTINGS_SECTIONS, type SettingsSection } from "@/features/companies/lib/settings-sections";
 import { localizedPageMetadata, resolveLocale } from "@/lib/page-meta";
 import { routes } from "@/lib/routes";
 
