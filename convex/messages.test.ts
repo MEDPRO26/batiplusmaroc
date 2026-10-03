@@ -7,6 +7,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
+import { maskCompanyName } from "./lib/companyName";
 
 const modules = import.meta.glob("./**/*.ts");
 type Backend = ReturnType<typeof convexTest>;
@@ -552,8 +553,8 @@ describe("message notification integration", () => {
         actorUserId: state.company.userId,
         payload: {
           projectTitle: "Apartment renovation",
-          companyName: company.name,
-          actorDisplayName: company.name,
+          companyName: maskCompanyName(company.name),
+          actorDisplayName: maskCompanyName(company.name),
           messagePreview: "Nous pouvons commencer lundi.",
         },
       }),
@@ -706,7 +707,8 @@ describe("private company PDF message attachments", () => {
     const companyPage = await company.query(api.messages.index.listMessages, { conversationId: conversationId!, paginationOpts: { numItems: 10, cursor: null } });
     expect(clientPage.page).toHaveLength(2);
     expect(companyPage.page).toHaveLength(2);
-    expect(clientPage.page.map((message) => message.attachment?.fileName).sort()).toEqual(["Plan chantier.pdf", "document.pdf"]);
+    expect(clientPage.page.map((message) => message.attachment?.fileName)).toEqual(["attachment.pdf", "attachment.pdf"]);
+    expect(companyPage.page.map((message) => message.attachment?.fileName).sort()).toEqual(["Plan chantier.pdf", "document.pdf"]);
     expect(clientPage.page.find((message) => message.body === "")?.attachment?.downloadUrl).toContain("/api/messages/attachments/");
 
     const invariants = await state.t.run(async (ctx) => ({
@@ -722,7 +724,7 @@ describe("private company PDF message attachments", () => {
     const notifications = await messageNotifications(state.t, state.clientId);
     expect(notifications).toHaveLength(2);
     expect(notifications.map((notification) => notification.payload.messagePreview)).toEqual([
-      "document.pdf",
+      "attachment.pdf",
       "Voici le plan.",
     ]);
     expect(await messageNotifications(state.t, state.company.userId)).toEqual([]);
@@ -789,7 +791,7 @@ describe("private company PDF message attachments", () => {
       conversationId: conversationId!, body: "Private PDF", clientMessageId: "private-pdf",
       uploadToken: upload.uploadToken, storageId: upload.storageId,
     });
-    await expect(asUser(state.t, state.clientId).query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).resolves.toMatchObject({ storageId: upload.storageId, fileName: "plans.pdf" });
+    await expect(asUser(state.t, state.clientId).query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).resolves.toMatchObject({ storageId: upload.storageId, fileName: "attachment.pdf" });
     await expect(asUser(state.t, state.company.userId).query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).resolves.toMatchObject({ storageId: upload.storageId });
     await expect(asUser(state.t, state.otherClientId).query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).rejects.toThrow("CONVERSATION_NOT_FOUND");
     await expect(asUser(state.t, state.otherCompany.userId).query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: result.attachmentId })).rejects.toThrow("CONVERSATION_NOT_FOUND");

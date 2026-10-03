@@ -128,7 +128,7 @@ describe("public company profile", () => {
       const slug = `profile-${verificationStatus}`;
       await seedCompany(t, { slug, verificationStatus });
       const profile = await t.query(api.portfolio.index.getPublicCompanyProfile, { slug });
-      expect(profile).toMatchObject({ slug, name: "Atlas Bâtiment", isVerified: verificationStatus === "verified" });
+      expect(profile).toMatchObject({ slug, name: "At*** Bâ******", isVerified: verificationStatus === "verified" });
     }
 
     const t = convexTest(schema, modules);

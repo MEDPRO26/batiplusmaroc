@@ -4,6 +4,7 @@ import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { httpAction, internalQuery } from "../_generated/server";
 import { requireFinalQuoteParticipant } from "./index";
+import { companyPdfFileNameForAudience } from "../lib/companyName";
 
 export const authorizePdfDownload = internalQuery({
   args: { revisionId: v.id("finalQuoteRevisions") },
@@ -16,11 +17,11 @@ export const authorizePdfDownload = internalQuery({
     if (!revision?.pdfStorageId) throw new ConvexError("FINAL_QUOTE_PDF_NOT_FOUND");
     const parent = await ctx.db.get(revision.finalQuoteId);
     if (!parent) throw new ConvexError("FINAL_QUOTE_PDF_NOT_FOUND");
-    await requireFinalQuoteParticipant(ctx, parent);
+    const { viewerType } = await requireFinalQuoteParticipant(ctx, parent);
     await assertNotVerificationStorage(ctx, revision.pdfStorageId);
     return {
       storageId: revision.pdfStorageId,
-      fileName: revision.pdfFileName ?? `final-quote-revision-${revision.revisionNumber}.pdf`,
+      fileName: companyPdfFileNameForAudience(revision.pdfFileName ?? `final-quote-revision-${revision.revisionNumber}.pdf`, viewerType === "company" ? "own_company" : viewerType, "final-quote"),
     };
   },
 });

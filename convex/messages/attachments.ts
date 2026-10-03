@@ -11,6 +11,7 @@ import {
   normalizePdfContentType,
   sanitizeMessagePdfFileName,
   validateMessagePdfMetadata,
+  validateUploadFileName,
 } from "./attachmentRules";
 import { requireConversationAccess, requireConversationAccessForUser, sendAuthorizedMessage } from "./index";
 
@@ -75,6 +76,7 @@ export const generateAttachmentUploadUrl = mutation({
       userId: access.viewer.userId,
       token: uploadToken,
       originalFileName: fileName,
+      uploadFileName: validateUploadFileName(args.fileName, "INVALID_MESSAGE_PDF"),
       expectedContentType: "application/pdf",
       expectedSize: args.size,
       expiresAt: now + MESSAGE_ATTACHMENT_UPLOAD_TTL_MS,
@@ -154,6 +156,7 @@ export const commitAttachmentMessage = internalMutation({
       attachment: {
         storageId: args.storageId,
         originalFileName: intent.originalFileName,
+        uploadFileName: intent.uploadFileName,
         sizeBytes: metadata.size,
         uploadIntentId: intent._id,
       },

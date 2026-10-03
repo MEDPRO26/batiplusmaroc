@@ -222,7 +222,7 @@ describe("immutable revision state machine", () => {
       actorUserId: s.companyUserId,
       payload: {
         projectTitle: "Villa renovation",
-        companyName: "Atlas Build",
+        companyName: "At*** Bu***",
         amountMad: 380_000,
       },
     });
@@ -1114,6 +1114,6 @@ describe("completed visit and private PDF", () => {
     await expect(asUser(s.t, s.seoId).query(api.finalQuotes.index.getPdfDownloadUrl, { revisionId })).rejects.toThrow("FINAL_QUOTE_NOT_FOUND");
     await expect(s.t.query(api.finalQuotes.index.getPdfDownloadUrl, { revisionId })).rejects.toThrow("NOT_AUTHENTICATED");
     const dto = await client.query(api.finalQuotes.index.getForConversation, { conversationId: s.conversationId });
-    expect(dto.finalQuote?.revisions[0]).toMatchObject({ hasPdf: true, pdfFileName: "devis-final.pdf" }); expect(dto.finalQuote?.revisions[0]).not.toHaveProperty("pdfStorageId");
+    expect(dto.finalQuote?.revisions[0]).toMatchObject({ hasPdf: true, pdfFileName: "final-quote.pdf" }); expect(dto.finalQuote?.revisions[0]).not.toHaveProperty("pdfStorageId");
   });
 });

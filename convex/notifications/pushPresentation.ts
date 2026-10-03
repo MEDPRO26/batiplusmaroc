@@ -1,5 +1,6 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { ActiveNotificationType } from "./constants";
+import { notificationCompanyIdentity } from "./companyIdentity";
 import {
   localizedNotificationDestination,
   type NotificationAccountType,
@@ -15,7 +16,7 @@ const GENERIC_NAMES = {
 type PushNotificationRecord = Pick<
   Doc<"notifications">,
   "type" | "entity" | "payload"
-> & { _id: Id<"notifications"> };
+> & { _id: Id<"notifications">; actorType?: Doc<"users">["accountType"] };
 
 const BODY_TEMPLATES = {
   en: {
@@ -92,7 +93,7 @@ export function marketplacePushPresentation(
   return {
     notificationId: notification._id,
     title: "Batiplus Maroc",
-    body: bodyFor(notification, locale),
+    body: bodyFor({ ...notification, payload: notificationCompanyIdentity(notification.payload, accountType, notification.actorType) }, locale),
     locale,
     url: localizedNotificationDestination(locale, notification, accountType),
     tag: `batiplus-notification-${notification._id}`,

@@ -4,6 +4,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
+import { companyFileNamesForRelationship, companyNameForAudience, maskCompanyNamesInText } from "../lib/companyName";
 import {
   getCompanyOperationalStatus,
   requireCompanyMarketplaceWriteAllowed,
@@ -234,25 +235,29 @@ function proposalMatches(visit: Doc<"siteVisits">, args: { proposedDate: string;
   return visit.proposedDate === args.proposedDate && visit.proposedTime === args.proposedTime && visit.siteAddress === args.siteAddress && (visit.note ?? undefined) === args.note;
 }
 
-async function visitDto(ctx: Ctx, visit: Doc<"siteVisits">, viewer: Participant | null) {
+async function visitDto(ctx: Ctx, visit: Doc<"siteVisits">, viewer: Participant | null, maskedNames: readonly unknown[]) {
   const newestProposals = await ctx.db.query("siteVisitProposals").withIndex("by_visitId_and_sequence", (q) => q.eq("visitId", visit._id)).order("desc").take(50);
   if (!visit.currentProposalId || newestProposals.length === 0 || newestProposals[0]?._id !== visit.currentProposalId) throw new ConvexError("SITE_VISIT_INTEGRITY_ERROR");
   const proposals = newestProposals.reverse();
+  const files = viewer?.actorType === "client" ? await companyFileNamesForRelationship(ctx, visit.projectId, visit.companyId, visit.clientId,
+    [visit.siteAddress, visit.note, visit.cancellationReason, ...proposals.flatMap(proposal => [proposal.siteAddress, proposal.note])]) : [];
   const other = viewer !== null && viewer.actorType !== proposerActorType(visit);
   return {
     id: visit._id, assessmentId: visit.assessmentId, projectId: visit.projectId, clientId: visit.clientId,
     companyId: visit.companyId, conversationId: visit.conversationId, initialQuoteId: visit.initialQuoteId,
     proposedByUserId: visit.proposedByUserId, proposedDate: visit.proposedDate, proposedTime: visit.proposedTime,
-    timezone: visit.timezone, scheduledEpoch: moroccoDateTimeToEpoch(visit.proposedDate, visit.proposedTime), siteAddress: visit.siteAddress, note: visit.note ?? null, status: visit.status,
+    timezone: visit.timezone, scheduledEpoch: moroccoDateTimeToEpoch(visit.proposedDate, visit.proposedTime), siteAddress: maskCompanyNamesInText(visit.siteAddress, maskedNames, files),
+    note: visit.note === undefined ? null : maskCompanyNamesInText(visit.note, maskedNames, files), status: visit.status,
     proposedAt: visit.proposedAt, confirmedByUserId: visit.confirmedByUserId ?? null, confirmedAt: visit.confirmedAt ?? null,
     declinedByUserId: visit.declinedByUserId ?? null, declinedAt: visit.declinedAt ?? null,
     cancelledByUserId: visit.cancelledByUserId ?? null, cancelledAt: visit.cancelledAt ?? null,
-    cancellationReason: visit.cancellationReason ?? null, completedByUserId: visit.completedByUserId ?? null,
+    cancellationReason: visit.cancellationReason === undefined ? null : maskCompanyNamesInText(visit.cancellationReason, maskedNames, files), completedByUserId: visit.completedByUserId ?? null,
     completedAt: visit.completedAt ?? null, createdAt: visit.createdAt, updatedAt: visit.updatedAt,
     proposals: proposals.map((proposal) => ({
       id: proposal._id, sequence: proposal.sequence, proposedByUserId: proposal.proposedByUserId,
       proposedDate: proposal.proposedDate, proposedTime: proposal.proposedTime, timezone: proposal.timezone,
-      siteAddress: proposal.siteAddress, note: proposal.note ?? null, proposedAt: proposal.proposedAt,
+      siteAddress: maskCompanyNamesInText(proposal.siteAddress, maskedNames, files),
+      note: proposal.note === undefined ? null : maskCompanyNamesInText(proposal.note, maskedNames, files), proposedAt: proposal.proposedAt,
     })),
     canPropose: viewer !== null && visit.status === "proposed" && other,
     canConfirm: viewer !== null && visit.status === "proposed" && other,
@@ -265,13 +270,16 @@ async function visitDto(ctx: Ctx, visit: Doc<"siteVisits">, viewer: Participant 
 async function assessmentDto(ctx: Ctx, assessment: Doc<"siteAssessments">, viewer: Participant | null) {
   const [company, visit] = await Promise.all([ctx.db.get(assessment.companyId), latestVisitForAssessment(ctx, assessment._id)]);
   if (!company) throw new ConvexError("COMPANY_NOT_FOUND");
+  const maskedNames = viewer?.actorType === "client" ? [company.name, company.legalName] : [];
+  const files = viewer?.actorType === "client" ? await companyFileNamesForRelationship(ctx, assessment.projectId, assessment.companyId, assessment.clientId, [assessment.clientNote, assessment.companyNote]) : [];
   return {
     id: assessment._id, projectId: assessment.projectId, companyId: assessment.companyId,
-    companyName: company.name?.trim() || "", initialQuoteId: assessment.initialQuoteId,
+    companyName: companyNameForAudience(company.name?.trim(), viewer === null ? "admin" : viewer.actorType === "company" ? "own_company" : "client"), initialQuoteId: assessment.initialQuoteId,
     conversationId: assessment.conversationId, status: assessment.status, invitedAt: assessment.invitedAt,
-    acceptedAt: assessment.acceptedAt ?? null, clientNote: assessment.clientNote ?? null,
-    companyNote: assessment.companyNote ?? null, updatedAt: assessment.updatedAt,
-    visit: visit ? await visitDto(ctx, visit, viewer) : null,
+    acceptedAt: assessment.acceptedAt ?? null,
+    clientNote: assessment.clientNote === undefined ? null : maskCompanyNamesInText(assessment.clientNote, maskedNames, files),
+    companyNote: assessment.companyNote === undefined ? null : maskCompanyNamesInText(assessment.companyNote, maskedNames, files), updatedAt: assessment.updatedAt,
+    visit: visit ? await visitDto(ctx, visit, viewer, maskedNames) : null,
   };
 }
 

@@ -3,6 +3,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
+import { companyFileNamesForRelationship, companyNameForAudience, maskCompanyNamesInText } from "../lib/companyName";
 import { assertCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { ensureConversationForAcceptedInvitation } from "../messages/index";
@@ -129,7 +130,7 @@ function clientDisplayName(client: Doc<"users">) {
     : firstName || client.name?.trim() || "";
 }
 
-async function toInvitationDto(ctx: Ctx, invitation: Doc<"invitations">) {
+async function toInvitationDto(ctx: Ctx, invitation: Doc<"invitations">, viewerType: "client" | "company") {
   const [project, company, client] = await Promise.all([
     ctx.db.get(invitation.projectId),
     ctx.db.get(invitation.companyId),
@@ -143,18 +144,21 @@ async function toInvitationDto(ctx: Ctx, invitation: Doc<"invitations">) {
   ) {
     throw new ConvexError("INVITATION_INTEGRITY_ERROR");
   }
+  const maskedNames = viewerType === "client" ? [company.name, company.legalName] : [];
+  const files = viewerType === "client" ? await companyFileNamesForRelationship(ctx, project._id, company._id, invitation.clientUserId,
+    [project.title, project.description, invitation.message]) : [];
   return {
     id: invitation._id,
     projectId: project._id,
-    projectTitle: project.title ?? "",
-    projectDescription: project.description ?? "",
+    projectTitle: maskCompanyNamesInText(project.title ?? "", maskedNames, files),
+    projectDescription: maskCompanyNamesInText(project.description ?? "", maskedNames, files),
     city: project.city ?? null,
     category: project.primaryCategory ?? null,
     companyId: company._id,
-    companyName: company.name ?? "",
+    companyName: companyNameForAudience(company.name, viewerType === "company" ? "own_company" : "client"),
     isVerified: company.verificationStatus === "verified",
     clientDisplayName: clientDisplayName(client),
-    message: invitation.message ?? null,
+    message: invitation.message === undefined ? null : maskCompanyNamesInText(invitation.message, maskedNames, files),
     status: invitation.status,
     createdAt: invitation.createdAt,
     updatedAt: invitation.updatedAt,
@@ -300,7 +304,7 @@ export const listMyCompanyInvitations = query({
       )
       .order("desc")
       .take(MAX_INVITATIONS);
-    return await Promise.all(rows.map((row) => toInvitationDto(ctx, row)));
+    return await Promise.all(rows.map((row) => toInvitationDto(ctx, row, "company")));
   },
 });
 
@@ -317,7 +321,7 @@ export const listProjectInvitations = query({
       )
       .order("desc")
       .take(MAX_INVITATIONS);
-    return await Promise.all(rows.map((row) => toInvitationDto(ctx, row)));
+    return await Promise.all(rows.map((row) => toInvitationDto(ctx, row, "client")));
   },
 });
 

@@ -495,7 +495,7 @@ describe("site visit notification integration", () => {
         entity: { type: "site_visit", id: companyProposal.visitId },
         actorUserId: companyState.company.userId,
         payload: expect.objectContaining({
-          actorDisplayName: "Atlas Build",
+          actorDisplayName: "At*** Bu***",
           scheduledAt: expect.any(Number),
         }),
       }),

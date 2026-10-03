@@ -9,6 +9,7 @@ import { consumeVerifiedPublicMediaIntent } from "../storage/publicMediaModel";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { getCompanyOperationalStatus } from "../companies/operationalStatus";
 import { resolvedServiceNames } from "../serviceCatalog";
+import { maskCompanyName, maskPublicCompanyText } from "../lib/companyName";
 
 const projectTypeValidator = v.union(
   v.literal("construction"),
@@ -104,7 +105,7 @@ async function resolveProject(ctx: QueryCtx, project: {
   coverImageStorageId?: Id<"_storage">;
   coverMediaId?: Id<"publicMedia">;
   updatedAt: number;
-}) {
+}, maskedNames: readonly unknown[] = []) {
   const [coverImageUrl, mediaRows] = await Promise.all([
     resolveMediaUrl(ctx, {
       storageId: project.coverImageStorageId,
@@ -120,13 +121,13 @@ async function resolveProject(ctx: QueryCtx, project: {
         storageId: item.storageId,
         publicMediaId: item.publicMediaId,
       }),
-      caption: item.caption ?? null,
+      caption: item.caption === undefined ? null : maskPublicCompanyText(item.caption, maskedNames),
     }))))
     .filter((item): item is { url: string; caption: string | null } => item.url !== null);
   return {
     id: project._id,
-    title: project.title,
-    description: project.description,
+    title: maskPublicCompanyText(project.title, maskedNames),
+    description: maskPublicCompanyText(project.description, maskedNames),
     city: project.city,
     projectType: project.projectType,
     surface: project.surface ?? null,
@@ -188,7 +189,8 @@ export const getPublicCompanyProfile = query({
     const coverImageUrl = coverMedia && coverMedia.companyId === company._id && coverMedia.purpose === "companyCover"
       ? getPublicMediaUrl(coverMedia.objectKey)
       : null;
-    const portfolio = (await Promise.all(projects.map((project) => resolveProject(ctx, project))))
+    const names = [company.name, company.legalName];
+    const portfolio = (await Promise.all(projects.map((project) => resolveProject(ctx, project, names))))
       .filter((project): project is NonNullable<typeof project> => project !== null);
     const reviews = (await Promise.all(reviewRows.map(async (review) => {
       const [client, project] = await Promise.all([
@@ -200,23 +202,23 @@ export const getPublicCompanyProfile = query({
       const lastInitial = client.lastName?.trim().charAt(0).toUpperCase() || null;
       return {
         rating: review.rating,
-        comment: review.comment,
+        comment: maskPublicCompanyText(review.comment, names),
         createdAt: review.createdAt,
         reviewerFirstName: firstName,
         reviewerLastInitial: lastInitial,
-        projectTitle: project.title ?? null,
+        projectTitle: project.title === undefined ? null : maskPublicCompanyText(project.title, names),
       };
     }))).filter((review): review is NonNullable<typeof review> => review !== null);
     return {
       id: company._id,
       slug: company.slug,
-      name: company.name,
+      name: maskCompanyName(company.name),
       logoUrl,
       coverImageUrl,
       isVerified: company.verificationStatus === "verified",
       marketplaceAvailable: getCompanyOperationalStatus(company) !== "suspended",
       city: company.city,
-      description: company.description,
+      description: maskPublicCompanyText(company.description, names),
       services: services.map((item) => item.service),
       serviceNames,
       serviceAreas: company.serviceAreas ?? [],
