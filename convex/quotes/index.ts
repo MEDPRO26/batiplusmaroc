@@ -18,6 +18,7 @@ import { getPublicMediaUrl } from "../storage/publicUrl";
 import { ensureConversationForQuote } from "../messages/index";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { invitationForPair } from "../invitations/index";
+import { companyFileNamesForRelationship, maskCompanyName, maskCompanyNamesInText, maskPublicCompanyText } from "../lib/companyName";
 import {
   createNotification,
   createNotificationForActiveCompanyMembers,
@@ -225,8 +226,9 @@ async function requireProjectOwnerQuote(ctx: QuoteCtx, rawQuoteId: string) {
   return { quote, userId };
 }
 
-async function companySummary(ctx: QuoteCtx, companyId: Id<"companies">) {
-  const company = await ctx.db.get(companyId);
+async function receivedQuoteDto(ctx: QuoteCtx, quote: Doc<"projectQuotes">, loadedCompany?: Doc<"companies"> | null) {
+  const companyId = quote.companyId;
+  const company = loadedCompany === undefined ? await ctx.db.get(companyId) : loadedCompany;
   if (!company?.name) throw new ConvexError("COMPANY_NOT_FOUND");
   const logoMedia = company.logoMediaId ? await ctx.db.get(company.logoMediaId) : null;
   const logoUrl = logoMedia && logoMedia.companyId === company._id && logoMedia.purpose === "companyLogo"
@@ -234,13 +236,24 @@ async function companySummary(ctx: QuoteCtx, companyId: Id<"companies">) {
     : company.logoStorageId
       ? await getNonVerificationStorageUrl(ctx, company.logoStorageId)
       : null;
+  const names = [company.name, company.legalName];
+  const project = await ctx.db.get(quote.projectId);
+  if (!project) throw new ConvexError("PROJECT_NOT_FOUND");
+  const files = await companyFileNamesForRelationship(ctx, quote.projectId, companyId, project.clientId,
+    [quote.message, quote.scope]);
   return {
-    name: company.name,
-    slug: company.slug ?? null,
-    city: company.city ?? null,
-    description: company.description ?? null,
-    logoUrl,
-    isVerified: company.verificationStatus === "verified",
+    ...quoteFieldsFor(quote),
+    message: maskCompanyNamesInText(quote.message, names, files),
+    scope: maskCompanyNamesInText(quote.scope, names, files),
+    company: {
+      name: maskCompanyName(company.name),
+      slug: company.slug ?? null,
+      city: company.city ?? null,
+      // Public profile copy has no private-file relationship with this Client.
+      description: company.description === undefined ? null : maskPublicCompanyText(company.description, names),
+      logoUrl,
+      isVerified: company.verificationStatus === "verified",
+    },
   };
 }
 
@@ -515,12 +528,7 @@ export const listReceivedInitialQuotes = query({
       .sort((a, b) => b.submittedAt - a.submittedAt)
       .slice(0, MAX_QUOTES_PER_PROJECT_RESPONSE);
     return await Promise.all(
-      quotes.map(async (quote) => {
-        return {
-          ...quoteFieldsFor(quote),
-          company: await companySummary(ctx, quote.companyId),
-        };
-      }),
+      quotes.map((quote) => receivedQuoteDto(ctx, quote)),
     );
   },
 });
@@ -531,15 +539,18 @@ export const getReceivedInitialQuote = query({
   returns: v.union(v.null(), receivedQuoteDetailValidator),
   handler: async (ctx, args) => {
     const { quote } = await requireProjectOwnerQuote(ctx, args.quoteId);
-    const history = await ctx.db
+    const [company, history] = await Promise.all([ctx.db.get(quote.companyId), ctx.db
       .query("quoteStatusHistory")
       .withIndex("by_quoteId_and_changedAt", (q) => q.eq("quoteId", quote._id))
       .order("asc")
-      .take(50);
+      .take(50)]);
+    const project = await ctx.db.get(quote.projectId);
+    if (!project) throw new ConvexError("PROJECT_NOT_FOUND");
+    const files = await companyFileNamesForRelationship(ctx, quote.projectId, quote.companyId, project.clientId, history.map(item => item.reason));
     return {
-      ...quoteFieldsFor(quote),
-      company: await companySummary(ctx, quote.companyId),
-      history: history.map((item) => ({ oldStatus: item.oldStatus, newStatus: item.newStatus, changedAt: item.changedAt, reason: item.reason ?? null })),
+      ...await receivedQuoteDto(ctx, quote, company),
+      history: history.map((item) => ({ oldStatus: item.oldStatus, newStatus: item.newStatus, changedAt: item.changedAt,
+        reason: item.reason === undefined ? null : maskCompanyNamesInText(item.reason, [company?.name, company?.legalName], files) })),
     };
   },
 });

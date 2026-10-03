@@ -193,7 +193,7 @@ describe("marketplace push delivery", () => {
     expect(payloads[subscription("phone").endpoint]).toEqual({
       notificationId: first.notificationId,
       title: "Batiplus Maroc",
-      body: "Nouveau message de Amine au sujet de Villa Atlas.",
+      body: "Nouveau message de Am*** au sujet de Villa Atlas.",
       locale: "fr",
       url: `/fr/messages/${context.conversationId}`,
       tag: `batiplus-notification-${first.notificationId}`,
@@ -201,7 +201,7 @@ describe("marketplace push delivery", () => {
     expect(payloads[subscription("laptop").endpoint]).toEqual({
       notificationId: first.notificationId,
       title: "Batiplus Maroc",
-      body: "New message from Amine about Villa Atlas.",
+      body: "New message from Am*** about Villa Atlas.",
       locale: "en",
       url: `/en/messages/${context.conversationId}`,
       tag: `batiplus-notification-${first.notificationId}`,
@@ -601,7 +601,7 @@ describe("marketplace push presentation", () => {
       marketplacePushPresentation({ ...base, payload: { ...base.payload, companyId }, type, entity } as Parameters<typeof marketplacePushPresentation>[0], role, locale);
 
     expect(render("proposal_received", { type: "proposal", id: "proposal-1" }, "client", "en")).toMatchObject({
-      body: "Atlas Build sent a proposal for Villa Atlas.",
+      body: "At*** Bu*** sent a proposal for Villa Atlas.",
       url: "/en/client/dashboard",
     });
     expect(render("invitation_received", { type: "invitation", id: "invitation-1" }, "company", "fr").url).toBe("/fr/espace-entreprise/invitations");

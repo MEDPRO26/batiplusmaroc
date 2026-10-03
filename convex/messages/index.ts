@@ -1,5 +1,6 @@
 import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { companyFileNamesForConversation, companyPdfFileNameForAudience, maskCompanyName, maskCompanyNamesInText, type CompanyFileNameReference } from "../lib/companyName";
 import { paginationOptsValidator, paginationResultValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
@@ -10,10 +11,10 @@ import {
   createNotificationForActiveCompanyMembers,
 } from "../notifications/model";
 import { getPublicMediaUrl } from "../storage/publicUrl";
+import { MESSAGE_PREVIEW_LENGTH, plainMessagePreview } from "./attachmentRules";
 
 const MAX_CONVERSATIONS = 100;
 const MAX_MESSAGE_LENGTH = 4_000;
-const MESSAGE_PREVIEW_LENGTH = 120;
 const MIN_SEND_INTERVAL_MS = 500;
 
 const conversationStatusValidator = v.union(v.literal("active"), v.literal("closed"));
@@ -64,16 +65,6 @@ function clientDisplayName(client: Doc<"users">) {
   const lastInitial = client.lastName?.trim().charAt(0);
   if (firstName && lastInitial) return `${firstName} ${lastInitial}.`;
   return firstName || client.name?.trim() || "";
-}
-
-function plainMessagePreview(value: string) {
-  const preview = value
-    .replace(/<[^>]*>/g, "")
-    .replace(/[\u0000-\u001f\u007f]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, MESSAGE_PREVIEW_LENGTH);
-  return preview || undefined;
 }
 
 async function createMessageReceivedNotifications(
@@ -206,6 +197,7 @@ export async function requireConversationAccess(
 type PendingMessageAttachment = {
   storageId: Id<"_storage">;
   originalFileName: string;
+  uploadFileName?: string;
   sizeBytes: number;
   uploadIntentId: Id<"messageAttachmentUploadIntents">;
 };
@@ -240,6 +232,7 @@ export async function sendAuthorizedMessage(
         uploadedByUserId: viewer.userId,
         kind: "pdf",
         originalFileName: args.attachment.originalFileName,
+        uploadFileName: args.attachment.uploadFileName,
         mimeType: "application/pdf",
         sizeBytes: args.attachment.sizeBytes,
         createdAt: now,
@@ -278,13 +271,31 @@ async function threadFor(ctx: MessageCtx, conversation: Doc<"conversations">, vi
       : null,
   ]);
   if (!company || !client) return null;
+  const maskedNames = viewerType === "client" ? [company.name, company.legalName] : [];
+  let files: readonly CompanyFileNameReference[] = [];
+  let preview = conversation.lastMessagePreview === undefined ? null : maskCompanyNamesInText(conversation.lastMessagePreview, maskedNames);
+  if (viewerType === "client" && preview !== null) {
+    // Sanitize the full source before truncation, including legacy previews.
+    const latestMessage = await ctx.db.query("messages").withIndex("by_conversationId_and_createdAt", q =>
+      q.eq("conversationId", conversation._id)).order("desc").first();
+    if (latestMessage) {
+      const attachment = await ctx.db.query("messageAttachments").withIndex("by_messageId", q => q.eq("messageId", latestMessage._id)).unique();
+      const source = latestMessage.body || attachment?.originalFileName || conversation.lastMessagePreview!;
+      files = await companyFileNamesForConversation(ctx, conversation, [source, project.title], attachment ? [{ originalFileName: attachment.originalFileName, kind: "attachment" }] : []);
+      preview = maskCompanyNamesInText(source, maskedNames, files).slice(0, MESSAGE_PREVIEW_LENGTH);
+    }
+  }
+  if (viewerType === "client" && files.length === 0) {
+    files = await companyFileNamesForConversation(ctx, conversation, [project.title, conversation.lastMessagePreview]);
+    if (preview !== null) preview = maskCompanyNamesInText(preview, maskedNames, files);
+  }
   const lastReadAt = viewerType === "client" ? conversation.clientLastReadAt : conversation.companyLastReadAt;
   return {
     id: conversation._id,
     projectId: conversation.projectId,
     quoteId: conversation.quoteId ?? null,
-    projectTitle: project.title ?? null,
-    otherPartyName: viewerType === "client" ? company.name?.trim() || "" : clientDisplayName(client),
+    projectTitle: project.title === undefined ? null : maskCompanyNamesInText(project.title, maskedNames, files),
+    otherPartyName: viewerType === "client" ? maskCompanyName(company.name) : clientDisplayName(client),
     companySlug: viewerType === "client" ? company.slug ?? null : null,
     otherPartyAvatarUrl:
       viewerType === "client"
@@ -293,7 +304,7 @@ async function threadFor(ctx: MessageCtx, conversation: Doc<"conversations">, vi
           ? getPublicMediaUrl(clientProfile.avatarObjectKey)
           : null,
     status: conversation.status,
-    preview: conversation.lastMessagePreview ?? null,
+    preview,
     lastMessageAt: conversation.lastMessageAt ?? null,
     unread: conversation.lastMessageAt !== undefined && (lastReadAt === undefined || conversation.lastMessageAt > lastReadAt),
   };
@@ -469,26 +480,31 @@ export const listMessages = query({
     if (!Number.isInteger(args.paginationOpts.numItems) || args.paginationOpts.numItems < 1 || args.paginationOpts.numItems > 50) {
       throw new ConvexError("INVALID_MESSAGE_PAGE_SIZE");
     }
-    const { viewer } = await requireConversationAccess(ctx, args.conversationId);
+    const { viewer, conversation } = await requireConversationAccess(ctx, args.conversationId);
+    const company = viewer.viewerType === "client" ? await ctx.db.get(conversation.companyId) : null;
+    const names = [company?.name, company?.legalName];
     const page = await ctx.db.query("messages").withIndex("by_conversationId_and_createdAt", (q) => q.eq("conversationId", args.conversationId)).order("desc").paginate(args.paginationOpts);
-    const messages = await Promise.all(page.page.map(async (message) => {
-      const attachment = await ctx.db.query("messageAttachments").withIndex("by_messageId", (q) => q.eq("messageId", message._id)).unique();
+    const attachments = await Promise.all(page.page.map(message => ctx.db.query("messageAttachments").withIndex("by_messageId", q => q.eq("messageId", message._id)).unique()));
+    const files = viewer.viewerType === "client" ? await companyFileNamesForConversation(ctx, conversation,
+      page.page.map(message => message.body), attachments.flatMap(attachment => attachment ? [{ originalFileName: attachment.originalFileName, kind: "attachment" as const }] : [])) : [];
+    const messages = page.page.map((message, index) => {
+      const attachment = attachments[index];
       return {
         id: message._id,
         senderType: message.senderType,
-        body: message.body,
+        body: maskCompanyNamesInText(message.body, names, files),
         createdAt: message.createdAt,
         isMine: message.senderUserId === viewer.userId,
         attachment: attachment ? {
           id: attachment._id,
           kind: attachment.kind,
-          fileName: attachment.originalFileName,
+          fileName: companyPdfFileNameForAudience(attachment.originalFileName, viewer.viewerType === "company" ? "own_company" : "client", "attachment"),
           mimeType: attachment.mimeType,
           sizeBytes: attachment.sizeBytes,
           downloadUrl: `/api/messages/attachments/${attachment._id}`,
         } : null,
       };
-    }));
+    });
     return { ...page, page: messages };
   },
 });

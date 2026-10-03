@@ -4,6 +4,7 @@ import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { httpAction, internalQuery } from "../_generated/server";
 import { requireConversationAccess } from "./index";
+import { companyPdfFileNameForAudience } from "../lib/companyName";
 
 export const authorizeAttachmentDownload = internalQuery({
   args: { attachmentId: v.id("messageAttachments") },
@@ -11,13 +12,13 @@ export const authorizeAttachmentDownload = internalQuery({
   handler: async (ctx, args) => {
     const attachment = await ctx.db.get(args.attachmentId);
     if (!attachment) throw new ConvexError("MESSAGE_ATTACHMENT_NOT_FOUND");
-    await requireConversationAccess(ctx, attachment.conversationId);
+    const { viewer } = await requireConversationAccess(ctx, attachment.conversationId);
     const message = await ctx.db.get(attachment.messageId);
     if (!message || message.conversationId !== attachment.conversationId || message.senderUserId !== attachment.uploadedByUserId) {
       throw new ConvexError("MESSAGE_ATTACHMENT_NOT_FOUND");
     }
     await assertNotVerificationStorage(ctx, attachment.storageId);
-    return { storageId: attachment.storageId, fileName: attachment.originalFileName, sizeBytes: attachment.sizeBytes };
+    return { storageId: attachment.storageId, fileName: companyPdfFileNameForAudience(attachment.originalFileName, viewer.viewerType === "company" ? "own_company" : "client", "attachment"), sizeBytes: attachment.sizeBytes };
   },
 });
 

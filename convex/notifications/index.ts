@@ -4,6 +4,7 @@ import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
+import { notificationIdentityForRecipient } from "./companyIdentity";
 import {
   notificationEntityValidator,
   notificationPayloadValidator,
@@ -45,6 +46,7 @@ export const listMyNotifications = query({
       throw new ConvexError("INVALID_NOTIFICATION_PAGE_SIZE");
     }
     const userId = await requireUserId(ctx);
+    const recipient = await ctx.db.get(userId);
     const [state, page] = await Promise.all([
       recipientState(ctx, userId),
       ctx.db
@@ -56,15 +58,16 @@ export const listMyNotifications = query({
     return {
       ...page,
       page: await Promise.all(page.page.map(async (notification) => {
-        const proposal = notification.entity.type === "proposal"
-          ? await ctx.db.get(notification.entity.id)
-          : null;
+        const [proposal, identity] = await Promise.all([
+          notification.entity.type === "proposal" ? ctx.db.get(notification.entity.id) : null,
+          notificationIdentityForRecipient(ctx, notification, recipient?.accountType),
+        ]);
         return {
           id: notification._id,
           type: notification.type,
           entity: notification.entity,
           projectId: proposal?.projectId ?? null,
-          payload: notification.payload,
+          payload: identity.payload,
           actorUserId: notification.actorUserId ?? null,
           createdAt: notification.createdAt,
           readAt: notification.readAt ?? (

@@ -11,6 +11,7 @@ import { internalMutation, query } from "../_generated/server";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { resolvedServiceNames } from "../serviceCatalog";
 import { getCompanyOperationalStatus } from "./operationalStatus";
+import { maskCompanyName, maskPublicCompanyText } from "../lib/companyName";
 
 export const companyServices = [
   "houseConstruction",
@@ -171,6 +172,7 @@ async function resolvePublicMediaUrl(
 }
 
 async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, serviceFilter?: ServiceFilter) {
+  const names = [company.name, company.legalName];
   if (
     getCompanyOperationalStatus(company) === "suspended" ||
     company.onboardingStatus !== "completed" ||
@@ -214,7 +216,7 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, s
           storageId: project.coverImageStorageId,
           publicMediaId: project.coverMediaId,
         });
-        return url ? { title: project.title, url } : null;
+        return url ? { title: maskPublicCompanyText(project.title, names), url } : null;
       }),
     )
   ).filter((item): item is { title: string; url: string } => item !== null);
@@ -222,8 +224,8 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, s
   return {
     id: company._id,
     slug: company.slug,
-    name: company.name,
-    description: company.description,
+    name: maskCompanyName(company.name),
+    description: maskPublicCompanyText(company.description, names),
     city: company.city,
     isVerified: company.verificationStatus === "verified",
     yearsExperience: company.yearsExperience ?? null,

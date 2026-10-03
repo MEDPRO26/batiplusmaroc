@@ -498,6 +498,8 @@ export default defineSchema({
     companyNote: v.optional(v.string()),
     pdfStorageId: v.optional(v.id("_storage")),
     pdfFileName: v.optional(v.string()),
+    /** Private browser spelling for read-time redaction; never included in Client DTOs. */
+    pdfUploadFileName: v.optional(v.string()),
     pdfSize: v.optional(v.number()),
     submittedByUserId: v.id("users"),
     submittedAt: v.number(),
@@ -737,6 +739,8 @@ export default defineSchema({
     uploadedByUserId: v.id("users"),
     kind: v.literal("pdf"),
     originalFileName: v.string(),
+    /** Optional for legacy rows; retain the browser spelling before sanitization. */
+    uploadFileName: v.optional(v.string()),
     mimeType: v.literal("application/pdf"),
     sizeBytes: v.number(),
     createdAt: v.number(),
@@ -749,6 +753,7 @@ export default defineSchema({
     userId: v.id("users"),
     token: v.string(),
     originalFileName: v.string(),
+    uploadFileName: v.optional(v.string()),
     expectedContentType: v.literal("application/pdf"),
     expectedSize: v.number(),
     expiresAt: v.number(),

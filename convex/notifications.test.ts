@@ -328,6 +328,6 @@ describe("notification foundation", () => {
     });
     const refreshed = await viewer.query(api.notifications.index.listMyNotifications, page());
     expect(refreshed.page).toHaveLength(1);
-    expect(refreshed.page[0]).toMatchObject({ type: "proposal_received", payload: { companyName: "Atlas Build" } });
+    expect(refreshed.page[0]).toMatchObject({ type: "proposal_received", payload: { companyName: "At*** Bu***" } });
   });
 });

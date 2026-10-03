@@ -4,6 +4,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser, requireVerifiedCompanyMarketplaceUser } from "../companies/access";
+import { companyFileNamesForConversation, companyNameForAudience, companyPdfFileNameForAudience, maskCompanyNamesInText, type CompanyNameAudience, type CompanyFileNameReference } from "../lib/companyName";
 import { assertCompanyMarketplaceWriteAllowed, getCompanyOperationalStatus, requireCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
 import {
   createDealFromFreshFinalQuoteAcceptance,
@@ -17,6 +18,7 @@ import {
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import { assertProjectTransition } from "../projects/state";
 import { assertFinalQuoteTransition } from "./state";
+import { validateUploadFileName } from "../messages/attachmentRules";
 
 const MAX_PRICE_MAD = 100_000_000;
 const MAX_DURATION_DAYS = 1_825;
@@ -245,12 +247,13 @@ export async function requireFinalQuoteParticipant(ctx: Ctx, parent: Doc<"finalQ
   throw new ConvexError("FINAL_QUOTE_NOT_FOUND");
 }
 
-async function revisionDto(revision: Doc<"finalQuoteRevisions">) {
+async function revisionDto(revision: Doc<"finalQuoteRevisions">, maskedNames: readonly unknown[], audience: CompanyNameAudience, files: readonly CompanyFileNameReference[]) {
   return { id: revision._id, revisionNumber: revision.revisionNumber, price: revision.price, currency: revision.currency,
     duration: revision.duration, plannedStartDate: revision.plannedStartDate, validUntil: revision.validUntil,
-    scope: revision.scope, inclusions: revision.inclusions, exclusions: revision.exclusions, paymentTerms: revision.paymentTerms,
-    companyNote: revision.companyNote ?? null, hasPdf: revision.pdfStorageId !== undefined,
-    pdfFileName: revision.pdfFileName ?? null, pdfSize: revision.pdfSize ?? null, submittedAt: revision.submittedAt };
+    scope: maskCompanyNamesInText(revision.scope, maskedNames, files), inclusions: maskCompanyNamesInText(revision.inclusions, maskedNames, files),
+    exclusions: maskCompanyNamesInText(revision.exclusions, maskedNames, files), paymentTerms: maskCompanyNamesInText(revision.paymentTerms, maskedNames, files),
+    companyNote: revision.companyNote === undefined ? null : maskCompanyNamesInText(revision.companyNote, maskedNames, files), hasPdf: revision.pdfStorageId !== undefined,
+    pdfFileName: revision.pdfFileName === undefined ? null : companyPdfFileNameForAudience(revision.pdfFileName, audience, "final-quote"), pdfSize: revision.pdfSize ?? null, submittedAt: revision.submittedAt };
 }
 
 async function finalQuoteDto(
@@ -264,15 +267,24 @@ async function finalQuoteDto(
     ctx.db.query("finalQuoteRevisions").withIndex("by_finalQuoteId_and_revisionNumber", (q) => q.eq("finalQuoteId", parent._id)).order("asc").take(100),
   ]);
   if (!company) throw new ConvexError("FINAL_QUOTE_INTEGRITY_ERROR");
+  const maskedNames = viewerType === "client" ? [company.name, company.legalName] : [];
+  let files: readonly CompanyFileNameReference[] = [];
+  if (viewerType === "client") {
+    const conversation = await ctx.db.get(parent.conversationId);
+    if (!conversation || conversation.companyId !== parent.companyId || conversation.clientId !== parent.clientId || conversation.projectId !== parent.projectId) throw new ConvexError("FINAL_QUOTE_INTEGRITY_ERROR");
+    files = await companyFileNamesForConversation(ctx, conversation,
+      [parent.changesRequestReason, ...revisions.flatMap(revision => [revision.scope, revision.inclusions, revision.exclusions, revision.paymentTerms, revision.companyNote])],
+      revisions.flatMap(revision => revision.pdfFileName ? [{ originalFileName: revision.pdfFileName, kind: "final-quote" as const }] : []));
+  }
   const canSubmit =
     canSubmitOverride ??
     (viewerType === "company" &&
       (parent.status === "draft" || parent.status === "changes_requested"));
-  return { id: parent._id, projectId: parent.projectId, companyId: parent.companyId, companyName: company.name?.trim() || "",
+  return { id: parent._id, projectId: parent.projectId, companyId: parent.companyId, companyName: companyNameForAudience(company.name?.trim(), viewerType === "company" ? "own_company" : viewerType),
     conversationId: parent.conversationId, status: parent.status, requestTrigger: parent.requestTrigger, requestedAt: parent.requestedAt,
-    changesRequestReason: parent.changesRequestReason ?? null, acceptedAt: parent.acceptedAt ?? null,
+    changesRequestReason: parent.changesRequestReason === undefined ? null : maskCompanyNamesInText(parent.changesRequestReason, maskedNames, files), acceptedAt: parent.acceptedAt ?? null,
     declinedAt: parent.declinedAt ?? null, withdrawnAt: parent.withdrawnAt ?? null, currentRevisionId: parent.currentRevisionId ?? null,
-    revisions: await Promise.all(revisions.map(revisionDto)), canRequest: false,
+    revisions: await Promise.all(revisions.map((revision) => revisionDto(revision, maskedNames, viewerType === "company" ? "own_company" : viewerType, files))), canRequest: false,
     canSubmit,
     canReview: viewerType === "client" && parent.status === "submitted", canWithdraw: viewerType === "company" && parent.status === "submitted" };
 }
@@ -390,12 +402,13 @@ export const submitRevision = mutation({
     const now = Date.now(); const latest = await ctx.db.query("finalQuoteRevisions").withIndex("by_finalQuoteId_and_revisionNumber", (q) => q.eq("finalQuoteId", parent!._id)).order("desc").take(1);
     const revisionNumber = (latest[0]?.revisionNumber ?? 0) + 1;
     if (revisionNumber > MAX_REVISIONS) throw new ConvexError("FINAL_QUOTE_REVISION_LIMIT_REACHED");
-    let pdfFields: { pdfStorageId?: Id<"_storage">; pdfFileName?: string; pdfSize?: number } = {};
+    let pdfFields: { pdfStorageId?: Id<"_storage">; pdfFileName?: string; pdfUploadFileName?: string; pdfSize?: number } = {};
     if (args.pdf) {
       const intent = await ctx.db.query("finalQuoteUploadIntents").withIndex("by_token", (q) => q.eq("token", args.pdf!.uploadToken)).unique();
       const metadata = await ctx.db.system.get("_storage", args.pdf.storageId); const mime = metadata?.contentType?.split(";", 1)[0]?.trim().toLowerCase();
       if (!intent || intent.finalQuoteId !== parent._id || intent.userId !== access.userId || intent.claimedAt || intent.expiresAt < now || !metadata || mime !== "application/pdf" || metadata.size < 1 || metadata.size > PDF_MAX_BYTES) throw new ConvexError("INVALID_FINAL_QUOTE_PDF");
-      pdfFields = { pdfStorageId: args.pdf.storageId, pdfFileName: normalizeText(args.pdf.fileName, 1, 180, "INVALID_FINAL_QUOTE_PDF"), pdfSize: metadata.size };
+      pdfFields = { pdfStorageId: args.pdf.storageId, pdfFileName: normalizeText(args.pdf.fileName, 1, 180, "INVALID_FINAL_QUOTE_PDF"),
+        pdfUploadFileName: validateUploadFileName(args.pdf.fileName, "INVALID_FINAL_QUOTE_PDF"), pdfSize: metadata.size };
       await ctx.db.patch(intent._id, { claimedAt: now });
     }
     if (!Number.isFinite(args.price) || args.price <= 0 || args.price > MAX_PRICE_MAD) throw new ConvexError("INVALID_FINAL_QUOTE_PRICE");

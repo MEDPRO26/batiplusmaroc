@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
 import { notificationEntityValidator, notificationPayloadValidator, notificationTypeValidator } from "./constants";
+import { notificationIdentityForRecipient } from "./companyIdentity";
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   resolveNotificationDelivery,
@@ -31,6 +32,7 @@ export const claimMarketplacePush = internalMutation({
       type: notificationTypeValidator,
       entity: notificationEntityValidator,
       payload: notificationPayloadValidator,
+      actorType: v.optional(v.union(v.literal("client"), v.literal("company"), v.literal("admin"), v.literal("seo_team"))),
     }),
     recipientUserId: v.id("users"),
     accountType: v.union(
@@ -117,12 +119,14 @@ export const claimMarketplacePush = internalMutation({
       internal.notifications.pushDelivery.deliverMarketplacePush,
       { notificationId: notification._id },
     );
+    const identity = await notificationIdentityForRecipient(ctx, notification, recipient.accountType);
     return {
       notification: {
         _id: notification._id,
         type: notification.type,
         entity: notification.entity,
-        payload: notification.payload,
+        payload: identity.payload,
+        ...(identity.actorType === undefined ? {} : { actorType: identity.actorType }),
       },
       recipientUserId: notification.recipientUserId,
       accountType: recipient.accountType,

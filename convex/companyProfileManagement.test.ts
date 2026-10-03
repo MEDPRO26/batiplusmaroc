@@ -439,12 +439,13 @@ describe("company public profile management", () => {
     const t = convexTest(schema, modules);
     const { userId } = await seedCompany(t, "public-sync");
     await asUser(t, userId).mutation(api.companies.index.updatePublicProfile, validUpdate);
+    expect((await asUser(t, userId).query(api.companies.index.getProfileManager, {})).name).toBe("Atlas Public Construction");
 
     const publicProfile = await t.query(api.portfolio.index.getPublicCompanyProfile, {
       slug: "public-sync-company",
     });
     expect(publicProfile).toMatchObject({
-      name: "Atlas Public Construction",
+      name: "At*** Pu**** Co**********",
       city: "Casablanca",
       foundedYear: 2010,
       companySize: "11to50",
@@ -466,7 +467,7 @@ describe("company public profile management", () => {
     expect(directory.page).toHaveLength(1);
     expect(directory.page[0]).toMatchObject({
       slug: "public-sync-company",
-      name: "Atlas Public Construction",
+      name: "At*** Pu**** Co**********",
       city: "Casablanca",
       services: ["houseConstruction", "renovation"],
       serviceAreas: ["casablanca", "agadir", "marrakech"],
