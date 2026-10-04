@@ -123,6 +123,62 @@ const validQuote = {
 };
 
 describe("direct company invitation authorization and creation", () => {
+  test.each(["active", "missing", "inactive", "pending", "rejected", "suspended", "needs_attention"] as const)(
+    "public profiles and invitation queries handle %s companies without a render error",
+    async (availability) => {
+      const state = await setup();
+      const eligible = availability === "active" || availability === "needs_attention";
+      await state.t.run(async (ctx) => {
+        const membership = await ctx.db.query("companyMembers")
+          .withIndex("by_companyId_and_userId", (q) => q
+            .eq("companyId", state.company.companyId).eq("userId", state.company.userId))
+          .unique();
+        if (availability === "missing") await ctx.db.delete(membership!._id);
+        if (availability === "inactive") await ctx.db.patch(membership!._id, { status: "inactive" });
+        if (availability === "pending" || availability === "rejected") {
+          await ctx.db.patch(state.company.companyId, { verificationStatus: availability });
+        }
+        if (availability === "suspended" || availability === "needs_attention") {
+          await ctx.db.patch(state.company.companyId, { operationalStatus: availability });
+        }
+      });
+      const company = await state.t.run(ctx => ctx.db.get(state.company.companyId));
+      const profile = await state.t.query(api.portfolio.index.getPublicCompanyProfile, { slug: company!.slug! });
+      expect(profile).toMatchObject({ id: state.company.companyId, invitationEligible: eligible });
+      const client = asUser(state.t, state.clientId);
+      const projects = await client.query(api.invitations.index.listMyEligibleProjectsForCompany, {
+        companyId: state.company.companyId,
+      });
+      if (eligible) {
+        expect(projects).toEqual([expect.objectContaining({ id: state.projectId })]);
+        await expect(client.mutation(api.invitations.index.inviteCompanyToProject, {
+          companyId: state.company.companyId, projectId: state.projectId,
+        })).resolves.toMatchObject({ status: "pending" });
+      } else {
+        expect(projects).toBeNull();
+        await expect(client.mutation(api.invitations.index.inviteCompanyToProject, {
+          companyId: state.company.companyId, projectId: state.projectId,
+        })).rejects.toThrow(availability === "suspended"
+          ? "COMPANY_MARKETPLACE_SUSPENDED" : "COMPANY_NOT_ELIGIBLE_FOR_INVITATION");
+      }
+    },
+  );
+
+  test("eligibility updates safely while a profile is open and project queries remain client-only", async () => {
+    const state = await setup();
+    const args = { companyId: state.company.companyId };
+    const client = asUser(state.t, state.clientId);
+    await expect(client.query(api.invitations.index.listMyEligibleProjectsForCompany, args))
+      .resolves.toEqual([expect.objectContaining({ id: state.projectId })]);
+    await state.t.run(ctx => ctx.db.patch(state.company.companyId, { verificationStatus: "pending" }));
+    await expect(client.query(api.invitations.index.listMyEligibleProjectsForCompany, args)).resolves.toBeNull();
+    await state.t.run(ctx => ctx.db.delete(state.company.companyId));
+    await expect(client.query(api.invitations.index.listMyEligibleProjectsForCompany, args)).resolves.toBeNull();
+    await expect(state.t.query(api.invitations.index.listMyEligibleProjectsForCompany, args)).rejects.toThrow("NOT_AUTHENTICATED");
+    await expect(asUser(state.t, state.otherCompany.userId)
+      .query(api.invitations.index.listMyEligibleProjectsForCompany, args)).rejects.toThrow("CLIENT_ACCOUNT_REQUIRED");
+  });
+
   test.each(["draft", "pending", "rejected", "verified"] as const)("invitation DTO exposes only the live safe badge flag for %s", async (verificationStatus) => {
     const state = await setup();
     const invitation = await asUser(state.t, state.clientId).mutation(api.invitations.index.inviteCompanyToProject, {

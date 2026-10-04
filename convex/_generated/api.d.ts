@@ -45,6 +45,7 @@ import type * as finalQuotes_download from "../finalQuotes/download.js";
 import type * as finalQuotes_index from "../finalQuotes/index.js";
 import type * as finalQuotes_state from "../finalQuotes/state.js";
 import type * as http from "../http.js";
+import type * as invitations_eligibility from "../invitations/eligibility.js";
 import type * as invitations_index from "../invitations/index.js";
 import type * as invitations_state from "../invitations/state.js";
 import type * as lib_accountFoundation from "../lib/accountFoundation.js";
@@ -155,6 +156,7 @@ declare const fullApi: ApiFromModules<{
   "finalQuotes/index": typeof finalQuotes_index;
   "finalQuotes/state": typeof finalQuotes_state;
   http: typeof http;
+  "invitations/eligibility": typeof invitations_eligibility;
   "invitations/index": typeof invitations_index;
   "invitations/state": typeof invitations_state;
   "lib/accountFoundation": typeof lib_accountFoundation;

@@ -5,6 +5,7 @@ import { mutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
 import { companyFileNamesForRelationship, companyNameForAudience, maskCompanyNamesInText } from "../lib/companyName";
 import { assertCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
+import { companyInvitationEligibilityError } from "./eligibility";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { ensureConversationForAcceptedInvitation } from "../messages/index";
 import {
@@ -71,21 +72,8 @@ function normalizeMessage(value: string | undefined) {
 async function requireEligibleCompany(ctx: Ctx, companyId: Id<"companies">) {
   const company = await ctx.db.get(companyId);
   if (!company) throw new ConvexError("COMPANY_NOT_FOUND");
-  if (
-    company.onboardingStatus !== "completed" ||
-    company.verificationStatus !== "verified"
-  ) {
-    throw new ConvexError("COMPANY_NOT_ELIGIBLE_FOR_INVITATION");
-  }
-  assertCompanyMarketplaceWriteAllowed(company);
-  const activeMembers = await ctx.db
-    .query("companyMembers")
-    .withIndex("by_companyId_and_status", (q) =>
-      q.eq("companyId", companyId).eq("status", "active"),
-    )
-    .take(1);
-  if (activeMembers.length === 0)
-    throw new ConvexError("COMPANY_NOT_ELIGIBLE_FOR_INVITATION");
+  const error = await companyInvitationEligibilityError(ctx, company);
+  if (error) throw new ConvexError(error);
   return company;
 }
 
@@ -170,10 +158,12 @@ async function toInvitationDto(ctx: Ctx, invitation: Doc<"invitations">, viewerT
 
 export const listMyEligibleProjectsForCompany = query({
   args: { companyId: v.id("companies") },
-  returns: v.array(eligibleProjectValidator),
+  returns: v.union(v.null(), v.array(eligibleProjectValidator)),
   handler: async (ctx, args) => {
     const { userId } = await requireClientUser(ctx);
-    await requireEligibleCompany(ctx, args.companyId);
+    const company = await ctx.db.get(args.companyId);
+    // Eligibility can change while a public profile or invitation dialog is open.
+    if (!company || await companyInvitationEligibilityError(ctx, company)) return null;
     const groups = await Promise.all(
       (["published", "in_discussion"] as const).map((status) =>
         ctx.db
