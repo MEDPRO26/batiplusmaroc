@@ -5,6 +5,12 @@ import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 
 vi.mock("next/image", () => ({ default: () => null }));
+vi.mock("convex/react", () => ({
+  usePaginatedQuery: (_query: unknown, args: unknown) => {
+    expect(args).toBe("skip");
+    return { results: [], status: "Exhausted" };
+  },
+}));
 vi.mock("@/components/shared/outfit", () => ({ outfit: { className: "font-outfit" } }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,

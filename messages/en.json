@@ -4248,7 +4248,7 @@
       "signIn": "Sign in",
       "clientRequired": "Only a completed client account can send project invitations.",
       "clientWorkspace": "Client workspace",
-      "unavailable": "Only verified companies can receive project invitations.",
+      "unavailable": "This company is currently unavailable for project invitations.",
       "status": { "pending": "Invitation sent", "accepted": "Invitation accepted", "declined": "Invitation declined" }
     },
     "company": {

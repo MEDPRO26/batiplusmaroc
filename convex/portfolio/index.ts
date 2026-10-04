@@ -8,6 +8,7 @@ import { createUniqueCompanySlug, requireOwnerCompany } from "../companies/index
 import { consumeVerifiedPublicMediaIntent } from "../storage/publicMediaModel";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { getCompanyOperationalStatus } from "../companies/operationalStatus";
+import { companyInvitationEligibilityError } from "../invitations/eligibility";
 import { resolvedServiceNames } from "../serviceCatalog";
 import { maskCompanyName, maskPublicCompanyText } from "../lib/companyName";
 
@@ -150,6 +151,7 @@ export const getPublicCompanyProfile = query({
     coverImageUrl: v.union(v.string(), v.null()),
     isVerified: v.boolean(),
     marketplaceAvailable: v.boolean(),
+    invitationEligible: v.boolean(),
     city: v.string(),
     description: v.string(),
     services: v.array(v.string()),
@@ -217,6 +219,7 @@ export const getPublicCompanyProfile = query({
       coverImageUrl,
       isVerified: company.verificationStatus === "verified",
       marketplaceAvailable: getCompanyOperationalStatus(company) !== "suspended",
+      invitationEligible: (await companyInvitationEligibilityError(ctx, company)) === null,
       city: company.city,
       description: maskPublicCompanyText(company.description, names),
       services: services.map((item) => item.service),

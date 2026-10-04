@@ -4248,7 +4248,7 @@
       "signIn": "Connexion",
       "clientRequired": "Seul un compte client finalisé peut envoyer des invitations.",
       "clientWorkspace": "Espace client",
-      "unavailable": "Seules les entreprises vérifiées peuvent recevoir des invitations.",
+      "unavailable": "Cette entreprise ne peut pas recevoir d’invitations pour le moment.",
       "status": { "pending": "Invitation envoyée", "accepted": "Invitation acceptée", "declined": "Invitation refusée" }
     },
     "company": {

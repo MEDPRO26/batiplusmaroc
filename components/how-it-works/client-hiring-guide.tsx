@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { outfit } from "@/components/shared/outfit";
-import { featuredMarketplaceCompanies } from "@/content/marketplace";
+import { HiringCompanyPreviews } from "./hiring-company-previews";
 import { Link } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 
@@ -24,9 +24,6 @@ const faqItems = [
 
 export async function ClientHiringGuide() {
   const t = await getTranslations("clientHowItWorks");
-  const tCategories = await getTranslations("home.marketplace.categories");
-  const tCompany = await getTranslations("home.marketplace");
-  const companies = featuredMarketplaceCompanies().slice(0, 2);
 
   return (
     <div className={`${outfit.className} bg-white pb-20 sm:pb-28`}>
@@ -130,45 +127,7 @@ export async function ClientHiringGuide() {
         </div>
 
         <div className="mt-6 grid gap-4 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,0.9fr)] lg:gap-5">
-          {companies.map((company) => {
-            const category = company.categories[0];
-
-            return (
-              <article
-                className="overflow-hidden rounded-[22px] border border-brand-border bg-white"
-                key={company.id}
-              >
-                <Link
-                  className="group block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                  href={{ pathname: "/entreprises/[slug]", params: { slug: company.slug } }}
-                >
-                  <div className="relative aspect-[16/10] overflow-hidden">
-                    <Image
-                      alt={tCompany("imageAlt", { company: company.name, city: company.city })}
-                      className="object-cover transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                      fill
-                      sizes="(max-width: 1023px) calc(100vw - 2rem), 360px"
-                      src={company.image}
-                    />
-                  </div>
-                  <div className="px-5 py-4">
-                    <h3 className="mb-1 text-[1.05rem] leading-snug font-semibold tracking-[-0.02em] text-ink!">
-                      {company.name}
-                    </h3>
-                    <p className="mb-3 text-[0.92rem] leading-6 text-muted">
-                      {category ? tCategories(category) : company.city}
-                      <span aria-hidden="true"> · </span>
-                      {company.city}
-                    </p>
-                    <span className="inline-flex min-h-11 items-center gap-2 text-[0.92rem] font-semibold text-brand">
-                      {t("ways.invite.profile")}
-                      <ArrowIcon />
-                    </span>
-                  </div>
-                </Link>
-              </article>
-            );
-          })}
+          <HiringCompanyPreviews />
 
           <article className="flex flex-col justify-center rounded-[22px] bg-brand-soft px-6 py-8 sm:px-8">
             <h3 className="mb-0 text-[clamp(1.7rem,3vw,2.35rem)] leading-[1.08] font-semibold tracking-[-0.04em] text-ink!">

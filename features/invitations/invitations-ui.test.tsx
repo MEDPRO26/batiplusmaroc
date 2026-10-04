@@ -1,16 +1,23 @@
 import { NextIntlClientProvider } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
+import { getFunctionName } from "convex/server";
 import { describe, expect, test, vi } from "vitest";
 import type { Id } from "@/convex/_generated/dataModel";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 
-const state = vi.hoisted(() => ({ queryResult: undefined as unknown }));
+const state = vi.hoisted(() => ({
+  queryResult: undefined as unknown,
+  queryCalls: [] as { name: string; args: unknown }[],
+  accountType: "company",
+}));
 vi.mock("convex/react", () => ({
-  useQuery: (_query: unknown, args: unknown) =>
-    args === undefined
-      ? { accountType: "company", onboardingStatus: "completed" }
-      : state.queryResult,
+  useQuery: (query: unknown, args: unknown) => {
+    state.queryCalls.push({ name: getFunctionName(query as never), args });
+    return args === undefined
+      ? { accountType: state.accountType, onboardingStatus: "completed" }
+      : args === "skip" ? undefined : state.queryResult;
+  },
   useMutation: () => vi.fn(),
 }));
 vi.mock("@/i18n/navigation", () => ({
@@ -128,4 +135,16 @@ describe("direct invitation UI", () => {
     );
     expect(html).toContain(label);
   });
+
+  for (const locale of ["en", "fr"] as const) {
+    test.each([true, false])(`opening a ${locale} profile keeps invitations lazy (eligible: %s)`, (companyEligible) => {
+      state.accountType = "client";
+      state.queryCalls = [];
+      const html = render(locale, <InviteCompanyButton companyId={"company-1" as Id<"companies">} companyEligible={companyEligible} />);
+      expect(state.queryCalls.find(call => call.name === "invitations/index:listMyEligibleProjectsForCompany")?.args).toBe("skip");
+      expect(html.includes('disabled=""')).toBe(!companyEligible);
+      if (!companyEligible) expect(html).toContain((locale === "en" ? en : fr).invitations.client.unavailable);
+      state.accountType = "company";
+    });
+  }
 });

@@ -67,6 +67,13 @@ function render(locale: "en" | "fr", child: React.ReactNode) {
 describe("Admin companies UI", () => {
   beforeEach(() => { mocks.query = undefined; mocks.paginated = { results: [], status: "Exhausted", loadMore: vi.fn() }; });
 
+  test.each(["en", "fr"] as const)("%s authorized Admin Company detail retains full identity", locale => {
+    mocks.query = { ...summary, name: "S2MBOU SARL", legalName: "S2MBOU SARL" };
+    const html = render(locale, <AdminCompanyDetailPanel companyId={companyId} />);
+    expect(html).toContain("S2MBOU SARL");
+    expect(html).not.toContain("S2**** SA**");
+  });
+
   test.each([["en", "Companies", "No companies match these filters.", "Search by name"], ["fr", "Entreprises", "Aucune entreprise ne correspond à ces filtres.", "Nom, ville"]] as const)("renders the translated %s list and bounded empty state", (locale, title, empty, search) => {
     const html = render(locale, <AdminCompaniesPanel initialFilters={noFilters} />);
     expect(html).toContain(title);

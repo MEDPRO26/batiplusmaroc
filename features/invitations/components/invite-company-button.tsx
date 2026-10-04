@@ -25,7 +25,7 @@ export function InviteCompanyButton({
   const [open, setOpen] = useState(false);
   const projects = useQuery(
     api.invitations.index.listMyEligibleProjectsForCompany,
-    companyEligible &&
+    open && companyEligible &&
       user?.accountType === "client" &&
       user.onboardingStatus === "completed"
       ? { companyId }
@@ -109,10 +109,10 @@ export function InviteCompanyButton({
     <>
       <button
         className={`${className ?? "button button-primary w-full"} disabled:cursor-not-allowed disabled:opacity-55`}
-        disabled={!companyEligible}
+        disabled={!companyEligible || projects === null}
         onClick={start}
         ref={triggerRef}
-        title={!companyEligible ? t("unavailable") : undefined}
+        title={!companyEligible || projects === null ? t("unavailable") : undefined}
         type="button"
       >
         {t("open")}
@@ -173,6 +173,10 @@ export function InviteCompanyButton({
                 action={t("clientWorkspace")}
                 href={routes.clientDashboard}
               />
+            ) : !companyEligible || projects === null ? (
+              <p className="mt-6 text-sm text-muted" role="status">
+                {t("unavailable")}
+              </p>
             ) : projects === undefined ? (
               <p className="mt-6 text-sm text-muted" role="status">
                 {t("loading")}
