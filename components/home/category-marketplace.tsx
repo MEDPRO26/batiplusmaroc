@@ -1,24 +1,26 @@
 "use client";
 
 import Image from "next/image";
-import { useTranslations } from "next-intl";
-import { useMemo, useState, type ReactNode } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useState, type ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import {
-  companiesForCategory,
   companyPath,
   marketplaceCategories,
   type MarketplaceCategory,
-  type MarketplaceCompany,
 } from "@/content/marketplace";
+import { usePublicCompanyPreview, type PublicMarketplaceCompany } from "@/features/companies/hooks/use-public-company-preview";
+import { serviceName } from "@/features/companies/lib/service-label";
+import { CompanyDiscoveryCardSkeleton } from "@/features/companies/components/company-directory-skeleton";
 import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
 
 export function CategoryMarketplace() {
   const t = useTranslations("home.marketplace");
+  const tDirectory = useTranslations("companyDirectory");
   const [selected, setSelected] = useState<MarketplaceCategory | null>(null);
   const browsing = selected !== null;
-  const companies = useMemo(() => (selected ? companiesForCategory(selected) : []), [selected]);
+  const { companies, loading } = usePublicCompanyPreview({ limit: 5, service: selected ?? undefined, enabled: browsing });
 
   return (
     <section aria-labelledby="marketplace-title" className="bg-white py-16 sm:py-20 lg:py-28">
@@ -90,7 +92,9 @@ export function CategoryMarketplace() {
               {t("resultsLabel", { category: t(`categories.${selected}`) })}
             </h3>
 
-            {companies.length === 0 ? (
+            {loading ? (
+              <div aria-busy="true" role="status"><span className="sr-only">{tDirectory("loading")}</span><CompanyDiscoveryCardSkeleton /></div>
+            ) : companies.length === 0 ? (
               <p className="text-base text-muted">{t("empty")}</p>
             ) : (
               <ul
@@ -111,34 +115,37 @@ export function CategoryMarketplace() {
   );
 }
 
-function CompanyCard({ company }: { company: MarketplaceCompany }) {
+function CompanyCard({ company }: { company: PublicMarketplaceCompany }) {
   const t = useTranslations("home.marketplace");
-  const services = company.services.map((service) => t(`categories.${service}`)).join(" · ");
+  const tProfile = useTranslations("publicCompany");
+  const locale = useLocale();
+  const services = company.services.map(service => serviceName(service, company.serviceNames, locale, key => t(`categories.${key}`))).join(" · ");
+  const initials = company.name.split(/\s+/).slice(0, 2).map(part => part[0] ?? "").join("");
 
   return (
     <article className="flex h-full flex-col">
       <div className="relative mb-8">
         <div className="relative aspect-4/5 overflow-hidden rounded-md bg-surface-muted ring-1 ring-black/10">
-          <Image
+          {company.coverImageUrl ? <Image
             alt={t("imageAlt", { company: company.name, city: company.city })}
             className="object-cover"
             fill
             sizes="(max-width: 767px) 78vw, (max-width: 1023px) 30vw, (max-width: 1279px) 22vw, 220px"
-            src={company.image}
-          />
+            src={company.coverImageUrl}
+          /> : null}
         </div>
         <div className="absolute -bottom-5 left-4 grid size-11 place-items-center overflow-hidden rounded-full bg-white shadow-[0_6px_16px_rgb(23_61_99/0.14)] ring-2 ring-white">
-          {company.logo ? (
+          {company.logoUrl ? (
             <Image
               alt=""
               className="object-contain p-1.5"
               height={44}
-              src={company.logo}
+              src={company.logoUrl}
               width={44}
             />
           ) : (
             <span aria-hidden="true" className="text-[0.72rem] font-semibold tracking-tight text-brand">
-              {company.initials}
+              {initials}
             </span>
           )}
         </div>
@@ -147,7 +154,7 @@ function CompanyCard({ company }: { company: MarketplaceCompany }) {
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="flex items-center gap-1.5">
           <h3 className="text-[0.98rem] leading-tight font-semibold tracking-[-0.02em] text-ink">{company.name}</h3>
-          {company.verified ? (
+          {company.isVerified ? (
             <span className="inline-flex text-brand" title={t("verified")}>
               <span className="sr-only">{t("verified")}</span>
               <VerifiedIcon />
@@ -155,13 +162,13 @@ function CompanyCard({ company }: { company: MarketplaceCompany }) {
           ) : null}
         </div>
 
-        <p aria-label={t("rating", { rating: company.rating.toFixed(1) })} className="mt-1.5 flex items-center gap-1 text-[0.84rem] text-ink">
+        {company.rating !== null ? <p aria-label={t("rating", { rating: company.rating.toFixed(1) })} className="mt-1.5 flex items-center gap-1 text-[0.84rem] text-ink">
           <StarIcon />
           <span aria-hidden="true">{company.rating.toFixed(1)}</span>
-        </p>
+        </p> : null}
         <p className="mt-1 text-[0.84rem] text-muted">{company.city}</p>
         <p className="mt-1 text-[0.84rem] leading-snug text-ink">{services}</p>
-        <p className="mt-1 text-[0.84rem] text-muted">{t("projects", { count: company.projectCount })}</p>
+        <p className="mt-1 text-[0.84rem] text-muted">{tProfile("reviewCount", { count: company.reviewCount })}</p>
 
         <div className="mt-4 flex flex-col gap-2">
           <Link

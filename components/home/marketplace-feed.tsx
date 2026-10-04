@@ -1,16 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import {
   companyPath,
-  featuredMarketplaceCompanies,
   marketplaceOpenProjects,
-  type MarketplaceCompany,
   type MarketplaceOpenProject,
 } from "@/content/marketplace";
+import { usePublicCompanyPreview, type PublicMarketplaceCompany } from "@/features/companies/hooks/use-public-company-preview";
+import { serviceName } from "@/features/companies/lib/service-label";
+import { CompanyDiscoveryCardSkeleton } from "@/features/companies/components/company-directory-skeleton";
 import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
 import { outfit } from "@/components/shared/outfit";
@@ -19,8 +20,9 @@ type Feed = "projects" | "companies";
 
 export function MarketplaceFeed() {
   const t = useTranslations("home.feed");
+  const tDirectory = useTranslations("companyDirectory");
   const [feed, setFeed] = useState<Feed>("projects");
-  const companies = featuredMarketplaceCompanies();
+  const { companies, loading } = usePublicCompanyPreview({ limit: 6, enabled: feed === "companies" });
 
   return (
     <section
@@ -77,6 +79,10 @@ export function MarketplaceFeed() {
               </li>
             ))}
           </ul>
+        ) : loading ? (
+          <div aria-busy="true" className="mt-10" role="status"><span className="sr-only">{tDirectory("loading")}</span><CompanyDiscoveryCardSkeleton /></div>
+        ) : companies.length === 0 ? (
+          <p className="mt-10 text-muted">{tDirectory("empty")}</p>
         ) : (
           <ul className="mt-10 grid list-none grid-cols-1 gap-4 p-0 sm:mt-12 lg:grid-cols-2 lg:gap-5">
             {companies.map((company) => (
@@ -151,27 +157,28 @@ function OpenProjectCard({ project }: { project: MarketplaceOpenProject }) {
   );
 }
 
-function FeaturedCompanyCard({ company }: { company: MarketplaceCompany }) {
-  const t = useTranslations("home.feed");
+function FeaturedCompanyCard({ company }: { company: PublicMarketplaceCompany }) {
   const tMarket = useTranslations("home.marketplace");
-  const services = company.services.map((service) => tMarket(`categories.${service}`)).join(" · ");
+  const tProfile = useTranslations("publicCompany");
+  const locale = useLocale();
+  const services = company.services.map(service => serviceName(service, company.serviceNames, locale, key => tMarket(`categories.${key}`))).join(" · ");
 
   return (
     <article className="flex h-full flex-col gap-5 rounded-md border border-brand-border bg-white p-5 shadow-[0_8px_24px_rgb(23_61_99/0.05)] transition-[border-color,box-shadow] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:border-brand hover:shadow-[0_12px_32px_rgb(23_61_99/0.08)] sm:flex-row sm:p-6">
       <div className="relative aspect-4/3 w-full shrink-0 overflow-hidden rounded-md bg-surface-muted outline-1 outline-black/10 sm:aspect-auto sm:h-auto sm:w-[148px]">
-        <Image
+        {company.coverImageUrl ? <Image
           alt={tMarket("imageAlt", { company: company.name, city: company.city })}
           className="object-cover"
           fill
           sizes="(max-width: 639px) 100vw, 148px"
-          src={company.image}
-        />
+          src={company.coverImageUrl}
+        /> : null}
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-1.5">
           <h3 className="mb-0 text-[1.05rem] leading-tight font-semibold tracking-[-0.02em] text-ink">{company.name}</h3>
-          {company.verified ? (
+          {company.isVerified ? (
             <span className="inline-flex text-brand" title={tMarket("verified")}>
               <span className="sr-only">{tMarket("verified")}</span>
               <VerifiedIcon />
@@ -179,8 +186,8 @@ function FeaturedCompanyCard({ company }: { company: MarketplaceCompany }) {
           ) : null}
         </div>
 
-        <p className="mt-1 mb-0 text-[0.84rem] font-medium text-ink">{t(`companies.${company.id}.headline` as Parameters<typeof t>[0])}</p>
-        <p
+        <p className="mt-1 mb-0 text-[0.84rem] font-medium text-ink">{services}</p>
+        {company.rating !== null ? <p
           aria-label={tMarket("rating", { rating: company.rating.toFixed(1) })}
           className="mt-2 mb-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.84rem] text-ink"
         >
@@ -189,10 +196,9 @@ function FeaturedCompanyCard({ company }: { company: MarketplaceCompany }) {
             <span aria-hidden="true">{company.rating.toFixed(1)}</span>
           </span>
           <span className="text-muted">{company.city}</span>
-          <span className="text-muted">{tMarket("projects", { count: company.projectCount })}</span>
-        </p>
-        <p className="mt-2 mb-0 line-clamp-2 text-[0.88rem] leading-6 text-muted">{t(`companies.${company.id}.pitch` as Parameters<typeof t>[0])}</p>
-        <p className="mt-2 mb-0 text-[0.82rem] text-ink">{services}</p>
+          <span className="text-muted">{tProfile("reviewCount", { count: company.reviewCount })}</span>
+        </p> : <p className="mt-2 mb-0 text-[0.84rem] text-muted">{company.city}</p>}
+        <p className="mt-2 mb-0 line-clamp-2 text-[0.88rem] leading-6 text-muted">{company.description}</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <Link

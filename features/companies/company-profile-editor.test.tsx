@@ -39,6 +39,20 @@ function objectShape(value: unknown): unknown {
 }
 
 describe("company profile management UX contract", () => {
+  test("own Company workspace retains full backend identity without frontend masking", () => {
+    vi.mocked(useQuery).mockImplementation(((ref: unknown) => {
+      const name = getFunctionName(ref as never);
+      if (name === "users:currentUser") return { accountType: "company", onboardingStatus: "completed" };
+      if (name === "companies/index:getProfileManager") return { ...profileFixture, name: "S2MBOU SARL", legal: { ...profileFixture.legal, legalName: "S2MBOU SARL" } };
+      return undefined;
+    }) as never);
+    const ownProfile = renderToStaticMarkup(<CompanyProfileEditor />);
+    const ownLegal = renderToStaticMarkup(<CompanySettings section="verification" />);
+    for (const html of [ownProfile, ownLegal]) {
+      expect(html).toContain("S2MBOU SARL");
+      expect(html).not.toContain("S2**** SA**");
+    }
+  });
   test("FR and EN expose the same complete profile-management translation shape", () => {
     expect(objectShape(fr.companyProfileManager)).toEqual(objectShape(en.companyProfileManager));
     expect(en.companyProfileManager.save).toBe("Save changes");

@@ -360,9 +360,7 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
                 <p className="mt-5 mb-0 text-sm leading-6 text-ink/85">{profile.description}</p>
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
                   <InviteCompanyButton
-                    companyEligible={
-                      profile.isVerified && profile.marketplaceAvailable
-                    }
+                    companyEligible={profile.invitationEligible}
                     companyId={profile.id}
                   />
                   <button className="button w-full cursor-not-allowed border border-brand-border bg-white text-ink opacity-70" disabled type="button">{tProfile("quote")}</button>
