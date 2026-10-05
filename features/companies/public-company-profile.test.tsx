@@ -1,8 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, test, vi } from "vitest";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
-const localeState = vi.hoisted(() => ({ locale: "en" }));
+const localeState = vi.hoisted(() => ({ locale: "en" as "en" | "fr" }));
 
 vi.mock("next/image", () => ({
   default: ({ alt, src }: { alt: string; src: string }) => (
@@ -20,6 +21,10 @@ vi.mock("@/features/invitations/components/invite-company-button", () => ({
 
 import { VerifiedBadge } from "./components/verified-badge";
 import { PublicCompanyProfile } from "./components/public-company-profile";
+
+function renderProfile(node: React.ReactNode) {
+  return renderToStaticMarkup(<NextIntlClientProvider locale={localeState.locale} messages={localeState.locale === "fr" ? fr : en}>{node}</NextIntlClientProvider>);
+}
 
 function objectShape(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(objectShape);
@@ -85,7 +90,7 @@ describe("public company profile UX contract", () => {
         { slug: "structural", nameFr: "Gros œuvre", nameEn: "Structural work" },
       ],
     };
-    const html = renderToStaticMarkup(await PublicCompanyProfile({ company: profile as never }));
+    const html = renderProfile(await PublicCompanyProfile({ company: profile as never }));
     expect(html).toContain(customName);
     expect(html).toContain(originalName);
   });
@@ -93,7 +98,7 @@ describe("public company profile UX contract", () => {
     test.each(["verified", "draft", "pending", "rejected"])(`public profile badges are verified-only in ${locale}: %s`, async (status) => {
       localeState.locale = locale;
       const isVerified = status === "verified";
-      const html = renderToStaticMarkup(await PublicCompanyProfile({ company: { ...company, isVerified } as never }));
+      const html = renderProfile(await PublicCompanyProfile({ company: { ...company, isVerified } as never }));
       expect(html.match(/data-verification="verified"/g) ?? []).toHaveLength(isVerified ? 2 : 0);
       expect(html).not.toContain('data-verification="unverified"');
       expect(html).not.toMatch(/Unverified company|Entreprise non vérifiée|storageId|verificationPending/);
@@ -109,7 +114,7 @@ describe("public company profile UX contract", () => {
   });
 
   test("renders Upwork-like layout without phone or email", async () => {
-    const html = renderToStaticMarkup(await PublicCompanyProfile({ company: company as never }));
+    const html = renderProfile(await PublicCompanyProfile({ company: company as never }));
     expect(html).toContain("lg:grid-cols-[minmax(240px,28%)_minmax(0,1fr)]");
     expect(html).toContain("overview");
     expect(html).toContain("stats");

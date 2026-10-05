@@ -19,6 +19,7 @@ export const getUploadAccess = internalQuery({
   returns: v.object({ companyId: v.id("companies") }),
   handler: async (ctx, args) => {
     const { company } = await requireOwnerCompanyByUserId(ctx, args.userId);
+    if (args.purpose === "companyLogo") throw new ConvexError("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
     if (!validatePublicImageInput(args.purpose, args.contentType, args.size)) {
       throw new ConvexError("INVALID_PUBLIC_MEDIA_UPLOAD");
     }
@@ -49,6 +50,7 @@ export const createUploadIntent = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const { company } = await requireOwnerCompanyByUserId(ctx, args.userId);
+    if (args.purpose === "companyLogo") throw new ConvexError("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
     if (
       company._id !== args.companyId ||
       !validatePublicImageInput(args.purpose, args.contentType, args.size) ||
@@ -98,6 +100,7 @@ export const getUploadIntentForVerification = internalQuery({
       .unique();
     if (
       !intent ||
+      intent.purpose === "companyLogo" ||
       intent.userId !== args.userId ||
       intent.claimedAt !== undefined ||
       intent.verifiedAt !== undefined ||
@@ -134,6 +137,7 @@ export const markUploadVerified = internalMutation({
       .unique();
     if (
       !intent ||
+      intent.purpose === "companyLogo" ||
       intent.userId !== args.userId ||
       intent.claimedAt !== undefined ||
       intent.verifiedAt !== undefined ||

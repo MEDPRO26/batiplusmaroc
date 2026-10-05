@@ -1,6 +1,6 @@
 "use client";
 
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
@@ -16,9 +16,8 @@ import { focusFirstInvalidField } from "@/lib/forms/submit";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
+import { CompanyOwnerLogoManager } from "./company-owner-logo-manager";
 
-const logoTypes = ["image/jpeg", "image/png", "image/webp"];
-const maxLogoBytes = 5 * 1024 * 1024;
 const totalSteps = 3;
 type Step = 1 | 2 | 3;
 type CompanyOnboardingProfile = NonNullable<
@@ -32,15 +31,14 @@ export function CompanyOnboardingForm() {
   const tUx = useTranslations("ux");
   const tOnboarding = useTranslations("auth.onboarding");
   const user = useQuery(api.users.currentUser);
+  const access = useQuery(api.companyVerification.index.getVerificationStatus, user?.accountType === "company" ? {} : "skip");
   const profile = useQuery(
     api.companies.index.getOnboardingProfile,
-    user?.accountType === "company" && user.onboardingStatus !== "completed" ? {} : "skip",
+    user?.accountType === "company" && user.onboardingStatus !== "completed" && access?.canManageDocuments ? {} : "skip",
   );
   const onboardingCompleted = user?.onboardingStatus === "completed" || profile?.onboardingStatus === "completed";
   const finalizeOAuthSignup = useMutation(api.users.finalizeOAuthSignup);
   const completeOnboarding = useMutation(api.companies.index.completeOnboarding);
-  const requestUpload = useAction(api.storage.r2.requestPublicMediaUpload);
-  const verifyUpload = useAction(api.storage.r2.verifyPublicMediaUpload);
   const router = useRouter();
   const finalized = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -49,11 +47,6 @@ export function CompanyOnboardingForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<{ name: string; message: string } | null>(null);
-  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
-
-  useEffect(() => () => {
-    if (logoPreviewUrl?.startsWith("blob:")) URL.revokeObjectURL(logoPreviewUrl);
-  }, [logoPreviewUrl]);
 
   useEffect(() => {
     if (user === null) {
@@ -95,25 +88,6 @@ export function CompanyOnboardingForm() {
     const first = form.querySelector<HTMLElement>(`[data-step="${step}"] input, [data-step="${step}"] textarea`);
     first?.focus();
   }, [step]);
-
-  async function uploadLogo(file: File) {
-    if (file.size > maxLogoBytes || !logoTypes.includes(file.type)) {
-      throw new Error("INVALID_LOGO");
-    }
-    const intent = await requestUpload({
-      purpose: "companyLogo",
-      contentType: file.type,
-      size: file.size,
-    });
-    const response = await fetch(intent.uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.type },
-      body: file,
-    });
-    if (!response.ok) throw new Error("INVALID_LOGO");
-    await verifyUpload({ uploadToken: intent.uploadToken });
-    return intent.uploadToken;
-  }
 
   function invalid(name: string) {
     return fieldError?.name === name;
@@ -190,12 +164,9 @@ export function CompanyOnboardingForm() {
 
     const formData = new FormData(form);
     const yearsValue = String(formData.get("yearsExperience") ?? "").trim();
-    const logo = formData.get("logo");
 
     setSubmitting(true);
     try {
-      const logoUploadToken =
-        logo instanceof File && logo.size > 0 ? await uploadLogo(logo) : undefined;
       await completeOnboarding({
         name: String(formData.get("name") ?? ""),
         legalName: String(formData.get("legalName") ?? ""),
@@ -207,7 +178,6 @@ export function CompanyOnboardingForm() {
           : { serviceIds: formData.getAll("services").map(String) as CompanyServiceId[] }),
         yearsExperience: yearsValue === "" ? undefined : Number(yearsValue),
         website: String(formData.get("website") ?? ""),
-        logoUploadToken,
       });
       router.replace(routes.companyDashboard);
     } catch (caught) {
@@ -230,6 +200,10 @@ export function CompanyOnboardingForm() {
       progressValue={Math.round((step / totalSteps) * 100)}
     />
   );
+
+  if (user?.accountType === "company" && access?.canManageDocuments === false && !onboardingCompleted) {
+    return <>{chrome}<section className="mx-auto w-full max-w-[560px] px-5 py-10"><FriendlyAlert>{tUx("error.codes.COMPANY_OWNER_REQUIRED")}</FriendlyAlert></section></>;
+  }
 
   if (
     user === undefined ||
@@ -430,33 +404,7 @@ export function CompanyOnboardingForm() {
               </label>
             </div>
 
-            <label className="mt-4 block text-[0.88rem] font-medium text-ink" htmlFor={`${formId}-logo`}>
-              {t("logo")}
-              <input
-                accept={logoTypes.join(",")}
-                aria-invalid={invalid("logo")}
-                className={`${inputClass("logo")} file:me-3 file:rounded-md file:border-0 file:bg-brand-soft file:px-3 file:py-2 file:font-medium file:text-brand`}
-                id={`${formId}-logo`}
-                name="logo"
-                onChange={(event) => {
-                  const file = event.currentTarget.files?.[0];
-                  setLogoPreviewUrl(file ? URL.createObjectURL(file) : null);
-                }}
-                type="file"
-              />
-              <span className="mt-1.5 block text-[0.8rem] font-normal leading-5 text-muted">{t("logoHint")}</span>
-              {fieldMessage("logo") ? (
-                <span className="mt-1 block text-[0.8rem] font-normal text-red-700">{fieldMessage("logo")}</span>
-              ) : null}
-            </label>
-            {logoPreviewUrl || profile.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                alt={t("logoPreviewAlt")}
-                className="mt-3 h-16 w-16 rounded-lg border border-brand-border object-contain"
-                src={logoPreviewUrl ?? profile.logoUrl ?? undefined}
-              />
-            ) : null}
+            <div className="mt-6 border-t border-brand-border pt-5"><CompanyOwnerLogoManager /></div>
           </div>
 
           {error ? (

@@ -22,12 +22,14 @@ function state(locale: "en" | "fr") {
   const createdAt = Date.UTC(2026, 8, 20, 10);
   return {
     __locale: locale,
+    __authToken: "admin-session",
     __pathname: "/admin/companies",
     __queries: {
+      "users.currentUser": { _id: "admin", accountType: "admin" },
       "admin.companies.getCompanySummary": {
         companyId, name: "Atlas Build", legalName: "Atlas Build SARL", description: "Construction and renovation company.", city: "Rabat",
         serviceAreas: ["rabat"], services: ["renovation"], verificationStatus: "pending", onboardingStatus: "completed", createdAt,
-        logoUrl: null, publicProfileSlug: "atlas-build", activeMemberCount: 1, membersTruncated: false,
+        logoUrl: null, submittedLogoImageId: null, approvedLogoImageId: null, publicProfileSlug: "atlas-build", activeMemberCount: 1, membersTruncated: false,
         members: [{ userId: "user-owner", displayName: "Sara El Amrani", role: "owner", status: "active" }],
         reviewSummary: { count: 1, rating: 5 }, dealSummary: { activeCount: 1, completedCount: 0, truncated: false },
         commissionSummary: { dueCount: 1, dueAmountMad: 5000, truncated: false }, portfolio: [], portfolioHasMore: false,
@@ -82,6 +84,8 @@ for (const copy of [
 
     await page.getByRole("tab", { name: copy.verification }).click();
     await expect(page.getByRole("heading", { name: copy.verificationRecord })).toBeVisible();
+    await page.getByRole("tab", { name: "Logo", exact: true }).click();
+    await expect(page.getByText(copy.locale === "en" ? "This Company has no submitted or approved logo." : "Cette entreprise n’a aucun logo soumis ou approuvé.")).toBeVisible();
     await page.getByRole("tab", { name: copy.projects }).click();
     await expect(page.getByText("Villa Atlas", { exact: true })).toBeVisible();
     await page.getByRole("tab", { name: copy.commissions }).click();

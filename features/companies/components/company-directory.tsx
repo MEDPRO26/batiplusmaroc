@@ -1,5 +1,7 @@
 "use client";
 
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import Image from "next/image";
@@ -305,7 +307,6 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
     };
   }, [onClose]);
 
-  const initials = profile?.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") ?? "";
   const sheet = (
     <div className="fixed inset-0 z-[80]" role="presentation">
       <button aria-label={t("closeProfile")} className="absolute inset-0 bg-ink/45" onClick={onClose} type="button" />
@@ -345,7 +346,7 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
               <div className=" px-5 py-6 sm:px-6">
                 <div className="flex items-start gap-4">
                   <div className="relative grid size-16 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-soft text-lg font-semibold text-brand outline outline-1 outline-black/10 sm:size-20">
-                    {profile.logoUrl ? <Image alt={t("logoAlt", { name: profile.name })} className="object-cover" fill sizes="80px" src={profile.logoUrl} /> : <span aria-hidden>{initials}</span>}
+                    <ApprovedCompanyLogo alt={t("logoAlt", { name: profile.name })} className="object-cover" fill sizes="80px" url={profile.logoUrl} />
                   </div>
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -456,7 +457,6 @@ function ExternalIcon() {
 function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onViewProfile: () => void }) {
   const t = useTranslations("companyDirectory");
   const locale = useLocale();
-  const initials = company.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("");
   const meta = [
     company.city,
     company.yearsExperience !== null ? t("years", { count: company.yearsExperience }) : null,
@@ -464,7 +464,7 @@ function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onVie
   return (
     <article className="-mx-2 flex gap-4 rounded-xl px-2 py-6 transition-[background-color] duration-150 ease-out hover:bg-[#f4f7fa] sm:-mx-3 sm:gap-5 sm:px-3">
       <div className="relative mt-0.5 grid size-12 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-soft text-sm font-semibold text-brand ring-1 ring-black/5 sm:size-14">
-        {company.logoUrl ? <Image alt={t("logoAlt", { name: company.name })} className="object-cover" fill sizes="56px" src={company.logoUrl} /> : <span aria-hidden>{initials}</span>}
+        <ApprovedCompanyLogo alt={t("logoAlt", { name: company.name })} className="object-cover" fill sizes="56px" url={company.logoUrl} />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">

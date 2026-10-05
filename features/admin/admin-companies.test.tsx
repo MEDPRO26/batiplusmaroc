@@ -16,6 +16,7 @@ vi.mock("convex/react", () => ({
   usePaginatedQuery: () => mocks.paginated,
   useMutation: () => vi.fn(),
 }));
+vi.mock("@convex-dev/auth/react", () => ({ useAuthToken: () => null }));
 vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("next/font/google", () => ({ Outfit: () => ({ className: "font-outfit" }) }));
 vi.mock("@/i18n/navigation", () => ({

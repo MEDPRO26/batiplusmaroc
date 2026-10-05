@@ -1,3 +1,4 @@
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 import type { FunctionReturnType } from "convex/server";
 import { ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
@@ -15,11 +16,6 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
   const tDirectory = await getTranslations("companyDirectory");
   const format = await getFormatter();
   const locale = await getLocale();
-  const initials = company.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
 
   return (
     <div className="min-h-[calc(100dvh-4.5rem)]">
@@ -45,18 +41,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
               <div className="flex min-w-0 flex-1 gap-4 sm:gap-5 ">
                 <div className="-mt-10 shrink-0 sm:-mt-12 ">
                   <div className="relative grid size-[88px] place-items-center overflow-hidden rounded-full border-[3px] border-white bg-brand-soft text-2xl font-semibold text-brand shadow-[0_2px_8px_rgb(10_25_38/0.12)] sm:size-[112px]">
-                    {company.logoUrl ? (
-                      <Image
-                        alt={t("logoAlt", { name: company.name })}
-                        className="object-cover"
-                        fill
-                        priority={!company.coverImageUrl}
-                        sizes="112px"
-                        src={company.logoUrl}
-                      />
-                    ) : (
-                      <span aria-hidden>{initials || "?"}</span>
-                    )}
+                    <ApprovedCompanyLogo alt={t("logoAlt", { name: company.name })} className="object-cover" fill priority={!company.coverImageUrl} sizes="112px" url={company.logoUrl} />
                   </div>
                 </div>
 

@@ -111,6 +111,17 @@ async function uploadedCompanyImage(
 
 type UpdateArgs = FunctionArgs<typeof api.companies.index.updatePublicProfile>;
 
+async function uploadPendingLogo(t: TestBackend, userId: Id<"users">) {
+  const owner = asUser(t, userId);
+  const bytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+  const { uploadToken } = await owner.mutation(api.companyLogos.index.generateUploadIntent, { contentType: "image/png", size: bytes.length });
+  const response = await owner.fetch("/company-logos/upload", { method: "POST", headers: {
+    "Content-Type": "image/png", "X-Upload-Token": uploadToken,
+  }, body: bytes });
+  expect(response.status).toBe(200);
+  return (await response.json() as { imageId: Id<"companyLogoImages"> }).imageId;
+}
+
 const validUpdate: UpdateArgs = {
   name: "Atlas Public Construction",
   description: "Updated public construction services for residential and commercial clients.",
@@ -164,15 +175,10 @@ describe("company public profile management", () => {
   test("a delayed image save preserves newer text and every unrelated profile field", async () => {
     const t = convexTest(schema, modules);
     const { userId, companyId } = await seedCompany(t, "delayed-image");
-    const logoUploadToken = await uploadedCompanyImage(t, userId, companyId, "companyLogo");
-
     await asUser(t, userId).mutation(api.companies.index.updatePublicProfile, {
       description: "This newer profile description must survive a delayed image upload completion.",
     });
-    await asUser(t, userId).mutation(api.companies.index.setCompanyPublicImage, {
-      kind: "logo",
-      uploadToken: logoUploadToken,
-    });
+    const imageId = await uploadPendingLogo(t, userId);
 
     const state = await t.run(async (ctx) => ({
       company: await ctx.db.get(companyId),
@@ -190,20 +196,17 @@ describe("company public profile management", () => {
       yearsExperience: 5,
       directorySearchText: "delayed-image company rabat servicestructural structural work gros oeuvre gros œuvre",
     });
-    expect(state.company?.logoMediaId).toBeDefined();
+    expect(state.company?.submittedLogoImageId).toBe(imageId);
+    expect(state.company?.approvedLogoImageId).toBeUndefined();
     expect(state.services.map((row) => row.service)).toEqual(["structural"]);
   });
 
   test("a focused text patch preserves a newer image and untouched profile sections", async () => {
     const t = convexTest(schema, modules);
     const { userId, companyId } = await seedCompany(t, "newer-image");
-    const logoUploadToken = await uploadedCompanyImage(t, userId, companyId, "companyLogo");
-    await asUser(t, userId).mutation(api.companies.index.setCompanyPublicImage, {
-      kind: "logo",
-      uploadToken: logoUploadToken,
-    });
+    await uploadPendingLogo(t, userId);
     const imageBeforeTextSave = await t.run(async (ctx) =>
-      (await ctx.db.get(companyId))?.logoMediaId,
+      (await ctx.db.get(companyId))?.submittedLogoImageId,
     );
 
     await asUser(t, userId).mutation(api.companies.index.updatePublicProfile, {
@@ -225,7 +228,7 @@ describe("company public profile management", () => {
       phone: "0611111111",
       website: "https://old.example/",
       yearsExperience: 5,
-      logoMediaId: imageBeforeTextSave,
+      submittedLogoImageId: imageBeforeTextSave,
     });
     expect(state.company?.directorySearchText).toContain("newer image construction");
     expect(state.company?.directorySearchText).toContain("casablanca");
@@ -271,17 +274,17 @@ describe("company public profile management", () => {
     const t = convexTest(schema, modules);
     const companyA = await seedCompany(t, "company-a");
     const companyB = await seedCompany(t, "company-b");
-    const companyBLogo = await uploadedCompanyImage(
+    const companyBCover = await uploadedCompanyImage(
       t,
       companyB.userId,
       companyB.companyId,
-      "companyLogo",
+      "companyCover",
     );
 
     await expect(
       asUser(t, companyA.userId).mutation(api.companies.index.setCompanyPublicImage, {
-        kind: "logo",
-        uploadToken: companyBLogo,
+        kind: "cover",
+        uploadToken: companyBCover,
       }),
     ).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
 
@@ -293,7 +296,7 @@ describe("company public profile management", () => {
     expect(state.companyB?.name).toBe("company-b Company");
   });
 
-  test("uploads and replaces both logo and cover through verified R2 intents", async () => {
+  test("preserves unreviewed legacy logos while cover replacement keeps its verified R2 flow", async () => {
     const t = convexTest(schema, modules);
     const { userId, companyId } = await seedCompany(t, "branding");
     const oldMedia = await t.run(async (ctx) => {
@@ -323,10 +326,10 @@ describe("company public profile management", () => {
     const logoUploadToken = await uploadedCompanyImage(t, userId, companyId, "companyLogo");
     const coverUploadToken = await uploadedCompanyImage(t, userId, companyId, "companyCover");
 
-    await asUser(t, userId).mutation(api.companies.index.setCompanyPublicImage, {
+    await expect(asUser(t, userId).mutation(api.companies.index.setCompanyPublicImage, {
       kind: "logo",
       uploadToken: logoUploadToken,
-    });
+    })).rejects.toThrow("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
     await asUser(t, userId).mutation(api.companies.index.setCompanyPublicImage, {
       kind: "cover",
       uploadToken: coverUploadToken,
@@ -344,11 +347,12 @@ describe("company public profile management", () => {
     });
     expect(state.logo).toMatchObject({ purpose: "companyLogo", uploadedBy: userId });
     expect(state.cover).toMatchObject({ purpose: "companyCover", uploadedBy: userId });
-    expect(state.oldLogo).toBeNull();
+    expect(state.oldLogo?._id).toBe(oldMedia.logoMediaId);
+    expect(state.company?.logoMediaId).toBe(oldMedia.logoMediaId);
     expect(state.oldCover).toBeNull();
 
     const manager = await asUser(t, userId).query(api.companies.index.getProfileManager, {});
-    expect(manager.logoUrl).toContain(`/companies/${companyId}/logo/`);
+    expect(manager.logoUrl).toBeNull();
     expect(manager.coverImageUrl).toContain(`/companies/${companyId}/cover/`);
   });
 

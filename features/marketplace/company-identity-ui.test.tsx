@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { createFormatter, createTranslator, NextIntlClientProvider } from "next-intl";
 import { getFunctionName, type FunctionReturnType } from "convex/server";
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -37,7 +37,7 @@ vi.mock("react", async importOriginal => {
       : state.selection === "renovation" && initial === null ? "renovation" : initial,
   ) };
 });
-vi.mock("next/image", () => ({ default: ({ alt }: { alt: string }) => <span data-image-alt={alt} /> }));
+vi.mock("next/image", () => ({ default: ({ alt, src, unoptimized }: { alt: string; src: string; unoptimized?: boolean }) => <span data-image-alt={alt} data-src={src} data-unoptimized={unoptimized || undefined} /> }));
 vi.mock("next/font/google", () => ({ Outfit: () => ({ className: "font-outfit" }) }));
 vi.mock("next-intl/server", () => ({
   getLocale: async () => state.locale,
@@ -112,6 +112,7 @@ function expectSafe(html: string) {
 
 describe("Company identity is displayed from backend-safe DTOs", () => {
   beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_CONVEX_SITE_URL", "https://logo-test.convex.site");
     state.locale = "en"; state.selection = null; state.queries = []; state.responses.clear(); state.loading = false;
     state.responses.set("companies/directory:listPublicCompanies", [{ ...company, realName: FULL_NAME, legalName: FULL_NAME }]);
     state.responses.set("serviceCatalog:listActive", []);
@@ -119,6 +120,44 @@ describe("Company identity is displayed from backend-safe DTOs", () => {
     state.responses.set("finalQuotes/index:getForConversation", { viewerType: "client", canRequest: false, canPrepare: false, finalQuote });
     state.responses.set("finalQuotes/index:getPdfDownloadUrl", "https://files.example.test/final-quote.pdf");
   });
+  afterEach(() => vi.unstubAllEnvs());
+
+  for (const locale of ["en", "fr"] as const) {
+    test.each([null, "https://logo-test.convex.site/company-logos/private/pending", "https://logo-test.convex.site/company-logos/private/rejected", "https://media.example.test/legacy-logo.png", "https://logo-test.convex.site/company-logos/public/approved"])(`${locale} logo consumers fail closed for %s and retain supplied masked names`, async logoUrl => {
+      state.locale = locale;
+      const row = { ...company, logoUrl };
+      state.responses.set("companies/directory:listPublicCompanies", [row]);
+      const proposal = { ...quote, company: { ...quote.company, logoUrl } };
+      const summary = { ...thread, otherPartyAvatarUrl: logoUrl };
+      const surfaces = [
+        <CompanyDirectory key="directory" />,
+        <ReceivedQuoteCard key="proposal" quote={proposal} onOpen={vi.fn()} />,
+        <QuoteReviewContent key="quote" quote={proposal} confirmDecline={false} error={null} success={null} pendingAction={null} onReview={vi.fn()} onCancelDecline={vi.fn()} onConfirmDecline={vi.fn()} />,
+        <MessagesInboxView key="inbox" accountType="client" projects={[]} threads={[summary]} />,
+        <ConversationContextPanel key="conversation" accountType="client" conversation={{ ...summary, viewerType: "client" }} conversationId={conversationId} />,
+        await PublicCompanyProfile({ company: { ...row, marketplaceAvailable: true, invitationEligible: true, foundedYear: null, companySize: null, languages: [], website: null, reviews: [], portfolio: [] } }),
+      ];
+      for (const surface of ["category", "feed", "hiring"] as const) {
+        state.selection = surface === "category" ? "renovation" : surface === "feed" ? "companies" : null;
+        surfaces.push(surface === "category" ? <CategoryMarketplace /> : surface === "feed" ? <MarketplaceFeed /> : <HiringCompanyPreviews />);
+        // Promotional selection is resolved during render, just as in the existing identity tests.
+        const html = render(surfaces.pop());
+        assertLogo(html);
+      }
+      state.selection = null;
+      for (const surface of surfaces) assertLogo(render(surface));
+      function assertLogo(html: string) {
+        expectSafe(html);
+        if (logoUrl?.includes("/public/")) {
+          expect(html).toContain(`data-src="${logoUrl}"`); expect(html).toContain('data-unoptimized="true"');
+        } else {
+          expect(html).toContain((locale === "fr" ? fr : en).companyLogo.genericAlt);
+          if (logoUrl) expect(html).not.toContain(logoUrl);
+        }
+        expect(html).not.toContain("Contains identifying branding");
+      }
+    });
+  }
 
   for (const locale of ["en", "fr"] as const) {
     test.each(["category", "feed", "hiring"] as const)(`${locale} promotional %s cards cannot use static identities or recover private names`, surface => {

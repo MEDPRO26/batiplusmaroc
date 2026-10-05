@@ -1,4 +1,5 @@
 import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
+import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import { ConvexError, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
@@ -170,10 +171,9 @@ export const getPublicCompanyProfile = query({
   handler: async (ctx, args) => {
     const company = await ctx.db.query("companies").withIndex("by_slug", (q) => q.eq("slug", args.slug)).unique();
     if (!company || company.onboardingStatus !== "completed" || !company.slug || !company.name || !company.city || !company.description) return null;
-    const [services, projects, logoMedia, coverMedia, reviewRows] = await Promise.all([
+    const [services, projects, coverMedia, reviewRows] = await Promise.all([
       ctx.db.query("companyServices").withIndex("by_companyId", (q) => q.eq("companyId", company._id)).take(200),
       ctx.db.query("portfolioProjects").withIndex("by_companyId_and_status", (q) => q.eq("companyId", company._id).eq("status", "published")).order("desc").take(24),
-      company.logoMediaId ? ctx.db.get(company.logoMediaId) : Promise.resolve(null),
       company.coverMediaId ? ctx.db.get(company.coverMediaId) : Promise.resolve(null),
       ctx.db.query("reviews")
         .withIndex("by_companyId_and_moderationStatus_and_createdAt", (q) =>
@@ -183,11 +183,7 @@ export const getPublicCompanyProfile = query({
         .take(20),
     ]);
     const serviceNames = await resolvedServiceNames(ctx, services);
-    const logoUrl = logoMedia && logoMedia.companyId === company._id && logoMedia.purpose === "companyLogo"
-      ? getPublicMediaUrl(logoMedia.objectKey)
-      : company.logoStorageId
-        ? await getNonVerificationStorageUrl(ctx, company.logoStorageId)
-        : null;
+    const logoUrl = await resolveApprovedLogoUrl(ctx, company);
     const coverImageUrl = coverMedia && coverMedia.companyId === company._id && coverMedia.purpose === "companyCover"
       ? getPublicMediaUrl(coverMedia.objectKey)
       : null;

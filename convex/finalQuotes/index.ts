@@ -19,6 +19,7 @@ import { requireClientUser, requireOwnedProject } from "../projects/access";
 import { assertProjectTransition } from "../projects/state";
 import { assertFinalQuoteTransition } from "./state";
 import { validateUploadFileName } from "../messages/attachmentRules";
+import { assertNotVerificationStorage } from "../storage/verificationPrivacy";
 
 const MAX_PRICE_MAD = 100_000_000;
 const MAX_DURATION_DAYS = 1_825;
@@ -405,6 +406,7 @@ export const submitRevision = mutation({
     if (revisionNumber > MAX_REVISIONS) throw new ConvexError("FINAL_QUOTE_REVISION_LIMIT_REACHED");
     let pdfFields: { pdfStorageId?: Id<"_storage">; pdfFileName?: string; pdfUploadFileName?: string; pdfSize?: number } = {};
     if (args.pdf) {
+      await assertNotVerificationStorage(ctx, args.pdf.storageId);
       const intent = await ctx.db.query("finalQuoteUploadIntents").withIndex("by_token", (q) => q.eq("token", args.pdf!.uploadToken)).unique();
       const metadata = await ctx.db.system.get("_storage", args.pdf.storageId); const mime = metadata?.contentType?.split(";", 1)[0]?.trim().toLowerCase();
       if (!intent || intent.finalQuoteId !== parent._id || intent.userId !== access.userId || intent.claimedAt || intent.expiresAt < now || !metadata || mime !== "application/pdf" || metadata.size < 1 || metadata.size > PDF_MAX_BYTES) throw new ConvexError("INVALID_FINAL_QUOTE_PDF");

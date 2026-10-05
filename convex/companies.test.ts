@@ -218,15 +218,16 @@ describe("company onboarding", () => {
     expect(state.memberships).toHaveLength(1);
   });
 
-  test("stores new logos and company covers as R2 metadata", async () => {
+  test("rejects legacy public logo uploads while company covers retain the R2 flow", async () => {
     const t = convexTest(schema, modules);
     const { userId, companyId } = await seedCompany(t);
     const owner = asUser(t, userId);
     const logoUploadToken = await uploadedCompanyImage(t, userId, companyId, "companyLogo");
-    await owner.mutation(api.companies.index.completeOnboarding, {
+    await expect(owner.mutation(api.companies.index.completeOnboarding, {
       ...validInput,
       logoUploadToken,
-    });
+    })).rejects.toThrow("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
+    await owner.mutation(api.companies.index.completeOnboarding, validInput);
     const coverUploadToken = await uploadedCompanyImage(t, userId, companyId, "companyCover");
     await owner.mutation(api.companies.index.setCompanyPublicImage, {
       kind: "cover",
@@ -242,10 +243,10 @@ describe("company onboarding", () => {
       };
     });
     expect(state.company?.logoStorageId).toBeUndefined();
-    expect(state.logo).toMatchObject({ storageProvider: "r2", purpose: "companyLogo", uploadedBy: userId });
+    expect(state.logo).toBeNull();
     expect(state.cover).toMatchObject({ storageProvider: "r2", purpose: "companyCover", uploadedBy: userId });
     const profile = await owner.query(api.companies.index.getOnboardingProfile, {});
-    expect(profile?.logoUrl).toContain("https://media.example.test/companies/");
+    expect(profile?.logoUrl).toBeNull();
   });
 
   test("re-submission updates the same company and relationship rows", async () => {

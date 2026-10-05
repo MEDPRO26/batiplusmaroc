@@ -1,4 +1,4 @@
-import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
+import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
@@ -252,7 +252,7 @@ async function resolveManagedImageUrl(
   ctx: QueryCtx,
   companyId: Id<"companies">,
   mediaId: Id<"publicMedia"> | undefined,
-  purpose: "companyLogo" | "companyCover",
+  purpose: "companyCover",
 ) {
   if (!mediaId) return null;
   const media = await ctx.db.get(mediaId);
@@ -338,7 +338,6 @@ export const getOnboardingProfile = query({
     const catalog = await listCatalog(ctx, false);
     const bySlug = new Map(catalog.map(item => [item.slug, item]));
     const selectedServiceIds = selectedServices.map(row => row.serviceId ?? bySlug.get(row.service)?._id).filter((id): id is Id<"serviceCatalog"> => id !== undefined);
-    const logoMedia = company.logoMediaId ? await ctx.db.get(company.logoMediaId) : null;
 
     return {
       ownerFirstName: user.firstName ?? "",
@@ -350,11 +349,7 @@ export const getOnboardingProfile = query({
       description: company.description ?? "",
       yearsExperience: company.yearsExperience ?? null,
       website: company.website ?? "",
-      logoUrl: logoMedia
-        ? getPublicMediaUrl(logoMedia.objectKey)
-        : company.logoStorageId
-          ? await getNonVerificationStorageUrl(ctx, company.logoStorageId)
-          : null,
+      logoUrl: await resolveApprovedLogoUrl(ctx, company),
       publicSlug: company.slug ?? null,
       services: selectedServices.map((item) => item.service),
       serviceOptions: [...legacyServiceOptions],
@@ -390,7 +385,7 @@ export const getProfileManager = query({
         .query("companyVerificationDocuments")
         .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
         .take(5),
-      resolveManagedImageUrl(ctx, company._id, company.logoMediaId, "companyLogo"),
+      resolveApprovedLogoUrl(ctx, company),
       resolveManagedImageUrl(ctx, company._id, company.coverMediaId, "companyCover"),
     ]);
 
@@ -405,10 +400,6 @@ export const getProfileManager = query({
     if (new Set(services).size !== services.length) {
       throw new ConvexError("DUPLICATE_COMPANY_SERVICE");
     }
-
-    const legacyLogoUrl = !logoUrl && company.logoStorageId
-      ? await getNonVerificationStorageUrl(ctx, company.logoStorageId)
-      : null;
 
     return {
       slug: company.slug ?? null,
@@ -429,7 +420,7 @@ export const getProfileManager = query({
       serviceAreaOptions: [...companyServiceAreas],
       languageOptions: [...companyLanguages],
       companySizeOptions: [...companySizes],
-      logoUrl: logoUrl ?? legacyLogoUrl,
+      logoUrl,
       coverImageUrl,
       legal: {
         verificationStatus: company.verificationStatus,
@@ -578,6 +569,7 @@ export const completeOnboarding = mutation({
   returns: v.object({ onboardingStatus: v.literal("completed") }),
   handler: async (ctx, args) => {
     const { userId, company } = await requireOwnerCompany(ctx);
+    if (args.logoUploadToken) throw new ConvexError("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
     const name = normalizeText(args.name, 2, 120, "INVALID_COMPANY_NAME");
     const legalName = normalizeOptionalText(args.legalName, 2, 160, "INVALID_LEGAL_NAME");
     const phone = normalizeMoroccanPhone(args.phone);
@@ -649,15 +641,6 @@ export const completeOnboarding = mutation({
       }
     }
 
-    const oldLogoMedia = company.logoMediaId ? await ctx.db.get(company.logoMediaId) : null;
-    const logoMediaId = args.logoUploadToken
-      ? await consumeVerifiedPublicMediaIntent(ctx, {
-          uploadToken: args.logoUploadToken,
-          companyId: company._id,
-          userId,
-          purpose: "companyLogo",
-        })
-      : undefined;
     await ctx.db.patch(company._id, {
       name,
       slug,
@@ -668,18 +651,10 @@ export const completeOnboarding = mutation({
       yearsExperience,
       website,
       directorySearchText: buildCompanyDirectorySearchText({ name, city, services }),
-      ...(logoMediaId ? { logoMediaId } : {}),
       onboardingStatus: "completed",
       updatedAt: now,
     });
     await ctx.db.patch(userId, { onboardingStatus: "completed", updatedAt: now });
-
-    if (logoMediaId && oldLogoMedia) {
-      await ctx.db.delete(oldLogoMedia._id);
-      await ctx.scheduler.runAfter(0, internal.storage.r2.deleteObjectIfUnreferenced, {
-        objectKey: oldLogoMedia.objectKey,
-      });
-    }
 
     return { onboardingStatus: "completed" as const };
   },
@@ -693,17 +668,18 @@ export const setCompanyPublicImage = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const { company, userId } = await requireOwnerCompany(ctx);
+    if (args.kind === "logo") throw new ConvexError("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
     if (company.onboardingStatus !== "completed") {
       throw new ConvexError("COMPANY_ONBOARDING_REQUIRED");
     }
-    const field = args.kind === "logo" ? "logoMediaId" : "coverMediaId";
+    const field = "coverMediaId";
     const previousId = company[field];
     const previous = previousId ? await ctx.db.get(previousId) : null;
     const mediaId = await consumeVerifiedPublicMediaIntent(ctx, {
       uploadToken: args.uploadToken,
       companyId: company._id,
       userId,
-      purpose: args.kind === "logo" ? "companyLogo" : "companyCover",
+      purpose: "companyCover",
     });
     await ctx.db.patch(company._id, { [field]: mediaId, updatedAt: Date.now() });
     if (previous) {

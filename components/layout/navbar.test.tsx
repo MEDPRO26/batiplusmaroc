@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { getFunctionName } from "convex/server";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 import { resolveNavbarRole, userInitials } from "./navbar-role";
@@ -7,11 +8,14 @@ import { buildCompanyNav } from "./company-nav";
 import { isGroupActive, isLinkActive } from "./signed-in-navbar-chrome";
 import { routes } from "@/lib/routes";
 
+beforeEach(() => vi.stubEnv("NEXT_PUBLIC_CONVEX_SITE_URL", "https://example.convex.site"));
+afterEach(() => vi.unstubAllEnvs());
+
 vi.mock("next/font/google", () => ({
   Outfit: () => ({ className: "font-outfit" }),
 }));
 vi.mock("next/image", () => ({
-  default: ({ alt, src }: { alt: string; src: string }) => <span aria-label={alt} data-src={src} />,
+  default: ({ alt, src, unoptimized }: { alt: string; src: string; unoptimized?: boolean }) => <span aria-label={alt} data-src={src} data-unoptimized={unoptimized || undefined} />,
 }));
 vi.mock("next-intl", () => ({
   useTranslations: (ns?: string) => (key: string) => (ns ? `${ns}.${key}` : key),
@@ -254,8 +258,14 @@ describe("role navbar content", () => {
     expect(activeIds(routes.companyVerification)).toEqual([]);
   });
 
-  test("CompanyNavbar renders the stored company logo when available", () => {
-    vi.mocked(useQuery).mockReturnValue({ logoUrl: "https://cdn.example.test/company-logo.webp" });
+  test("CompanyNavbar renders the approved company logo without optimization", () => {
+    vi.mocked(useQuery).mockImplementation(((ref: unknown, args: unknown) => {
+      if (args === "skip") return undefined;
+      const path = getFunctionName(ref as never);
+      if (path === "companyVerification/index:getVerificationStatus") return { status: "draft", canManageDocuments: true };
+      if (path === "companies/index:getOnboardingProfile") return { logoUrl: "https://example.convex.site/company-logos/public/approved" };
+      return null;
+    }) as never);
     const html = renderToStaticMarkup(
       <CompanyNavbar
         user={{
@@ -266,7 +276,8 @@ describe("role navbar content", () => {
         }}
       />,
     );
-    expect(html).toContain("https://cdn.example.test/company-logo.webp");
+    expect(html).toContain("https://example.convex.site/company-logos/public/approved");
+    expect(html).toContain('data-unoptimized="true"');
     expect(html).not.toContain(">SA<");
   });
 
@@ -277,6 +288,7 @@ describe("role navbar content", () => {
       publicSlug: "atlas-build",
       verificationStatus: "verified",
       logoUrl: null,
+      canManageDocuments: true,
     });
     const html = renderToStaticMarkup(
       <CompanyNavbar user={{ firstName: "Sara", lastName: "Alaoui", email: "s@example.test", onboardingStatus: "completed" }} />,
@@ -285,6 +297,20 @@ describe("role navbar content", () => {
     expect(html).toContain("nav.companySuspended.support");
     expect(html).toContain(routes.companyBatiplus);
     expect(html).not.toContain("needs_attention");
+  });
+
+  test("Company staff skip owner-only navbar queries and use a generic avatar", () => {
+    const queried: string[] = [];
+    vi.mocked(useQuery).mockImplementation(((ref: unknown, args: unknown) => {
+      if (args === "skip") return undefined;
+      const path = getFunctionName(ref as never); queried.push(path);
+      if (path === "companyVerification/index:getVerificationStatus") return { status: "rejected", canManageDocuments: false };
+      return null;
+    }) as never);
+    const html = renderToStaticMarkup(<CompanyNavbar user={{ firstName: "Sara", lastName: "Alaoui", email: "s@example.test", onboardingStatus: "completed" }} />);
+    expect(queried).not.toContain("companies/index:getOnboardingProfile");
+    expect(queried).not.toContain("companyLogos/index:getMyLogos");
+    expect(html).toContain("companyLogo.genericAlt"); expect(html).not.toContain("company-logos/");
   });
 });
 

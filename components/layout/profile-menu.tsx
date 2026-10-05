@@ -1,5 +1,7 @@
 "use client";
 
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Fragment, useEffect, useId, useRef, useState, type ComponentProps, type ReactNode } from "react";
@@ -19,6 +21,7 @@ export function ProfileMenu({
   firstName,
   lastName,
   displayName,
+  role,
   roleLabel,
   profileImageUrl,
   sections,
@@ -85,7 +88,7 @@ export function ProfileMenu({
         ref={triggerRef}
         type="button"
       >
-        {profileImageUrl ? (
+        {role === "company" ? <ApprovedCompanyLogo alt="" className="object-cover" fill sizes="44px" url={profileImageUrl} /> : profileImageUrl ? (
           <Image alt="" className="object-cover" fill sizes="44px" src={profileImageUrl} />
         ) : (
           <span aria-hidden>{initials}</span>
@@ -102,7 +105,7 @@ export function ProfileMenu({
       >
         <div className="flex items-center gap-3 border-b border-brand-border px-3 py-3">
           <span aria-hidden className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-soft text-sm font-semibold text-brand-dark outline outline-1 -outline-offset-1 outline-black/10">
-            {profileImageUrl ? <Image alt="" className="object-cover" fill sizes="40px" src={profileImageUrl} /> : initials}
+            {role === "company" ? <ApprovedCompanyLogo alt="" className="object-cover" fill sizes="40px" url={profileImageUrl} /> : profileImageUrl ? <Image alt="" className="object-cover" fill sizes="40px" src={profileImageUrl} /> : initials}
           </span>
           <div className="min-w-0">
             <p className="m-0 truncate text-sm font-semibold text-ink">{displayName}</p>

@@ -11,6 +11,8 @@ import {
   type PublicMediaPurpose,
 } from "./constants";
 import { getPublicMediaBaseUrl } from "./publicUrl";
+import { matchesImageSignature } from "./imageValidation";
+export { matchesImageSignature } from "./imageValidation";
 import {
   createPresignedPutUrl,
   deletePublicMediaObject,
@@ -48,24 +50,6 @@ export function validateHeadMetadata(
   return contentType === expected.contentType && actual.ContentLength === expected.size;
 }
 
-export function matchesImageSignature(contentType: string, bytes: Uint8Array) {
-  if (contentType === "image/jpeg") {
-    return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
-  }
-  if (contentType === "image/png") {
-    const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-    return bytes.length >= signature.length && signature.every((value, index) => bytes[index] === value);
-  }
-  if (contentType === "image/webp") {
-    return (
-      bytes.length >= 12 &&
-      String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" &&
-      String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
-    );
-  }
-  return false;
-}
-
 export const requestPublicMediaUpload = action({
   args: {
     purpose: publicMediaPurposeValidator,
@@ -77,6 +61,7 @@ export const requestPublicMediaUpload = action({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new ConvexError("NOT_AUTHENTICATED");
+    if (args.purpose === "companyLogo") throw new ConvexError("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
     if (!getPublicMediaBaseUrl()) throw new ConvexError("PUBLIC_MEDIA_URL_NOT_CONFIGURED");
 
     const access: { companyId: Id<"companies"> } = await ctx.runQuery(

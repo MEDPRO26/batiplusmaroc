@@ -1625,6 +1625,38 @@
     "portfolioCount": "{count, plural, =0 {No published work} one {# published project} other {# published projects shown}}",
     "reviewCount": "{count, plural, one {# review} other {# reviews}}"
   },
+  "companyLogo": {
+    "title": "Company logo",
+    "guidance": "Do not include your Company name, phone number, email, website, social handle, QR code or identifying watermark. Batiplus reviews the image before public display.",
+    "chooseFile": "Choose a logo for review",
+    "limits": "JPEG, PNG or WebP. Maximum 5 MiB.",
+    "optional": "A logo is optional. You can save your profile without one.",
+    "selected": "Selected: {name}. Submit this image for review when ready.",
+    "submit": "Upload for review",
+    "uploading": "Uploading logo…",
+    "retryUpload": "Retry upload",
+    "success": "Logo uploaded. Waiting for review; it is not public yet.",
+    "loading": "Loading your logos…",
+    "approvedTitle": "Current approved logo",
+    "submittedTitle": "Latest submission",
+    "approvedAlt": "Your approved Company logo",
+    "submittedAlt": "Your submitted Company logo",
+    "genericAlt": "Generic Company image",
+    "status": {
+      "pending": "Waiting for review",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "noApproved": "No approved logo",
+    "noSubmission": "No pending or rejected submission",
+    "approvedHelp": "Public display follows Company visibility rules. A new submission replaces this logo only after approval.",
+    "pendingHelp": "Only you and Admin can see this submission. It is not public yet.",
+    "rejectedHelp": "You can upload a new image for review. Any approved logo remains available under Company visibility rules.",
+    "reason": "Rejection reason: {reason}",
+    "loadingPreview": "Loading private preview…",
+    "previewError": "The private preview could not be loaded.",
+    "retryPreview": "Retry preview"
+  },
   "companyProfileManager": {
     "profileView": {
       "settings": "Profile settings",
@@ -4327,6 +4359,12 @@
         "INVALID_SERVICES": "Select at least one valid service.",
         "DUPLICATE_COMPANY_SERVICE": "This service is already linked to the company.",
         "INVALID_LOGO": "Choose a JPG, PNG, or WebP logo of 5 MB or less.",
+        "INVALID_COMPANY_LOGO_UPLOAD": "This logo upload is invalid, expired or already used. Select a JPG, PNG or WebP file of 5 MiB or less again.",
+        "COMPANY_LOGO_NOT_FOUND": "This logo is not available.",
+        "COMPANY_LOGO_REVIEW_STALE": "This logo changed while you were reviewing it. Open the current submission again.",
+        "COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED": "Logo uploads require the secure moderation upload flow.",
+        "PRIVATE_COMPANY_LOGO_FILE": "This private logo cannot be used through another file upload.",
+        "INVALID_PAGINATION": "Choose a page size between 1 and 100.",
         "INVALID_PUBLIC_MEDIA_UPLOAD": "This image upload is invalid or has expired. Please select the image again.",
         "PUBLIC_MEDIA_UPLOAD_FAILED": "The image could not be uploaded. Please try again.",
         "PUBLIC_MEDIA_URL_NOT_CONFIGURED": "Public image delivery is not configured yet. Please contact support.",
@@ -4623,7 +4661,8 @@
         "reviews": "Reviews",
         "activity": "Activity",
         "messages": "Messages",
-        "internalNotes": "Internal Notes"
+        "internalNotes": "Internal Notes",
+        "logo": "Logo"
       },
       "moreActions": "More actions",
       "reviewVerification": "Review verification",
@@ -4900,5 +4939,77 @@
       "historyTitle": "No past projects yet",
       "historyLead": "Completed and cancelled projects will appear here."
     }
+  },
+  "adminCompanyLogos": {
+    "loadError": "Logo review could not load. Please try again.",
+    "retry": "Try again",
+    "queueTitle": "Logos waiting for review",
+    "queueLead": "Open a submission to load its private preview. Logo approval is separate from Company verification.",
+    "emptyQueue": "No logos are waiting for review.",
+    "companyFallback": "Company",
+    "reviewCompany": "Review logo for {company}",
+    "review": "Review logo",
+    "reviewTitle": "Logo review",
+    "close": "Close",
+    "separateApproval": "Logo approval does not verify the Company. An approved logo may be public before a Deal, subject to Company visibility rules.",
+    "latest": "Review latest submission",
+    "currentApproved": "Current approved logo",
+    "noLogo": "This Company has no submitted or approved logo.",
+    "loading": "Loading…",
+    "status": {
+      "pending": "Waiting for review",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "uploaded": "Uploaded {date}",
+    "reasonValue": "Reason: {reason}",
+    "stale": "The image or its status has changed. The previous confirmation is cancelled. Reload the data and review the image again.",
+    "reviewAgain": "Reload and review again",
+    "superseded": "This submission has been replaced. It cannot be approved or rejected.",
+    "selectedImage": "Selected image",
+    "previewAlt": "Private preview of the selected Company logo",
+    "approvedAlt": "Private preview of the current approved Company logo",
+    "checklistTitle": "Manual review checklist",
+    "checklistLead": "Reject the image if it contains any of the following:",
+    "checklist": {
+      "branding": "Real Company name or identifying branding",
+      "contact": "Phone number or email",
+      "links": "Website or social handle",
+      "qr": "QR code",
+      "watermark": "Identifying watermark"
+    },
+    "replacement": "The current approved logo stays public while a replacement waits or is rejected. Only approval of the replacement changes the public logo.",
+    "reviewApproved": "Review the approved logo",
+    "noApproved": "No approved logo. Public displays use a generic Company image.",
+    "decision": "Decision",
+    "approvalRequiresPreview": "Approval is available only after this exact image preview loads successfully.",
+    "approve": "Approve logo",
+    "reject": "Reject logo",
+    "hide": "Hide approved logo",
+    "success": {
+      "approve": "Logo approved. Public display follows Company visibility rules.",
+      "reject": "Logo rejected. Any current approved logo remains public.",
+      "hide": "Logo hidden. Public displays now use a generic image; older logos are not restored."
+    },
+    "confirm": {
+      "approve": "Confirm approval",
+      "reject": "Confirm rejection",
+      "hide": "Confirm hiding"
+    },
+    "hideLead": "Hide the current approved logo for {company}? Public displays will use a generic image. Older logos will not be restored.",
+    "confirmLead": "Apply this decision to the exact selected image for {company}.",
+    "reason": "Reason",
+    "reasonHelp": "Required: 3–500 characters. The Company owner can see this reason.",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "history": "Moderation history",
+    "emptyHistory": "No moderation history for this image.",
+    "historyActions": {
+      "uploaded": "Uploaded",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "hidden": "Hidden"
+    },
+    "loadMore": "Load more"
   }
 }

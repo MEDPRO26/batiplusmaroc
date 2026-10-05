@@ -24,7 +24,8 @@ export function CompanyNavbar({ user }: { user: CompanyUser }) {
   const tBrand = useTranslations("brand");
   const tMenu = useTranslations("nav.profileMenu");
   const onboarded = user.onboardingStatus === "completed";
-  const profile = useQuery(api.companies.index.getOnboardingProfile, onboarded ? {} : "skip");
+  const access = useQuery(api.companyVerification.index.getVerificationStatus, onboarded ? {} : "skip");
+  const profile = useQuery(api.companies.index.getOnboardingProfile, onboarded && access?.canManageDocuments ? {} : "skip");
 
   const links = buildCompanyNav(t, onboarded);
   const profileHref = onboarded ? routes.companyProfileManagement : routes.companyOnboarding;

@@ -1,8 +1,10 @@
 "use client";
 
+import { AdminCompanyLogoSection } from "./admin-company-logo-review";
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { DropdownMenu } from "radix-ui";
 import { useEffect, useId, useState, type ReactNode } from "react";
@@ -19,13 +21,13 @@ import { OperationalConversation } from "@/features/operations/components/operat
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 
-export type AdminCompanyTab = "overview" | "verification" | "projectsDeals" | "commissions" | "reviews" | "activity" | "messages" | "internalNotes";
+export type AdminCompanyTab = "overview" | "verification" | "logo" | "projectsDeals" | "commissions" | "reviews" | "activity" | "messages" | "internalNotes";
 type Summary = NonNullable<FunctionReturnType<typeof api.admin.companies.getCompanySummary>>;
 type Commission = FunctionReturnType<typeof api.admin.deals.listCommissionObligations>["page"][number];
 type Review = FunctionReturnType<typeof api.admin.companies.listCompanyReviews>["page"][number];
 type OperationalStatus = "normal" | "needs_attention" | "suspended";
 
-const TABS: AdminCompanyTab[] = ["overview", "verification", "projectsDeals", "commissions", "reviews", "activity", "messages", "internalNotes"];
+const TABS: AdminCompanyTab[] = ["overview", "verification", "logo", "projectsDeals", "commissions", "reviews", "activity", "messages", "internalNotes"];
 const OPERATIONAL_STATUSES: OperationalStatus[] = ["normal", "needs_attention", "suspended"];
 
 /** Returns to the Companies list with the filters the Admin left it with. */
@@ -117,6 +119,7 @@ export function AdminCompanyDetailPanel({ companyId, initialTab = "overview" }: 
       <section aria-labelledby={`company-tab-${tab}`} id={`company-panel-${tab}`} role="tabpanel">
         {tab === "overview" ? <Overview currentStatus={currentStatus} onChangeStatus={setStatusTarget} onSelectTab={selectTab} summary={summary} unreadMessages={operationalSummary?.unreadCount ?? 0} /> : null}
         {tab === "verification" ? <AdminCompanyVerification companyId={companyId} companyName={summary.name} /> : null}
+        {tab === "logo" ? <AdminCompanyLogoSection approvedImageId={summary.approvedLogoImageId} submittedImageId={summary.submittedLogoImageId} /> : null}
         {tab === "projectsDeals" ? <ProjectsDeals companyId={companyId} /> : null}
         {tab === "commissions" ? <Commissions companyId={companyId} /> : null}
         {tab === "reviews" ? <Reviews companyId={companyId} /> : null}
@@ -169,7 +172,7 @@ function CompanyHeader({ summary, currentStatus, backHref, onChangeStatus, onRev
       </Link>
       <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
-          {summary.logoUrl ? <Image alt="" className="size-14 shrink-0 rounded-[14px] object-cover ring-1 ring-black/5" height={56} src={summary.logoUrl} unoptimized width={56} /> : <span aria-hidden className="grid size-14 shrink-0 place-items-center rounded-[14px] bg-[#eef4ff] text-xl font-semibold text-[#2456c7]">{summary.name.slice(0, 1).toLocaleUpperCase()}</span>}
+          <span className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-[14px] bg-[#eef4ff] text-[#2456c7] ring-1 ring-black/5"><ApprovedCompanyLogo alt="" className="object-cover" fill sizes="56px" url={summary.logoUrl} /></span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="m-0 truncate text-[1.6rem] leading-tight font-semibold tracking-[-0.03em]">{summary.name}</h1>

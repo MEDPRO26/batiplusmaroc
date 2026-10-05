@@ -1625,6 +1625,38 @@
     "portfolioCount": "{count, plural, =0 {Aucune réalisation publiée} one {# réalisation publiée} other {# réalisations publiées affichées}}",
     "reviewCount": "{count, plural, one {# avis} other {# avis}}"
   },
+  "companyLogo": {
+    "title": "Logo de l’entreprise",
+    "guidance": "N’incluez pas le nom de votre entreprise, de numéro de téléphone, d’adresse e-mail, de site web, d’identifiant sur les réseaux sociaux, de code QR ou de filigrane permettant de vous identifier. Batiplus examine l’image avant son affichage public.",
+    "chooseFile": "Choisir un logo à faire examiner",
+    "limits": "JPEG, PNG ou WebP. Maximum 5 Mio.",
+    "optional": "Le logo est facultatif. Vous pouvez enregistrer votre profil sans logo.",
+    "selected": "Fichier sélectionné : {name}. Envoyez cette image pour examen lorsque vous êtes prêt.",
+    "submit": "Envoyer pour examen",
+    "uploading": "Envoi du logo…",
+    "retryUpload": "Réessayer l’envoi",
+    "success": "Logo envoyé. En attente d’examen ; il n’est pas encore public.",
+    "loading": "Chargement de vos logos…",
+    "approvedTitle": "Logo approuvé actuel",
+    "submittedTitle": "Dernier envoi",
+    "approvedAlt": "Votre logo d’entreprise approuvé",
+    "submittedAlt": "Votre logo d’entreprise envoyé pour examen",
+    "genericAlt": "Image d’entreprise générique",
+    "status": {
+      "pending": "En attente d’examen",
+      "approved": "Approuvé",
+      "rejected": "Refusé"
+    },
+    "noApproved": "Aucun logo approuvé",
+    "noSubmission": "Aucun envoi en attente ou refusé",
+    "approvedHelp": "L’affichage public dépend des règles de visibilité de l’entreprise. Un nouvel envoi remplace ce logo uniquement après approbation.",
+    "pendingHelp": "Seuls vous et l’Admin pouvez voir cet envoi. Il n’est pas encore public.",
+    "rejectedHelp": "Vous pouvez envoyer une nouvelle image pour examen. Tout logo approuvé reste disponible selon les règles de visibilité de l’entreprise.",
+    "reason": "Motif du refus : {reason}",
+    "loadingPreview": "Chargement de l’aperçu privé…",
+    "previewError": "L’aperçu privé n’a pas pu être chargé.",
+    "retryPreview": "Réessayer l’aperçu"
+  },
   "companyProfileManager": {
     "profileView": {
       "settings": "Paramètres du profil",
@@ -4327,6 +4359,12 @@
         "INVALID_SERVICES": "Sélectionnez au moins un service valide.",
         "DUPLICATE_COMPANY_SERVICE": "Ce service est déjà associé à l’entreprise.",
         "INVALID_LOGO": "Choisissez un logo JPG, PNG ou WebP de 5 Mo maximum.",
+        "INVALID_COMPANY_LOGO_UPLOAD": "Cet envoi de logo est invalide, expiré ou déjà utilisé. Sélectionnez à nouveau un fichier JPG, PNG ou WebP de 5 Mio maximum.",
+        "COMPANY_LOGO_NOT_FOUND": "Ce logo n’est pas disponible.",
+        "COMPANY_LOGO_REVIEW_STALE": "Ce logo a changé pendant votre examen. Ouvrez à nouveau la soumission actuelle.",
+        "COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED": "L’envoi de logos nécessite le parcours sécurisé de modération.",
+        "PRIVATE_COMPANY_LOGO_FILE": "Ce logo privé ne peut pas être utilisé via un autre envoi de fichier.",
+        "INVALID_PAGINATION": "Choisissez une taille de page entre 1 et 100.",
         "INVALID_PUBLIC_MEDIA_UPLOAD": "Cet envoi d’image est invalide ou a expiré. Sélectionnez à nouveau l’image.",
         "PUBLIC_MEDIA_UPLOAD_FAILED": "L’image n’a pas pu être envoyée. Veuillez réessayer.",
         "PUBLIC_MEDIA_URL_NOT_CONFIGURED": "La diffusion des images publiques n’est pas encore configurée. Contactez le support.",
@@ -4623,7 +4661,8 @@
         "reviews": "Avis",
         "activity": "Activité",
         "messages": "Messages",
-        "internalNotes": "Notes internes"
+        "internalNotes": "Notes internes",
+        "logo": "Logo"
       },
       "moreActions": "Plus d’actions",
       "reviewVerification": "Examiner la vérification",
@@ -4900,5 +4939,77 @@
       "historyTitle": "Aucun projet passé",
       "historyLead": "Les projets terminés et annulés apparaîtront ici."
     }
+  },
+  "adminCompanyLogos": {
+    "loadError": "Impossible de charger la revue du logo. Réessayez.",
+    "retry": "Réessayer",
+    "queueTitle": "Logos en attente de revue",
+    "queueLead": "Ouvrez une soumission pour charger son aperçu privé. L’approbation du logo est distincte de la vérification de l’entreprise.",
+    "emptyQueue": "Aucun logo en attente de revue.",
+    "companyFallback": "Entreprise",
+    "reviewCompany": "Examiner le logo de {company}",
+    "review": "Examiner le logo",
+    "reviewTitle": "Revue du logo",
+    "close": "Fermer",
+    "separateApproval": "L’approbation du logo ne vérifie pas l’entreprise. Un logo approuvé peut être public avant un Deal, selon les règles de visibilité de l’entreprise.",
+    "latest": "Examiner la dernière soumission",
+    "currentApproved": "Logo actuellement approuvé",
+    "noLogo": "Cette entreprise n’a aucun logo soumis ou approuvé.",
+    "loading": "Chargement…",
+    "status": {
+      "pending": "En attente de revue",
+      "approved": "Approuvé",
+      "rejected": "Rejeté"
+    },
+    "uploaded": "Téléversé le {date}",
+    "reasonValue": "Motif : {reason}",
+    "stale": "L’image ou son statut a changé. La confirmation précédente est annulée. Rechargez les données et examinez à nouveau l’image.",
+    "reviewAgain": "Recharger et examiner à nouveau",
+    "superseded": "Cette soumission a été remplacée. Elle ne peut plus être approuvée ou rejetée.",
+    "selectedImage": "Image sélectionnée",
+    "previewAlt": "Aperçu privé du logo d’entreprise sélectionné",
+    "approvedAlt": "Aperçu privé du logo d’entreprise actuellement approuvé",
+    "checklistTitle": "Liste de contrôle manuelle",
+    "checklistLead": "Rejetez l’image si elle contient l’un des éléments suivants :",
+    "checklist": {
+      "branding": "Nom réel de l’entreprise ou marque permettant de l’identifier",
+      "contact": "Numéro de téléphone ou adresse e-mail",
+      "links": "Site web ou identifiant de réseau social",
+      "qr": "Code QR",
+      "watermark": "Filigrane permettant d’identifier l’entreprise"
+    },
+    "replacement": "Le logo approuvé reste public pendant l’attente ou après le rejet d’un remplacement. Seule l’approbation du remplacement change le logo public.",
+    "reviewApproved": "Examiner le logo approuvé",
+    "noApproved": "Aucun logo approuvé. Les affichages publics utilisent une image d’entreprise générique.",
+    "decision": "Décision",
+    "approvalRequiresPreview": "L’approbation est disponible uniquement après le chargement réussi de l’aperçu de cette image exacte.",
+    "approve": "Approuver le logo",
+    "reject": "Rejeter le logo",
+    "hide": "Masquer le logo approuvé",
+    "success": {
+      "approve": "Logo approuvé. Son affichage public suit les règles de visibilité de l’entreprise.",
+      "reject": "Logo rejeté. Le logo actuellement approuvé reste public.",
+      "hide": "Logo masqué. Les affichages publics utilisent une image générique ; les anciens logos ne sont pas rétablis."
+    },
+    "confirm": {
+      "approve": "Confirmer l’approbation",
+      "reject": "Confirmer le rejet",
+      "hide": "Confirmer le masquage"
+    },
+    "hideLead": "Masquer le logo actuellement approuvé de {company} ? Les affichages publics utiliseront une image générique. Les anciens logos ne seront pas rétablis.",
+    "confirmLead": "Appliquer cette décision à l’image exacte sélectionnée pour {company}.",
+    "reason": "Motif",
+    "reasonHelp": "Obligatoire : 3 à 500 caractères. Le propriétaire de l’entreprise peut voir ce motif.",
+    "cancel": "Annuler",
+    "saving": "Enregistrement…",
+    "history": "Historique de modération",
+    "emptyHistory": "Aucun historique de modération pour cette image.",
+    "historyActions": {
+      "uploaded": "Téléversé",
+      "approved": "Approuvé",
+      "rejected": "Rejeté",
+      "hidden": "Masqué"
+    },
+    "loadMore": "Charger plus"
   }
 }

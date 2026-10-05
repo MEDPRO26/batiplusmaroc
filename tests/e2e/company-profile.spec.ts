@@ -6,6 +6,10 @@ import fr from "../../messages/fr.json";
 let profileBundle = "";
 let settingsBundle = "";
 
+test.beforeEach(async ({ page }) => {
+  await page.route("**/*", route => ["127.0.0.1", "localhost"].includes(new URL(route.request().url()).hostname) ? route.continue() : route.abort());
+});
+
 test.beforeAll(async () => {
   profileBundle = await buildHarness(
     `import { CompanyProfileEditor } from "./features/companies/components/company-profile-editor";
@@ -59,9 +63,12 @@ const profile = {
 function state(locale: "en" | "fr", extra: Record<string, unknown> = {}) {
   return {
     __locale: locale,
+    __authToken: "owner-session",
     __pathname: "/espace-entreprise/profil",
     __queries: {
-      "users.currentUser": { accountType: "company", onboardingStatus: "completed", email: "owner@atlas.example" },
+      "users.currentUser": { _id: "owner", accountType: "company", onboardingStatus: "completed", email: "owner@atlas.example" },
+      "companyVerification.index.getVerificationStatus": { status: "verified", canManageDocuments: true },
+      "companyLogos.index.getMyLogos": { submitted: null, approved: null },
       "companies.index.getProfileManager": profile,
       "portfolio.index.getPortfolioManager": { companySlug: "atlas-build", projects: [] },
       "portfolio.index.getPublicCompanyProfile": null,

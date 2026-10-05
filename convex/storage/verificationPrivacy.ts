@@ -2,8 +2,11 @@ import { ConvexError } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { QueryCtx, MutationCtx } from "../_generated/server";
 
-/** Prevent private verification IDs from being reused through another file API. */
+/** Prevent private verification and logo IDs from being reused through another file API. */
 export async function assertNotVerificationStorage(ctx: QueryCtx | MutationCtx, storageId: Id<"_storage">) {
+  const logo = await ctx.db.query("companyLogoImages")
+    .withIndex("by_storageId", q => q.eq("storageId", storageId)).first();
+  if (logo) throw new ConvexError("PRIVATE_COMPANY_LOGO_FILE");
   const document = await ctx.db.query("companyVerificationDocuments")
     .withIndex("by_storageId", q => q.eq("storageId", storageId)).first();
   const upload = await ctx.db.query("companyVerificationUploadIntents")
@@ -15,7 +18,7 @@ export async function getNonVerificationStorageUrl(ctx: QueryCtx | MutationCtx, 
   try {
     await assertNotVerificationStorage(ctx, storageId);
   } catch (error) {
-    if (error instanceof ConvexError && error.data === "PRIVATE_VERIFICATION_FILE") return null;
+    if (error instanceof ConvexError && ["PRIVATE_VERIFICATION_FILE", "PRIVATE_COMPANY_LOGO_FILE"].includes(String(error.data))) return null;
     throw error;
   }
   return ctx.storage.getUrl(storageId);

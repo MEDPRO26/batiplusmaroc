@@ -1,4 +1,5 @@
 import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
+import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import {
   paginationOptsValidator,
   paginationResultValidator,
@@ -196,10 +197,7 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, s
       )
       .order("desc")
       .take(3),
-    resolvePublicMediaUrl(ctx, {
-      storageId: company.logoStorageId,
-      publicMediaId: company.logoMediaId,
-    }),
+    resolveApprovedLogoUrl(ctx, company),
     resolvePublicMediaUrl(ctx, { publicMediaId: company.coverMediaId }),
   ]);
   if (serviceFilter && !serviceRows.some(row => row.serviceId
