@@ -1,5 +1,9 @@
 "use client";
 
+import { isApprovedPortfolioImageUrl } from "@/lib/files/portfolio-image";
+
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { usePublicCompanyPreview } from "@/features/companies/hooks/use-public-company-preview";
@@ -22,10 +26,10 @@ export function HiringCompanyPreviews() {
     <article className="overflow-hidden rounded-[22px] border border-brand-border bg-white" key={company.id}>
       <Link className="group block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={companyPath(company.slug)}>
         <div className="relative aspect-[16/10] overflow-hidden bg-surface-muted">
-          {company.coverImageUrl ? <Image alt={tCompany("imageAlt", { company: company.name, city: company.city })} className="object-cover transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100" fill sizes="(max-width: 1023px) calc(100vw - 2rem), 360px" src={company.coverImageUrl} /> : null}
+          {company.coverImageUrl ? <Image alt={tCompany("imageAlt", { company: company.name, city: company.city })} className="object-cover transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100" fill sizes="(max-width: 1023px) calc(100vw - 2rem), 360px" src={company.coverImageUrl} unoptimized={isApprovedPortfolioImageUrl(company.coverImageUrl)} /> : null}
         </div>
         <div className="px-5 py-4">
-          <h3 className="mb-1 text-[1.05rem] leading-snug font-semibold tracking-[-0.02em] text-ink!">{company.name}</h3>
+          <div className="mb-2 flex items-center gap-2"><span className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-soft text-brand"><ApprovedCompanyLogo alt="" className="object-cover" fill sizes="36px" url={company.logoUrl} /></span><h3 className="mb-1 text-[1.05rem] leading-snug font-semibold tracking-[-0.02em] text-ink!">{company.name}</h3></div>
           <p className="mb-3 text-[0.92rem] leading-6 text-muted">
             {company.services[0] ? serviceName(company.services[0], company.serviceNames, locale, key => tCompany(`categories.${key}`)) : company.city}
             <span aria-hidden="true"> · </span>{company.city}

@@ -1,5 +1,8 @@
 "use client";
 
+import { AdminPendingLogoQueue } from "./admin-company-logo-review";
+import { AdminPortfolioImageQueue } from "./admin-portfolio-image-review";
+
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
@@ -65,6 +68,8 @@ export function AdminCompaniesPanel({ initialFilters }: { initialFilters: AdminC
   return (
     <AdminPage breadcrumb={t("title")} title={t("title")}>
       <p className="-mt-2 max-w-3xl text-sm leading-6 text-[#626970]">{t("lead")}</p>
+      <div className="mt-5"><AdminPendingLogoQueue /></div>
+      <AdminPortfolioImageQueue />
       <section className="overflow-hidden rounded-[16px] border border-[#e7eaee] bg-white">
         <div className="overflow-x-auto border-b border-[#eef1f4]">
           <div aria-label={t("views.label")} className="flex min-w-max gap-5 px-4 sm:px-5" role="group">

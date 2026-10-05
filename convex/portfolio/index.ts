@@ -1,15 +1,15 @@
-import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
+import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import { ConvexError, v } from "convex/values";
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
-import { internal } from "../_generated/api";
 import { createUniqueCompanySlug, requireOwnerCompany } from "../companies/index";
-import { consumeVerifiedPublicMediaIntent } from "../storage/publicMediaModel";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { getCompanyOperationalStatus } from "../companies/operationalStatus";
 import { companyInvitationEligibilityError } from "../invitations/eligibility";
 import { resolvedServiceNames } from "../serviceCatalog";
+import { PORTFOLIO_GALLERY_LIMIT } from "../portfolioImages/constants";
+import { resolveApprovedPortfolioImageUrl } from "../portfolioImages/model";
 import { maskCompanyName, maskPublicCompanyText } from "../lib/companyName";
 
 const projectTypeValidator = v.union(
@@ -40,7 +40,7 @@ const projectOutputValidator = v.object({
   durationMonths: v.union(v.number(), v.null()),
   year: v.union(v.number(), v.null()),
   status: statusValidator,
-  coverImageUrl: v.string(),
+  coverImageUrl: v.union(v.string(), v.null()),
   media: v.array(imageOutputValidator),
   updatedAt: v.number(),
 });
@@ -53,7 +53,7 @@ const publicReviewValidator = v.object({
   projectTitle: v.union(v.string(), v.null()),
 });
 
-const MAX_EXTRA_IMAGES = 8;
+const MAX_EXTRA_IMAGES = PORTFOLIO_GALLERY_LIMIT;
 
 function normalizeText(value: string, min: number, max: number, code: string) {
   const normalized = value.trim().replace(/\s+/g, " ");
@@ -82,46 +82,15 @@ async function requireOwnedProject(ctx: MutationCtx, projectId: Id<"portfolioPro
   return { ...access, project };
 }
 
-async function resolveMediaUrl(
-  ctx: QueryCtx,
-  reference: { storageId?: Id<"_storage">; publicMediaId?: Id<"publicMedia"> },
-) {
-  if (reference.publicMediaId) {
-    const media = await ctx.db.get(reference.publicMediaId);
-    return media ? getPublicMediaUrl(media.objectKey) : null;
-  }
-  return reference.storageId ? await getNonVerificationStorageUrl(ctx, reference.storageId) : null;
-}
-
-async function resolveProject(ctx: QueryCtx, project: {
-  _id: Id<"portfolioProjects">;
-  title: string;
-  description: string;
-  city: string;
-  projectType: "construction" | "renovation" | "structural" | "finishing" | "interior" | "exterior" | "other";
-  surface?: number;
-  durationMonths?: number;
-  year?: number;
-  status: "draft" | "published" | "hidden";
-  coverImageStorageId?: Id<"_storage">;
-  coverMediaId?: Id<"publicMedia">;
-  updatedAt: number;
-}, maskedNames: readonly unknown[] = []) {
+async function resolveProject(ctx: QueryCtx, project: Doc<"portfolioProjects">, maskedNames: readonly unknown[] = []) {
   const [coverImageUrl, mediaRows] = await Promise.all([
-    resolveMediaUrl(ctx, {
-      storageId: project.coverImageStorageId,
-      publicMediaId: project.coverMediaId,
-    }),
+    resolveApprovedPortfolioImageUrl(ctx, project),
     ctx.db.query("portfolioMedia").withIndex("by_portfolioProjectId", (q) => q.eq("portfolioProjectId", project._id)).take(MAX_EXTRA_IMAGES),
   ]);
-  if (!coverImageUrl) return null;
   const media = (await Promise.all(mediaRows
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map(async (item) => ({
-      url: await resolveMediaUrl(ctx, {
-        storageId: item.storageId,
-        publicMediaId: item.publicMediaId,
-      }),
+      url: await resolveApprovedPortfolioImageUrl(ctx, project, item),
       caption: item.caption === undefined ? null : maskPublicCompanyText(item.caption, maskedNames),
     }))))
     .filter((item): item is { url: string; caption: string | null } => item.url !== null);
@@ -170,10 +139,9 @@ export const getPublicCompanyProfile = query({
   handler: async (ctx, args) => {
     const company = await ctx.db.query("companies").withIndex("by_slug", (q) => q.eq("slug", args.slug)).unique();
     if (!company || company.onboardingStatus !== "completed" || !company.slug || !company.name || !company.city || !company.description) return null;
-    const [services, projects, logoMedia, coverMedia, reviewRows] = await Promise.all([
+    const [services, projects, coverMedia, reviewRows] = await Promise.all([
       ctx.db.query("companyServices").withIndex("by_companyId", (q) => q.eq("companyId", company._id)).take(200),
       ctx.db.query("portfolioProjects").withIndex("by_companyId_and_status", (q) => q.eq("companyId", company._id).eq("status", "published")).order("desc").take(24),
-      company.logoMediaId ? ctx.db.get(company.logoMediaId) : Promise.resolve(null),
       company.coverMediaId ? ctx.db.get(company.coverMediaId) : Promise.resolve(null),
       ctx.db.query("reviews")
         .withIndex("by_companyId_and_moderationStatus_and_createdAt", (q) =>
@@ -183,11 +151,7 @@ export const getPublicCompanyProfile = query({
         .take(20),
     ]);
     const serviceNames = await resolvedServiceNames(ctx, services);
-    const logoUrl = logoMedia && logoMedia.companyId === company._id && logoMedia.purpose === "companyLogo"
-      ? getPublicMediaUrl(logoMedia.objectKey)
-      : company.logoStorageId
-        ? await getNonVerificationStorageUrl(ctx, company.logoStorageId)
-        : null;
+    const logoUrl = await resolveApprovedLogoUrl(ctx, company);
     const coverImageUrl = coverMedia && coverMedia.companyId === company._id && coverMedia.purpose === "companyCover"
       ? getPublicMediaUrl(coverMedia.objectKey)
       : null;
@@ -269,15 +233,13 @@ export const createPortfolioProject = mutation({
   args: {
     title: v.string(), description: v.string(), city: v.string(), projectType: projectTypeValidator,
     surface: v.optional(v.number()), durationMonths: v.optional(v.number()), year: v.optional(v.number()),
-    coverImage: imageInputValidator, extraImages: v.array(imageInputValidator),
+    coverImage: v.optional(imageInputValidator), extraImages: v.optional(v.array(imageInputValidator)),
   },
   returns: v.id("portfolioProjects"),
   handler: async (ctx, args) => {
-    const { company, userId } = await requireOwnerCompany(ctx);
+    const { company } = await requireOwnerCompany(ctx);
     if (company.onboardingStatus !== "completed") throw new ConvexError("COMPANY_ONBOARDING_REQUIRED");
-    if (args.extraImages.length > MAX_EXTRA_IMAGES) throw new ConvexError("INVALID_PORTFOLIO_IMAGE");
-    const uploadTokens = [args.coverImage.uploadToken, ...args.extraImages.map((item) => item.uploadToken)];
-    if (new Set(uploadTokens).size !== uploadTokens.length) throw new ConvexError("INVALID_PORTFOLIO_IMAGE");
+    if (args.coverImage || args.extraImages?.length) throw new ConvexError("PORTFOLIO_PRIVATE_UPLOAD_REQUIRED");
     const title = normalizeText(args.title, 2, 120, "INVALID_PORTFOLIO_TITLE");
     const description = normalizeText(args.description, 20, 1200, "INVALID_PORTFOLIO_DESCRIPTION");
     const city = normalizeCity(args.city);
@@ -290,29 +252,6 @@ export const createPortfolioProject = mutation({
       surface, durationMonths, year,
       status: "draft", createdAt: now, updatedAt: now,
     });
-    const coverMediaId = await consumeVerifiedPublicMediaIntent(ctx, {
-      uploadToken: args.coverImage.uploadToken,
-      companyId: company._id,
-      userId,
-      purpose: "portfolioCover",
-      portfolioProjectId: projectId,
-    });
-    await ctx.db.patch(projectId, { coverMediaId });
-    for (let index = 0; index < args.extraImages.length; index += 1) {
-      const image = args.extraImages[index];
-      const publicMediaId = await consumeVerifiedPublicMediaIntent(ctx, {
-        uploadToken: image.uploadToken,
-        companyId: company._id,
-        userId,
-        purpose: "portfolioMedia",
-        portfolioProjectId: projectId,
-      });
-      await ctx.db.insert("portfolioMedia", {
-        portfolioProjectId: projectId, publicMediaId, sortOrder: index,
-        caption: image.caption ? normalizeText(image.caption, 1, 200, "INVALID_PORTFOLIO_CAPTION") : undefined,
-        createdAt: now,
-      });
-    }
     return projectId;
   },
 });
@@ -321,36 +260,13 @@ export const updatePortfolioProject = mutation({
   args: {
     projectId: v.id("portfolioProjects"), title: v.string(), description: v.string(), city: v.string(), projectType: projectTypeValidator,
     surface: v.optional(v.number()), durationMonths: v.optional(v.number()), year: v.optional(v.number()),
-    coverImage: v.optional(imageInputValidator), extraImages: v.array(imageInputValidator),
+    coverImage: v.optional(imageInputValidator), extraImages: v.optional(v.array(imageInputValidator)),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const { company, userId, project } = await requireOwnedProject(ctx, args.projectId);
-    if (args.extraImages.length > MAX_EXTRA_IMAGES) throw new ConvexError("INVALID_PORTFOLIO_IMAGE");
-    const uploadTokens = [
-      ...(args.coverImage ? [args.coverImage.uploadToken] : []),
-      ...args.extraImages.map((item) => item.uploadToken),
-    ];
-    if (new Set(uploadTokens).size !== uploadTokens.length) throw new ConvexError("INVALID_PORTFOLIO_IMAGE");
+    const { project } = await requireOwnedProject(ctx, args.projectId);
+    if (args.coverImage || args.extraImages?.length) throw new ConvexError("PORTFOLIO_PRIVATE_UPLOAD_REQUIRED");
     const now = Date.now();
-    const existingMedia = await ctx.db.query("portfolioMedia").withIndex("by_portfolioProjectId", (q) => q.eq("portfolioProjectId", project._id)).take(MAX_EXTRA_IMAGES + 1);
-    if (existingMedia.length + args.extraImages.length > MAX_EXTRA_IMAGES) throw new ConvexError("INVALID_PORTFOLIO_IMAGE");
-    let nextCoverMediaId = project.coverMediaId;
-    let previousR2ObjectKey: string | null = null;
-    if (args.coverImage) {
-      nextCoverMediaId = await consumeVerifiedPublicMediaIntent(ctx, {
-        uploadToken: args.coverImage.uploadToken,
-        companyId: company._id,
-        userId,
-        purpose: "portfolioCover",
-        portfolioProjectId: project._id,
-      });
-      if (project.coverMediaId) {
-        const oldMedia = await ctx.db.get(project.coverMediaId);
-        previousR2ObjectKey = oldMedia?.objectKey ?? null;
-        if (oldMedia) await ctx.db.delete(oldMedia._id);
-      }
-    }
     await ctx.db.patch(project._id, {
       title: normalizeText(args.title, 2, 120, "INVALID_PORTFOLIO_TITLE"),
       description: normalizeText(args.description, 20, 1200, "INVALID_PORTFOLIO_DESCRIPTION"),
@@ -358,30 +274,8 @@ export const updatePortfolioProject = mutation({
       surface: validateOptionalNumber(args.surface, 1, 1000000, "INVALID_PORTFOLIO_SURFACE"),
       durationMonths: validateOptionalNumber(args.durationMonths, 1, 600, "INVALID_PORTFOLIO_DURATION", true),
       year: validateOptionalNumber(args.year, 1900, new Date().getFullYear(), "INVALID_PORTFOLIO_YEAR", true),
-      coverMediaId: nextCoverMediaId,
       updatedAt: now,
     });
-    for (let index = 0; index < args.extraImages.length; index += 1) {
-      const image = args.extraImages[index];
-      const publicMediaId = await consumeVerifiedPublicMediaIntent(ctx, {
-        uploadToken: image.uploadToken,
-        companyId: company._id,
-        userId,
-        purpose: "portfolioMedia",
-        portfolioProjectId: project._id,
-      });
-      await ctx.db.insert("portfolioMedia", {
-        portfolioProjectId: project._id, publicMediaId,
-        sortOrder: existingMedia.length + index,
-        caption: image.caption ? normalizeText(image.caption, 1, 200, "INVALID_PORTFOLIO_CAPTION") : undefined,
-        createdAt: now,
-      });
-    }
-    if (previousR2ObjectKey) {
-      await ctx.scheduler.runAfter(0, internal.storage.r2.deleteObjectIfUnreferenced, {
-        objectKey: previousR2ObjectKey,
-      });
-    }
     return null;
   },
 });

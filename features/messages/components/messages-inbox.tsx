@@ -1,5 +1,7 @@
 "use client";
 
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+
 import { useAction, useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import Image from "next/image";
@@ -196,7 +198,7 @@ export function MessagesInboxView({
                       }`}
                       href={{ pathname: routes.messagesConversation, params: { conversationId: thread.id } }}
                     >
-                      <ThreadAvatar name={thread.otherPartyName || t("unknownParty")} url={thread.otherPartyAvatarUrl} />
+                      <ThreadAvatar company={accountType === "client"} name={thread.otherPartyName || t("unknownParty")} url={thread.otherPartyAvatarUrl} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline gap-2">
                           <span
@@ -511,7 +513,7 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
   );
 }
 
-function ThreadAvatar({ name, url }: { name: string; url: string | null }) {
+function ThreadAvatar({ name, url, company }: { name: string; url: string | null; company: boolean }) {
   const initials = name
     .split(/\s+/)
     .slice(0, 2)
@@ -522,7 +524,7 @@ function ThreadAvatar({ name, url }: { name: string; url: string | null }) {
       aria-hidden
       className="relative mt-0.5 grid size-10 shrink-0 place-items-center overflow-hidden rounded-full border border-brand-border bg-brand-soft text-xs font-semibold text-brand"
     >
-      {url ? <Image alt="" className="object-cover" fill sizes="40px" src={url} /> : initials}
+      {company ? <ApprovedCompanyLogo alt="" className="object-cover" fill sizes="40px" url={url} /> : url ? <Image alt="" className="object-cover" fill sizes="40px" src={url} /> : initials}
     </span>
   );
 }

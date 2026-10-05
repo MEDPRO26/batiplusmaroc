@@ -1,9 +1,10 @@
 "use client";
 
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+
 import type { FunctionReturnType } from "convex/server";
 import { useMutation, useQuery } from "convex/react";
 import { ArrowRight, CalendarDays, Check, Clock3, ExternalLink, LockKeyhole, MapPin, MessageSquareText, RefreshCw, Star, WalletCards, X } from "lucide-react";
-import Image from "next/image";
 import { VerifiedBadge } from "@/features/companies/components/verified-badge";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -91,7 +92,7 @@ export function ReceivedQuoteCard({ quote, onOpen }: { quote: ReceivedQuote; onO
   const inactive = quote.status === "declined" || quote.status === "withdrawn";
   return (
     <article className={`flex gap-3 px-4 py-5 sm:gap-4 sm:px-7 sm:py-6 ${inactive ? "bg-[#fbfcfc]" : ""}`}>
-      <CompanyLogo alt={quote.company.name} initials={initialsFor(quote.company.name)} url={quote.company.logoUrl} />
+      <CompanyLogo alt={quote.company.name} url={quote.company.logoUrl} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-col-reverse items-start gap-2 sm:flex-row sm:justify-between sm:gap-3">
           <CompanyIdentity company={quote.company} />
@@ -230,7 +231,7 @@ export function QuoteReviewContent({ quote, conversationId = null, conversationL
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <DrawerSection title={t("detail.companyTitle")}>
           <div className="flex items-start gap-3">
-            <CompanyLogo alt={quote.company.name} initials={initialsFor(quote.company.name)} url={quote.company.logoUrl} />
+            <CompanyLogo alt={quote.company.name} url={quote.company.logoUrl} />
             <div className="min-w-0 flex-1"><CompanyIdentity company={quote.company} /></div>
           </div>
           {quote.company.description ? <p className="mt-4 mb-0 line-clamp-4 text-sm leading-6 text-ink/80">{quote.company.description}</p> : null}
@@ -301,7 +302,6 @@ function trapFocus(event: KeyboardEvent, container: HTMLElement | null) {
   else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
 }
 
-function initialsFor(name: string) { return name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join(""); }
 function formatStartDate(format: ReturnType<typeof useFormatter>, isoDate: string) { return format.dateTime(new Date(`${isoDate}T12:00:00Z`), { dateStyle: "medium", timeZone: "UTC" }); }
 
 function CompanyIdentity({ company }: { company: ReceivedQuote["company"] }) {
@@ -326,7 +326,7 @@ function DrawerSection({ title, children }: { title: string; children: React.Rea
   return <section className="border-b border-brand-border px-5 py-6 last:border-b-0 sm:px-8"><h3 className="mt-0 mb-4 text-sm font-semibold text-ink">{title}</h3>{children}</section>;
 }
 
-function CompanyLogo({ url, alt, initials }: { url: string | null; alt: string; initials: string }) { return <div className="relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-brand-border bg-brand-soft text-sm font-semibold text-brand">{url ? <Image alt={alt} className="object-cover" fill sizes="44px" src={url} /> : initials}</div>; }
+function CompanyLogo({ url, alt }: { url: string | null; alt: string }) { return <div className="relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-brand-border bg-brand-soft text-sm font-semibold text-brand"><ApprovedCompanyLogo alt={alt} className="object-cover" fill sizes="44px" url={url} /></div>; }
 function QuoteStatus({ status }: { status: ReceivedQuote["status"] }) { const t = useTranslations("receivedQuotes.status"); const tone = status === "declined" ? "bg-[#fff1ef] text-[#8a2f28]" : status === "withdrawn" ? "bg-[#f0f2f3] text-muted" : status === "discussion_open" ? "bg-[#e9f6ee] text-[#21633d]" : status === "shortlisted" ? "bg-[#fff7df] text-[#72540a]" : "bg-brand-soft text-brand"; return <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${tone}`}>{t(status)}</span>; }
 function Metric({ label, value }: { label: string; value: string }) { return <div className="flex min-w-0 flex-col-reverse"><dt className="mt-0.5 text-xs text-muted">{label}</dt><dd className="m-0 text-sm font-semibold text-ink">{value}</dd></div>; }
 function DetailMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) { return <div className="flex gap-3"><span aria-hidden className="mt-0.5 text-muted [&>svg]:size-5">{icon}</span><div className="flex flex-col-reverse"><dt className="mt-0.5 text-xs text-muted">{label}</dt><dd className="m-0 text-sm font-semibold text-ink">{value}</dd></div></div>; }

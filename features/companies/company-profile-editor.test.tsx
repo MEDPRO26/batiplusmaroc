@@ -12,6 +12,7 @@ vi.mock("next-intl", () => ({
   useFormatter: () => ({ number: String, dateTime: String }),
 }));
 vi.mock("convex/react", () => ({ useAction: vi.fn(), useMutation: vi.fn(), useQuery: vi.fn() }));
+vi.mock("@convex-dev/auth/react", () => ({ useAuthToken: () => "test-session" }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, ...props }: { children?: React.ReactNode; href?: unknown }) => <a {...props} href="#">{children}</a>,
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
@@ -42,7 +43,9 @@ describe("company profile management UX contract", () => {
   test("own Company workspace retains full backend identity without frontend masking", () => {
     vi.mocked(useQuery).mockImplementation(((ref: unknown) => {
       const name = getFunctionName(ref as never);
-      if (name === "users:currentUser") return { accountType: "company", onboardingStatus: "completed" };
+      if (name === "users:currentUser") return { _id: "owner", accountType: "company", onboardingStatus: "completed" };
+      if (name === "companyVerification/index:getVerificationStatus") return { status: "pending", canManageDocuments: true };
+      if (name === "companyLogos/index:getMyLogos") return { submitted: null, approved: null };
       if (name === "companies/index:getProfileManager") return { ...profileFixture, name: "S2MBOU SARL", legal: { ...profileFixture.legal, legalName: "S2MBOU SARL" } };
       return undefined;
     }) as never);
@@ -118,7 +121,9 @@ describe("company profile management UX contract", () => {
 function mockQueries() {
   vi.mocked(useQuery).mockImplementation(((ref: unknown) => {
     const name = getFunctionName(ref as never);
-    if (name === "users:currentUser") return { accountType: "company", onboardingStatus: "completed", email: "owner@atlas.example" };
+    if (name === "users:currentUser") return { _id: "owner", accountType: "company", onboardingStatus: "completed", email: "owner@atlas.example" };
+    if (name === "companyVerification/index:getVerificationStatus") return { status: "pending", canManageDocuments: true };
+    if (name === "companyLogos/index:getMyLogos") return { submitted: null, approved: null };
     if (name === "companies/index:getProfileManager") return profileFixture;
     return undefined;
   }) as never);

@@ -41,11 +41,21 @@ const mocks: Plugin = {
             useHarnessVersion();
             if (args === "skip") return undefined;
             window.__queryCalls = [...(window.__queryCalls || []), query.__path];
+            const handler = (window.__queryHandlers || {})[query.__path];
+            if (handler) return handler(args);
             return window.__queries[query.__path];
           }
-          export function usePaginatedQuery(query) {
+          export function useConvex() { return { async query(query, args) {
+            window.__directQueryCalls = [...(window.__directQueryCalls || []), { path: query.__path, args }];
+            const handler = (window.__queryHandlers || {})[query.__path];
+            return handler ? await handler(args) : window.__queries[query.__path];
+          } }; }
+          export function usePaginatedQuery(query, args, options) {
             useHarnessVersion();
-            const state = (window.__paginatedQueries || {})[query.__path] || { results: [], status: "Exhausted" };
+            window.__queryCalls = [...(window.__queryCalls || []), query.__path];
+            window.__paginatedArgs = [...(window.__paginatedArgs || []), { path: query.__path, args, options }];
+            const queryHandler = (window.__paginatedQueryHandlers || {})[query.__path];
+            const state = (queryHandler ? queryHandler(args) : (window.__paginatedQueries || {})[query.__path]) || { results: [], status: "Exhausted" };
             return {
               ...state,
               loadMore(numItems) {
@@ -61,6 +71,7 @@ const mocks: Plugin = {
           export function useMutation(mutation) {
             return async (args) => {
               window.__mutationCalls = [...(window.__mutationCalls || []), { path: mutation.__path, args }];
+              try {
               const delay = (window.__mutationDelays || {})[mutation.__path];
               if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
               const error = (window.__mutationErrors || {})[mutation.__path];
@@ -68,6 +79,9 @@ const mocks: Plugin = {
               const handler = (window.__mutationHandlers || {})[mutation.__path];
               if (handler) return await handler(args);
               return (window.__mutationResults || {})[mutation.__path] ?? {};
+              } finally {
+                window.__mutationCompletions = [...(window.__mutationCompletions || []), mutation.__path];
+              }
             };
           }
         `,
@@ -105,7 +119,7 @@ const mocks: Plugin = {
         `,
         image: `
           import React from "react";
-          export default function Image({ fill, sizes, priority, ...props }) { return <img {...props} style={fill ? { position: "absolute", inset: 0, width: "100%", height: "100%" } : undefined} />; }
+          export default function Image({ fill, sizes, priority, unoptimized, ...props }) { return <img {...props} data-unoptimized={unoptimized || undefined} style={fill ? { position: "absolute", inset: 0, width: "100%", height: "100%" } : undefined} />; }
         `,
       };
       return { loader: "jsx", resolveDir: process.cwd(), contents: contents[args.path] };

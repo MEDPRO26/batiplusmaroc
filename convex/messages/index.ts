@@ -1,4 +1,4 @@
-import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
+import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { companyFileNamesForConversation, companyNameForAudience, companyNamesToMask, companyPdfFileNameForAudience, maskCompanyNamesInText, resolveCompanyIdentityAudience, type CompanyFileNameReference } from "../lib/companyName";
 import { paginationOptsValidator, paginationResultValidator } from "convex/server";
@@ -246,14 +246,7 @@ export async function sendAuthorizedMessage(
 }
 
 async function logoUrlFor(ctx: MessageCtx, company: Doc<"companies">) {
-  if (company.logoMediaId) {
-    const media = await ctx.db.get(company.logoMediaId);
-    if (media && media.companyId === company._id && media.purpose === "companyLogo") {
-      return getPublicMediaUrl(media.objectKey);
-    }
-  }
-  if (company.logoStorageId) return await getNonVerificationStorageUrl(ctx, company.logoStorageId);
-  return null;
+  return await resolveApprovedLogoUrl(ctx, company);
 }
 
 async function threadFor(ctx: MessageCtx, conversation: Doc<"conversations">, viewerType: Viewer["viewerType"]) {

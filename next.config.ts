@@ -24,6 +24,8 @@ function r2PublicMediaPattern() {
 const r2Pattern = r2PublicMediaPattern();
 
 const nextConfig: NextConfig = {
+  // Local browser checks can run without sharing a running dev server's output/lock.
+  distDir: process.env.BATIPLUS_E2E_DIST_DIR ?? ".next",
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
   logging: {
@@ -35,9 +37,11 @@ const nextConfig: NextConfig = {
     globalNotFound: true,
   },
   images: {
+    maximumRedirects: 0,
     remotePatterns: [
       { protocol: "https", hostname: "*.convex.cloud" },
-      { protocol: "https", hostname: "*.convex.site" },
+      // Moderated logo/portfolio HTTP endpoints must never enter the optimizer's public cache.
+      { protocol: "https", hostname: "*.convex.site", pathname: "/api/storage/**" },
       ...(r2Pattern ? [r2Pattern] : []),
     ],
   },

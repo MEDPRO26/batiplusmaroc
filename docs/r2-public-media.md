@@ -1,7 +1,11 @@
 # R2 public media
 
-Batiplus stores public marketplace images in Cloudflare R2. Private company
-verification documents continue to use Convex Storage.
+Batiplus stores Company covers and other existing public marketplace media in
+Cloudflare R2. New Company logos and portfolio cover/gallery images use private
+Convex Storage with exact-file moderation. See
+[portfolio image moderation](portfolio-image-moderation-v1.md) and
+[Company logo moderation](company-logo-moderation-v1.md). Private Company
+verification documents also use Convex Storage.
 
 ## Runtime configuration
 
@@ -46,11 +50,11 @@ origins and the `Content-Type` request header:
 Keep public bucket access read-only. Writes happen only through short-lived,
 object-specific presigned URLs.
 
-## Legacy portfolio migration
+## Legacy portfolio rollout
 
-Existing `coverImageStorageId` and `portfolioMedia.storageId` records remain
-readable. A later migration can copy each public image to a company-scoped R2
-key, verify the R2 object with HEAD, create its `publicMedia` metadata row, and
-atomically switch the portfolio reference. Keep the old Convex Storage object
-until the migrated URL has been audited in production; deletion requires a
-separate, explicitly approved cleanup pass.
+Existing `coverImageStorageId`, `coverMediaId`, `portfolioMedia.storageId` and
+`publicMediaId` records/files are retained but treated as unreviewed, with no
+application portfolio URL fallback. Previously issued URLs may remain public.
+A separately authorized rollout must inventory those links/caches and review
+new private copies or re-uploads per file. No legacy file is migrated, deleted
+or automatically approved by the moderation backend.

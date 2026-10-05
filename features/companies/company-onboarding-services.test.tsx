@@ -9,12 +9,16 @@ import { defaultServiceCatalog } from "@/lib/service-catalog-defaults";
 const selected = "catalog-1";
 const queryState = vi.hoisted(() => ({ fallback: false, userCompleted: false, companyCompleted: false }));
 vi.mock("next/font/google", () => ({ Outfit: () => ({ className: "font-outfit" }) }));
+vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("@/features/auth/components/onboarding-chrome", () => ({ OnboardingChrome: () => null }));
+vi.mock("@convex-dev/auth/react", () => ({ useAuthToken: () => "test-session" }));
 vi.mock("convex/react", () => ({
   useQuery: (reference: unknown, args: unknown) => {
     if (args === "skip") return undefined;
     const name = getFunctionName(reference as never);
-    if (name === "users:currentUser") return { accountType: "company", onboardingStatus: queryState.userCompleted ? "completed" : "pending" };
+    if (name === "users:currentUser") return { _id: "owner", accountType: "company", onboardingStatus: queryState.userCompleted ? "completed" : "pending" };
+    if (name === "companyVerification/index:getVerificationStatus") return { status: "draft", canManageDocuments: true };
+    if (name === "companyLogos/index:getMyLogos") return { submitted: null, approved: null };
     if (name === "companies/index:getOnboardingProfile") return {
       ownerFirstName: "Ada", ownerLastName: "Build", name: "Atlas", legalName: "Atlas SARL",
       phone: "0612345678", city: "Rabat", description: "A construction company with residential projects.",

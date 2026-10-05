@@ -10,6 +10,7 @@ vi.mock("convex/react", () => ({ useQuery: () => state.review, useMutation: () =
 vi.mock("@convex-dev/auth/react", () => ({ useAuthToken: () => "session" }));
 vi.mock("@/components/layout/language-switcher", () => ({ LanguageSwitcher: () => null }));
 vi.mock("next/font/google", () => ({ Outfit: () => ({ className: "outfit" }) }));
+vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("@/i18n/navigation", () => ({ Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>, useRouter: () => ({ replace: vi.fn() }) }));
 import { AdminCompanyVerification } from "./components/admin-company-verification";
 import AdminCompaniesError from "@/app/[locale]/(admin)/admin/companies/error";

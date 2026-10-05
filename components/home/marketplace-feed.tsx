@@ -1,5 +1,9 @@
 "use client";
 
+import { isApprovedPortfolioImageUrl } from "@/lib/files/portfolio-image";
+
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -171,12 +175,13 @@ function FeaturedCompanyCard({ company }: { company: PublicMarketplaceCompany })
           className="object-cover"
           fill
           sizes="(max-width: 639px) 100vw, 148px"
-          src={company.coverImageUrl}
+          src={company.coverImageUrl} unoptimized={isApprovedPortfolioImageUrl(company.coverImageUrl)}
         /> : null}
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-1.5">
+          <span className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-soft text-brand"><ApprovedCompanyLogo alt="" className="object-cover" fill sizes="36px" url={company.logoUrl} /></span>
           <h3 className="mb-0 text-[1.05rem] leading-tight font-semibold tracking-[-0.02em] text-ink">{company.name}</h3>
           {company.isVerified ? (
             <span className="inline-flex text-brand" title={tMarket("verified")}>

@@ -1,3 +1,5 @@
+import { ApprovedPortfolioImage } from "@/features/portfolio/components/approved-portfolio-image";
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 import type { FunctionReturnType } from "convex/server";
 import { ExternalLink, MapPin } from "lucide-react";
 import Image from "next/image";
@@ -15,11 +17,6 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
   const tDirectory = await getTranslations("companyDirectory");
   const format = await getFormatter();
   const locale = await getLocale();
-  const initials = company.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
 
   return (
     <div className="min-h-[calc(100dvh-4.5rem)]">
@@ -45,18 +42,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
               <div className="flex min-w-0 flex-1 gap-4 sm:gap-5 ">
                 <div className="-mt-10 shrink-0 sm:-mt-12 ">
                   <div className="relative grid size-[88px] place-items-center overflow-hidden rounded-full border-[3px] border-white bg-brand-soft text-2xl font-semibold text-brand shadow-[0_2px_8px_rgb(10_25_38/0.12)] sm:size-[112px]">
-                    {company.logoUrl ? (
-                      <Image
-                        alt={t("logoAlt", { name: company.name })}
-                        className="object-cover"
-                        fill
-                        priority={!company.coverImageUrl}
-                        sizes="112px"
-                        src={company.logoUrl}
-                      />
-                    ) : (
-                      <span aria-hidden>{initials || "?"}</span>
-                    )}
+                    <ApprovedCompanyLogo alt={t("logoAlt", { name: company.name })} className="object-cover" fill priority={!company.coverImageUrl} sizes="112px" url={company.logoUrl} />
                   </div>
                 </div>
 
@@ -212,12 +198,12 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                       <li key={project.id}>
                         <article className="group">
                           <div className="relative aspect-[4/3] overflow-hidden rounded-[12px] bg-[#e8eef3] ring-1 ring-brand-border">
-                            <Image
+                            <ApprovedPortfolioImage
                               alt={t("projectImageAlt", { title: project.title })}
                               className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
                               fill
                               sizes="(max-width: 640px) 100vw, (max-width: 1120px) 50vw, 280px"
-                              src={project.coverImageUrl}
+                              url={project.coverImageUrl}
                             />
                             <span className="absolute top-2.5 left-2.5 rounded-md bg-white/95 px-2 py-0.5 text-[0.65rem] font-semibold tracking-[0.04em] text-brand uppercase shadow-sm backdrop-blur-sm">
                               {t(`projectType.${project.projectType}`)}

@@ -17,7 +17,6 @@ type UpdateArgs = FunctionArgs<typeof api.companies.index.updatePublicProfile>;
 export type ProfilePatch = UpdateArgs;
 
 const imageTypes = ["image/jpeg", "image/png", "image/webp"];
-const maxLogoBytes = 5 * 1024 * 1024;
 const maxCoverBytes = 10 * 1024 * 1024;
 
 class ProfileSaveError extends Error {}
@@ -41,22 +40,21 @@ export function useProfileSave() {
     showToast(t("success"));
   }
 
-  async function saveImage(kind: "logo" | "cover", uploadToken: string) {
+  async function saveImage(uploadToken: string) {
     try {
-      await setImage({ kind, uploadToken });
+      await setImage({ kind: "cover", uploadToken });
     } catch (caught) {
       throw new ProfileSaveError(mapConvexFailure(caught, tUx).message);
     }
     showToast(t("success"));
   }
 
-  async function uploadImage(file: File, purpose: "companyLogo" | "companyCover") {
-    const maximum = purpose === "companyLogo" ? maxLogoBytes : maxCoverBytes;
-    if (!imageTypes.includes(file.type) || file.size < 1 || file.size > maximum) {
-      throw new ProfileSaveError(t(purpose === "companyLogo" ? "branding.logoHelp" : "branding.coverHelp"));
+  async function uploadImage(file: File) {
+    if (!imageTypes.includes(file.type) || file.size < 1 || file.size > maxCoverBytes) {
+      throw new ProfileSaveError(t("branding.coverHelp"));
     }
     try {
-      const intent = await requestUpload({ purpose, contentType: file.type, size: file.size });
+      const intent = await requestUpload({ purpose: "companyCover", contentType: file.type, size: file.size });
       const response = await fetch(intent.uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
       if (!response.ok) throw new Error("PUBLIC_MEDIA_UPLOAD_FAILED");
       await verifyUpload({ uploadToken: intent.uploadToken });

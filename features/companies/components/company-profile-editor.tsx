@@ -1,5 +1,9 @@
 "use client";
 
+import { ApprovedPortfolioImage } from "@/features/portfolio/components/approved-portfolio-image";
+
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+
 import { VerifiedBadge } from "./verified-badge";
 import { useQuery } from "convex/react";
 import { ExternalLink, Loader2, MapPin, Pencil, Plus } from "lucide-react";
@@ -9,11 +13,13 @@ import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import { serviceName } from "@/features/companies/lib/service-label";
 import { ProfileSectionSkeleton } from "@/features/shared/components/skeletons";
+import { FriendlyAlert } from "@/features/shared/components/error-state";
 import { WorkspaceTabs, workspaceButton } from "@/features/shared/components/workspace-page";
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 import { errorMessage, useProfileSave, type ProfileManager } from "./profile/profile-editing";
+import { CompanyOwnerLogoManager } from "./company-owner-logo-manager";
 import {
   AboutEditor,
   CompanyInfoEditor,
@@ -30,9 +36,11 @@ import {
  */
 export function CompanyProfileEditor() {
   const t = useTranslations("companyProfileManager");
+  const tUx = useTranslations("ux");
   const user = useQuery(api.users.currentUser);
   const canLoad = user?.accountType === "company" && user.onboardingStatus === "completed";
-  const profile = useQuery(api.companies.index.getProfileManager, canLoad ? {} : "skip");
+  const access = useQuery(api.companyVerification.index.getVerificationStatus, canLoad ? {} : "skip");
+  const profile = useQuery(api.companies.index.getProfileManager, canLoad && access?.canManageDocuments ? {} : "skip");
   const router = useRouter();
 
   useEffect(() => {
@@ -42,10 +50,13 @@ export function CompanyProfileEditor() {
     }
   }, [router, user]);
 
+  if (canLoad && access?.canManageDocuments === false) {
+    return <div className="mx-auto max-w-[1240px] p-6"><FriendlyAlert>{tUx("error.codes.COMPANY_OWNER_REQUIRED")}</FriendlyAlert></div>;
+  }
   if (!user || !canLoad || profile === undefined) {
     return <CompanyProfileEditorSkeleton label={t("loading")} />;
   }
-  return <CompanyProfileView profile={profile} />;
+  return <CompanyProfileView key={user._id} profile={profile} />;
 }
 
 export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
@@ -59,6 +70,7 @@ export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
       <div className="mx-auto w-full max-w-[1240px] px-4 pt-6 sm:px-6 sm:pt-8">
         <article className="overflow-hidden rounded-2xl border border-brand-border bg-white">
           <ProfileHeader isVerified={isVerified} profile={profile} />
+          <div className="border-b border-brand-border px-5 py-6 sm:px-7"><CompanyOwnerLogoManager /></div>
 
           <div className="grid lg:grid-cols-[minmax(260px,30%)_minmax(0,1fr)]">
             <div className="order-1 min-w-0 px-5 py-6 sm:px-7 lg:order-2 lg:py-7">
@@ -119,11 +131,9 @@ export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
 
 function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVerified: boolean }) {
   const t = useTranslations("companyProfileManager");
-  const initials = profile.name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("");
-  const cover = useImageReplace("companyCover");
-  const logo = useImageReplace("companyLogo");
+  const cover = useCoverReplace();
   const coverUrl = cover.previewUrl ?? profile.coverImageUrl;
-  const logoUrl = logo.previewUrl ?? profile.logoUrl;
+  const logoUrl = profile.logoUrl;
 
   return (
     <header>
@@ -147,17 +157,8 @@ function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVer
         <div className="flex min-w-0 gap-4 sm:gap-5">
           <div className="relative -mt-11 shrink-0 sm:-mt-14">
             <div className="relative grid size-[92px] place-items-center overflow-hidden rounded-full border-4 border-white bg-brand-soft text-2xl font-semibold text-brand shadow-[0_2px_10px_rgb(10_25_38/0.14)] sm:size-[120px]">
-              {logoUrl ? <Image alt={t("branding.logoAlt")} className="object-cover" fill sizes="120px" src={logoUrl} unoptimized={logoUrl.startsWith("blob:")} /> : <span aria-hidden>{initials || "?"}</span>}
-              {logo.uploading ? <span className="absolute inset-0 grid place-items-center bg-white/70"><Loader2 aria-hidden className="size-5 animate-spin text-brand" /></span> : null}
+              <ApprovedCompanyLogo alt={t("branding.logoAlt")} className="object-cover" fill sizes="120px" url={logoUrl} />
             </div>
-            <label
-              aria-label={profile.logoUrl ? t("branding.replaceLogo") : t("branding.uploadLogo")}
-              className="absolute right-0.5 bottom-0.5 grid size-9 cursor-pointer place-items-center rounded-full border-2 border-white bg-brand text-white shadow-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand"
-              title={profile.logoUrl ? t("branding.replaceLogo") : t("branding.uploadLogo")}
-            >
-              <Pencil aria-hidden className="size-3.5" strokeWidth={2} />
-              <input accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={logo.uploading} onChange={logo.onChange} type="file" />
-            </label>
           </div>
           <div className="min-w-0 pt-3 sm:pt-4">
             <div className="flex flex-wrap items-center gap-2.5">
@@ -169,7 +170,6 @@ function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVer
               <MapPin aria-hidden className="size-3.5 shrink-0" strokeWidth={1.8} />
               {profile.city}
             </p>
-            {logo.error ? <p className="mt-2 mb-0 text-xs text-[#9b2c20]" role="alert">{logo.error}</p> : null}
           </div>
         </div>
         <div className="flex flex-wrap gap-2.5">
@@ -186,8 +186,8 @@ function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVer
   );
 }
 
-/** Replaces the cover or logo immediately: preview, upload, save, and a visible error on failure. */
-function useImageReplace(purpose: "companyLogo" | "companyCover") {
+/** Covers keep their existing upload flow; moderated logos use the separate owner manager. */
+function useCoverReplace() {
   const { saveImage, uploadImage } = useProfileSave();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -206,8 +206,8 @@ function useImageReplace(purpose: "companyLogo" | "companyCover") {
     setUploading(true);
     setPreviewUrl(URL.createObjectURL(file));
     try {
-      const token = await uploadImage(file, purpose);
-      await saveImage(purpose === "companyLogo" ? "logo" : "cover", token);
+      const token = await uploadImage(file);
+      await saveImage(token);
     } catch (caught) {
       setPreviewUrl(null);
       setError(errorMessage(caught));
@@ -261,7 +261,7 @@ function PortfolioShowcase() {
               <li key={project.id}>
                 <article className="group">
                   <div className="relative aspect-[4/3] overflow-hidden rounded-[12px] bg-brand-soft ring-1 ring-brand-border">
-                    <Image alt={tPortfolio("imageAlt", { title: project.title })} className="object-cover transition-transform duration-300 group-hover:scale-[1.03]" fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 280px" src={project.coverImageUrl} />
+                    <ApprovedPortfolioImage alt={tPortfolio("imageAlt", { title: project.title })} className="object-cover transition-transform duration-300 group-hover:scale-[1.03]" fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 280px" url={project.coverImageUrl} />
                   </div>
                   <h3 className="mt-2.5 mb-0 line-clamp-1 text-[0.95rem] font-semibold tracking-[-0.01em] text-ink">{project.title}</h3>
                   <p className="mt-0.5 mb-0 text-xs text-muted">{[project.city, project.year].filter(Boolean).join(" · ")}</p>

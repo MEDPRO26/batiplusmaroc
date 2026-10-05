@@ -1,4 +1,5 @@
-import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
+import { resolveApprovedPortfolioImageUrl } from "../portfolioImages/model";
+import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import {
   paginationOptsValidator,
   paginationResultValidator,
@@ -14,7 +15,6 @@ import {
 import { commissionStatusValidator, dealStatusValidator } from "../deals/constants";
 import { projectStatusValidator } from "../projects/constants";
 import { reviewModerationStatusValidator } from "../reviews/constants";
-import { getPublicMediaUrl } from "../storage/publicUrl";
 import { requireAdminUser } from "./access";
 
 const onboardingStatusValidator = v.union(
@@ -94,6 +94,8 @@ const companySummaryValidator = v.object({
   onboardingStatus: onboardingStatusValidator,
   createdAt: v.number(),
   logoUrl: v.union(v.string(), v.null()),
+  submittedLogoImageId: v.union(v.id("companyLogoImages"), v.null()),
+  approvedLogoImageId: v.union(v.id("companyLogoImages"), v.null()),
   publicProfileSlug: v.union(v.string(), v.null()),
   activeMemberCount: v.number(),
   membersTruncated: v.boolean(),
@@ -346,30 +348,7 @@ export const listCompanies = query({
 });
 
 async function logoUrl(ctx: QueryCtx, company: Doc<"companies">) {
-  if (company.logoMediaId) {
-    const media = await ctx.db.get(company.logoMediaId);
-    if (media && media.companyId === company._id && media.purpose === "companyLogo") {
-      return getPublicMediaUrl(media.objectKey);
-    }
-  }
-  return company.logoStorageId ? await getNonVerificationStorageUrl(ctx, company.logoStorageId) : null;
-}
-
-async function portfolioCoverUrl(ctx: QueryCtx, project: Doc<"portfolioProjects">) {
-  if (project.coverMediaId) {
-    const media = await ctx.db.get(project.coverMediaId);
-    if (
-      media &&
-      media.companyId === project.companyId &&
-      media.portfolioProjectId === project._id &&
-      media.purpose === "portfolioCover"
-    ) {
-      return getPublicMediaUrl(media.objectKey);
-    }
-  }
-  return project.coverImageStorageId
-    ? await getNonVerificationStorageUrl(ctx, project.coverImageStorageId)
-    : null;
+  return await resolveApprovedLogoUrl(ctx, company);
 }
 
 export const getCompanySummary = query({
@@ -399,7 +378,7 @@ export const getCompanySummary = query({
       projectId: project._id,
       title: project.title,
       city: project.city,
-      coverImageUrl: await portfolioCoverUrl(ctx, project),
+      coverImageUrl: await resolveApprovedPortfolioImageUrl(ctx, project),
     })));
     const reviewCount = company.reviewCount ?? 0;
     return {
@@ -414,6 +393,8 @@ export const getCompanySummary = query({
       onboardingStatus: company.onboardingStatus,
       createdAt: company.createdAt,
       logoUrl: resolvedLogo,
+      submittedLogoImageId: company.submittedLogoImageId ?? null,
+      approvedLogoImageId: company.approvedLogoImageId ?? null,
       publicProfileSlug:
         company.onboardingStatus === "completed" &&
         company.slug && company.name && company.city && company.description

@@ -1,5 +1,7 @@
 "use client";
 
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
@@ -62,16 +64,6 @@ function profileCompletion(profile: Profile) {
     profile.website.trim().length > 0,
   ];
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
-}
-
-function initials(name: string) {
-  const letters = name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-  return letters || "B";
 }
 
 export function CompanyDashboard() {
@@ -377,18 +369,7 @@ function CompanySidebar({ profile, verification }: { profile: Profile; verificat
     <aside className="grid gap-4 lg:sticky lg:top-24">
       <section className="rounded-2xl border border-brand-border bg-white px-5 py-5">
         <div className="flex items-center gap-3">
-          {profile.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              alt=""
-              className="size-14 rounded-full object-cover outline outline-black/10"
-              src={profile.logoUrl}
-            />
-          ) : (
-            <span className="grid size-14 place-items-center rounded-full bg-brand-soft text-sm font-semibold text-brand">
-              {initials(profile.name)}
-            </span>
-          )}
+          <span className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-soft text-brand outline outline-black/10"><ApprovedCompanyLogo alt="" className="object-cover" fill sizes="56px" url={profile.logoUrl} /></span>
           <div className="min-w-0">
             <h2 className="m-0 truncate text-base font-semibold text-ink">{profile.name}</h2>
             <p className="mt-0.5 mb-0 truncate text-sm text-muted">{serviceLine || profile.city}</p>

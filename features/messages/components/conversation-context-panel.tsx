@@ -1,5 +1,7 @@
 "use client";
 
+import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import Image from "next/image";
@@ -56,7 +58,7 @@ export function ConversationContextPanel({
   return (
     <div className="flex flex-col gap-6 px-5 py-5">
       <section aria-label={t("partyLabel")} className="flex flex-col items-center text-center">
-        <PartyAvatar name={name} url={conversation.otherPartyAvatarUrl} />
+        <PartyAvatar company={accountType === "client"} name={name} url={conversation.otherPartyAvatarUrl} />
         <p className="mt-3 mb-0 text-[0.95rem] font-semibold text-ink">{name}</p>
         <p className="mt-0.5 mb-0 text-xs text-muted">{accountType === "company" ? t("roleClient") : t("roleCompany")}</p>
         <div className="mt-4 flex w-full flex-col gap-2">
@@ -214,7 +216,7 @@ function StageMarker({ state }: { state: ProgressStage["state"] }) {
   );
 }
 
-function PartyAvatar({ name, url }: { name: string; url: string | null }) {
+function PartyAvatar({ name, url, company }: { name: string; url: string | null; company: boolean }) {
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -223,7 +225,7 @@ function PartyAvatar({ name, url }: { name: string; url: string | null }) {
     .join("");
   return (
     <span className="relative grid size-16 place-items-center overflow-hidden rounded-full bg-brand-soft text-lg font-semibold text-brand-dark outline outline-1 -outline-offset-1 outline-black/10">
-      {url ? <Image alt="" className="object-cover" fill sizes="64px" src={url} /> : <span aria-hidden>{initials || "?"}</span>}
+      {company ? <ApprovedCompanyLogo alt="" className="object-cover" fill sizes="64px" url={url} /> : url ? <Image alt="" className="object-cover" fill sizes="64px" src={url} /> : <span aria-hidden>{initials || "?"}</span>}
     </span>
   );
 }

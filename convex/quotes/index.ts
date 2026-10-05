@@ -1,4 +1,4 @@
-import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
+import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
@@ -14,7 +14,6 @@ import {
   projectCityValidator,
   projectTimelineValidator,
 } from "../projects/constants";
-import { getPublicMediaUrl } from "../storage/publicUrl";
 import { ensureConversationForQuote } from "../messages/index";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { invitationForPair } from "../invitations/index";
@@ -230,12 +229,7 @@ async function receivedQuoteDto(ctx: QuoteCtx, quote: Doc<"projectQuotes">, load
   const companyId = quote.companyId;
   const company = loadedCompany === undefined ? await ctx.db.get(companyId) : loadedCompany;
   if (!company?.name) throw new ConvexError("COMPANY_NOT_FOUND");
-  const logoMedia = company.logoMediaId ? await ctx.db.get(company.logoMediaId) : null;
-  const logoUrl = logoMedia && logoMedia.companyId === company._id && logoMedia.purpose === "companyLogo"
-    ? getPublicMediaUrl(logoMedia.objectKey)
-    : company.logoStorageId
-      ? await getNonVerificationStorageUrl(ctx, company.logoStorageId)
-      : null;
+  const logoUrl = await resolveApprovedLogoUrl(ctx, company);
   const names = [company.name, company.legalName];
   const audience = await resolveCompanyIdentityAudience(ctx, companyId);
   const maskedNames = companyNamesToMask(company, audience);

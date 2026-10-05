@@ -1,4 +1,6 @@
+import { resolveApprovedPortfolioImageUrl } from "../portfolioImages/model";
 import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
+import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import {
   paginationOptsValidator,
   paginationResultValidator,
@@ -196,10 +198,7 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, s
       )
       .order("desc")
       .take(3),
-    resolvePublicMediaUrl(ctx, {
-      storageId: company.logoStorageId,
-      publicMediaId: company.logoMediaId,
-    }),
+    resolveApprovedLogoUrl(ctx, company),
     resolvePublicMediaUrl(ctx, { publicMediaId: company.coverMediaId }),
   ]);
   if (serviceFilter && !serviceRows.some(row => row.serviceId
@@ -212,10 +211,7 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, s
   const portfolio = (
     await Promise.all(
       projects.map(async (project) => {
-        const url = await resolvePublicMediaUrl(ctx, {
-          storageId: project.coverImageStorageId,
-          publicMediaId: project.coverMediaId,
-        });
+        const url = await resolveApprovedPortfolioImageUrl(ctx, project);
         return url ? { title: maskPublicCompanyText(project.title, names), url } : null;
       }),
     )
