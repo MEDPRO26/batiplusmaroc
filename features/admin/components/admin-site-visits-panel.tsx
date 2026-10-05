@@ -2,8 +2,21 @@
 
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
+import {
+  Building2,
+  CalendarDays,
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  MapPin,
+  Search,
+  TriangleAlert,
+  UserRound,
+  X,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { Dialog, Tabs } from "radix-ui";
+import { useEffect, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
@@ -34,6 +47,16 @@ const CITIES = [
   "tangier",
   "tetouan",
 ] as const;
+const PAGE_SIZE = 15;
+
+const SECONDARY = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-[#e6e9ee] bg-white px-4 text-sm font-semibold text-[#17191d] hover:bg-[#f7f9fc] ${ADMIN_PRESS}`;
+const ICON_BUTTON = `inline-flex size-10 shrink-0 items-center justify-center rounded-full text-[#626970] hover:bg-[#f2f4f7] hover:text-[#17191d] ${ADMIN_PRESS}`;
+const FILTER_SHELL =
+  "flex min-h-11 min-w-0 items-center gap-2 rounded-full border border-[#e7eaee] bg-white px-4 text-sm transition-[border-color,box-shadow] duration-150 focus-within:border-[#2f6bff] focus-within:ring-3 focus-within:ring-[#2f6bff]/15";
+const UNDERLINE_TAB = `-mb-px inline-flex min-h-12 items-center gap-2 border-0 border-b-2 border-transparent bg-transparent px-0.5 text-sm font-semibold whitespace-nowrap text-[#626970] hover:text-[#17191d] aria-pressed:border-[#2f6bff] aria-pressed:text-[#17191d] ${ADMIN_PRESS} active:scale-100`;
+const DRAWER_TAB = `-mb-px inline-flex min-h-12 items-center gap-2 border-0 border-b-2 border-transparent bg-transparent px-0.5 text-sm font-semibold whitespace-nowrap text-[#626970] hover:text-[#17191d] data-[state=active]:border-[#2f6bff] data-[state=active]:text-[#17191d] ${ADMIN_PRESS} active:scale-100`;
+const PILL =
+  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap";
 
 type Tab = (typeof TABS)[number];
 type City = (typeof CITIES)[number];
@@ -43,7 +66,28 @@ type Row = FunctionReturnType<
 type Detail = NonNullable<
   FunctionReturnType<typeof api.admin.siteVisits.getSiteVisitDetail>
 >;
-type Status = Row["status"];
+type Status =
+  | Row["status"]
+  | Row["assessmentStatus"]
+  | Detail["assessment"]["status"]
+  | NonNullable<Detail["visit"]>["status"];
+type FinalQuoteStatus = Row["finalQuoteStatus"];
+type Tone = "success" | "danger" | "info" | "warning" | "neutral";
+
+const TONE_PILL: Record<Tone, string> = {
+  success: "bg-[#e7f8ee] text-[#157a3e]",
+  danger: "bg-[#fdecec] text-[#b42318]",
+  info: "bg-[#e8f0ff] text-[#2755c8]",
+  warning: "bg-[#fff4df] text-[#9a6700]",
+  neutral: "bg-[#f2f4f7] text-[#626970]",
+};
+const TONE_DOT: Record<Tone, string> = {
+  success: "bg-[#22a35a]",
+  danger: "bg-[#e5484d]",
+  info: "bg-[#2f6bff]",
+  warning: "bg-[#e0a100]",
+  neutral: "bg-[#a0a6ae]",
+};
 
 export function AdminSiteVisitsPanel() {
   const t = useTranslations("adminSiteVisits");
@@ -60,9 +104,18 @@ export function AdminSiteVisitsPanel() {
     null,
   );
   const [now, setNow] = useState(0);
+  const [expanded, setExpanded] = useState({ key: "", count: PAGE_SIZE });
   const invalidDateRange =
     dateFrom !== "" && dateTo !== "" && dateFrom > dateTo;
-  const closeDrawer = useCallback(() => setSelectedId(null), []);
+  const hasFilters =
+    projectSearch !== "" ||
+    companySearch !== "" ||
+    city !== "" ||
+    dateFrom !== "" ||
+    dateTo !== "";
+  // Any filter change falls back to the first page without an effect.
+  const filterKey = [tab, projectSearch, companySearch, city, dateFrom, dateTo].join("|");
+  const visibleCount = expanded.key === filterKey ? expanded.count : PAGE_SIZE;
 
   useEffect(() => {
     const updateClock = () => setNow(Date.now());
@@ -88,36 +141,46 @@ export function AdminSiteVisitsPanel() {
           now,
         },
   );
+  const visible = list?.slice(0, visibleCount) ?? [];
+  const remaining = (list?.length ?? 0) - visible.length;
+
+  function clearFilters() {
+    setProjectSearch("");
+    setCompanySearch("");
+    setCity("");
+    setDateFrom("");
+    setDateTo("");
+  }
 
   return (
     <AdminPage breadcrumb={t("title")} title={t("title")}>
-      <p className="max-w-3xl text-sm leading-6 text-[#626970]">{t("lead")}</p>
+      <p className="max-w-3xl text-sm leading-6 text-pretty text-[#626970]">
+        {t("lead")}
+      </p>
 
-      <section className="rounded-[20px] border border-[#e7eaee] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:p-5">
-        <div className="overflow-x-auto pb-1" aria-label={t("tabsLabel")}>
-          <div className="flex min-w-max gap-1">
-            {TABS.map((status) => (
-              <button
-                aria-pressed={tab === status}
-                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${ADMIN_PRESS} ${
-                  tab === status
-                    ? "bg-[#2f6bff] text-white"
-                    : "bg-[#f4f6f8] text-[#626970]"
-                }`}
-                key={status}
-                onClick={() => {
-                  setTab(status);
-                  setSelectedId(null);
-                }}
-                type="button"
-              >
-                {t(`tabs.${status}`)}
-              </button>
-            ))}
-          </div>
+      <section className="overflow-hidden rounded-[16px] border border-[#e7eaee] bg-white">
+        <div
+          aria-label={t("tabsLabel")}
+          className="flex gap-5 overflow-x-auto border-b border-[#eef1f4] px-4 sm:px-5"
+          role="group"
+        >
+          {TABS.map((status) => (
+            <button
+              aria-pressed={tab === status}
+              className={UNDERLINE_TAB}
+              key={status}
+              onClick={() => {
+                setTab(status);
+                setSelectedId(null);
+              }}
+              type="button"
+            >
+              {t(`tabs.${status}`)}
+            </button>
+          ))}
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-2 border-b border-[#eef1f4] p-4 sm:grid-cols-2 sm:px-5 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem_auto]">
           <FilterInput
             label={t("filters.projectLabel")}
             onChange={setProjectSearch}
@@ -130,10 +193,11 @@ export function AdminSiteVisitsPanel() {
             placeholder={t("filters.companyPlaceholder")}
             value={companySearch}
           />
-          <label className="flex min-h-11 items-center rounded-full bg-[#f4f6f8] px-3 text-sm">
+          <label className={`${FILTER_SHELL} relative`}>
+            <MapPin aria-hidden className="size-4 shrink-0 text-[#8b919a]" />
             <span className="sr-only">{t("filters.cityLabel")}</span>
             <select
-              className="h-11 w-full bg-transparent text-[#626970] outline-none"
+              className={`h-10 w-full min-w-0 cursor-pointer appearance-none bg-transparent pr-5 outline-none ${city ? "text-[#17191d]" : "text-[#626970]"}`}
               onChange={(event) => setCity(event.target.value as City | "")}
               value={city}
             >
@@ -144,141 +208,215 @@ export function AdminSiteVisitsPanel() {
                 </option>
               ))}
             </select>
+            <ChevronDown
+              aria-hidden
+              className="pointer-events-none absolute right-4 size-4 text-[#8b919a]"
+            />
           </label>
-          <DateInput
-            label={t("filters.dateFrom")}
-            onChange={setDateFrom}
-            value={dateFrom}
-          />
-          <DateInput
-            label={t("filters.dateTo")}
-            onChange={setDateTo}
-            value={dateTo}
-          />
+          <div
+            aria-label={t("filters.dateRange")}
+            className={`${FILTER_SHELL} ${invalidDateRange ? "border-[#e5484d]" : ""}`}
+            role="group"
+          >
+            <CalendarDays
+              aria-hidden
+              className="size-4 shrink-0 text-[#8b919a]"
+            />
+            <DateInput
+              label={t("filters.dateFrom")}
+              onChange={setDateFrom}
+              value={dateFrom}
+            />
+            <span aria-hidden className="text-[#c5cad1]">
+              –
+            </span>
+            <DateInput
+              label={t("filters.dateTo")}
+              onChange={setDateTo}
+              value={dateTo}
+            />
+          </div>
         </div>
         {invalidDateRange ? (
           <p
-            className="mt-3 rounded-xl bg-[#fff4f2] px-3 py-2 text-sm text-[#8a2f28]"
+            className="mx-4 mt-4 rounded-[10px] bg-[#fff4f2] px-3 py-2 text-sm text-[#8a2f28] sm:mx-5"
             role="alert"
           >
             {t("filters.invalidRange")}
           </p>
         ) : null}
 
-        {invalidDateRange ? null : list === undefined ? (
+        {invalidDateRange ? (
+          <div className="h-4" />
+        ) : list === undefined ? (
           <SiteVisitSkeleton label={tUx("loading.dashboard")} />
-        ) : list.length === 0 ? (
-          <p className="mt-8 py-10 text-center text-sm text-[#8b919a]">
-            {t("empty")}
-          </p>
         ) : (
           <>
-            <div className="mt-5 grid gap-3 lg:hidden">
-              {list.map((row) => (
-                <SiteVisitCard
-                  key={row.assessmentId}
-                  locale={locale}
-                  onView={() => setSelectedId(row.assessmentId)}
-                  row={row}
-                />
-              ))}
+            <div className="flex min-h-12 items-center justify-between gap-3 px-4 sm:px-5">
+              <p className="text-sm text-[#626970] tabular-nums">
+                {t("resultCount", { count: list.length })}
+              </p>
+              {hasFilters ? (
+                <button
+                  className={`inline-flex min-h-10 items-center gap-1 rounded-full px-2 text-sm font-semibold text-[#2f6bff] hover:text-[#2456c7] ${ADMIN_PRESS}`}
+                  onClick={clearFilters}
+                  type="button"
+                >
+                  <X aria-hidden className="size-4" />
+                  {t("clearFilters")}
+                </button>
+              ) : null}
             </div>
-            <div className="mt-5 hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-full table-fixed border-separate border-spacing-y-2 text-left text-sm">
-                <thead>
-                  <tr className="text-[0.72rem] font-semibold tracking-[0.06em] text-[#a0a6ae] uppercase">
-                    <th className="w-[12%] px-3 py-2 font-semibold">
-                      {t("columns.project")}
-                    </th>
-                    <th className="w-[10%] px-3 py-2 font-semibold">
-                      {t("columns.client")}
-                    </th>
-                    <th className="w-[10%] px-3 py-2 font-semibold">
-                      {t("columns.company")}
-                    </th>
-                    <th className="w-[11%] px-3 py-2 font-semibold">
-                      {t("columns.assessmentStatus")}
-                    </th>
-                    <th className="w-[12%] px-3 py-2 font-semibold">
-                      {t("columns.visitDate")}
-                    </th>
-                    <th className="w-[9%] px-3 py-2 font-semibold">
-                      {t("columns.city")}
-                    </th>
-                    <th className="w-[9%] px-3 py-2 font-semibold">
-                      {t("columns.proposedBy")}
-                    </th>
-                    <th className="w-[10%] px-3 py-2 font-semibold">
-                      {t("columns.status")}
-                    </th>
-                    <th className="w-[10%] px-3 py-2 font-semibold">
-                      {t("columns.finalQuote")}
-                    </th>
-                    <th className="w-[7%] px-3 py-2 font-semibold">
-                      {t("columns.action")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {list.map((row) => (
-                    <tr className="bg-[#f8fafb]" key={row.assessmentId}>
-                      <td className="truncate rounded-l-[14px] px-3 py-3 font-semibold text-[#17191d]">
-                        {row.projectTitle}
-                      </td>
-                      <td className="truncate px-3 py-3 text-[#626970]">
-                        {row.clientName}
-                      </td>
-                      <td className="truncate px-3 py-3 text-[#626970]">
-                        {row.companyName}
-                      </td>
-                      <td className="px-3 py-3">
-                        <StatusPill status={row.assessmentStatus} />
-                      </td>
-                      <td className="truncate px-3 py-3 text-[#626970]">
-                        {formatVisitDate(row, locale)}
-                      </td>
-                      <td className="truncate px-3 py-3 text-[#626970]">
-                        {row.city ? tWizard(`cityOptions.${row.city}`) : "—"}
-                      </td>
-                      <td className="truncate px-3 py-3 text-[#626970]">
-                        {row.proposedBy ? t(`actor.${row.proposedBy}`) : "—"}
-                      </td>
-                      <td className="px-3 py-3">
-                        <StatusPill status={row.status} />
-                        {row.riskSignal ? (
-                          <RiskPill signal={row.riskSignal} />
-                        ) : null}
-                      </td>
-                      <td className="truncate px-3 py-3 text-[#626970]">
-                        {t(
-                          `finalQuote.${row.finalQuoteStatus}` as "finalQuote.not_available",
-                        )}
-                      </td>
-                      <td className="rounded-r-[14px] px-3 py-3">
-                        <button
-                          className={`inline-flex min-h-10 items-center rounded-full border border-[#e6e9ee] bg-white px-3 text-sm font-semibold ${ADMIN_PRESS}`}
-                          onClick={() => setSelectedId(row.assessmentId)}
-                          type="button"
-                        >
-                          {t("view")}
-                        </button>
-                      </td>
-                    </tr>
+            {list.length === 0 ? (
+              <div className="grid justify-items-center gap-1 border-t border-[#eef1f4] px-6 py-16 text-center">
+                <p className="text-base font-semibold text-[#17191d]">
+                  {t("empty")}
+                </p>
+                <p className="max-w-sm text-sm text-[#626970]">
+                  {t("emptyHint")}
+                </p>
+              </div>
+            ) : (
+              <>
+                <ul className="divide-y divide-[#eef1f4] border-t border-[#eef1f4] xl:hidden">
+                  {visible.map((row) => (
+                    <SiteVisitCard
+                      key={row.assessmentId}
+                      locale={locale}
+                      onView={() => setSelectedId(row.assessmentId)}
+                      row={row}
+                    />
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </ul>
+                <table className="hidden w-full table-fixed border-collapse text-left text-sm xl:table">
+                  <thead className="border-y border-[#eef1f4] bg-[#fafbfc]">
+                    <tr className="text-xs font-semibold text-[#8b919a]">
+                      <th className="px-5 py-2.5 font-semibold" scope="col">
+                        {t("columns.project")}
+                      </th>
+                      <th className="w-[18%] px-4 py-2.5 font-semibold" scope="col">
+                        {t("partiesColumn")}
+                      </th>
+                      <th className="w-[16%] px-4 py-2.5 font-semibold" scope="col">
+                        {t("columns.visitDate")}
+                      </th>
+                      <th
+                        className="hidden w-[11%] px-4 py-2.5 font-semibold 2xl:table-cell"
+                        scope="col"
+                      >
+                        {t("columns.assessmentStatus")}
+                      </th>
+                      <th className="w-[21%] px-4 py-2.5 font-semibold 2xl:w-[17%]" scope="col">
+                        {t("columns.status")}
+                      </th>
+                      <th
+                        className="w-[15%] px-4 py-2.5 font-semibold 2xl:w-[14%]"
+                        scope="col"
+                      >
+                        {t("columns.finalQuote")}
+                      </th>
+                      <th className="w-12 py-2.5" scope="col">
+                        <span className="sr-only">{t("columns.action")}</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#eef1f4]">
+                    {visible.map((row) => (
+                      // The whole row opens the sheet; the title button keeps it keyboard reachable.
+                      <tr
+                        className="group cursor-pointer transition-colors duration-150 hover:bg-[#f7f9fc]"
+                        key={row.assessmentId}
+                        onClick={() => setSelectedId(row.assessmentId)}
+                      >
+                        <td className="px-5 py-3.5">
+                          <button
+                            aria-label={t("viewAria", {
+                              project: row.projectTitle,
+                            })}
+                            title={row.projectTitle}
+                            className="block max-w-full cursor-pointer truncate text-left font-semibold text-[#17191d] group-hover:text-[#2456c7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6bff]"
+                            type="button"
+                          >
+                            {row.projectTitle}
+                          </button>
+                          <span className="mt-0.5 flex items-center gap-1 truncate text-xs text-[#8b919a]">
+                            <MapPin aria-hidden className="size-3.5 shrink-0" />
+                            {row.city ? tWizard(`cityOptions.${row.city}`) : "—"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="block truncate text-[#17191d]">
+                            {row.companyName}
+                          </span>
+                          <span className="mt-0.5 block truncate text-xs text-[#8b919a]">
+                            {row.clientName}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="block truncate text-[#17191d] tabular-nums">
+                            {formatVisitDate(row, locale)}
+                          </span>
+                          {row.proposedBy ? (
+                            <span className="mt-0.5 block truncate text-xs text-[#8b919a]">
+                              {t("proposedByActor", {
+                                actor: t(`actor.${row.proposedBy}`),
+                              })}
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="hidden px-4 py-3.5 2xl:table-cell">
+                          <StatusText status={row.assessmentStatus} />
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <StatusPill status={row.status} />
+                            {row.riskSignal ? (
+                              <RiskPill signal={row.riskSignal} />
+                            ) : null}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <FinalQuoteText status={row.finalQuoteStatus} />
+                        </td>
+                        <td className="py-3.5 pr-4 text-right">
+                          <ChevronRight
+                            aria-hidden
+                            className="inline size-4 text-[#c5cad1] transition-colors duration-150 group-hover:text-[#2f6bff]"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {remaining > 0 ? (
+                  <div className="flex justify-center border-t border-[#eef1f4] p-4">
+                    <button
+                      className={SECONDARY}
+                      onClick={() =>
+                        setExpanded({
+                          key: filterKey,
+                          count: visibleCount + PAGE_SIZE,
+                        })
+                      }
+                      type="button"
+                    >
+                      {t("showMore", {
+                        count: Math.min(PAGE_SIZE, remaining),
+                      })}
+                    </button>
+                  </div>
+                ) : null}
+              </>
+            )}
           </>
         )}
       </section>
 
-      {selectedId ? (
-        <SiteVisitDrawer
-          assessmentId={selectedId}
-          now={now}
-          onClose={closeDrawer}
-        />
-      ) : null}
+      <SiteVisitDrawer
+        assessmentId={selectedId}
+        now={now}
+        onClose={() => setSelectedId(null)}
+      />
     </AdminPage>
   );
 }
@@ -295,12 +433,14 @@ function FilterInput({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="flex min-h-11 items-center rounded-full bg-[#f4f6f8] px-3 text-sm">
+    <label className={FILTER_SHELL}>
+      <Search aria-hidden className="size-4 shrink-0 text-[#8b919a]" />
       <span className="sr-only">{label}</span>
       <input
-        className="h-11 w-full bg-transparent text-[#17191d] outline-none placeholder:text-[#8b919a]"
+        className="h-10 w-full min-w-0 bg-transparent text-[#17191d] outline-none placeholder:text-[#8b919a]"
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        type="search"
         value={value}
       />
     </label>
@@ -317,10 +457,10 @@ function DateInput({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="flex min-h-11 items-center gap-2 rounded-full bg-[#f4f6f8] px-3 text-xs text-[#626970]">
-      <span>{label}</span>
+    <label className="min-w-0 flex-1">
+      <span className="sr-only">{label}</span>
       <input
-        className="h-11 min-w-0 flex-1 bg-transparent text-[#17191d] outline-none"
+        className={`h-10 w-full min-w-[6.5rem] bg-transparent outline-none ${value ? "text-[#17191d]" : "text-[#8b919a]"}`}
         onChange={(event) => onChange(event.target.value)}
         type="date"
         value={value}
@@ -341,73 +481,103 @@ function SiteVisitCard({
   const t = useTranslations("adminSiteVisits");
   const tWizard = useTranslations("projectWizard");
   return (
-    <article className="rounded-[14px] bg-[#f8fafb] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="truncate text-sm font-semibold text-[#17191d]">
-            {row.projectTitle}
-          </h2>
-          <p className="mt-1 text-xs text-[#8b919a]">
-            {row.companyName} · {row.clientName}
-          </p>
-        </div>
-        <StatusPill status={row.status} />
-      </div>
-      {row.riskSignal ? <RiskPill signal={row.riskSignal} /> : null}
-      <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-        <CompactField
-          label={t("columns.assessmentStatus")}
-          value={t(`status.${row.assessmentStatus}`)}
-        />
-        <CompactField
-          label={t("columns.visitDate")}
-          value={formatVisitDate(row, locale)}
-        />
-        <CompactField
-          label={t("columns.city")}
-          value={row.city ? tWizard(`cityOptions.${row.city}`) : "—"}
-        />
-        <CompactField
-          label={t("columns.finalQuote")}
-          value={t(
-            `finalQuote.${row.finalQuoteStatus}` as "finalQuote.not_available",
-          )}
-        />
-      </dl>
+    <li>
       <button
-        className={`mt-4 inline-flex min-h-10 items-center rounded-full border border-[#e6e9ee] bg-white px-3 text-sm font-semibold ${ADMIN_PRESS}`}
+        aria-label={t("viewAria", { project: row.projectTitle })}
+        className="flex w-full cursor-pointer items-center gap-3 px-4 py-4 text-left transition-colors duration-150 hover:bg-[#f7f9fc] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#2f6bff] sm:px-5"
         onClick={onView}
         type="button"
       >
-        {t("view")}
+        <span className="min-w-0 flex-1">
+          <span className="flex items-start justify-between gap-3">
+            <span className="min-w-0 truncate text-sm font-semibold text-[#17191d]">
+              {row.projectTitle}
+            </span>
+            <StatusPill status={row.status} />
+          </span>
+          <span className="mt-1 block truncate text-xs text-[#626970]">
+            {row.companyName} · {row.clientName}
+          </span>
+          <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8b919a]">
+            <span className="inline-flex items-center gap-1 tabular-nums">
+              <CalendarDays aria-hidden className="size-3.5" />
+              {formatVisitDate(row, locale)}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <MapPin aria-hidden className="size-3.5" />
+              {row.city ? tWizard(`cityOptions.${row.city}`) : "—"}
+            </span>
+            <FinalQuoteText status={row.finalQuoteStatus} />
+          </span>
+          {row.riskSignal ? (
+            <span className="mt-2 block">
+              <RiskPill signal={row.riskSignal} />
+            </span>
+          ) : null}
+        </span>
+        <ChevronRight aria-hidden className="size-4 shrink-0 text-[#c5cad1]" />
       </button>
-    </article>
+    </li>
   );
+}
+
+function statusTone(status: Status): Tone {
+  if (status === "completed") return "success";
+  if (status === "cancelled" || status === "declined") return "danger";
+  if (status === "confirmed" || status === "accepted") return "info";
+  return "warning";
+}
+
+function finalQuoteTone(status: FinalQuoteStatus): Tone {
+  if (status === "accepted") return "success";
+  if (status === "declined" || status === "withdrawn") return "danger";
+  if (status === "submitted") return "info";
+  if (status === "not_available") return "neutral";
+  return "warning";
 }
 
 function StatusPill({ status }: { status: Status }) {
   const t = useTranslations("adminSiteVisits");
-  const style =
-    status === "completed"
-      ? "bg-[#e7f8ee] text-[#157a3e]"
-      : status === "cancelled" || status === "declined"
-        ? "bg-[#fdecec] text-[#b42318]"
-        : status === "confirmed" || status === "accepted"
-          ? "bg-[#e8f0ff] text-[#2755c8]"
-          : "bg-[#fff4df] text-[#9a6700]";
+  const tone = statusTone(status);
   return (
-    <span
-      className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-semibold ${style}`}
-    >
+    <span className={`${PILL} ${TONE_PILL[tone]}`}>
+      <span aria-hidden className={`size-1.5 rounded-full ${TONE_DOT[tone]}`} />
       {t(`status.${status}`)}
     </span>
+  );
+}
+
+function DotText({ tone, children }: { tone: Tone; children: ReactNode }) {
+  return (
+    <span className="flex min-w-0 items-center gap-2 text-[#626970]">
+      <span
+        aria-hidden
+        className={`size-1.5 shrink-0 rounded-full ${TONE_DOT[tone]}`}
+      />
+      <span className="truncate">{children}</span>
+    </span>
+  );
+}
+
+function StatusText({ status }: { status: Status }) {
+  const t = useTranslations("adminSiteVisits");
+  return <DotText tone={statusTone(status)}>{t(`status.${status}`)}</DotText>;
+}
+
+function FinalQuoteText({ status }: { status: FinalQuoteStatus }) {
+  const t = useTranslations("adminSiteVisits");
+  return (
+    <DotText tone={finalQuoteTone(status)}>
+      {t(`finalQuote.${status}` as "finalQuote.not_available")}
+    </DotText>
   );
 }
 
 function RiskPill({ signal }: { signal: NonNullable<Row["riskSignal"]> }) {
   const t = useTranslations("adminSiteVisits");
   return (
-    <span className="mt-1 block w-fit rounded-full bg-[#fff0d8] px-2.5 py-1 text-xs font-semibold text-[#9a6700]">
+    <span className={`${PILL} bg-[#fff0d8] text-[#9a6700]`}>
+      <TriangleAlert aria-hidden className="size-3" />
       {t(`risk.${signal}`)}
     </span>
   );
@@ -418,337 +588,471 @@ function SiteVisitDrawer({
   now,
   onClose,
 }: {
-  assessmentId: Id<"siteAssessments">;
+  assessmentId: Id<"siteAssessments"> | null;
   now: number;
   onClose: () => void;
 }) {
+  return (
+    <Dialog.Root
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      open={assessmentId !== null}
+    >
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-[#101828]/30 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <Dialog.Content
+          aria-describedby={undefined}
+          // Focus the sheet itself so opening with the mouse does not ring the close button.
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            (event.currentTarget as HTMLElement).focus();
+          }}
+          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[640px] flex-col bg-white shadow-[-16px_0_48px_rgba(16,24,40,0.16)] outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-right"
+        >
+          {assessmentId ? (
+            <SiteVisitDrawerBody
+              assessmentId={assessmentId}
+              key={assessmentId}
+              now={now}
+            />
+          ) : null}
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
+function SiteVisitDrawerBody({
+  assessmentId,
+  now,
+}: {
+  assessmentId: Id<"siteAssessments">;
+  now: number;
+}) {
   const t = useTranslations("adminSiteVisits");
   const tWizard = useTranslations("projectWizard");
-  const tProjects = useTranslations("adminProjects");
   const tUx = useTranslations("ux");
   const locale = useLocale();
-  const titleId = useId();
-  const dialogRef = useRef<HTMLElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const detail = useQuery(api.admin.siteVisits.getSiteVisitDetail, {
+  const fresh = useQuery(api.admin.siteVisits.getSiteVisitDetail, {
     assessmentId,
     now,
   });
-
-  useEffect(() => {
-    const previouslyFocused =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    closeButtonRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab" || !dialogRef.current) return;
-      const focusable = [
-        ...dialogRef.current.querySelectorAll<HTMLElement>(
-          "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])",
-        ),
-      ];
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable.at(-1)!;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
-    };
-  }, [onClose]);
+  // Keep the last result on screen while the minute clock re-subscribes the query.
+  const [last, setLast] = useState(fresh);
+  if (fresh !== undefined && fresh !== last) setLast(fresh);
+  const detail = fresh ?? last;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/45">
-      <button
-        aria-label={t("close")}
-        className="absolute inset-0"
-        onClick={onClose}
-        tabIndex={-1}
-        type="button"
-      />
-      <aside
-        aria-labelledby={titleId}
-        aria-modal="true"
-        className="relative z-10 flex h-full w-full flex-col bg-white shadow-[-12px_0_40px_rgba(16,24,40,0.18)] md:w-[70%]"
-        ref={dialogRef}
-        role="dialog"
-      >
-        <div className="flex items-start justify-between gap-3 border-b border-[#eef1f4] px-5 py-4">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold tracking-[0.08em] text-[#8b919a] uppercase">
-              {t("detailTitle")}
-            </p>
-            <h2
-              className="mt-1 truncate text-xl font-semibold tracking-[-0.02em]"
-              id={titleId}
-            >
-              {detail?.project.title ?? t("loadingDetail")}
-            </h2>
-          </div>
-          <button
-            ref={closeButtonRef}
-            aria-label={t("close")}
-            className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full ${ADMIN_PRESS}`}
-            onClick={onClose}
-            type="button"
-          >
-            ×
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto px-5 py-5">
-          {detail === undefined ? (
-            <div aria-busy="true" className="space-y-3" role="status">
-              <span className="sr-only">{tUx("loading.dashboard")}</span>
-              <div className="h-24 animate-pulse rounded-[16px] bg-[#f4f6f8]" />
-              <div className="h-40 animate-pulse rounded-[16px] bg-[#f4f6f8]" />
-            </div>
-          ) : detail === null ? (
-            <p className="text-sm text-[#8b919a]">{t("notFound")}</p>
-          ) : (
-            <div className="space-y-5">
+    <>
+      <div className="flex items-start justify-between gap-4 border-b border-[#eef1f4] px-5 py-4 sm:px-6">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-[#8b919a]">
+            {t("detailTitle")}
+          </p>
+          <Dialog.Title className="mt-1 text-xl font-semibold tracking-[-0.02em] text-balance text-[#17191d] [overflow-wrap:anywhere]">
+            {detail?.project.title ?? t("loadingDetail")}
+          </Dialog.Title>
+          {detail ? (
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-[#626970]">
+              {detail.project.city ? (
+                <span className="inline-flex items-center gap-1">
+                  <MapPin aria-hidden className="size-4 text-[#8b919a]" />
+                  {tWizard(`cityOptions.${detail.project.city}`)}
+                </span>
+              ) : null}
+              {detail.project.category ? (
+                <span>{categoryLabel(detail, tWizard)}</span>
+              ) : null}
               {detail.riskSignal ? (
                 <RiskPill signal={detail.riskSignal} />
               ) : null}
-              <DetailSection title={t("sections.project")}>
+            </div>
+          ) : null}
+        </div>
+        <Dialog.Close asChild>
+          <button aria-label={t("close")} className={ICON_BUTTON} type="button">
+            <X aria-hidden className="size-4" />
+          </button>
+        </Dialog.Close>
+      </div>
+      {detail === undefined ? (
+        <div
+          aria-busy="true"
+          className="space-y-3 px-5 py-5 sm:px-6"
+          role="status"
+        >
+          <span className="sr-only">{tUx("loading.dashboard")}</span>
+          <div className="h-20 animate-pulse rounded-[12px] bg-[#f4f6f8]" />
+          <div className="h-10 animate-pulse rounded-[12px] bg-[#f4f6f8]" />
+          <div className="h-56 animate-pulse rounded-[12px] bg-[#f4f6f8]" />
+        </div>
+      ) : detail === null ? (
+        <p className="px-5 py-10 text-center text-sm text-[#626970] sm:px-6">
+          {t("notFound")}
+        </p>
+      ) : (
+        <SiteVisitDetail detail={detail} locale={locale} />
+      )}
+    </>
+  );
+}
+
+function SiteVisitDetail({ detail, locale }: { detail: Detail; locale: string }) {
+  const t = useTranslations("adminSiteVisits");
+  const tProjects = useTranslations("adminProjects");
+  const tWizard = useTranslations("projectWizard");
+  const { assessment, visit, finalQuote } = detail;
+
+  return (
+    <Tabs.Root
+      className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      defaultValue="overview"
+    >
+      <div className="grid grid-cols-1 gap-px border-b border-[#eef1f4] bg-[#eef1f4] sm:grid-cols-3">
+        <SummaryTile label={t("sections.assessment")}>
+          <StatusPill status={assessment.status} />
+          <SummaryHint>
+            {formatSiteVisitDateTime(assessment.invitedAt, locale)}
+          </SummaryHint>
+        </SummaryTile>
+        <SummaryTile label={t("sections.visit")}>
+          {visit ? (
+            <>
+              <SummaryValue>
+                {formatVisitDay(visit.proposedDate, locale, false)} ·{" "}
+                {visit.proposedTime}
+              </SummaryValue>
+              <StatusPill status={visit.status} />
+            </>
+          ) : (
+            <SummaryHint>{t("noVisit")}</SummaryHint>
+          )}
+        </SummaryTile>
+        <SummaryTile label={t("sections.finalQuote")}>
+          {finalQuote && finalQuote.price !== null ? (
+            <SummaryValue>{formatMoney(finalQuote.price, locale)}</SummaryValue>
+          ) : null}
+          <span className="text-sm">
+            <FinalQuoteText status={detail.finalQuoteStatus} />
+          </span>
+        </SummaryTile>
+      </div>
+
+      <Tabs.List
+        aria-label={t("detailTabs.label")}
+        className="sticky top-0 z-10 flex gap-5 border-b border-[#eef1f4] bg-white px-5 sm:px-6"
+      >
+        <Tabs.Trigger className={DRAWER_TAB} value="overview">
+          {t("detailTabs.overview")}
+        </Tabs.Trigger>
+        <Tabs.Trigger className={DRAWER_TAB} value="timeline">
+          {t("sections.timeline")}
+          <span className="rounded-full bg-[#f2f4f7] px-2 py-0.5 text-xs font-semibold text-[#626970] tabular-nums">
+            {detail.activity.length}
+          </span>
+        </Tabs.Trigger>
+      </Tabs.List>
+
+      <Tabs.Content
+        className="px-5 outline-none sm:px-6"
+        value="overview"
+      >
+        <div className="grid gap-3 py-5 sm:grid-cols-2">
+          <PartyCard
+            icon={<UserRound aria-hidden className="size-4" />}
+            label={t("sections.client")}
+            name={detail.client.displayName}
+          >
+            <span className="font-mono text-xs text-[#626970]">
+              {detail.client.accountReference}
+            </span>
+          </PartyCard>
+          <PartyCard
+            icon={<Building2 aria-hidden className="size-4" />}
+            label={t("sections.company")}
+            name={detail.company.name}
+          >
+            <span className="text-xs text-[#626970]">
+              {t(`verification.${detail.company.verificationStatus}`)}
+            </span>
+            {detail.company.slug ? (
+              <Link
+                className="inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-[#2f6bff] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6bff]"
+                href={{
+                  pathname: "/entreprises/[slug]",
+                  params: { slug: detail.company.slug },
+                }}
+              >
+                {t("openProfile")}
+                <ExternalLink aria-hidden className="size-3.5" />
+              </Link>
+            ) : null}
+          </PartyCard>
+        </div>
+
+        <div className="divide-y divide-[#eef1f4] border-t border-[#eef1f4]">
+          <DetailSection title={t("sections.project")}>
+            <Field
+              label={t("fields.city")}
+              value={
+                detail.project.city
+                  ? tWizard(`cityOptions.${detail.project.city}`)
+                  : null
+              }
+            />
+            <Field
+              label={t("fields.category")}
+              value={
+                detail.project.category ? categoryLabel(detail, tWizard) : null
+              }
+            />
+            <Field
+              label={t("fields.projectStatus")}
+              value={tProjects(`status.${detail.project.status}`)}
+            />
+          </DetailSection>
+          <DetailSection title={t("sections.initialQuote")}>
+            <Field
+              label={t("fields.estimatedPrice")}
+              value={formatMoney(
+                detail.initialQuote.estimatedPrice,
+                locale,
+                detail.initialQuote.currency,
+              )}
+            />
+            <Field
+              label={t("fields.duration")}
+              value={t("durationDays", {
+                count: detail.initialQuote.estimatedDuration,
+              })}
+            />
+            <Field
+              label={t("fields.quoteStatus")}
+              value={t(`quoteStatus.${detail.initialQuote.status}`)}
+            />
+          </DetailSection>
+          <DetailSection title={t("sections.discussion")}>
+            <Field
+              label={t("fields.openedAt")}
+              value={formatSiteVisitDateTime(detail.discussion.openedAt, locale)}
+            />
+            <Field
+              label={t("fields.conversationReference")}
+              mono
+              value={detail.discussion.reference}
+            />
+            <Field
+              label={t("fields.conversationStatus")}
+              value={t(`conversationStatus.${detail.discussion.status}`)}
+            />
+          </DetailSection>
+          <DetailSection title={t("sections.assessment")}>
+            <Field
+              label={t("fields.invitedBy")}
+              value={actorLabel(assessment.invitedBy, t)}
+            />
+            <Field
+              label={t("fields.invitedAt")}
+              value={formatSiteVisitDateTime(assessment.invitedAt, locale)}
+            />
+            <Field
+              label={t("fields.acceptedAt")}
+              value={formatOptionalDate(assessment.acceptedAt, locale)}
+            />
+            <Field
+              label={t("fields.declinedAt")}
+              value={formatOptionalDate(assessment.declinedAt, locale)}
+            />
+            <Field
+              label={t("fields.cancelledAt")}
+              value={formatOptionalDate(assessment.cancelledAt, locale)}
+            />
+            <Field
+              label={t("fields.marketplaceAcknowledgement")}
+              value={formatOptionalDate(
+                assessment.marketplaceAcknowledgedAt,
+                locale,
+              )}
+            />
+          </DetailSection>
+          <DetailSection title={t("sections.visit")}>
+            {visit ? (
+              <>
                 <Field
-                  label={t("fields.projectTitle")}
-                  value={detail.project.title}
+                  label={t("fields.proposedDateTime")}
+                  value={`${formatVisitDay(visit.proposedDate, locale)} · ${visit.proposedTime} · ${visit.timezone}`}
+                  wide
                 />
                 <Field
-                  label={t("fields.city")}
-                  value={
-                    detail.project.city
-                      ? tWizard(`cityOptions.${detail.project.city}`)
-                      : "—"
-                  }
+                  label={t("fields.siteAddress")}
+                  value={visit.siteAddress}
+                  wide
                 />
                 <Field
-                  label={t("fields.category")}
-                  value={categoryLabel(detail, tWizard)}
+                  label={t("fields.proposedBy")}
+                  value={actorLabel(visit.proposedBy, t)}
                 />
                 <Field
-                  label={t("fields.projectStatus")}
-                  value={tProjects(`status.${detail.project.status}`)}
-                />
-              </DetailSection>
-              <DetailSection title={t("sections.client")}>
-                <Field
-                  label={t("fields.safeIdentity")}
-                  value={detail.client.displayName}
+                  label={t("fields.proposedAt")}
+                  value={formatSiteVisitDateTime(visit.proposedAt, locale)}
                 />
                 <Field
-                  label={t("fields.accountReference")}
-                  value={detail.client.accountReference}
-                />
-              </DetailSection>
-              <DetailSection title={t("sections.company")}>
-                <Field
-                  label={t("fields.companyName")}
-                  value={detail.company.name}
+                  label={t("fields.confirmedBy")}
+                  value={optionalActor(visit.confirmedBy, t)}
                 />
                 <Field
-                  label={t("fields.verificationStatus")}
-                  value={t(`verification.${detail.company.verificationStatus}`)}
-                />
-                {detail.company.slug ? (
-                  <div>
-                    <p className="text-xs font-semibold tracking-[0.04em] text-[#a0a6ae] uppercase">
-                      {t("fields.publicProfile")}
-                    </p>
-                    <Link
-                      className="mt-1 inline-flex min-h-10 items-center text-sm font-semibold text-[#2f6bff] underline-offset-4 hover:underline"
-                      href={{
-                        pathname: "/entreprises/[slug]",
-                        params: { slug: detail.company.slug },
-                      }}
-                    >
-                      {t("openProfile")}
-                    </Link>
-                  </div>
-                ) : (
-                  <Field label={t("fields.publicProfile")} value="—" />
-                )}
-              </DetailSection>
-              <DetailSection title={t("sections.initialQuote")}>
-                <Field
-                  label={t("fields.estimatedPrice")}
-                  value={new Intl.NumberFormat(locale, {
-                    style: "currency",
-                    currency: detail.initialQuote.currency,
-                    maximumFractionDigits: 0,
-                  }).format(detail.initialQuote.estimatedPrice)}
+                  label={t("fields.confirmedAt")}
+                  value={formatOptionalDate(visit.confirmedAt, locale)}
                 />
                 <Field
-                  label={t("fields.duration")}
-                  value={t("durationDays", {
-                    count: detail.initialQuote.estimatedDuration,
-                  })}
-                />
-                <Field
-                  label={t("fields.quoteStatus")}
-                  value={t(`quoteStatus.${detail.initialQuote.status}`)}
-                />
-              </DetailSection>
-              <DetailSection title={t("sections.discussion")}>
-                <Field
-                  label={t("fields.openedAt")}
-                  value={formatSiteVisitDateTime(detail.discussion.openedAt, locale)}
-                />
-                <Field
-                  label={t("fields.conversationReference")}
-                  value={detail.discussion.reference}
-                />
-                <Field
-                  label={t("fields.conversationStatus")}
-                  value={t(`conversationStatus.${detail.discussion.status}`)}
-                />
-              </DetailSection>
-              <DetailSection title={t("sections.assessment")}>
-                <Field
-                  label={t("fields.invitedBy")}
-                  value={actorLabel(detail.assessment.invitedBy, t)}
-                />
-                <Field
-                  label={t("fields.invitedAt")}
-                  value={formatSiteVisitDateTime(detail.assessment.invitedAt, locale)}
-                />
-                <Field
-                  label={t("fields.assessmentStatus")}
-                  value={t(`status.${detail.assessment.status}`)}
-                />
-                <Field
-                  label={t("fields.acceptedAt")}
-                  value={formatOptionalDate(
-                    detail.assessment.acceptedAt,
-                    locale,
-                  )}
+                  label={t("fields.declinedBy")}
+                  value={optionalActor(visit.declinedBy, t)}
                 />
                 <Field
                   label={t("fields.declinedAt")}
-                  value={formatOptionalDate(
-                    detail.assessment.declinedAt,
-                    locale,
-                  )}
+                  value={formatOptionalDate(visit.declinedAt, locale)}
+                />
+                <Field
+                  label={t("fields.cancelledBy")}
+                  value={optionalActor(visit.cancelledBy, t)}
                 />
                 <Field
                   label={t("fields.cancelledAt")}
-                  value={formatOptionalDate(
-                    detail.assessment.cancelledAt,
-                    locale,
-                  )}
+                  value={formatOptionalDate(visit.cancelledAt, locale)}
                 />
                 <Field
-                  label={t("fields.marketplaceAcknowledgement")}
-                  value={formatOptionalDate(
-                    detail.assessment.marketplaceAcknowledgedAt,
-                    locale,
-                  )}
+                  label={t("fields.cancellationReason")}
+                  value={visit.cancellationReason}
+                  wide
                 />
-              </DetailSection>
-              <DetailSection title={t("sections.visit")}>
-                {detail.visit ? (
-                  <VisitFields detail={detail} locale={locale} />
-                ) : (
-                  <p className="text-sm text-[#8b919a]">{t("noVisit")}</p>
-                )}
-              </DetailSection>
-              <DetailSection title={t("sections.timeline")}>
-                <ActivityTimeline detail={detail} locale={locale} />
-              </DetailSection>
-              <DetailSection title={t("sections.finalQuote")}>
-                {detail.finalQuote ? (
-                  <>
-                    <Field
-                      label={t("fields.finalQuoteStatus")}
-                      value={t(
-                        `finalQuote.${detail.finalQuote.status}` as "finalQuote.accepted",
-                      )}
-                    />
-                    <Field
-                      label={t("finalQuote.revisionLabel")}
-                      value={
-                        detail.finalQuote.revisionNumber !== null
-                          ? t("finalQuote.revision", {
-                              number: detail.finalQuote.revisionNumber,
-                            })
-                          : "—"
-                      }
-                    />
-                    <Field
-                      label={t("finalQuote.amount")}
-                      value={
-                        detail.finalQuote.price !== null
-                          ? new Intl.NumberFormat(locale, {
-                              style: "currency",
-                              currency: "MAD",
-                              maximumFractionDigits: 0,
-                            }).format(detail.finalQuote.price)
-                          : "—"
-                      }
-                    />
-                    <Field
-                      label={t("finalQuote.submittedAt")}
-                      value={formatOptionalDate(
-                        detail.finalQuote.submittedAt,
-                        locale,
-                      )}
-                    />
-                    <Field
-                      label={t("finalQuote.acceptedAt")}
-                      value={formatOptionalDate(
-                        detail.finalQuote.acceptedAt,
-                        locale,
-                      )}
-                    />
-                    <Field
-                      label={t("finalQuote.declinedAt")}
-                      value={formatOptionalDate(
-                        detail.finalQuote.declinedAt,
-                        locale,
-                      )}
-                    />
-                    {detail.finalQuote.changesRequestReason ? (
-                      <Field
-                        label={t("finalQuote.changesReason")}
-                        value={detail.finalQuote.changesRequestReason}
-                      />
-                    ) : null}
-                    <Field
-                      label={t("finalQuote.companySelected")}
-                      value={
-                        detail.finalQuote.companySelected
-                          ? t("finalQuote.yes")
-                          : t("finalQuote.no")
-                      }
-                    />
-                  </>
-                ) : (
-                  <Field
-                    label={t("fields.finalQuoteStatus")}
-                    value={t("finalQuote.not_available")}
-                  />
-                )}
-              </DetailSection>
-            </div>
-          )}
+                <Field
+                  label={t("fields.completedBy")}
+                  value={optionalActor(visit.completedBy, t)}
+                />
+                <Field
+                  label={t("fields.completedAt")}
+                  value={formatOptionalDate(visit.completedAt, locale)}
+                />
+              </>
+            ) : (
+              <p className="text-sm text-[#8b919a] sm:col-span-2">
+                {t("noVisit")}
+              </p>
+            )}
+          </DetailSection>
+          <DetailSection title={t("sections.finalQuote")}>
+            <Field
+              label={t("fields.finalQuoteStatus")}
+              value={t(
+                `finalQuote.${detail.finalQuoteStatus}` as "finalQuote.not_available",
+              )}
+            />
+            {finalQuote ? (
+              <>
+                <Field
+                  label={t("finalQuote.revisionLabel")}
+                  value={
+                    finalQuote.revisionNumber !== null
+                      ? t("finalQuote.revision", {
+                          number: finalQuote.revisionNumber,
+                        })
+                      : null
+                  }
+                />
+                <Field
+                  label={t("finalQuote.amount")}
+                  value={
+                    finalQuote.price !== null
+                      ? formatMoney(finalQuote.price, locale)
+                      : null
+                  }
+                />
+                <Field
+                  label={t("finalQuote.submittedAt")}
+                  value={formatOptionalDate(finalQuote.submittedAt, locale)}
+                />
+                <Field
+                  label={t("finalQuote.acceptedAt")}
+                  value={formatOptionalDate(finalQuote.acceptedAt, locale)}
+                />
+                <Field
+                  label={t("finalQuote.declinedAt")}
+                  value={formatOptionalDate(finalQuote.declinedAt, locale)}
+                />
+                <Field
+                  label={t("finalQuote.companySelected")}
+                  value={
+                    finalQuote.companySelected
+                      ? t("finalQuote.yes")
+                      : t("finalQuote.no")
+                  }
+                />
+                <Field
+                  label={t("finalQuote.changesReason")}
+                  value={finalQuote.changesRequestReason ?? null}
+                  wide
+                />
+              </>
+            ) : null}
+          </DetailSection>
         </div>
-      </aside>
+      </Tabs.Content>
+
+      <Tabs.Content
+        className="px-5 py-5 outline-none sm:px-6"
+        value="timeline"
+      >
+        <ActivityTimeline detail={detail} locale={locale} />
+      </Tabs.Content>
+    </Tabs.Root>
+  );
+}
+
+function SummaryTile({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col items-start gap-1.5 bg-white px-5 py-4 sm:px-6">
+      <p className="text-xs text-[#8b919a]">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+function SummaryValue({ children }: { children: ReactNode }) {
+  return (
+    <p className="text-sm font-semibold text-[#17191d] tabular-nums">
+      {children}
+    </p>
+  );
+}
+
+function SummaryHint({ children }: { children: ReactNode }) {
+  return <p className="text-xs leading-5 text-[#8b919a]">{children}</p>;
+}
+
+function PartyCard({
+  icon,
+  label,
+  name,
+  children,
+}: {
+  icon: ReactNode;
+  label: string;
+  name: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-[12px] bg-[#f7f9fc] p-4">
+      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-[#626970] shadow-[0_0_0_1px_rgba(16,24,40,0.06),0_1px_2px_rgba(16,24,40,0.06)]">
+        {icon}
+      </span>
+      <div className="flex min-w-0 flex-col items-start gap-0.5">
+        <p className="text-xs text-[#8b919a]">{label}</p>
+        <p className="text-sm font-semibold text-[#17191d] [overflow-wrap:anywhere]">
+          {name}
+        </p>
+        {children}
+      </div>
     </div>
   );
 }
@@ -762,144 +1066,97 @@ function ActivityTimeline({
 }) {
   const t = useTranslations("adminSiteVisits");
   if (detail.activity.length === 0)
-    return <p className="text-sm text-[#8b919a]">{t("activity.empty")}</p>;
+    return (
+      <p className="py-10 text-center text-sm text-[#8b919a]">
+        {t("activity.empty")}
+      </p>
+    );
   return (
-    <ol className="space-y-4">
-      {detail.activity.map((item) => (
-        <li
-          className="relative border-l-2 border-[#dbe5ff] pl-4"
-          key={item.activityId}
-        >
+    <ol>
+      {detail.activity.map((item, index) => (
+        <li className="relative flex gap-3 pb-6 last:pb-0" key={item.activityId}>
+          {index < detail.activity.length - 1 ? (
+            <span
+              aria-hidden
+              className="absolute top-4 bottom-0 left-[4.5px] w-px bg-[#e7eaee]"
+            />
+          ) : null}
           <span
             aria-hidden
-            className="absolute -left-[5px] top-1.5 size-2 rounded-full bg-[#2f6bff]"
+            className={`relative mt-1.5 size-2.5 shrink-0 rounded-full ring-4 ring-white ${TONE_DOT[eventTone(item.eventType)]}`}
           />
-          <p className="text-sm font-semibold text-[#17191d]">
-            {t(
-              `activity.events.${item.eventType}` as "activity.events.site_assessment_invited",
-            )}
-          </p>
-          <p className="mt-1 text-xs text-[#626970]">
-            {t("activity.byActor", {
-              actor: item.actor.displayName,
-              type: t(`actor.${item.actor.type}`),
-            })}{" "}
-            · {formatSiteVisitDateTime(item.createdAt, locale)}
-          </p>
-          {item.oldStatus && item.newStatus ? (
-            <p className="mt-1 text-xs text-[#626970]">
-              {t("activity.transition", {
-                from: t(`status.${item.oldStatus}` as "status.invited"),
-                to: t(`status.${item.newStatus}` as "status.accepted"),
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+              <p className="text-sm font-semibold text-[#17191d]">
+                {t(
+                  `activity.events.${item.eventType}` as "activity.events.site_assessment_invited",
+                )}
+              </p>
+              <time
+                className="text-xs text-[#8b919a] tabular-nums"
+                dateTime={new Date(item.createdAt).toISOString()}
+              >
+                {formatSiteVisitDateTime(item.createdAt, locale)}
+              </time>
+            </div>
+            <p className="mt-0.5 text-xs text-[#626970]">
+              {t("activity.byActor", {
+                actor: item.actor.displayName,
+                type: t(`actor.${item.actor.type}`),
               })}
             </p>
-          ) : null}
-          {item.metadata?.proposedDate && item.metadata?.proposedTime ? (
-            <p className="mt-1 text-xs text-[#626970]">
-              {t("activity.schedule", {
-                date: String(item.metadata.proposedDate),
-                time: String(item.metadata.proposedTime),
-              })}
-            </p>
-          ) : null}
-          {typeof item.metadata?.revisionNumber === "number" &&
-          typeof item.metadata?.price === "number" ? (
-            <p className="mt-1 text-xs text-[#626970]">
-              {t("activity.finalQuoteRevision", {
-                number: item.metadata.revisionNumber,
-                amount: new Intl.NumberFormat(locale, {
-                  style: "currency",
-                  currency: "MAD",
-                  maximumFractionDigits: 0,
-                }).format(item.metadata.price),
-              })}
-            </p>
-          ) : null}
-          {item.reason ? (
-            <p className="mt-2 break-words rounded-lg bg-[#fff7ed] px-3 py-2 text-xs leading-5 text-[#9a6700]">
-              {t("activity.reason", { reason: item.reason })}
-            </p>
-          ) : null}
+            <div className="mt-1.5 flex flex-wrap gap-1.5 empty:hidden">
+              {item.oldStatus && item.newStatus ? (
+                <TimelineChip>
+                  {t("activity.transition", {
+                    from: t(`status.${item.oldStatus}` as "status.invited"),
+                    to: t(`status.${item.newStatus}` as "status.accepted"),
+                  })}
+                </TimelineChip>
+              ) : null}
+              {item.metadata?.proposedDate && item.metadata?.proposedTime ? (
+                <TimelineChip>
+                  {t("activity.schedule", {
+                    date: String(item.metadata.proposedDate),
+                    time: String(item.metadata.proposedTime),
+                  })}
+                </TimelineChip>
+              ) : null}
+              {typeof item.metadata?.revisionNumber === "number" &&
+              typeof item.metadata?.price === "number" ? (
+                <TimelineChip>
+                  {t("activity.finalQuoteRevision", {
+                    number: item.metadata.revisionNumber,
+                    amount: formatMoney(item.metadata.price, locale),
+                  })}
+                </TimelineChip>
+              ) : null}
+            </div>
+            {item.reason ? (
+              <p className="mt-2 rounded-[10px] bg-[#fff7ed] px-3 py-2 text-xs leading-5 text-[#9a6700] [overflow-wrap:anywhere]">
+                {t("activity.reason", { reason: item.reason })}
+              </p>
+            ) : null}
+          </div>
         </li>
       ))}
     </ol>
   );
 }
 
-function VisitFields({ detail, locale }: { detail: Detail; locale: string }) {
-  const t = useTranslations("adminSiteVisits");
-  if (!detail.visit) return null;
+function TimelineChip({ children }: { children: ReactNode }) {
   return (
-    <>
-      <Field
-        label={t("fields.proposedBy")}
-        value={actorLabel(detail.visit.proposedBy, t)}
-      />
-      <Field
-        label={t("fields.proposedAt")}
-        value={formatSiteVisitDateTime(detail.visit.proposedAt, locale)}
-      />
-      <Field
-        label={t("fields.proposedDateTime")}
-        value={`${detail.visit.proposedDate} · ${detail.visit.proposedTime} · ${detail.visit.timezone}`}
-      />
-      <Field
-        label={t("fields.confirmedBy")}
-        value={
-          detail.visit.confirmedBy
-            ? actorLabel(detail.visit.confirmedBy, t)
-            : "—"
-        }
-      />
-      <Field
-        label={t("fields.confirmedAt")}
-        value={formatOptionalDate(detail.visit.confirmedAt, locale)}
-      />
-      <Field label={t("fields.siteAddress")} value={detail.visit.siteAddress} />
-      <Field
-        label={t("fields.visitStatus")}
-        value={t(`status.${detail.visit.status}`)}
-      />
-      <Field
-        label={t("fields.declinedBy")}
-        value={
-          detail.visit.declinedBy ? actorLabel(detail.visit.declinedBy, t) : "—"
-        }
-      />
-      <Field
-        label={t("fields.declinedAt")}
-        value={formatOptionalDate(detail.visit.declinedAt, locale)}
-      />
-      <Field
-        label={t("fields.cancellationReason")}
-        value={detail.visit.cancellationReason ?? "—"}
-      />
-      <Field
-        label={t("fields.cancelledBy")}
-        value={
-          detail.visit.cancelledBy
-            ? actorLabel(detail.visit.cancelledBy, t)
-            : "—"
-        }
-      />
-      <Field
-        label={t("fields.cancelledAt")}
-        value={formatOptionalDate(detail.visit.cancelledAt, locale)}
-      />
-      <Field
-        label={t("fields.completedBy")}
-        value={
-          detail.visit.completedBy
-            ? actorLabel(detail.visit.completedBy, t)
-            : "—"
-        }
-      />
-      <Field
-        label={t("fields.completedAt")}
-        value={formatOptionalDate(detail.visit.completedAt, locale)}
-      />
-    </>
+    <span className="rounded-md bg-[#f2f4f7] px-1.5 py-0.5 text-xs text-[#475467] tabular-nums">
+      {children}
+    </span>
   );
+}
+
+function eventTone(eventType: string): Tone {
+  if (/(cancelled|declined|withdrawn)$/.test(eventType)) return "danger";
+  if (/(completed|accepted|company_selected)$/.test(eventType)) return "success";
+  if (/changes_requested$/.test(eventType)) return "warning";
+  return "info";
 }
 
 function DetailSection({
@@ -907,45 +1164,48 @@ function DetailSection({
   children,
 }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <section className="rounded-[16px] border border-[#eef1f4] p-4">
+    <section className="py-5">
       <h3 className="text-sm font-semibold text-[#17191d]">{title}</h3>
-      <div className="mt-3 space-y-3">{children}</div>
+      <dl className="mt-3 grid gap-x-6 gap-y-4 sm:grid-cols-2">{children}</dl>
     </section>
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+/** Empty values are skipped so the sheet only lists what actually happened. */
+function Field({
+  label,
+  value,
+  wide,
+  mono,
+}: {
+  label: string;
+  value: string | null;
+  wide?: boolean;
+  mono?: boolean;
+}) {
+  if (value === null || value === "") return null;
   return (
-    <div>
-      <p className="text-xs font-semibold tracking-[0.04em] text-[#a0a6ae] uppercase">
-        {label}
-      </p>
-      <p className="mt-1 break-words whitespace-pre-wrap text-sm leading-6 text-[#17191d] [overflow-wrap:anywhere]">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function CompactField({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
+    <div className={wide ? "sm:col-span-2" : undefined}>
       <dt className="text-xs text-[#8b919a]">{label}</dt>
-      <dd className="mt-1 text-[#17191d]">{value}</dd>
+      <dd
+        className={`mt-0.5 text-sm leading-6 whitespace-pre-wrap text-[#17191d] [overflow-wrap:anywhere] ${mono ? "font-mono text-[0.8125rem]" : ""}`}
+      >
+        {value}
+      </dd>
     </div>
   );
 }
 
 function SiteVisitSkeleton({ label }: { label: string }) {
   return (
-    <div aria-busy="true" className="mt-5 space-y-3" role="status">
+    <div aria-busy="true" className="space-y-2 p-4 sm:p-5" role="status">
       <span className="sr-only">{label}</span>
-      {Array.from({ length: 5 }).map((_, index) => (
+      {Array.from({ length: 6 }).map((_, index) => (
         <div
-          className="h-14 animate-pulse rounded-[14px] bg-[#f4f6f8]"
+          className="h-14 animate-pulse rounded-[10px] bg-[#f4f6f8]"
           key={index}
         />
       ))}
@@ -956,11 +1216,31 @@ function SiteVisitSkeleton({ label }: { label: string }) {
 function formatVisitDate(row: Row, locale: string) {
   if (!row.visitDate || !row.visitTime) return "—";
   const date = new Date(`${row.visitDate}T00:00:00.000Z`);
-  return `${date.toLocaleDateString(locale, { day: "2-digit", month: "short" })} · ${row.visitTime}`;
+  return `${date.toLocaleDateString(locale, { day: "2-digit", month: "short", timeZone: "UTC" })} · ${row.visitTime}`;
+}
+
+function formatVisitDay(isoDate: string, locale: string, weekday = true) {
+  const date = new Date(`${isoDate}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return isoDate;
+  return date.toLocaleDateString(locale, {
+    weekday: weekday ? "short" : undefined,
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function formatMoney(value: number, locale: string, currency = "MAD") {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 function formatOptionalDate(value: number | null, locale: string) {
-  return value === null ? "—" : formatSiteVisitDateTime(value, locale);
+  return value === null ? null : formatSiteVisitDateTime(value, locale);
 }
 
 function formatSiteVisitDateTime(value: number, locale: string) {
@@ -975,6 +1255,13 @@ function actorLabel(
   t: ReturnType<typeof useTranslations<"adminSiteVisits">>,
 ) {
   return `${actor.displayName} · ${t(`actor.${actor.type}`)}`;
+}
+
+function optionalActor(
+  actor: { displayName: string; type: "client" | "company" } | null,
+  t: ReturnType<typeof useTranslations<"adminSiteVisits">>,
+) {
+  return actor ? actorLabel(actor, t) : null;
 }
 
 function categoryLabel(

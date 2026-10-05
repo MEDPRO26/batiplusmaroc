@@ -3241,7 +3241,8 @@
       "allCities": "Toutes les villes",
       "dateFrom": "Du",
       "dateTo": "Au",
-      "invalidRange": "La date de fin doit être postérieure ou égale à la date de début."
+      "invalidRange": "La date de fin doit être postérieure ou égale à la date de début.",
+      "dateRange": "Période de visite"
     },
     "empty": "Aucune visite technique ne correspond à ces filtres.",
     "columns": {
@@ -3409,6 +3410,17 @@
       "title": "Impossible de charger les visites techniques",
       "description": "Un problème est survenu pendant le chargement de cette vue opérationnelle. Réessayez.",
       "retry": "Réessayer"
+    },
+    "resultCount": "{count, plural, one {# visite technique} other {# visites techniques}}",
+    "showMore": "Afficher {count} de plus",
+    "clearFilters": "Effacer les filtres",
+    "emptyHint": "Essayez un autre statut ou effacez les filtres.",
+    "viewAria": "Voir la visite technique pour {project}",
+    "partiesColumn": "Entreprise · Client",
+    "proposedByActor": "Proposée par {actor}",
+    "detailTabs": {
+      "label": "Sections du détail de la visite technique",
+      "overview": "Aperçu"
     }
   },
   "adminAccess": {

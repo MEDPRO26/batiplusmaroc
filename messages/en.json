@@ -3241,7 +3241,8 @@
       "allCities": "All cities",
       "dateFrom": "From",
       "dateTo": "To",
-      "invalidRange": "The end date must be on or after the start date."
+      "invalidRange": "The end date must be on or after the start date.",
+      "dateRange": "Visit date range"
     },
     "empty": "No site visits match these filters.",
     "columns": {
@@ -3409,6 +3410,17 @@
       "title": "Site visits could not be loaded",
       "description": "Something went wrong while loading this operational view. Try again.",
       "retry": "Retry"
+    },
+    "resultCount": "{count, plural, one {# site visit} other {# site visits}}",
+    "showMore": "Show {count} more",
+    "clearFilters": "Clear filters",
+    "emptyHint": "Try another status or clear the filters.",
+    "viewAria": "View site visit for {project}",
+    "partiesColumn": "Company · Client",
+    "proposedByActor": "Proposed by {actor}",
+    "detailTabs": {
+      "label": "Site visit detail sections",
+      "overview": "Overview"
     }
   },
   "adminAccess": {
