@@ -17,6 +17,7 @@ import {
 import { notificationPushCategoriesValidator } from "./notifications/deliveryPolicy";
 import { companyOperationalStatusValidator } from "./companies/operationalStatus";
 import { logoContentTypeValidator, logoStatusValidator } from "./companyLogos/constants";
+import { portfolioImageTypeValidator, portfolioImageStatusValidator, portfolioImagePurposeValidator } from "./portfolioImages/constants";
 
 const accountType = v.union(
   v.literal("client"),
@@ -1018,6 +1019,8 @@ export default defineSchema({
     coverImageStorageId: v.optional(v.id("_storage")),
     coverMediaId: v.optional(v.id("publicMedia")),
     status: v.union(v.literal("draft"), v.literal("published"), v.literal("hidden")),
+    submittedImageId: v.optional(v.id("portfolioImages")),
+    approvedImageId: v.optional(v.id("portfolioImages")),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -1029,10 +1032,39 @@ export default defineSchema({
     /** @deprecated Kept while legacy Convex Storage images are migrated. */
     storageId: v.optional(v.id("_storage")),
     publicMediaId: v.optional(v.id("publicMedia")),
+    submittedImageId: v.optional(v.id("portfolioImages")),
+    approvedImageId: v.optional(v.id("portfolioImages")),
     sortOrder: v.number(),
     caption: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_portfolioProjectId", ["portfolioProjectId"]),
+
+  portfolioImages: defineTable({
+    companyId: v.id("companies"), portfolioProjectId: v.id("portfolioProjects"),
+    purpose: portfolioImagePurposeValidator, gallerySlotId: v.optional(v.id("portfolioMedia")),
+    storageId: v.id("_storage"), contentType: portfolioImageTypeValidator, size: v.number(), sha256: v.string(),
+    uploadedBy: v.id("users"), uploadedAt: v.number(), moderationStatus: portfolioImageStatusValidator,
+    moderationReason: v.optional(v.string()), moderatedBy: v.optional(v.id("users")), moderatedAt: v.optional(v.number()),
+  })
+    .index("by_portfolioProjectId_and_uploadedAt", ["portfolioProjectId", "uploadedAt"])
+    .index("by_moderationStatus_and_uploadedAt", ["moderationStatus", "uploadedAt"])
+    .index("by_companyId_and_moderationStatus_and_uploadedAt", ["companyId", "moderationStatus", "uploadedAt"])
+    .index("by_storageId", ["storageId"]),
+
+  portfolioImageUploadIntents: defineTable({
+    companyId: v.id("companies"), portfolioProjectId: v.id("portfolioProjects"),
+    purpose: portfolioImagePurposeValidator, gallerySlotId: v.optional(v.id("portfolioMedia")),
+    userId: v.id("users"), token: v.string(), expectedContentType: portfolioImageTypeValidator,
+    expectedSize: v.number(), expiresAt: v.number(), claimedAt: v.optional(v.number()),
+    imageId: v.optional(v.id("portfolioImages")), createdAt: v.number(),
+  }).index("by_token", ["token"]),
+
+  portfolioImageModerationHistory: defineTable({
+    companyId: v.id("companies"), portfolioProjectId: v.id("portfolioProjects"), imageId: v.id("portfolioImages"),
+    action: v.union(v.literal("uploaded"), v.literal("approved"), v.literal("rejected"), v.literal("hidden")),
+    oldStatus: v.union(portfolioImageStatusValidator, v.null()), newStatus: portfolioImageStatusValidator,
+    changedBy: v.id("users"), changedAt: v.number(), reason: v.optional(v.string()),
+  }).index("by_imageId_and_changedAt", ["imageId", "changedAt"]),
 
   portfolioUploadIntents: defineTable({
     companyId: v.id("companies"),

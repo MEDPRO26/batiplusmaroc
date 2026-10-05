@@ -1,12 +1,11 @@
 /// <reference types="vite/client" />
 
-import { convexTest } from "convex-test";
+import { convexTest, type TestConvexForDataModel } from "convex-test";
 import { exportPKCS8, generateKeyPair } from "jose";
 import { beforeAll, describe, expect, test, vi } from "vitest";
-import { api, internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
+import { api } from "./_generated/api";
+import type { DataModel, Id } from "./_generated/dataModel";
 import schema from "./schema";
-import { deletePublicMediaObject, headPublicMediaObject } from "./storage/r2Client";
 
 const modules = import.meta.glob("./**/*.ts");
 
@@ -33,7 +32,7 @@ beforeAll(async () => {
   process.env.R2_PUBLIC_BASE_URL = "https://media.example.test";
 });
 
-type TestBackend = ReturnType<typeof convexTest>;
+type TestBackend = TestConvexForDataModel<DataModel>;
 
 async function seedCompany(t: TestBackend, options?: {
   accountType?: "client" | "company";
@@ -86,355 +85,103 @@ function asUser(t: TestBackend, userId: Id<"users">) {
   return t.withIdentity({ subject: `${userId}|test-session`, tokenIdentifier: `test|${userId}` });
 }
 
-async function uploadedImage(t: TestBackend, userId: Id<"users">, kind: "cover" | "media" = "cover", mime = "image/jpeg") {
-  return await t.run(async (ctx) => {
-    const membership = await ctx.db
-      .query("companyMembers")
-      .filter((q) => q.eq(q.field("userId"), userId))
-      .unique();
-    if (!membership) throw new Error("Missing test membership");
-    const uploadToken = crypto.randomUUID();
-    const objectKey = `companies/${membership.companyId}/portfolio/pending/${kind}/${crypto.randomUUID()}.jpg`;
-    await ctx.db.insert("publicMediaUploadIntents", {
-      companyId: membership.companyId,
-      userId,
-      purpose: kind === "cover" ? "portfolioCover" : "portfolioMedia",
-      expectedContentType: mime,
-      expectedSize: 10,
-      objectKey,
-      token: uploadToken,
-      expiresAt: Date.now() + 60_000,
-      verifiedAt: Date.now(),
-      createdAt: Date.now(),
-    });
-    return { uploadToken };
-  });
-}
-
 const fields = {
   title: "Villa contemporaine à Agadir",
   description: "Construction complète avec finitions intérieures et aménagement des espaces extérieurs.",
-  city: "Agadir",
-  projectType: "construction" as const,
-  surface: 280,
-  durationMonths: 14,
-  year: 2025,
+  city: "Agadir", projectType: "construction" as const, surface: 280, durationMonths: 14, year: 2025,
 };
 
 describe("public company profile", () => {
-  test("loads only completed companies and exposes verified badge accurately", async () => {
+  test("completed profiles keep name masking and verification independent from images", async () => {
     for (const verificationStatus of ["draft", "verified", "pending", "rejected"] as const) {
       const t = convexTest(schema, modules);
       const slug = `profile-${verificationStatus}`;
       await seedCompany(t, { slug, verificationStatus });
       const profile = await t.query(api.portfolio.index.getPublicCompanyProfile, { slug });
       expect(profile).toMatchObject({ slug, name: "At*** Bâ******", isVerified: verificationStatus === "verified" });
+      expect(profile).not.toHaveProperty("phone");
+      expect(profile).not.toHaveProperty("email");
     }
-
     const t = convexTest(schema, modules);
     await seedCompany(t, { slug: "incomplete", onboardingStatus: "pending" });
-    await expect(t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "missing" })).resolves.toBeNull();
-    await expect(t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "incomplete" })).resolves.toBeNull();
-  });
-
-  test("never exposes company phone or email on the public profile DTO", async () => {
-    const t = convexTest(schema, modules);
-    await seedCompany(t, { slug: "privacy-public" });
-    const profile = await t.query(api.portfolio.index.getPublicCompanyProfile, {
-      slug: "privacy-public",
-    });
-    expect(profile).not.toBeNull();
-    expect(profile).not.toHaveProperty("phone");
-    expect(profile).not.toHaveProperty("email");
-    expect(JSON.stringify(profile)).not.toMatch(/0612345678|@example\.test/i);
+    expect(await t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "missing" })).toBeNull();
+    expect(await t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "incomplete" })).toBeNull();
   });
 });
 
-describe("portfolio management", () => {
-  test("owner creates, updates, publishes, and exposes one valid realization", async () => {
+describe("portfolio metadata management", () => {
+  test("owner creates, edits and publishes metadata without approving or requiring an image", async () => {
     const t = convexTest(schema, modules);
-    const { userId } = await seedCompany(t, { slug: "atlas-public", verificationStatus: "verified" });
+    const { userId } = await seedCompany(t, { slug: "atlas-public" });
     const owner = asUser(t, userId);
-    const coverImage = await uploadedImage(t, userId);
-    const projectId = await owner.mutation(api.portfolio.index.createPortfolioProject, {
-      ...fields,
-      coverImage,
-      extraImages: [],
-    });
-    await owner.mutation(api.portfolio.index.updatePortfolioProject, {
-      ...fields,
-      projectId,
-      title: "Villa contemporaine livrée",
-      extraImages: [],
-    });
+    const projectId = await owner.mutation(api.portfolio.index.createPortfolioProject, fields);
+    await owner.mutation(api.portfolio.index.updatePortfolioProject, { ...fields, projectId, title: "Villa contemporaine livrée" });
     await owner.mutation(api.portfolio.index.publishPortfolioProject, { projectId });
-
     const manager = await owner.query(api.portfolio.index.getPortfolioManager, {});
-    expect(manager.projects).toHaveLength(1);
-    expect(manager.projects[0]).toMatchObject({ title: "Villa contemporaine livrée", status: "published" });
+    expect(manager.projects[0]).toMatchObject({ title: "Villa contemporaine livrée", status: "published", coverImageUrl: null, media: [] });
     const profile = await t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "atlas-public" });
-    expect(profile?.portfolio).toHaveLength(1);
-    expect(profile?.portfolio[0]).toMatchObject({ id: projectId, status: "published" });
+    expect(profile?.portfolio[0]).toMatchObject({ id: projectId, coverImageUrl: null, media: [] });
+    expect(await t.run(ctx => ctx.db.query("portfolioImages").collect())).toEqual([]);
   });
 
-  test("client, staff, and another company cannot manage an owner portfolio", async () => {
+  test("client, staff, visitor and another company cannot manage the portfolio", async () => {
     const t = convexTest(schema, modules);
-    const first = await seedCompany(t, { slug: "first-company" });
-    const second = await seedCompany(t, { slug: "second-company" });
-    const client = await seedCompany(t, { accountType: "client", slug: "client-foundation" });
-    const staff = await seedCompany(t, { role: "staff", slug: "staff-company" });
-    const coverImage = await uploadedImage(t, first.userId);
-    const projectId = await asUser(t, first.userId).mutation(api.portfolio.index.createPortfolioProject, { ...fields, coverImage, extraImages: [] });
-
-    await expect(asUser(t, second.userId).mutation(api.portfolio.index.publishPortfolioProject, { projectId })).rejects.toThrow("PORTFOLIO_PROJECT_NOT_FOUND");
-    await expect(asUser(t, client.userId).query(api.portfolio.index.getPortfolioManager, {})).rejects.toThrow("COMPANY_ACCOUNT_REQUIRED");
-    await expect(asUser(t, staff.userId).query(api.portfolio.index.getPortfolioManager, {})).rejects.toThrow("COMPANY_OWNER_REQUIRED");
-    await expect(t.query(api.portfolio.index.getPortfolioManager, {})).rejects.toThrow("NOT_AUTHENTICATED");
+    const first = await seedCompany(t);
+    const other = await seedCompany(t);
+    const client = await seedCompany(t, { accountType: "client" });
+    const staff = await seedCompany(t, { role: "staff" });
+    const projectId = await asUser(t, first.userId).mutation(api.portfolio.index.createPortfolioProject, fields);
+    await expect(asUser(t, other.userId).mutation(api.portfolio.index.publishPortfolioProject, { projectId })).rejects.toThrow("PORTFOLIO_PROJECT_NOT_FOUND");
+    for (const caller of [t, asUser(t, client.userId), asUser(t, staff.userId)]) {
+      await expect(caller.query(api.portfolio.index.getPortfolioManager, {})).rejects.toThrow();
+      await expect(caller.mutation(api.portfolio.index.createPortfolioProject, fields)).rejects.toThrow();
+    }
   });
 
-  test("upload permission rejects unauthenticated, client, staff, and cross-company callers", async () => {
+  test("metadata validation and onboarding gates remain enforced", async () => {
     const t = convexTest(schema, modules);
-    const ownerCompany = await seedCompany(t, { slug: "upload-target" });
-    const other = await seedCompany(t, { slug: "upload-other" });
-    const client = await seedCompany(t, { accountType: "client", slug: "upload-client" });
-    const staff = await seedCompany(t, { role: "staff", slug: "upload-staff" });
-    const projectId = await asUser(t, ownerCompany.userId).mutation(api.portfolio.index.createPortfolioProject, {
-      ...fields,
-      coverImage: await uploadedImage(t, ownerCompany.userId),
-      extraImages: [],
+    const company = await seedCompany(t);
+    const owner = asUser(t, company.userId);
+    for (const invalid of [{ title: " " }, { description: "short" }, { city: "123" }, { surface: 0 }, { durationMonths: 1.5 }, { year: 1899 }]) {
+      await expect(owner.mutation(api.portfolio.index.createPortfolioProject, { ...fields, ...invalid })).rejects.toThrow();
+    }
+    const incomplete = await seedCompany(t, { onboardingStatus: "pending" });
+    await expect(asUser(t, incomplete.userId).mutation(api.portfolio.index.createPortfolioProject, fields)).rejects.toThrow("COMPANY_ONBOARDING_REQUIRED");
+  });
+
+  test("legacy cover replacement is rejected without deleting any legacy file or reference", async () => {
+    const t = convexTest(schema, modules);
+    const company = await seedCompany(t, { slug: "legacy-storage" });
+    const owner = asUser(t, company.userId);
+    const legacy = await t.run(async ctx => {
+      const storageId = await ctx.storage.store(new Blob(["legacy"], { type: "image/jpeg" }));
+      const mediaId = await ctx.db.insert("publicMedia", { companyId: company.companyId, storageProvider: "r2", purpose: "portfolioCover",
+        objectKey: "legacy/cover.jpg", mimeType: "image/jpeg", size: 6, uploadedBy: company.userId, createdAt: 1 });
+      const projectId = await ctx.db.insert("portfolioProjects", { ...fields, companyId: company.companyId, coverImageStorageId: storageId, coverMediaId: mediaId,
+        status: "published", createdAt: 1, updatedAt: 1 });
+      await ctx.db.insert("portfolioMedia", { portfolioProjectId: projectId, storageId, sortOrder: 0, createdAt: 1 });
+      return { storageId, mediaId, projectId };
     });
-    const args = { purpose: "portfolioMedia" as const, contentType: "image/jpeg", size: 10, portfolioProjectId: projectId };
-
-    await expect(t.action(api.storage.r2.requestPublicMediaUpload, args)).rejects.toThrow("NOT_AUTHENTICATED");
-    await expect(asUser(t, client.userId).action(api.storage.r2.requestPublicMediaUpload, args)).rejects.toThrow("COMPANY_ACCOUNT_REQUIRED");
-    await expect(asUser(t, staff.userId).action(api.storage.r2.requestPublicMediaUpload, args)).rejects.toThrow("COMPANY_OWNER_REQUIRED");
-    await expect(asUser(t, other.userId).action(api.storage.r2.requestPublicMediaUpload, args)).rejects.toThrow("PORTFOLIO_PROJECT_NOT_FOUND");
-  });
-
-  test("a valid signed upload is HEAD-verified before cover and gallery metadata are saved", async () => {
-    const t = convexTest(schema, modules);
-    const { userId, companyId } = await seedCompany(t, { slug: "verified-upload" });
-    const owner = asUser(t, userId);
-    const request = async (purpose: "portfolioCover" | "portfolioMedia") => {
-      const intent = await owner.action(api.storage.r2.requestPublicMediaUpload, {
-        purpose,
-        contentType: "image/jpeg",
-        size: 10,
-      });
-      await owner.action(api.storage.r2.verifyPublicMediaUpload, { uploadToken: intent.uploadToken });
-      return { uploadToken: intent.uploadToken };
-    };
-    const projectId = await owner.mutation(api.portfolio.index.createPortfolioProject, {
-      ...fields,
-      coverImage: await request("portfolioCover"),
-      extraImages: [{ ...(await request("portfolioMedia")), caption: "Façade terminée" }],
-    });
-    const state = await t.run(async (ctx) => ({
-      project: await ctx.db.get(projectId),
-      media: await ctx.db
-        .query("portfolioMedia")
-        .filter((q) => q.eq(q.field("portfolioProjectId"), projectId))
-        .collect(),
-      publicMedia: await ctx.db
-        .query("publicMedia")
-        .filter((q) => q.eq(q.field("companyId"), companyId))
-        .collect(),
-    }));
-    expect(state.project?.coverMediaId).toBeDefined();
-    expect(state.media).toHaveLength(1);
-    expect(state.media[0]).toMatchObject({ sortOrder: 0, caption: "Façade terminée" });
-    expect(state.publicMedia).toHaveLength(2);
-    expect(state.publicMedia.every((item) => item.storageProvider === "r2")).toBe(true);
-  });
-
-  test("does not attach media when the R2 object cannot be found", async () => {
-    const t = convexTest(schema, modules);
-    const { userId } = await seedCompany(t, { slug: "missing-r2-object" });
-    const owner = asUser(t, userId);
-    const intent = await owner.action(api.storage.r2.requestPublicMediaUpload, {
-      purpose: "portfolioCover",
-      contentType: "image/jpeg",
-      size: 10,
-    });
-    vi.mocked(headPublicMediaObject).mockRejectedValueOnce(new Error("NoSuchKey"));
-    await expect(owner.action(api.storage.r2.verifyPublicMediaUpload, {
-      uploadToken: intent.uploadToken,
-    })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
-    await expect(owner.mutation(api.portfolio.index.createPortfolioProject, {
-      ...fields,
-      coverImage: { uploadToken: intent.uploadToken },
-      extraImages: [],
-    })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
-  });
-
-  test("upload intents are owner-bound, single-use, typed, and reject duplicate image records", async () => {
-    const t = convexTest(schema, modules);
-    const first = await seedCompany(t, { slug: "upload-owner" });
-    const second = await seedCompany(t, { slug: "upload-attacker" });
-    const image = await uploadedImage(t, first.userId);
-
-    await expect(asUser(t, second.userId).mutation(api.portfolio.index.createPortfolioProject, {
-      ...fields, coverImage: image, extraImages: [],
-    })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
-
-    await expect(asUser(t, second.userId).mutation(api.portfolio.index.createPortfolioProject, {
-      ...fields,
-      coverImage: { uploadToken: image.uploadToken },
-      extraImages: [],
-    })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
-
-    const owner = asUser(t, first.userId);
-    const projectId = await owner.mutation(api.portfolio.index.createPortfolioProject, { ...fields, coverImage: image, extraImages: [] });
-    await expect(owner.mutation(api.portfolio.index.createPortfolioProject, { ...fields, coverImage: image, extraImages: [] })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
-
-    await expect(owner.action(api.storage.r2.requestPublicMediaUpload, {
-      purpose: "portfolioCover",
-      contentType: "text/plain",
-      size: 10,
-    })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
-    await expect(owner.action(api.storage.r2.requestPublicMediaUpload, {
-      purpose: "portfolioCover",
-      contentType: "image/jpeg",
-      size: 10 * 1024 * 1024 + 1,
-    })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
-
-    const duplicateCover = await uploadedImage(t, first.userId);
-    await expect(owner.mutation(api.portfolio.index.createPortfolioProject, {
-      ...fields,
-      coverImage: duplicateCover,
-      extraImages: [{ ...duplicateCover }],
-    })).rejects.toThrow("INVALID_PORTFOLIO_IMAGE");
-
-    const duplicateMedia = await uploadedImage(t, first.userId, "media");
-    await expect(owner.mutation(api.portfolio.index.updatePortfolioProject, {
-      ...fields,
-      projectId,
-      extraImages: [duplicateMedia, duplicateMedia],
-    })).rejects.toThrow("INVALID_PORTFOLIO_IMAGE");
-  });
-
-  test("replaces a cover before deleting the now-unreferenced old R2 object", async () => {
-    const t = convexTest(schema, modules);
-    const { userId } = await seedCompany(t, { slug: "replace-cover" });
-    const owner = asUser(t, userId);
-    const projectId = await owner.mutation(api.portfolio.index.createPortfolioProject, {
-      ...fields,
-      coverImage: await uploadedImage(t, userId),
-      extraImages: [],
-    });
-    const before = await t.run(async (ctx) => {
-      const project = await ctx.db.get(projectId);
-      return project?.coverMediaId ? await ctx.db.get(project.coverMediaId) : null;
-    });
-    await owner.mutation(api.portfolio.index.updatePortfolioProject, {
-      ...fields,
-      projectId,
-      coverImage: await uploadedImage(t, userId),
-      extraImages: [],
-    });
-    const after = await t.run(async (ctx) => {
-      const project = await ctx.db.get(projectId);
-      return {
-        cover: project?.coverMediaId ? await ctx.db.get(project.coverMediaId) : null,
-        scheduled: await ctx.db.system.query("_scheduled_functions").collect(),
-      };
-    });
-    expect(after.cover?._id).not.toBe(before?._id);
-    expect(before ? await t.run((ctx) => ctx.db.get(before._id)) : null).toBeNull();
-    expect(after.scheduled).toHaveLength(1);
-    expect(after.scheduled[0].name).toContain("storage/r2:deleteObjectIfUnreferenced");
-  });
-
-  test("rejects expired, unverified, and reused upload intents", async () => {
-    const t = convexTest(schema, modules);
-    const { userId, companyId } = await seedCompany(t, { slug: "intent-security" });
-    const owner = asUser(t, userId);
-    const makeIntent = async (options: { expired?: boolean; verified?: boolean }) => await t.run(async (ctx) => {
-      const token = crypto.randomUUID();
-      await ctx.db.insert("publicMediaUploadIntents", {
-        companyId,
-        userId,
-        purpose: "portfolioCover",
-        expectedContentType: "image/jpeg",
-        expectedSize: 10,
-        objectKey: `companies/${companyId}/portfolio/pending/cover/${crypto.randomUUID()}.jpg`,
-        token,
-        expiresAt: options.expired ? Date.now() - 1 : Date.now() + 60_000,
-        verifiedAt: options.verified ? Date.now() : undefined,
-        createdAt: Date.now(),
-      });
-      return { uploadToken: token };
-    });
-
-    await expect(owner.mutation(api.portfolio.index.createPortfolioProject, {
-      ...fields, coverImage: await makeIntent({ expired: true, verified: true }), extraImages: [],
-    })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
-    await expect(owner.mutation(api.portfolio.index.createPortfolioProject, {
-      ...fields, coverImage: await makeIntent({ verified: false }), extraImages: [],
-    })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
-
-    const reusable = await uploadedImage(t, userId);
-    await owner.mutation(api.portfolio.index.createPortfolioProject, { ...fields, coverImage: reusable, extraImages: [] });
-    await expect(owner.mutation(api.portfolio.index.createPortfolioProject, {
-      ...fields, coverImage: reusable, extraImages: [],
-    })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
-  });
-
-  test("cleans up an expired unclaimed R2 upload intent", async () => {
-    const t = convexTest(schema, modules);
-    const { userId, companyId } = await seedCompany(t, { slug: "orphan-cleanup" });
-    const uploadToken = crypto.randomUUID();
-    const objectKey = `companies/${companyId}/portfolio/pending/media/${crypto.randomUUID()}.jpg`;
-    await t.run((ctx) => ctx.db.insert("publicMediaUploadIntents", {
-      companyId,
-      userId,
-      purpose: "portfolioMedia",
-      expectedContentType: "image/jpeg",
-      expectedSize: 10,
-      objectKey,
-      token: uploadToken,
-      expiresAt: Date.now() - 1,
-      createdAt: Date.now() - 60_000,
-    }));
-    vi.mocked(deletePublicMediaObject).mockClear();
-    await t.action(internal.storage.r2.cleanupExpiredUploadIntent, { uploadToken });
-    const remaining = await t.run((ctx) => ctx.db
-      .query("publicMediaUploadIntents")
-      .filter((q) => q.eq(q.field("token"), uploadToken))
-      .collect());
-    expect(remaining).toHaveLength(0);
-    expect(deletePublicMediaObject).toHaveBeenCalledWith(objectKey);
-  });
-
-  test("keeps legacy Convex Storage portfolio images readable", async () => {
-    const t = convexTest(schema, modules);
-    const { companyId } = await seedCompany(t, { slug: "legacy-storage" });
-    const legacyStorageId = await t.run((ctx) => ctx.storage.store(new Blob(["legacy"], { type: "image/jpeg" })));
-    await t.run((ctx) => ctx.db.insert("portfolioProjects", {
-      companyId,
-      title: fields.title,
-      description: fields.description,
-      city: fields.city,
-      projectType: fields.projectType,
-      coverImageStorageId: legacyStorageId,
-      status: "published",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    }));
+    await expect(owner.mutation(api.portfolio.index.updatePortfolioProject, { ...fields, projectId: legacy.projectId, coverImage: { uploadToken: "old" } })).rejects.toThrow("PORTFOLIO_PRIVATE_UPLOAD_REQUIRED");
+    await expect(owner.mutation(api.portfolio.index.createPortfolioProject, { ...fields, extraImages: [{ uploadToken: "old" }] })).rejects.toThrow("PORTFOLIO_PRIVATE_UPLOAD_REQUIRED");
     const profile = await t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "legacy-storage" });
-    expect(profile?.portfolio).toHaveLength(1);
-    expect(profile?.portfolio[0].coverImageUrl).toContain("http");
+    expect(profile?.portfolio[0]).toMatchObject({ coverImageUrl: null, media: [] });
+    const state = await t.run(async ctx => ({ project: await ctx.db.get(legacy.projectId), media: await ctx.db.get(legacy.mediaId), file: (await ctx.storage.get(legacy.storageId)) !== null,
+      scheduled: await ctx.db.system.query("_scheduled_functions").collect() }));
+    expect(state.project).toMatchObject({ coverImageStorageId: legacy.storageId, coverMediaId: legacy.mediaId });
+    expect(state.media).not.toBeNull(); expect(state.file).toBe(true); expect(state.scheduled).toEqual([]);
   });
 
-  test("archived and draft realizations never appear publicly", async () => {
+  test("draft and archived realizations retain their existing public visibility rules", async () => {
     const t = convexTest(schema, modules);
-    const { userId } = await seedCompany(t, { slug: "private-work" });
-    const owner = asUser(t, userId);
-    const coverImage = await uploadedImage(t, userId);
-    const projectId = await owner.mutation(api.portfolio.index.createPortfolioProject, { ...fields, coverImage, extraImages: [] });
-    expect((await t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "private-work" }))?.portfolio).toHaveLength(0);
+    const company = await seedCompany(t, { slug: "private-work" });
+    const owner = asUser(t, company.userId);
+    const projectId = await owner.mutation(api.portfolio.index.createPortfolioProject, fields);
+    const profile = () => t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "private-work" });
+    expect((await profile())?.portfolio).toEqual([]);
     await owner.mutation(api.portfolio.index.publishPortfolioProject, { projectId });
+    expect((await profile())?.portfolio).toHaveLength(1);
     await owner.mutation(api.portfolio.index.archivePortfolioProject, { projectId });
-    expect((await t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "private-work" }))?.portfolio).toHaveLength(0);
+    expect((await profile())?.portfolio).toEqual([]);
   });
 });

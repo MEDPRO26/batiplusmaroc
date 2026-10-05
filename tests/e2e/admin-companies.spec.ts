@@ -86,6 +86,8 @@ for (const copy of [
     await expect(page.getByRole("heading", { name: copy.verificationRecord })).toBeVisible();
     await page.getByRole("tab", { name: "Logo", exact: true }).click();
     await expect(page.getByText(copy.locale === "en" ? "This Company has no submitted or approved logo." : "Cette entreprise n’a aucun logo soumis ou approuvé.")).toBeVisible();
+    await page.getByRole("tab", { name: copy.locale === "en" ? "Portfolio Images" : "Images du portfolio", exact: true }).click();
+    await expect(page.getByText(copy.locale === "en" ? "No portfolio images match this status." : "Aucune image du portfolio ne correspond à ce statut.")).toBeVisible();
     await page.getByRole("tab", { name: copy.projects }).click();
     await expect(page.getByText("Villa Atlas", { exact: true })).toBeVisible();
     await page.getByRole("tab", { name: copy.commissions }).click();

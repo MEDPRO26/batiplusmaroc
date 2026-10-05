@@ -1,11 +1,15 @@
 "use client";
 
-import { useAction, useMutation, useQuery } from "convex/react";
+import { ApprovedPortfolioImage } from "@/features/portfolio/components/approved-portfolio-image";
+
+import { useAuthToken } from "@convex-dev/auth/react";
+import { CompanyOwnerPortfolioImages } from "./company-owner-portfolio-images";
+
+import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import Image from "next/image";
 import { useFormatter, useTranslations } from "next-intl";
 import { DropdownMenu } from "radix-ui";
-import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useToast } from "@/features/shared/components/app-feedback";
@@ -22,9 +26,6 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { mapConvexFailure } from "@/lib/errors";
 
-const imageTypes = ["image/jpeg", "image/png", "image/webp"];
-const maxImageBytes = 10 * 1024 * 1024;
-const maxExtraImages = 8;
 const projectTypes = ["construction", "renovation", "structural", "finishing", "interior", "exterior", "other"] as const;
 type ProjectType = (typeof projectTypes)[number];
 type ManagerData = FunctionReturnType<typeof api.portfolio.index.getPortfolioManager>;
@@ -37,28 +38,34 @@ const STATUS_TONE: Record<PortfolioProject["status"], BadgeTone> = {
 };
 
 export function PortfolioManager() {
-  const t = useTranslations("portfolioManager");
-  const tUx = useTranslations("ux");
+  const token = useAuthToken();
   const user = useQuery(api.users.currentUser);
-  const canLoad = user?.accountType === "company" && user.onboardingStatus === "completed";
-  const data = useQuery(api.portfolio.index.getPortfolioManager, canLoad ? {} : "skip");
+  const tUx = useTranslations("ux");
+  const router = useRouter();
+  const eligible = !!token && user?.accountType === "company" && user.onboardingStatus === "completed";
+  const access = useQuery(api.companyVerification.index.getVerificationStatus, eligible ? {} : "skip");
+  useEffect(() => {
+    if (user && !(user.accountType === "company" && user.onboardingStatus === "completed")) router.replace(workspaceRouteForUser(user));
+  }, [router, user]);
+  if (!eligible || access === undefined) return <DashboardCardsSkeleton label={tUx("loading.dashboard")} />;
+  if (!access?.canManageDocuments) return <FriendlyAlert>{tUx("error.codes.COMPANY_OWNER_REQUIRED")}</FriendlyAlert>;
+  return <OwnerPortfolioManager key={`${user._id}:${token}`} />;
+}
+
+function OwnerPortfolioManager() {
+  const t = useTranslations("portfolioManager");
+  const tImages = useTranslations("portfolioImages");
+  const tUx = useTranslations("ux");
+  const data = useQuery(api.portfolio.index.getPortfolioManager, {});
   const ensurePublicSlug = useMutation(api.portfolio.index.ensurePublicSlug);
   const publish = useMutation(api.portfolio.index.publishPortfolioProject);
   const archive = useMutation(api.portfolio.index.archivePortfolioProject);
-  const router = useRouter();
   const { showToast } = useToast();
   const slugRequested = useRef(false);
   const formRef = useRef<HTMLElement>(null);
   const [editing, setEditing] = useState<PortfolioProject | "new" | null>(null);
   const [pendingId, setPendingId] = useState<Id<"portfolioProjects"> | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    if (!(user.accountType === "company" && user.onboardingStatus === "completed")) {
-      router.replace(workspaceRouteForUser(user));
-    }
-  }, [router, user]);
 
   useEffect(() => {
     if (!data || data.companySlug || slugRequested.current) return;
@@ -84,7 +91,7 @@ export function PortfolioManager() {
     }
   }
 
-  if (!user || !canLoad || data === undefined) return <DashboardCardsSkeleton label={tUx("loading.dashboard")} />;
+  if (data === undefined) return <DashboardCardsSkeleton label={tUx("loading.dashboard")} />;
 
   return (
     <WorkspacePage>
@@ -106,12 +113,14 @@ export function PortfolioManager() {
         title={t("title")}
       />
 
+      <p className="mt-4 text-sm leading-6 text-muted">{tImages("publicationHelp")}</p>
       {error ? <div className="mt-6"><FriendlyAlert>{error}</FriendlyAlert></div> : null}
       {editing ? (
         <PortfolioForm
           key={editing === "new" ? "new" : editing.id}
           onClose={() => setEditing(null)}
-          project={editing === "new" ? null : editing}
+          project={editing === "new" ? null : data.projects.find(project => project.id === editing.id) ?? editing}
+          projects={data.projects}
           sectionRef={formRef}
         />
       ) : null}
@@ -174,12 +183,12 @@ function PortfolioCard({
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-brand-border bg-white transition-shadow duration-200 hover:shadow-[0_12px_32px_rgb(23_61_99/0.10)]">
       <div className="relative aspect-[4/3] overflow-hidden bg-brand-soft">
-        <Image
+        <ApprovedPortfolioImage
           alt={t("imageAlt", { title: project.title })}
           className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-          src={project.coverImageUrl}
+          url={project.coverImageUrl}
         />
         <div className="absolute top-3 left-3">
           <StatusBadge tone={STATUS_TONE[project.status]}>{t(`status.${project.status}`)}</StatusBadge>
@@ -241,7 +250,9 @@ function PortfolioForm({
   project,
   onClose,
   sectionRef,
+  projects,
 }: {
+  projects: PortfolioProject[];
   project: PortfolioProject | null;
   onClose: () => void;
   sectionRef: RefObject<HTMLElement | null>;
@@ -250,91 +261,47 @@ function PortfolioForm({
   const tUx = useTranslations("ux");
   const createProject = useMutation(api.portfolio.index.createPortfolioProject);
   const updateProject = useMutation(api.portfolio.index.updatePortfolioProject);
-  const requestUpload = useAction(api.storage.r2.requestPublicMediaUpload);
-  const verifyUpload = useAction(api.storage.r2.verifyPublicMediaUpload);
+  const tImages = useTranslations("portfolioImages");
   const { showToast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(project?.coverImageUrl ?? null);
-  const [extraPreviews, setExtraPreviews] = useState<string[]>([]);
-  const extraInputRef = useRef<HTMLInputElement>(null);
-  const existingMedia = project?.media ?? [];
-  const remainingSlots = maxExtraImages - existingMedia.length;
-
-  useEffect(() => () => {
-    if (coverPreviewUrl?.startsWith("blob:")) URL.revokeObjectURL(coverPreviewUrl);
-  }, [coverPreviewUrl]);
-  useEffect(() => () => extraPreviews.forEach((url) => URL.revokeObjectURL(url)), [extraPreviews]);
-
-  async function upload(file: File, kind: "cover" | "media") {
-    if (!imageTypes.includes(file.type) || file.size < 1 || file.size > maxImageBytes) throw new Error("INVALID_PORTFOLIO_IMAGE");
-    const intent = await requestUpload({
-      purpose: kind === "cover" ? "portfolioCover" : "portfolioMedia",
-      contentType: file.type,
-      size: file.size,
-      portfolioProjectId: project?.id,
-    });
-    const response = await fetch(intent.uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
-    if (!response.ok) throw new Error("INVALID_PORTFOLIO_IMAGE");
-    await verifyUpload({ uploadToken: intent.uploadToken });
-    return { uploadToken: intent.uploadToken };
-  }
-
-  function onExtrasChange(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.currentTarget.files ?? []);
-    if (files.length > remainingSlots) {
-      setError(t("tooManyImages", { count: maxExtraImages }));
-      event.currentTarget.value = "";
-      setExtraPreviews([]);
-      return;
-    }
-    setError(null);
-    setExtraPreviews(files.map((file) => URL.createObjectURL(file)));
-  }
-
-  function clearExtras() {
-    if (extraInputRef.current) extraInputRef.current.value = "";
-    setExtraPreviews([]);
-  }
+  const [createdId, setCreatedId] = useState<Id<"portfolioProjects"> | null>(null);
+  const saveRequest = useRef<AbortController | null>(null);
+  const currentProject = project ?? projects.find(item => item.id === createdId) ?? null;
+  const projectId = project?.id ?? createdId;
+  useEffect(() => () => { saveRequest.current?.abort(); }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting) return;
+    if (saveRequest.current) return;
     const form = event.currentTarget;
     const values = new FormData(form);
-    const coverValue = values.get("coverImage");
-    const coverFile = coverValue instanceof File && coverValue.size > 0 ? coverValue : null;
-    const extras = values.getAll("extraImages").filter((file): file is File => file instanceof File && file.size > 0);
-    if (!project && !coverFile) { setError(t("coverRequired")); return; }
-    if (extras.length > remainingSlots) { setError(t("tooManyImages", { count: maxExtraImages })); return; }
     const optionalNumber = (name: string) => { const value = String(values.get(name) ?? "").trim(); return value ? Number(value) : undefined; };
+    const controller = new AbortController(); saveRequest.current = controller;
     setSubmitting(true);
     setError(null);
     try {
-      const [coverImage, extraImages] = await Promise.all([
-        coverFile ? upload(coverFile, "cover") : Promise.resolve(undefined),
-        Promise.all(extras.map((file) => upload(file, "media"))),
-      ]);
       const fields = {
         title: String(values.get("title") ?? ""), description: String(values.get("description") ?? ""), city: String(values.get("city") ?? ""),
         projectType: String(values.get("projectType") ?? "construction") as ProjectType,
-        surface: optionalNumber("surface"), durationMonths: optionalNumber("durationMonths"), year: optionalNumber("year"), extraImages,
+        surface: optionalNumber("surface"), durationMonths: optionalNumber("durationMonths"), year: optionalNumber("year"),
       };
-      if (project) await updateProject({ ...fields, projectId: project.id, coverImage });
-      else if (coverImage) await createProject({ ...fields, coverImage });
-      showToast(t(project ? "successUpdated" : "successCreated"));
-      onClose();
+      if (projectId) await updateProject({ ...fields, projectId });
+      else {
+        const id = await createProject(fields);
+        if (!controller.signal.aborted) setCreatedId(id);
+      }
+      if (!controller.signal.aborted) showToast(t(projectId ? "successUpdated" : "successCreated"));
     } catch (caught) {
-      setError(mapConvexFailure(caught, tUx).message);
+      if (!controller.signal.aborted) setError(mapConvexFailure(caught, tUx).message);
     } finally {
-      setSubmitting(false);
+      if (!controller.signal.aborted) { saveRequest.current = null; setSubmitting(false); }
     }
   }
 
   const inputClass =
     "mt-1.5 w-full rounded-[10px] border border-brand-border bg-white px-3.5 py-2.5 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]";
   const labelClass = "block text-sm font-medium text-ink";
-  const photoCount = existingMedia.length + extraPreviews.length;
 
   return (
     <section
@@ -345,7 +312,7 @@ function PortfolioForm({
       <div className="flex items-start justify-between gap-4 border-b border-brand-border px-5 py-4 sm:px-7">
         <div>
           <h2 className="m-0 text-lg leading-6 font-semibold tracking-[-0.02em] text-ink" id="portfolio-form-title">
-            {t(project ? "editTitle" : "addTitle")}
+            {t(projectId ? "editTitle" : "addTitle")}
           </h2>
           <p className="mt-1 mb-0 text-sm leading-6 text-muted">{t("formLead")}</p>
         </div>
@@ -367,71 +334,20 @@ function PortfolioForm({
           <label className={labelClass}>{t("fields.year")}<input className={inputClass} defaultValue={project?.year ?? ""} inputMode="numeric" max={new Date().getFullYear()} min="1900" name="year" step="1" type="number" /></label>
         </FormSection>
 
-        <FormSection lead={t("imageHelp", { count: maxExtraImages })} title={t("sections.media")}>
-          <div className="sm:col-span-2">
-            <p className="m-0 text-sm font-medium text-ink">{t("fields.cover", { optional: project ? t("optional") : "" })}</p>
-            <label className="group relative mt-1.5 flex aspect-[16/7] min-h-44 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[12px] border-2 border-dashed border-brand-border bg-[#f7f9fb] text-center transition-colors hover:border-brand/50 focus-within:border-brand focus-within:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]">
-              {coverPreviewUrl ? (
-                <>
-                  <Image alt={t("previewAlt")} className="object-cover" fill sizes="(max-width: 1024px) 100vw, 900px" src={coverPreviewUrl} unoptimized={coverPreviewUrl.startsWith("blob:")} />
-                  <span className="absolute right-3 bottom-3 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-ink shadow-sm">{t("replaceCover")}</span>
-                </>
-              ) : (
-                <>
-                  <span className="grid size-11 place-items-center rounded-full bg-white text-brand shadow-sm"><UploadIcon /></span>
-                  <span className="text-sm font-semibold text-brand">{t("uploadCover")}</span>
-                  <span className="text-xs text-muted">{t("fileRules")}</span>
-                </>
-              )}
-              <input
-                accept={imageTypes.join(",")}
-                className="sr-only"
-                name="coverImage"
-                onChange={(event) => {
-                  const file = event.currentTarget.files?.[0];
-                  setCoverPreviewUrl(file ? URL.createObjectURL(file) : project?.coverImageUrl ?? null);
-                }}
-                required={!project}
-                type="file"
-              />
-            </label>
-          </div>
-
-          <div className="sm:col-span-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="m-0 text-sm font-medium text-ink">{t("fields.extra")}</p>
-              <p className="m-0 text-xs tabular-nums text-muted">{t("galleryCount", { count: photoCount, max: maxExtraImages })}</p>
-            </div>
-            <div className="mt-1.5 grid grid-cols-3 gap-2.5 sm:grid-cols-5 lg:grid-cols-6">
-              {existingMedia.map((image) => (
-                <Thumb key={image.url} src={image.url} />
-              ))}
-              {extraPreviews.map((url) => (
-                <Thumb key={url} local src={url} />
-              ))}
-              {remainingSlots > 0 ? (
-                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-[10px] border-2 border-dashed border-brand-border bg-[#f7f9fb] text-brand transition-colors hover:border-brand/50 focus-within:border-brand focus-within:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]">
-                  <PlusIcon className="size-5" />
-                  <span className="text-xs font-semibold">{t("addPhotos")}</span>
-                  <input accept={imageTypes.join(",")} className="sr-only" multiple name="extraImages" onChange={onExtrasChange} ref={extraInputRef} type="file" />
-                </label>
-              ) : null}
-            </div>
-            {extraPreviews.length > 0 ? (
-              <button className={`${workspaceButton.ghost} mt-2 px-0`} onClick={clearExtras} type="button">{t("clearNewPhotos")}</button>
-            ) : null}
-          </div>
-        </FormSection>
-
         {error ? <div className="px-5 pb-2 sm:px-7"><FriendlyAlert>{error}</FriendlyAlert></div> : null}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-brand-border px-5 py-4 sm:px-7">
-          <p className="m-0 text-xs text-muted">{project ? null : t("draftHint")}</p>
-          <div className="flex gap-2.5">
+          <p className="m-0 text-xs text-muted">{projectId ? null : t("draftHint")}</p>
+          <div className="flex flex-wrap gap-2.5">
             <button className={workspaceButton.secondary} onClick={onClose} type="button">{t("cancel")}</button>
             <button className={workspaceButton.primary} disabled={submitting} type="submit">{submitting ? t("saving") : t("saveDraft")}</button>
           </div>
         </div>
       </form>
+      <FormSection lead={tImages("saveHelp")} title={t("sections.media")}>
+        <div className="min-w-0 sm:col-span-2">
+          {projectId ? <CompanyOwnerPortfolioImages portfolioProjectId={projectId} publicUrls={[currentProject?.coverImageUrl, ...(currentProject?.media.map(image => image.url) ?? [])].filter((url): url is string => !!url)} /> : <p className="m-0 text-sm leading-6 text-muted">{tImages("saveFirst")}</p>}
+        </div>
+      </FormSection>
     </section>
   );
 }
@@ -444,16 +360,8 @@ function FormSection({ title, lead, columns = 2, children }: { title: string; le
         <h3 className="m-0 text-sm font-semibold text-ink" id={titleId}>{title}</h3>
         <p className="mt-1 mb-0 text-xs leading-5 text-muted">{lead}</p>
       </div>
-      <div className={`grid gap-4 ${columns === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>{children}</div>
+      <div className={`grid min-w-0 gap-4 ${columns === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>{children}</div>
     </div>
-  );
-}
-
-function Thumb({ src, local = false }: { src: string; local?: boolean }) {
-  return (
-    <span className="relative aspect-square overflow-hidden rounded-[10px] bg-brand-soft outline outline-1 -outline-offset-1 outline-black/10">
-      <Image alt="" className="object-cover" fill sizes="120px" src={src} unoptimized={local} />
-    </span>
   );
 }
 
@@ -462,7 +370,4 @@ function PlusIcon({ className = "size-4" }: { className?: string }) {
 }
 function MoreIcon() {
   return <svg aria-hidden className="size-5" fill="currentColor" viewBox="0 0 20 20"><circle cx="4.5" cy="10" r="1.4" /><circle cx="10" cy="10" r="1.4" /><circle cx="15.5" cy="10" r="1.4" /></svg>;
-}
-function UploadIcon() {
-  return <svg aria-hidden className="size-5" fill="none" viewBox="0 0 20 20"><path d="M10 13V4m0 0L6.5 7.5M10 4l3.5 3.5M4 13.5V15a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 16 15v-1.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" /></svg>;
 }

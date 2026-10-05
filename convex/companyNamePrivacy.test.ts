@@ -18,7 +18,7 @@ const LEGAL_NAME = "S2MBOU Construction SARL";
 const MASKED = "S2**** SA**";
 const pageOpts = { numItems: 20, cursor: null };
 
-beforeAll(() => { process.env.R2_PUBLIC_BASE_URL = "https://media.example.test"; });
+beforeAll(() => { process.env.R2_PUBLIC_BASE_URL = "https://media.example.test"; process.env.CONVEX_SITE_URL = "https://example.convex.site"; });
 
 function asUser(t: Backend, userId: Id<"users">) {
   return t.withIdentity({ subject: `${userId}|session`, tokenIdentifier: `test|${userId}` });
@@ -59,9 +59,20 @@ async function setup() {
       companyId, title: `Work by ${NAME}`, description: `Built by ${LEGAL_NAME}.`,
       city: "Rabat", projectType: "renovation", coverImageStorageId, status: "published", createdAt: 1, updatedAt: 1,
     });
-    await ctx.db.insert("portfolioMedia", {
+    const gallerySlotId = await ctx.db.insert("portfolioMedia", {
       portfolioProjectId, storageId: coverImageStorageId, caption: `Construction by ${NAME}.`, sortOrder: 0, createdAt: 1,
     });
+    // Approved private fixtures keep text-redaction coverage independent of legacy delivery.
+    for (const purpose of ["cover", "gallery"] as const) {
+      const storageId = await ctx.storage.store(new Blob(["image"], { type: "image/jpeg" }));
+      const metadata = (await ctx.db.system.get("_storage", storageId))!;
+      const imageId = await ctx.db.insert("portfolioImages", {
+        companyId, portfolioProjectId, purpose, ...(purpose === "gallery" ? { gallerySlotId } : {}),
+        storageId, contentType: "image/jpeg", size: metadata.size, sha256: metadata.sha256,
+        uploadedBy: ownerId, uploadedAt: 1, moderationStatus: "approved",
+      });
+      await ctx.db.patch(purpose === "gallery" ? gallerySlotId : portfolioProjectId, { submittedImageId: imageId, approvedImageId: imageId });
+    }
     const projectId = await ctx.db.insert("projects", {
       clientId, title: "Villa renovation", description: "A complete renovation project.",
       primaryCategory: "renovation", city: "rabat", countryCode: "MA", propertyType: "house",

@@ -79,6 +79,10 @@ import type * as notifications_pushSubscriptions from "../notifications/pushSubs
 import type * as notifications_pushTest from "../notifications/pushTest.js";
 import type * as notifications_webPush from "../notifications/webPush.js";
 import type * as portfolio_index from "../portfolio/index.js";
+import type * as portfolioImages_constants from "../portfolioImages/constants.js";
+import type * as portfolioImages_http from "../portfolioImages/http.js";
+import type * as portfolioImages_index from "../portfolioImages/index.js";
+import type * as portfolioImages_model from "../portfolioImages/model.js";
 import type * as projects_access from "../projects/access.js";
 import type * as projects_constants from "../projects/constants.js";
 import type * as projects_index from "../projects/index.js";
@@ -195,6 +199,10 @@ declare const fullApi: ApiFromModules<{
   "notifications/pushTest": typeof notifications_pushTest;
   "notifications/webPush": typeof notifications_webPush;
   "portfolio/index": typeof portfolio_index;
+  "portfolioImages/constants": typeof portfolioImages_constants;
+  "portfolioImages/http": typeof portfolioImages_http;
+  "portfolioImages/index": typeof portfolioImages_index;
+  "portfolioImages/model": typeof portfolioImages_model;
   "projects/access": typeof projects_access;
   "projects/constants": typeof projects_constants;
   "projects/index": typeof projects_index;

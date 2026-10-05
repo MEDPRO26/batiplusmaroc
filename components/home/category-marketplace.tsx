@@ -1,5 +1,7 @@
 "use client";
 
+import { isApprovedPortfolioImageUrl } from "@/lib/files/portfolio-image";
+
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 
 import Image from "next/image";
@@ -132,7 +134,7 @@ function CompanyCard({ company }: { company: PublicMarketplaceCompany }) {
             className="object-cover"
             fill
             sizes="(max-width: 767px) 78vw, (max-width: 1023px) 30vw, (max-width: 1279px) 22vw, 220px"
-            src={company.coverImageUrl}
+            src={company.coverImageUrl} unoptimized={isApprovedPortfolioImageUrl(company.coverImageUrl)}
           /> : null}
         </div>
         <div className="absolute -bottom-5 left-4 grid size-11 place-items-center overflow-hidden rounded-full bg-white shadow-[0_6px_16px_rgb(23_61_99/0.14)] ring-2 ring-white">

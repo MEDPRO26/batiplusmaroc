@@ -50,10 +50,12 @@ const mocks: Plugin = {
             const handler = (window.__queryHandlers || {})[query.__path];
             return handler ? await handler(args) : window.__queries[query.__path];
           } }; }
-          export function usePaginatedQuery(query) {
+          export function usePaginatedQuery(query, args, options) {
             useHarnessVersion();
             window.__queryCalls = [...(window.__queryCalls || []), query.__path];
-            const state = (window.__paginatedQueries || {})[query.__path] || { results: [], status: "Exhausted" };
+            window.__paginatedArgs = [...(window.__paginatedArgs || []), { path: query.__path, args, options }];
+            const queryHandler = (window.__paginatedQueryHandlers || {})[query.__path];
+            const state = (queryHandler ? queryHandler(args) : (window.__paginatedQueries || {})[query.__path]) || { results: [], status: "Exhausted" };
             return {
               ...state,
               loadMore(numItems) {

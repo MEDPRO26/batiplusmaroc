@@ -3,10 +3,16 @@ import { auth } from "./auth";
 import { servePdf } from "./finalQuotes/download";
 import { serveAttachment } from "./messages/download";
 import { uploadLogo, privatePreview, publicLogo, uploadPreflight, previewPreflight } from "./companyLogos/http";
+import * as portfolioImages from "./portfolioImages/http";
 
 import { uploadDocument, downloadDocument, uploadDocumentPreflight, downloadDocumentPreflight } from "./companyVerification/index";
 
 const http = httpRouter();
+http.route({ path: "/portfolio-images/upload", method: "POST", handler: portfolioImages.uploadImage });
+http.route({ path: "/portfolio-images/upload", method: "OPTIONS", handler: portfolioImages.uploadPreflight });
+http.route({ pathPrefix: "/portfolio-images/private/", method: "GET", handler: portfolioImages.privatePreview });
+http.route({ pathPrefix: "/portfolio-images/private/", method: "OPTIONS", handler: portfolioImages.previewPreflight });
+http.route({ pathPrefix: "/portfolio-images/public/", method: "GET", handler: portfolioImages.publicImage });
 http.route({ path: "/company-logos/upload", method: "POST", handler: uploadLogo });
 http.route({ path: "/company-logos/upload", method: "OPTIONS", handler: uploadPreflight });
 http.route({ pathPrefix: "/company-logos/private/", method: "GET", handler: privatePreview });

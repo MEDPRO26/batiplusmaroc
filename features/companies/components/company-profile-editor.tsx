@@ -1,5 +1,7 @@
 "use client";
 
+import { ApprovedPortfolioImage } from "@/features/portfolio/components/approved-portfolio-image";
+
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 
 import { VerifiedBadge } from "./verified-badge";
@@ -259,7 +261,7 @@ function PortfolioShowcase() {
               <li key={project.id}>
                 <article className="group">
                   <div className="relative aspect-[4/3] overflow-hidden rounded-[12px] bg-brand-soft ring-1 ring-brand-border">
-                    <Image alt={tPortfolio("imageAlt", { title: project.title })} className="object-cover transition-transform duration-300 group-hover:scale-[1.03]" fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 280px" src={project.coverImageUrl} />
+                    <ApprovedPortfolioImage alt={tPortfolio("imageAlt", { title: project.title })} className="object-cover transition-transform duration-300 group-hover:scale-[1.03]" fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 280px" url={project.coverImageUrl} />
                   </div>
                   <h3 className="mt-2.5 mb-0 line-clamp-1 text-[0.95rem] font-semibold tracking-[-0.01em] text-ink">{project.title}</h3>
                   <p className="mt-0.5 mb-0 text-xs text-muted">{[project.city, project.year].filter(Boolean).join(" · ")}</p>

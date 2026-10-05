@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
     maximumRedirects: 0,
     remotePatterns: [
       { protocol: "https", hostname: "*.convex.cloud" },
-      // Logo HTTP endpoints must never enter the optimizer's independently public cache.
+      // Moderated logo/portfolio HTTP endpoints must never enter the optimizer's public cache.
       { protocol: "https", hostname: "*.convex.site", pathname: "/api/storage/**" },
       ...(r2Pattern ? [r2Pattern] : []),
     ],

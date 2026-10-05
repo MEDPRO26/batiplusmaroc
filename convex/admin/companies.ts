@@ -1,4 +1,4 @@
-import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
+import { resolveApprovedPortfolioImageUrl } from "../portfolioImages/model";
 import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import {
   paginationOptsValidator,
@@ -15,7 +15,6 @@ import {
 import { commissionStatusValidator, dealStatusValidator } from "../deals/constants";
 import { projectStatusValidator } from "../projects/constants";
 import { reviewModerationStatusValidator } from "../reviews/constants";
-import { getPublicMediaUrl } from "../storage/publicUrl";
 import { requireAdminUser } from "./access";
 
 const onboardingStatusValidator = v.union(
@@ -352,23 +351,6 @@ async function logoUrl(ctx: QueryCtx, company: Doc<"companies">) {
   return await resolveApprovedLogoUrl(ctx, company);
 }
 
-async function portfolioCoverUrl(ctx: QueryCtx, project: Doc<"portfolioProjects">) {
-  if (project.coverMediaId) {
-    const media = await ctx.db.get(project.coverMediaId);
-    if (
-      media &&
-      media.companyId === project.companyId &&
-      media.portfolioProjectId === project._id &&
-      media.purpose === "portfolioCover"
-    ) {
-      return getPublicMediaUrl(media.objectKey);
-    }
-  }
-  return project.coverImageStorageId
-    ? await getNonVerificationStorageUrl(ctx, project.coverImageStorageId)
-    : null;
-}
-
 export const getCompanySummary = query({
   args: { companyId: v.id("companies") },
   returns: v.union(v.null(), companySummaryValidator),
@@ -396,7 +378,7 @@ export const getCompanySummary = query({
       projectId: project._id,
       title: project.title,
       city: project.city,
-      coverImageUrl: await portfolioCoverUrl(ctx, project),
+      coverImageUrl: await resolveApprovedPortfolioImageUrl(ctx, project),
     })));
     const reviewCount = company.reviewCount ?? 0;
     return {

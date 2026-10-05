@@ -42,6 +42,7 @@ export async function consumeVerifiedPublicMediaIntent(
   },
 ) {
   if (args.purpose === "companyLogo") throw new ConvexError("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
+  if (args.purpose === "portfolioCover" || args.purpose === "portfolioMedia") throw new ConvexError("PORTFOLIO_PRIVATE_UPLOAD_REQUIRED");
   const intent = await ctx.db
     .query("publicMediaUploadIntents")
     .withIndex("by_token", (q) => q.eq("token", args.uploadToken))

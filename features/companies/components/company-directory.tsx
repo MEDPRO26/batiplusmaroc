@@ -1,10 +1,11 @@
 "use client";
 
+import { ApprovedPortfolioImage } from "@/features/portfolio/components/approved-portfolio-image";
+
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -407,7 +408,7 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
                       {profile.portfolio.map((project) => (
                         <li className="overflow-hidden rounded-xl border border-brand-border" key={project.id}>
                           <div className="relative aspect-[16/9] bg-brand-soft outline outline-1 outline-black/10">
-                            <Image alt={tProfile("projectImageAlt", { title: project.title })} className="object-cover" fill sizes="(max-width: 720px) 100vw, 720px" src={project.coverImageUrl} />
+                            <ApprovedPortfolioImage alt={tProfile("projectImageAlt", { title: project.title })} className="object-cover" fill sizes="(max-width: 720px) 100vw, 720px" url={project.coverImageUrl} />
                           </div>
                           <div className="p-4">
                             <p className="m-0 text-[0.68rem] font-semibold tracking-[0.06em] text-brand uppercase">{tProfile(`projectType.${project.projectType}`)}</p>
@@ -499,7 +500,7 @@ function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onVie
             <span className="sr-only">{t("portfolioPreview")}</span>
             {company.portfolio.slice(0, 3).map((item) => (
               <div className="relative size-12 overflow-hidden rounded-lg bg-surface-muted ring-1 ring-black/5" key={`${item.title}-${item.url}`}>
-                <Image alt={t("portfolioAlt", { title: item.title })} className="object-cover" fill sizes="48px" src={item.url} />
+                <ApprovedPortfolioImage alt={t("portfolioAlt", { title: item.title })} className="object-cover" fill sizes="48px" url={item.url} />
               </div>
             ))}
             <span className="text-xs text-muted">{t("portfolioCount", { count: company.portfolio.length })}</span>

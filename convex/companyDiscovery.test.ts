@@ -12,6 +12,7 @@ type Service = "houseConstruction" | "renovation" | "structural" | "finishing" |
 
 beforeAll(() => {
   process.env.R2_PUBLIC_BASE_URL = "https://media.example.test";
+  process.env.CONVEX_SITE_URL = "https://example.convex.site";
 });
 
 async function seedDirectoryCompany(t: TestBackend, options: {
@@ -92,18 +93,15 @@ async function seedDirectoryCompany(t: TestBackend, options: {
           createdAt: now + index,
           updatedAt: now + index,
         });
-        const mediaId = await ctx.db.insert("publicMedia", {
-          storageProvider: "r2",
-          companyId,
-          portfolioProjectId: projectId,
-          purpose: "portfolioCover",
-          objectKey: `companies/${companyId}/${status}-${index}.webp`,
-          mimeType: "image/webp",
-          size: 100,
-          uploadedBy: userId,
-          createdAt: now,
+        // Seed an approved exact-file fixture; publication alone does not approve it.
+        const storageId = await ctx.storage.store(new Blob(["image"], { type: "image/webp" }));
+        const metadata = (await ctx.db.system.get("_storage", storageId))!;
+        const imageId = await ctx.db.insert("portfolioImages", {
+          companyId, portfolioProjectId: projectId, purpose: "cover", storageId,
+          contentType: "image/webp", size: metadata.size, sha256: metadata.sha256,
+          uploadedBy: userId, uploadedAt: now, moderationStatus: "approved",
         });
-        await ctx.db.patch(projectId, { coverMediaId: mediaId });
+        await ctx.db.patch(projectId, { submittedImageId: imageId, approvedImageId: imageId });
       }
     }
     return { companyId, userId };
@@ -465,7 +463,7 @@ describe("public company discovery", () => {
     const company = result.page[0];
     expect(company.portfolio).toHaveLength(2);
     expect(company.portfolio.every((item) => item.title.startsWith("published"))).toBe(true);
-    expect(company.coverImageUrl).toMatch(/^https:\/\/media\.example\.test\//);
+    expect(company.coverImageUrl).toMatch(/^https:\/\/example\.convex\.site\/portfolio-images\/public\//);
     expect(company).not.toHaveProperty("legalName");
     expect(company).not.toHaveProperty("phone");
     expect(company).not.toHaveProperty("website");

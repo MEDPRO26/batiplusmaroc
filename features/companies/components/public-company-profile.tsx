@@ -1,3 +1,4 @@
+import { ApprovedPortfolioImage } from "@/features/portfolio/components/approved-portfolio-image";
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 import type { FunctionReturnType } from "convex/server";
 import { ExternalLink, MapPin } from "lucide-react";
@@ -197,12 +198,12 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                       <li key={project.id}>
                         <article className="group">
                           <div className="relative aspect-[4/3] overflow-hidden rounded-[12px] bg-[#e8eef3] ring-1 ring-brand-border">
-                            <Image
+                            <ApprovedPortfolioImage
                               alt={t("projectImageAlt", { title: project.title })}
                               className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
                               fill
                               sizes="(max-width: 640px) 100vw, (max-width: 1120px) 50vw, 280px"
-                              src={project.coverImageUrl}
+                              url={project.coverImageUrl}
                             />
                             <span className="absolute top-2.5 left-2.5 rounded-md bg-white/95 px-2 py-0.5 text-[0.65rem] font-semibold tracking-[0.04em] text-brand uppercase shadow-sm backdrop-blur-sm">
                               {t(`projectType.${project.projectType}`)}
