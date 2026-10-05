@@ -33,6 +33,7 @@ export const claimMarketplacePush = internalMutation({
       entity: notificationEntityValidator,
       payload: notificationPayloadValidator,
       actorType: v.optional(v.union(v.literal("client"), v.literal("company"), v.literal("admin"), v.literal("seo_team"))),
+      companyIdentityAudience: v.union(v.literal("public"), v.literal("client"), v.literal("deal_client"), v.literal("own_company"), v.literal("admin")),
     }),
     recipientUserId: v.id("users"),
     accountType: v.union(
@@ -119,13 +120,15 @@ export const claimMarketplacePush = internalMutation({
       internal.notifications.pushDelivery.deliverMarketplacePush,
       { notificationId: notification._id },
     );
-    const identity = await notificationIdentityForRecipient(ctx, notification, recipient.accountType);
+    const identity = await notificationIdentityForRecipient(ctx, notification);
     return {
       notification: {
         _id: notification._id,
         type: notification.type,
         entity: notification.entity,
         payload: identity.payload,
+        // Internal delivery DTO only; never stored or exposed in the inbox API.
+        companyIdentityAudience: identity.audience,
         ...(identity.actorType === undefined ? {} : { actorType: identity.actorType }),
       },
       recipientUserId: notification.recipientUserId,

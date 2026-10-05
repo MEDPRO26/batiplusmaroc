@@ -67,6 +67,7 @@ import { FinalQuoteSheet } from "@/features/final-quotes/components/conversation
 import { MarketplaceWorkflowCard } from "./components/conversation-marketplace-workflow";
 import { NotificationItem } from "@/features/notifications/components/notification-item";
 import { ClientProjectCurrentStep } from "@/features/projects/components/client-project-current-step";
+import { ClientDealCompletion } from "@/features/projects/components/client-project-details";
 
 const FULL_NAME = "S2MBOU SARL", SAFE_NAME = "S2**** SA**";
 const projectId = "project-1" as Id<"projects">;
@@ -197,6 +198,53 @@ describe("Company identity is displayed from backend-safe DTOs", () => {
       state.responses.set("quotes/index:listReceivedInitialQuotes", [quote]);
       state.responses.set("messages/index:listMyThreads", [thread]);
       expectSafe(render(<ClientProjectCurrentStep project={{ id: projectId, viewerRole: "owner", status: "in_discussion" } as Parameters<typeof ClientProjectCurrentStep>[0]["project"]} />));
+    });
+
+    test(`${locale} authenticated components render the full identity supplied after a Deal`, () => {
+      state.locale = locale;
+      const revealedQuote = { ...quote, company: { ...quote.company, name: FULL_NAME } };
+      const revealedThread = { ...thread, otherPartyName: FULL_NAME };
+      const revealedAssessment = { ...assessment, companyName: FULL_NAME };
+      const revealedFinalQuote = { ...finalQuote, companyName: FULL_NAME, status: "accepted" as const, canReview: false };
+      state.responses.set("messages/index:getConversation", { ...revealedThread, viewerType: "client" });
+      state.responses.set("messages/index:listMessages", []);
+      state.responses.set("siteVisits/index:getForConversation", { viewerType: "client", canInvite: false, assessment: revealedAssessment });
+      state.responses.set("finalQuotes/index:getForConversation", { viewerType: "client", canRequest: false, canPrepare: false, finalQuote: revealedFinalQuote });
+      state.responses.set("deals/index:getByProject", { id: "deal-1", companyName: FULL_NAME, conversationId, initialQuoteId: quote.id, status: "active", reviewEligible: false });
+      state.responses.set("invitations/index:listProjectInvitations", [{ id: "invitation-1", projectId, companyId, companyName: FULL_NAME, isVerified: true, status: "accepted", createdAt: 1 }]);
+      const surfaces = [
+        <ReceivedQuoteCard key="proposal" quote={revealedQuote} onOpen={vi.fn()} />,
+        <QuoteReviewContent key="detail" quote={revealedQuote} confirmDecline={false} error={null} success={null} pendingAction={null} onReview={vi.fn()} onCancelDecline={vi.fn()} onConfirmDecline={vi.fn()} />,
+        <ClientProjectInvitations key="invitations" projectId={projectId} />,
+        <MessagesInboxView key="messages" accountType="client" initialConversationId={conversationId} projects={[]} threads={[revealedThread]} />,
+        <ConversationContextPanel key="context" accountType="client" conversation={{ ...revealedThread, viewerType: "client" }} conversationId={conversationId} />,
+        <SiteAssessmentPanel key="visit" result={{ viewerType: "client", canInvite: false, assessment: revealedAssessment }} />,
+        <FinalQuoteSheet key="final" conversationId={conversationId} quote={revealedFinalQuote} viewerType="client" onClose={vi.fn()} />,
+        <MarketplaceWorkflowCard key="workflow" conversationId={conversationId} assessment={{ viewerType: "client", canInvite: false, assessment: null }} quote={{ viewerType: "client", canRequest: false, canPrepare: false, finalQuote: revealedFinalQuote }} />,
+        <NotificationItem key="notification" notification={{ id: "notification-1" as Id<"notifications">, type: "message_received", entity: { type: "conversation", id: conversationId }, actorUserId: null,
+          payload: { companyName: FULL_NAME, actorDisplayName: FULL_NAME, projectTitle: "Renovation", messagePreview: "See attachment.pdf." }, createdAt: 1, readAt: null }} onOpen={vi.fn()} />,
+      ];
+      for (const surface of surfaces) expect(render(surface)).toContain(FULL_NAME);
+      const sheet = render(surfaces[6]);
+      expect(sheet).toContain('href="https://files.example.test/final-quote.pdf"');
+      expect(sheet).not.toContain(`${FULL_NAME}.pdf`);
+      expect(state.queries.some(query => query.name.startsWith("companies/"))).toBe(false);
+    });
+
+    test(`${locale} selected-company card uses the Deal's exact Company and conversation`, () => {
+      state.locale = locale;
+      state.responses.set("quotes/index:listReceivedInitialQuotes", [{ ...quote, id: "unselected-quote", company: { ...quote.company, name: "Unselected company" } }, quote]);
+      state.responses.set("messages/index:listMyThreads", [{ ...thread, id: "unselected-conversation", otherPartyName: "Unselected company" }, thread]);
+      state.responses.set("deals/index:getByProject", { id: "deal-1", companyName: FULL_NAME, conversationId, initialQuoteId: quote.id, status: "active", reviewEligible: false });
+      const project = { id: projectId, viewerRole: "owner", status: "company_selected" } as Parameters<typeof ClientProjectCurrentStep>[0]["project"];
+      const html = render(<ClientProjectCurrentStep project={project} />);
+      expect(html).toContain(FULL_NAME); expect(html).not.toContain("Unselected company");
+      expect(html).toContain(conversationId); expect(html).not.toContain("unselected-conversation");
+      expect(render(<ClientDealCompletion project={project} />)).toContain(FULL_NAME);
+      state.responses.set("deals/index:getByProject", { id: "deal-1", companyName: FULL_NAME, status: "completed", reviewEligible: false, completedAt: 1 });
+      expect(render(<ClientDealCompletion project={{ ...project, status: "completed" }} />)).toContain(FULL_NAME);
+      state.responses.delete("deals/index:getByProject");
+      expect(render(<ClientProjectCurrentStep project={project} />)).not.toContain("Unselected company");
     });
   }
 

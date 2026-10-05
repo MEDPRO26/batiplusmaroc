@@ -3,7 +3,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
-import { companyFileNamesForRelationship, companyNameForAudience, maskCompanyNamesInText } from "../lib/companyName";
+import { companyFileNamesForRelationship, companyNameForAudience, companyNamesToMask, maskCompanyNamesInText, resolveCompanyIdentityAudience } from "../lib/companyName";
 import { assertCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
 import { companyInvitationEligibilityError } from "./eligibility";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
@@ -132,7 +132,8 @@ async function toInvitationDto(ctx: Ctx, invitation: Doc<"invitations">, viewerT
   ) {
     throw new ConvexError("INVITATION_INTEGRITY_ERROR");
   }
-  const maskedNames = viewerType === "client" ? [company.name, company.legalName] : [];
+  const audience = await resolveCompanyIdentityAudience(ctx, company._id);
+  const maskedNames = companyNamesToMask(company, audience);
   const files = viewerType === "client" ? await companyFileNamesForRelationship(ctx, project._id, company._id, invitation.clientUserId,
     [project.title, project.description, invitation.message]) : [];
   return {
@@ -143,7 +144,7 @@ async function toInvitationDto(ctx: Ctx, invitation: Doc<"invitations">, viewerT
     city: project.city ?? null,
     category: project.primaryCategory ?? null,
     companyId: company._id,
-    companyName: companyNameForAudience(company.name, viewerType === "company" ? "own_company" : "client"),
+    companyName: companyNameForAudience(company.name, audience),
     isVerified: company.verificationStatus === "verified",
     clientDisplayName: clientDisplayName(client),
     message: invitation.message === undefined ? null : maskCompanyNamesInText(invitation.message, maskedNames, files),

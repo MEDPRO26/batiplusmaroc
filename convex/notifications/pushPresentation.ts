@@ -1,6 +1,7 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { ActiveNotificationType } from "./constants";
 import { notificationCompanyIdentity } from "./companyIdentity";
+import type { CompanyNameAudience } from "../lib/companyName";
 import {
   localizedNotificationDestination,
   type NotificationAccountType,
@@ -16,7 +17,7 @@ const GENERIC_NAMES = {
 type PushNotificationRecord = Pick<
   Doc<"notifications">,
   "type" | "entity" | "payload"
-> & { _id: Id<"notifications">; actorType?: Doc<"users">["accountType"] };
+> & { _id: Id<"notifications">; actorType?: Doc<"users">["accountType"]; companyIdentityAudience?: CompanyNameAudience };
 
 const BODY_TEMPLATES = {
   en: {
@@ -90,10 +91,14 @@ export function marketplacePushPresentation(
   accountType: NotificationAccountType,
   locale: PushLocale,
 ) {
+  // Production delivery carries the server-resolved recipient audience. Raw
+  // legacy presentation inputs retain the existing masked Client fallback.
+  const audience = notification.companyIdentityAudience
+    ?? (accountType === "admin" ? "admin" : accountType === "company" ? "own_company" : "client");
   return {
     notificationId: notification._id,
     title: "Batiplus Maroc",
-    body: bodyFor({ ...notification, payload: notificationCompanyIdentity(notification.payload, accountType, notification.actorType) }, locale),
+    body: bodyFor({ ...notification, payload: notificationCompanyIdentity(notification.payload, audience, notification.actorType) }, locale),
     locale,
     url: localizedNotificationDestination(locale, notification, accountType),
     tag: `batiplus-notification-${notification._id}`,

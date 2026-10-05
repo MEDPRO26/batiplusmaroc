@@ -18,7 +18,7 @@ import { getPublicMediaUrl } from "../storage/publicUrl";
 import { ensureConversationForQuote } from "../messages/index";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { invitationForPair } from "../invitations/index";
-import { companyFileNamesForRelationship, maskCompanyName, maskCompanyNamesInText, maskPublicCompanyText } from "../lib/companyName";
+import { companyFileNamesForRelationship, companyNameForAudience, companyNamesToMask, maskCompanyNamesInText, maskPublicCompanyText, resolveCompanyIdentityAudience } from "../lib/companyName";
 import {
   createNotification,
   createNotificationForActiveCompanyMembers,
@@ -237,16 +237,18 @@ async function receivedQuoteDto(ctx: QuoteCtx, quote: Doc<"projectQuotes">, load
       ? await getNonVerificationStorageUrl(ctx, company.logoStorageId)
       : null;
   const names = [company.name, company.legalName];
+  const audience = await resolveCompanyIdentityAudience(ctx, companyId);
+  const maskedNames = companyNamesToMask(company, audience);
   const project = await ctx.db.get(quote.projectId);
   if (!project) throw new ConvexError("PROJECT_NOT_FOUND");
   const files = await companyFileNamesForRelationship(ctx, quote.projectId, companyId, project.clientId,
     [quote.message, quote.scope]);
   return {
     ...quoteFieldsFor(quote),
-    message: maskCompanyNamesInText(quote.message, names, files),
-    scope: maskCompanyNamesInText(quote.scope, names, files),
+    message: maskCompanyNamesInText(quote.message, maskedNames, files),
+    scope: maskCompanyNamesInText(quote.scope, maskedNames, files),
     company: {
-      name: maskCompanyName(company.name),
+      name: companyNameForAudience(company.name, audience),
       slug: company.slug ?? null,
       city: company.city ?? null,
       // Public profile copy has no private-file relationship with this Client.
@@ -547,10 +549,12 @@ export const getReceivedInitialQuote = query({
     const project = await ctx.db.get(quote.projectId);
     if (!project) throw new ConvexError("PROJECT_NOT_FOUND");
     const files = await companyFileNamesForRelationship(ctx, quote.projectId, quote.companyId, project.clientId, history.map(item => item.reason));
+    const audience = await resolveCompanyIdentityAudience(ctx, quote.companyId);
+    const maskedNames = companyNamesToMask(company ?? {}, audience);
     return {
       ...await receivedQuoteDto(ctx, quote, company),
       history: history.map((item) => ({ oldStatus: item.oldStatus, newStatus: item.newStatus, changedAt: item.changedAt,
-        reason: item.reason === undefined ? null : maskCompanyNamesInText(item.reason, [company?.name, company?.legalName], files) })),
+        reason: item.reason === undefined ? null : maskCompanyNamesInText(item.reason, maskedNames, files) })),
     };
   },
 });

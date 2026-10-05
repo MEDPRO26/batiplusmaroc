@@ -8,7 +8,7 @@ import schema from "./schema";
 import { marketplacePushPresentation } from "./notifications/pushPresentation";
 import { DEFAULT_NOTIFICATION_PREFERENCES } from "./notifications/deliveryPolicy";
 import { sanitizeMessagePdfFileName } from "./messages/attachmentRules";
-import { companyFileNamesForConversation, companyFileNamesForRelationship } from "./lib/companyName";
+import { companyFileNamesForConversation, companyFileNamesForRelationship, resolveCompanyIdentityAudience } from "./lib/companyName";
 import type { MutationCtx } from "./_generated/server";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -1033,12 +1033,292 @@ describe("Company name DTO privacy", () => {
     const deal = await asUser(s.t, s.clientId).query(api.deals.index.getByProject, { projectId: s.projectId });
     await asUser(s.t, s.clientId).mutation(api.deals.index.completeDeal, { dealId: deal!.id });
     await asUser(s.t, s.clientId).mutation(api.reviews.index.createReview, { dealId: deal!.id, rating: 5, comment: `Excellent work by ${NAME} (${LEGAL_NAME}).` });
-    // Step 4 is deferred: even this Client's own Deal does not toggle public identity.
+    // A Client's own Deal never toggles the public identity policy.
     for (const userId of [s.clientId, s.otherClientId]) {
       const profile = await asUser(s.t, userId).query(api.portfolio.index.getPublicCompanyProfile, { slug: "company-under-test" });
       expect(profile?.name).toBe(MASKED);
       expect(profile?.reviews[0].comment).toContain(MASKED);
       expectPrivateNameAbsent(profile);
     }
+  });
+});
+
+describe("Step 4: Company identity belongs to the authenticated Client/Deal relationship", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  type State = Awaited<ReturnType<typeof setup>>;
+
+  function fields<T extends { _id: unknown; _creationTime: number }>(doc: T) {
+    const { _id, _creationTime, ...value } = doc;
+    void _id; void _creationTime;
+    return value;
+  }
+
+  /** Another fully authorized discussion, without copying any Deal/reveal state. */
+  async function relationship(s: State, clientId: Id<"users">, companyId = s.companyId, ownerId = s.ownerId): Promise<State> {
+    const ids = await s.t.run(async ctx => {
+      const projectId = await ctx.db.insert("projects", { ...fields((await ctx.db.get(s.projectId))!), clientId });
+      const quoteId = await ctx.db.insert("projectQuotes", { ...fields((await ctx.db.get(s.quoteId))!), projectId, companyId, submittedByUserId: ownerId });
+      const invitationId = await ctx.db.insert("invitations", { ...fields((await ctx.db.get(s.invitationId))!), projectId, companyId, clientUserId: clientId });
+      const conversationId = await ctx.db.insert("conversations", { ...fields((await ctx.db.get(s.conversationId))!), projectId, companyId, clientId, quoteId, invitationId, createdBy: clientId });
+      const messageId = await ctx.db.insert("messages", { ...fields((await ctx.db.get(s.messageId))!), conversationId, senderUserId: ownerId });
+      const assessmentId = await ctx.db.insert("siteAssessments", { ...fields((await ctx.db.get(s.assessmentId))!), projectId, companyId, clientId, conversationId, initialQuoteId: quoteId, invitedByUserId: clientId });
+      const finalQuoteId = await ctx.db.insert("finalQuotes", { ...fields((await ctx.db.get(s.finalQuoteId))!), projectId, companyId, clientId, conversationId, initialQuoteId: quoteId, requestedByUserId: clientId, currentRevisionId: undefined });
+      const revisionId = await ctx.db.insert("finalQuoteRevisions", { ...fields((await ctx.db.get(s.revisionId))!), finalQuoteId, submittedByUserId: ownerId });
+      await ctx.db.patch(finalQuoteId, { currentRevisionId: revisionId });
+      const company = await ctx.db.get(companyId);
+      await ctx.db.insert("notifications", { recipientUserId: clientId, type: "message_received", entity: { type: "conversation", id: conversationId },
+        actorUserId: ownerId, payload: { companyName: company?.name, actorDisplayName: company?.name }, createdAt: 9 });
+      return { projectId, quoteId, invitationId, conversationId, messageId, assessmentId, finalQuoteId, revisionId };
+    });
+    return { ...s, ...ids, clientId, companyId, ownerId };
+  }
+
+  async function accept(s: State) {
+    await s.t.run(ctx => ctx.db.patch(s.assessmentId, { status: "cancelled", active: false }));
+    const client = asUser(s.t, s.clientId);
+    await client.mutation(api.finalQuotes.index.review, { finalQuoteId: s.finalQuoteId, revisionId: s.revisionId, action: "accept" });
+    const deal = await client.query(api.deals.index.getByProject, { projectId: s.projectId });
+    expect(deal).not.toBeNull();
+    return deal!;
+  }
+
+  async function identities(s: State) {
+    const client = asUser(s.t, s.clientId);
+    const [quotes, detail, invitations, threads, conversation, site, siteForConversation, finalQuote] = await Promise.all([
+      client.query(api.quotes.index.listReceivedInitialQuotes, { projectId: s.projectId }),
+      client.query(api.quotes.index.getReceivedInitialQuote, { quoteId: s.quoteId }),
+      client.query(api.invitations.index.listProjectInvitations, { projectId: s.projectId }),
+      client.query(api.messages.index.listMyThreads, {}),
+      client.query(api.messages.index.getConversation, { conversationId: s.conversationId }),
+      client.query(api.siteVisits.index.getForProject, { projectId: s.projectId }),
+      client.query(api.siteVisits.index.getForConversation, { conversationId: s.conversationId }),
+      client.query(api.finalQuotes.index.getForConversation, { conversationId: s.conversationId }),
+    ]);
+    return [quotes[0].company.name, detail.company.name, invitations[0].companyName,
+      threads.find(row => row.id === s.conversationId)?.otherPartyName, conversation.otherPartyName,
+      site.assessment?.companyName, siteForConversation.assessment?.companyName, finalQuote.finalQuote?.companyName];
+  }
+
+  async function pushNotification(s: State) {
+    return s.t.run(async ctx => {
+      await ctx.db.insert("notificationPreferences", { userId: s.clientId, ...DEFAULT_NOTIFICATION_PREFERENCES, pushEnabled: true, updatedAt: 1 });
+      await ctx.db.insert("pushSubscriptions", { userId: s.clientId, endpoint: `https://push.example.test/${s.clientId}`, p256dh: "test", auth: "test", locale: "en", createdAt: 1, updatedAt: 1 });
+      return (await ctx.db.query("notifications").withIndex("by_recipientUserId_and_createdAt", q => q.eq("recipientUserId", s.clientId)).first())!._id;
+    });
+  }
+
+  test("real Deal creation changes all authenticated Client identity DTOs from masked to full", async () => {
+    const s = await setup();
+    expect(await identities(s)).toEqual(Array(8).fill(MASKED));
+    const deal = await accept(s);
+    expect(deal).toMatchObject({ companyId: s.companyId, clientUserId: s.clientId, companyName: NAME });
+    expect(await identities(s)).toEqual(Array(8).fill(NAME));
+    const client = asUser(s.t, s.clientId);
+    expect((await client.query(api.quotes.index.getReceivedInitialQuote, { quoteId: s.quoteId })).history[0].reason).toContain(LEGAL_NAME);
+    expect((await client.query(api.messages.index.listMessages, { conversationId: s.conversationId, paginationOpts: pageOpts })).page[0].body).toContain(NAME);
+    expect((await client.query(api.finalQuotes.index.getForConversation, { conversationId: s.conversationId })).finalQuote?.revisions[0].scope).toContain(NAME);
+  });
+
+  test.each(["submitted", "shortlisted", "discussion_open"] as const)("%s proposal, accepted invitation, messages, assessment and Final Quote without a Deal stay masked", async status => {
+    const s = await setup();
+    await s.t.run(ctx => ctx.db.patch(s.quoteId, { status }));
+    const client = asUser(s.t, s.clientId);
+    expect((await client.query(api.quotes.index.getReceivedInitialQuote, { quoteId: s.quoteId })).company.name).toBe(MASKED);
+    expect((await client.query(api.messages.index.getConversation, { conversationId: s.conversationId })).otherPartyName).toBe(MASKED);
+    expect((await client.query(api.messages.index.listMessages, { conversationId: s.conversationId, paginationOpts: pageOpts })).page[0].body).toContain(MASKED);
+    expect((await client.query(api.invitations.index.listProjectInvitations, { projectId: s.projectId }))[0].companyName).toBe(MASKED);
+    expect(await client.query(api.deals.index.getByProject, { projectId: s.projectId })).toBeNull();
+  });
+
+  test("a Client's Deal with another Company cannot reveal Company X", async () => {
+    const s = await setup();
+    const { companyId, ownerId } = await s.t.run(async ctx => {
+      const companyId = await ctx.db.insert("companies", { name: "Atlas Construction", onboardingStatus: "completed", verificationStatus: "verified", createdAt: 1, updatedAt: 1 });
+      const ownerId = await ctx.db.insert("users", { accountType: "company", onboardingStatus: "completed", createdAt: 1 });
+      await ctx.db.insert("companyMembers", { companyId, userId: ownerId, role: "owner", status: "active", createdAt: 1 });
+      return { companyId, ownerId };
+    });
+    const otherCompany = await relationship(s, s.otherClientId, companyId, ownerId);
+    const otherClientX = await relationship(s, s.otherClientId);
+    await accept(otherCompany);
+    expect(await identities(otherClientX)).toEqual(Array(8).fill(MASKED));
+    expect(await identities(s)).toEqual(Array(8).fill(MASKED));
+  });
+
+  test("cross-Client reads and repeated recipient resolution stay isolated after Client A's Deal", async () => {
+    const s = await setup();
+    const b = await relationship(s, s.otherClientId);
+    const client = asUser(s.t, s.clientId), other = asUser(s.t, s.otherClientId);
+    await accept(s);
+    for (let index = 0; index < 2; index++) {
+      expect(await identities(s)).toEqual(Array(8).fill(NAME));
+      expect(await identities(b)).toEqual(Array(8).fill(MASKED));
+      expect((await client.query(api.notifications.index.listMyNotifications, { paginationOpts: pageOpts })).page[0].payload.companyName).toBe(NAME);
+      expect((await other.query(api.notifications.index.listMyNotifications, { paginationOpts: pageOpts })).page[0].payload.companyName).toBe(MASKED);
+    }
+    await expect(other.query(api.deals.index.getByProject, { projectId: s.projectId })).rejects.toThrow("DEAL_NOT_FOUND");
+    await expect(other.query(api.quotes.index.getReceivedInitialQuote, { quoteId: s.quoteId })).rejects.toThrow("PROJECT_NOT_FOUND");
+    await expect(other.query(api.messages.index.getConversation, { conversationId: s.conversationId })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+    await expect(other.query(api.finalQuotes.index.getForConversation, { conversationId: s.conversationId })).rejects.toThrow("CONVERSATION_NOT_FOUND");
+  });
+
+  test("Deal visibility applies to the same Client/Company on another authorized project", async () => {
+    const s = await setup();
+    const samePair = await relationship(s, s.clientId);
+    await accept(s);
+    expect(await identities(samePair)).toEqual(Array(8).fill(NAME));
+    expect(await asUser(s.t, s.clientId).query(api.deals.index.getByProject, { projectId: samePair.projectId })).toBeNull();
+  });
+
+  test.each(["completed", "cancelled"] as const)("%s Deal retains full identity for the same Client only", async status => {
+    const s = await setup(), b = await relationship(s, s.otherClientId);
+    const deal = await accept(s);
+    if (status === "completed") await asUser(s.t, s.clientId).mutation(api.deals.index.completeDeal, { dealId: deal.id });
+    else await s.t.run(ctx => ctx.db.patch(deal.id, { status })); // Model an existing cancelled record; no new lifecycle command.
+    expect(await identities(s)).toEqual(Array(8).fill(NAME));
+    expect(await identities(b)).toEqual(Array(8).fill(MASKED));
+    expect((await asUser(s.t, s.clientId).query(api.deals.index.getByProject, { projectId: s.projectId }))?.companyName).toBe(NAME);
+  });
+
+  test("anonymous and all public directory/profile/portfolio audiences remain masked after a Deal", async () => {
+    const s = await setup();
+    await accept(s);
+    expect(await s.t.run(ctx => resolveCompanyIdentityAudience(ctx, s.companyId))).toBe("public");
+    const viewers: Array<ReturnType<typeof asUser>> = [s.t, ...[s.clientId, s.otherClientId, s.ownerId, s.adminId].map(id => asUser(s.t, id))];
+    for (const viewer of viewers) {
+      const profile = await viewer.query(api.portfolio.index.getPublicCompanyProfile, { slug: "company-under-test" });
+      const directory = await viewer.query(api.companies.directory.listPublicCompanies, { paginationOpts: pageOpts, sort: "newest", verifiedOnly: true });
+      expect(profile?.name).toBe(MASKED);
+      expect(directory.page[0].name).toBe(MASKED);
+      expectPrivateNameAbsent(profile); expectPrivateNameAbsent(directory);
+    }
+    await expect(s.t.query(api.quotes.index.getReceivedInitialQuote, { quoteId: s.quoteId })).rejects.toThrow("NOT_AUTHENTICATED");
+    await expect(s.t.query(api.messages.index.getConversation, { conversationId: s.conversationId })).rejects.toThrow("NOT_AUTHENTICATED");
+  });
+
+  test.each(["adminId", "ownerId", "staffId"] as const)("%s keeps existing full-name behavior after Deal creation", async role => {
+    const s = await setup();
+    await accept(s);
+    const viewer = asUser(s.t, s[role]);
+    expect((await viewer.query(api.finalQuotes.index.getForConversation, { conversationId: s.conversationId })).finalQuote?.companyName).toBe(NAME);
+    expect((await viewer.query(api.siteVisits.index.getForProject, { projectId: s.projectId })).assessment?.companyName).toBe(NAME);
+    expect((await viewer.query(api.deals.index.getByProject, { projectId: s.projectId }))?.companyName).toBe(NAME);
+    expect((await viewer.query(api.notifications.index.listMyNotifications, { paginationOpts: pageOpts })).page[0].payload.companyName).toBe(NAME);
+  });
+
+  test("public API arguments cannot impersonate a Client or control identity visibility", async () => {
+    const s = await setup(), b = await relationship(s, s.otherClientId);
+    await accept(s);
+    const other = asUser(s.t, s.otherClientId);
+    for (const override of [{ isRevealed: true }, { hasDeal: true }, { showFullName: true }, { clientId: s.clientId }, { clientUserId: s.clientId }]) {
+      await expect(other.query(api.quotes.index.getReceivedInitialQuote, { quoteId: b.quoteId, ...override })).rejects.toThrow();
+    }
+    expect((await other.query(api.quotes.index.getReceivedInitialQuote, { quoteId: b.quoteId })).company.name).toBe(MASKED);
+  });
+
+  test("push identity is resolved for each stored recipient, regardless of the caller's Deal", async () => {
+    const s = await setup(), b = await relationship(s, s.otherClientId);
+    const aNotification = await pushNotification(s), bNotification = await pushNotification(b);
+    await accept(s);
+    for (const [notificationId, expected] of [[aNotification, NAME], [bNotification, MASKED]] as const) {
+      const claim = await asUser(s.t, s.clientId).mutation(internal.notifications.pushDeliveryModel.claimMarketplacePush, { notificationId, leaseId: `recipient-${notificationId}` });
+      expect(claim?.notification.payload.companyName).toBe(expected);
+      for (const locale of ["fr", "en"] as const) expect(marketplacePushPresentation(claim!.notification, "client", locale).body).toContain(expected);
+    }
+  });
+
+  test("notification payload company IDs/aliases cannot create a Deal relationship", async () => {
+    const s = await setup();
+    await accept(s);
+    const companyId = await s.t.run(ctx => ctx.db.insert("companies", { name: "Another Company", onboardingStatus: "completed", verificationStatus: "verified", createdAt: 1, updatedAt: 1 }));
+    const otherCompany = await relationship(s, s.clientId, companyId);
+    await s.t.run(async ctx => {
+      const notification = (await ctx.db.query("notifications").withIndex("by_recipientUserId_and_createdAt", q => q.eq("recipientUserId", s.clientId)).take(20)).find(n => n.entity.id === otherCompany.conversationId)!;
+      await ctx.db.patch(notification._id, { payload: { companyId: s.companyId, companyName: NAME, actorDisplayName: NAME } });
+    });
+    const inbox = await asUser(s.t, s.clientId).query(api.notifications.index.listMyNotifications, { paginationOpts: pageOpts });
+    expect(inbox.page.find(n => n.entity.id === otherCompany.conversationId)?.payload.companyName).toBe(MASKED);
+  });
+
+  test("Deal Clients retain filename/download/alias privacy and no extra contact or metadata fields", async () => {
+    const s = await setup();
+    const fileName = `${NAME}2026-private-contact?.PdF`;
+    const body = `Work by ${NAME}. Please see ${fileName}.`;
+    const sent = await uploadMessageFile(s, fileName, body, "deal-client-file");
+    const finalName = `${LEGAL_NAME}2026-private-document.pdf`;
+    await s.t.run(async ctx => {
+      await ctx.db.patch(s.companyId, { phone: "+212612345678", website: "https://private.example.test" });
+      await ctx.db.patch(s.revisionId, { pdfStorageId: await ctx.storage.store(new Blob(["%PDF-1.7 quote"])), pdfFileName: finalName, pdfUploadFileName: finalName, pdfSize: 14, scope: body });
+      await ctx.db.patch(s.quoteId, { message: body });
+      await ctx.db.patch(s.invitationId, { message: body });
+      await ctx.db.patch(s.assessmentId, { companyNote: body });
+    });
+    await pushNotification(s);
+    const notificationId = await s.t.run(async ctx => (await ctx.db.query("notifications")
+      .withIndex("by_recipientUserId_and_dedupeKey", q => q.eq("recipientUserId", s.clientId).eq("dedupeKey", `message:${sent.messageId}:received`)).unique())!._id);
+    await accept(s);
+    const client = asUser(s.t, s.clientId);
+    const before = await s.t.run(async ctx => ({ company: await ctx.db.get(s.companyId), deal: await ctx.db.query("deals").withIndex("by_projectId", q => q.eq("projectId", s.projectId)).unique(), revision: await ctx.db.get(s.revisionId), attachment: await ctx.db.get(sent.attachmentId), message: await ctx.db.get(sent.messageId) }));
+    const expected = `Work by ${NAME}. Please see attachment.PdF.`;
+    const messages = await client.query(api.messages.index.listMessages, { conversationId: s.conversationId, paginationOpts: pageOpts });
+    expect(messages.page[0]).toMatchObject({ body: expected, attachment: { fileName: "attachment.PdF" } });
+    expect((await client.query(api.messages.index.getConversation, { conversationId: s.conversationId })).preview).toBe(expected);
+    const quote = await client.query(api.quotes.index.getReceivedInitialQuote, { quoteId: s.quoteId });
+    const invitation = await client.query(api.invitations.index.listProjectInvitations, { projectId: s.projectId });
+    const assessment = await client.query(api.siteVisits.index.getForProject, { projectId: s.projectId });
+    const finalQuote = await client.query(api.finalQuotes.index.getForConversation, { conversationId: s.conversationId });
+    expect(quote.message).toBe(expected); expect(invitation[0].message).toBe(expected); expect(assessment.assessment?.companyNote).toBe(expected);
+    expect(finalQuote.finalQuote?.revisions[0]).toMatchObject({ scope: expected, pdfFileName: "final-quote.pdf" });
+    expect((await client.query(internal.messages.download.authorizeAttachmentDownload, { attachmentId: sent.attachmentId })).fileName).toBe("attachment.PdF");
+    expect((await client.fetch(`/messages/attachments/${sent.attachmentId}`)).headers.get("content-disposition")).toContain("attachment.PdF");
+    expect((await client.query(internal.finalQuotes.download.authorizePdfDownload, { revisionId: s.revisionId })).fileName).toBe("final-quote.pdf");
+    expect((await client.fetch(`/final-quotes/pdf/${s.revisionId}`)).headers.get("content-disposition")).toContain("final-quote.pdf");
+    const claim = await s.t.mutation(internal.notifications.pushDeliveryModel.claimMarketplacePush, { notificationId, leaseId: "deal-file-privacy" });
+    const inbox = await client.query(api.notifications.index.listMyNotifications, { paginationOpts: pageOpts });
+    expect(claim?.notification.payload.companyName).toBe(NAME);
+    expect(claim?.notification.payload.messagePreview).toBe(expected);
+    expect(inbox.page.find(n => n.id === notificationId)?.payload.messagePreview).toBe(expected);
+    const serialized = JSON.stringify([quote, invitation, assessment, finalQuote, messages, inbox, claim]);
+    for (const privateValue of [fileName, finalName, "+212612345678", "https://private.example.test", '"uploadFileName"', '"pdfUploadFileName"', '"legalName"']) expect(serialized).not.toContain(privateValue);
+    expect(await s.t.run(ctx => ctx.db.get(sent.attachmentId))).toEqual(before.attachment);
+    expect(await s.t.run(ctx => ctx.db.get(s.revisionId))).toEqual(before.revision);
+    expect(await s.t.run(ctx => ctx.db.get(s.companyId))).toEqual(before.company);
+    expect(await s.t.run(ctx => ctx.db.get(sent.messageId))).toEqual(before.message);
+    expect(await s.t.run(ctx => ctx.db.get(before.deal!._id))).toEqual(before.deal);
+  });
+
+  test("Deal Clients still fail closed for unreconstructable legacy filename paths", async () => {
+    const s = await setup();
+    const sent = await uploadMessageFile(s, `${NAME}2026/plans.pdf`, `See ${NAME}2026/plans.pdf.`, "deal-legacy-file");
+    await s.t.run(ctx => ctx.db.patch(sent.attachmentId, { uploadFileName: undefined }));
+    await accept(s);
+    await expect(asUser(s.t, s.clientId).query(api.messages.index.listMessages, { conversationId: s.conversationId, paginationOpts: pageOpts })).rejects.toThrow("COMPANY_FILE_PRIVACY_LIMIT");
+  });
+
+  test("historical site-visit notes and proposal history follow Deal identity while keeping filenames private", async () => {
+    const s = await setup();
+    const body = `Representative of ${NAME}. See ${LEGAL_NAME}2026.pdf.`;
+    await s.t.run(async ctx => {
+      const visitId = await ctx.db.insert("siteVisits", {
+        assessmentId: s.assessmentId, projectId: s.projectId, companyId: s.companyId, clientId: s.clientId,
+        conversationId: s.conversationId, initialQuoteId: s.quoteId, proposedByUserId: s.ownerId,
+        proposedDate: "2026-10-01", proposedTime: "10:00", timezone: "Africa/Casablanca", siteAddress: "Client project site, Rabat",
+        note: body, status: "completed", active: false, proposedAt: 5, completedAt: 6, createdAt: 5, updatedAt: 6,
+      });
+      const proposalId = await ctx.db.insert("siteVisitProposals", { visitId, assessmentId: s.assessmentId, sequence: 1, proposedByUserId: s.ownerId,
+        proposedDate: "2026-10-01", proposedTime: "10:00", timezone: "Africa/Casablanca", siteAddress: "Client project site, Rabat", note: body, proposedAt: 5 });
+      await ctx.db.patch(visitId, { currentProposalId: proposalId });
+      await ctx.db.patch(s.revisionId, { pdfFileName: `${LEGAL_NAME}2026.pdf` });
+    });
+    const client = asUser(s.t, s.clientId);
+    const before = await client.query(api.siteVisits.index.getForProject, { projectId: s.projectId });
+    expect(before.assessment?.visit?.note).toBe(`Representative of ${MASKED}. See final-quote.pdf.`);
+    await accept(s);
+    const after = await client.query(api.siteVisits.index.getForProject, { projectId: s.projectId });
+    expect(after.assessment?.companyName).toBe(NAME);
+    expect(after.assessment?.visit?.note).toBe(`Representative of ${NAME}. See final-quote.pdf.`);
+    expect(after.assessment?.visit?.proposals[0].note).toBe(after.assessment?.visit?.note);
   });
 });

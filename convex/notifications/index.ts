@@ -46,7 +46,6 @@ export const listMyNotifications = query({
       throw new ConvexError("INVALID_NOTIFICATION_PAGE_SIZE");
     }
     const userId = await requireUserId(ctx);
-    const recipient = await ctx.db.get(userId);
     const [state, page] = await Promise.all([
       recipientState(ctx, userId),
       ctx.db
@@ -60,7 +59,7 @@ export const listMyNotifications = query({
       page: await Promise.all(page.page.map(async (notification) => {
         const [proposal, identity] = await Promise.all([
           notification.entity.type === "proposal" ? ctx.db.get(notification.entity.id) : null,
-          notificationIdentityForRecipient(ctx, notification, recipient?.accountType),
+          notificationIdentityForRecipient(ctx, notification),
         ]);
         return {
           id: notification._id,

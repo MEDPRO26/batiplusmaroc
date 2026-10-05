@@ -12,12 +12,14 @@ import { assertProjectTransition } from "../projects/state";
 import { commissionStatusValidator, dealStatusValidator } from "./constants";
 import { recordCommissionDue } from "./commissionSummary";
 import { assertDealCompletable, isDealReviewEligible } from "./state";
+import { companyNameForAudience, resolveCompanyIdentityAudience } from "../lib/companyName";
 
 const dealValidator = v.object({
   id: v.id("deals"),
   projectId: v.id("projects"),
   clientUserId: v.id("users"),
   companyId: v.id("companies"),
+  companyName: v.string(),
   createdByUserId: v.id("users"),
   acceptedFinalQuoteId: v.id("finalQuotes"),
   acceptedFinalQuoteRevisionId: v.id("finalQuoteRevisions"),
@@ -126,7 +128,9 @@ export const getByProject = query({
       .unique();
     if (!deal) return null;
     await requireDealViewer(ctx, deal);
-    return toDealDto(deal);
+    const company = await ctx.db.get(deal.companyId);
+    const audience = await resolveCompanyIdentityAudience(ctx, deal.companyId);
+    return { ...toDealDto(deal), companyName: companyNameForAudience(company?.name?.trim(), audience) };
   },
 });
 
