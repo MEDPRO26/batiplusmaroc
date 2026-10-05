@@ -4,7 +4,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
-import { companyFileNamesForRelationship, companyNameForAudience, maskCompanyNamesInText } from "../lib/companyName";
+import { companyFileNamesForRelationship, companyNameForAudience, companyNamesToMask, maskCompanyNamesInText, resolveCompanyIdentityAudience } from "../lib/companyName";
 import {
   getCompanyOperationalStatus,
   requireCompanyMarketplaceWriteAllowed,
@@ -270,11 +270,12 @@ async function visitDto(ctx: Ctx, visit: Doc<"siteVisits">, viewer: Participant 
 async function assessmentDto(ctx: Ctx, assessment: Doc<"siteAssessments">, viewer: Participant | null) {
   const [company, visit] = await Promise.all([ctx.db.get(assessment.companyId), latestVisitForAssessment(ctx, assessment._id)]);
   if (!company) throw new ConvexError("COMPANY_NOT_FOUND");
-  const maskedNames = viewer?.actorType === "client" ? [company.name, company.legalName] : [];
+  const audience = await resolveCompanyIdentityAudience(ctx, company._id);
+  const maskedNames = companyNamesToMask(company, audience);
   const files = viewer?.actorType === "client" ? await companyFileNamesForRelationship(ctx, assessment.projectId, assessment.companyId, assessment.clientId, [assessment.clientNote, assessment.companyNote]) : [];
   return {
     id: assessment._id, projectId: assessment.projectId, companyId: assessment.companyId,
-    companyName: companyNameForAudience(company.name?.trim(), viewer === null ? "admin" : viewer.actorType === "company" ? "own_company" : "client"), initialQuoteId: assessment.initialQuoteId,
+    companyName: companyNameForAudience(company.name?.trim(), audience), initialQuoteId: assessment.initialQuoteId,
     conversationId: assessment.conversationId, status: assessment.status, invitedAt: assessment.invitedAt,
     acceptedAt: assessment.acceptedAt ?? null,
     clientNote: assessment.clientNote === undefined ? null : maskCompanyNamesInText(assessment.clientNote, maskedNames, files),

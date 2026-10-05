@@ -199,6 +199,7 @@ export function ClientDealCompletion({ project }: { project: ProjectDetails }) {
       <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="m-0 text-lg font-semibold text-ink" id="deal-completion-title">{completed ? t("completedTitle") : t("activeTitle")}</h2>
+          {deal.companyName ? <p className="mt-1 mb-0 text-sm font-semibold text-ink">{deal.companyName}</p> : null}
           <p className="mt-1 mb-0 max-w-2xl text-sm leading-6 text-muted">
             {completed && deal.completedAt
               ? t("completedLead", { date: new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "Africa/Casablanca" }).format(deal.completedAt) })

@@ -4,7 +4,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { requireCompanyUser, requireVerifiedCompanyMarketplaceUser } from "../companies/access";
-import { companyFileNamesForConversation, companyNameForAudience, companyPdfFileNameForAudience, maskCompanyNamesInText, type CompanyNameAudience, type CompanyFileNameReference } from "../lib/companyName";
+import { companyFileNamesForConversation, companyNameForAudience, companyNamesToMask, companyPdfFileNameForAudience, maskCompanyNamesInText, resolveCompanyIdentityAudience, type CompanyNameAudience, type CompanyFileNameReference } from "../lib/companyName";
 import { assertCompanyMarketplaceWriteAllowed, getCompanyOperationalStatus, requireCompanyMarketplaceWriteAllowed } from "../companies/operationalStatus";
 import {
   createDealFromFreshFinalQuoteAcceptance,
@@ -267,7 +267,8 @@ async function finalQuoteDto(
     ctx.db.query("finalQuoteRevisions").withIndex("by_finalQuoteId_and_revisionNumber", (q) => q.eq("finalQuoteId", parent._id)).order("asc").take(100),
   ]);
   if (!company) throw new ConvexError("FINAL_QUOTE_INTEGRITY_ERROR");
-  const maskedNames = viewerType === "client" ? [company.name, company.legalName] : [];
+  const audience = await resolveCompanyIdentityAudience(ctx, company._id);
+  const maskedNames = companyNamesToMask(company, audience);
   let files: readonly CompanyFileNameReference[] = [];
   if (viewerType === "client") {
     const conversation = await ctx.db.get(parent.conversationId);
@@ -280,11 +281,11 @@ async function finalQuoteDto(
     canSubmitOverride ??
     (viewerType === "company" &&
       (parent.status === "draft" || parent.status === "changes_requested"));
-  return { id: parent._id, projectId: parent.projectId, companyId: parent.companyId, companyName: companyNameForAudience(company.name?.trim(), viewerType === "company" ? "own_company" : viewerType),
+  return { id: parent._id, projectId: parent.projectId, companyId: parent.companyId, companyName: companyNameForAudience(company.name?.trim(), audience),
     conversationId: parent.conversationId, status: parent.status, requestTrigger: parent.requestTrigger, requestedAt: parent.requestedAt,
     changesRequestReason: parent.changesRequestReason === undefined ? null : maskCompanyNamesInText(parent.changesRequestReason, maskedNames, files), acceptedAt: parent.acceptedAt ?? null,
     declinedAt: parent.declinedAt ?? null, withdrawnAt: parent.withdrawnAt ?? null, currentRevisionId: parent.currentRevisionId ?? null,
-    revisions: await Promise.all(revisions.map((revision) => revisionDto(revision, maskedNames, viewerType === "company" ? "own_company" : viewerType, files))), canRequest: false,
+    revisions: await Promise.all(revisions.map((revision) => revisionDto(revision, maskedNames, audience, files))), canRequest: false,
     canSubmit,
     canReview: viewerType === "client" && parent.status === "submitted", canWithdraw: viewerType === "company" && parent.status === "submitted" };
 }

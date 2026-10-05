@@ -28,6 +28,13 @@ describe("Company name masking", () => {
     expect(companyNameForAudience("S2MBOU SARL", "client")).toBe("S2**** SA**");
     expect(companyNameForAudience("S2MBOU SARL", "admin")).toBe("S2MBOU SARL");
     expect(companyNameForAudience("S2MBOU SARL", "own_company")).toBe("S2MBOU SARL");
+    expect(companyNameForAudience("S2MBOU SARL", "deal_client")).toBe("S2MBOU SARL");
+  });
+
+  test("Deal identity visibility does not reveal document filenames", () => {
+    for (const kind of ["attachment", "final-quote", "company-document"] as const) {
+      expect(companyPdfFileNameForAudience("S2MBOU SARL-private-contact.PDF", "deal_client", kind)).toBe(`${kind}.PDF`);
+    }
   });
 
   test("redacts exact aliases in text, including accents, whitespace and regex punctuation", () => {

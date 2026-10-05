@@ -1,6 +1,6 @@
 import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { companyFileNamesForConversation, companyPdfFileNameForAudience, maskCompanyName, maskCompanyNamesInText, type CompanyFileNameReference } from "../lib/companyName";
+import { companyFileNamesForConversation, companyNameForAudience, companyNamesToMask, companyPdfFileNameForAudience, maskCompanyNamesInText, resolveCompanyIdentityAudience, type CompanyFileNameReference } from "../lib/companyName";
 import { paginationOptsValidator, paginationResultValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
@@ -271,7 +271,8 @@ async function threadFor(ctx: MessageCtx, conversation: Doc<"conversations">, vi
       : null,
   ]);
   if (!company || !client) return null;
-  const maskedNames = viewerType === "client" ? [company.name, company.legalName] : [];
+  const audience = await resolveCompanyIdentityAudience(ctx, company._id);
+  const maskedNames = companyNamesToMask(company, audience);
   let files: readonly CompanyFileNameReference[] = [];
   let preview = conversation.lastMessagePreview === undefined ? null : maskCompanyNamesInText(conversation.lastMessagePreview, maskedNames);
   if (viewerType === "client" && preview !== null) {
@@ -295,7 +296,7 @@ async function threadFor(ctx: MessageCtx, conversation: Doc<"conversations">, vi
     projectId: conversation.projectId,
     quoteId: conversation.quoteId ?? null,
     projectTitle: project.title === undefined ? null : maskCompanyNamesInText(project.title, maskedNames, files),
-    otherPartyName: viewerType === "client" ? maskCompanyName(company.name) : clientDisplayName(client),
+    otherPartyName: viewerType === "client" ? companyNameForAudience(company.name, audience) : clientDisplayName(client),
     companySlug: viewerType === "client" ? company.slug ?? null : null,
     otherPartyAvatarUrl:
       viewerType === "client"
@@ -482,7 +483,8 @@ export const listMessages = query({
     }
     const { viewer, conversation } = await requireConversationAccess(ctx, args.conversationId);
     const company = viewer.viewerType === "client" ? await ctx.db.get(conversation.companyId) : null;
-    const names = [company?.name, company?.legalName];
+    const audience = await resolveCompanyIdentityAudience(ctx, conversation.companyId);
+    const names = companyNamesToMask(company ?? {}, audience);
     const page = await ctx.db.query("messages").withIndex("by_conversationId_and_createdAt", (q) => q.eq("conversationId", args.conversationId)).order("desc").paginate(args.paginationOpts);
     const attachments = await Promise.all(page.page.map(message => ctx.db.query("messageAttachments").withIndex("by_messageId", q => q.eq("messageId", message._id)).unique()));
     const files = viewer.viewerType === "client" ? await companyFileNamesForConversation(ctx, conversation,

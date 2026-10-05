@@ -551,6 +551,7 @@ export default defineSchema({
   })
     .index("by_projectId", ["projectId"])
     .index("by_clientUserId", ["clientUserId"])
+    .index("by_clientUserId_and_companyId", ["clientUserId", "companyId"])
     .index("by_companyId", ["companyId"])
     .index("by_createdAt", ["createdAt"])
     .index("by_companyId_and_createdAt", ["companyId", "createdAt"])

@@ -16,16 +16,18 @@ export function ClientProjectCurrentStep({ project }: { project: ProjectDetails 
     (project.status === "in_discussion" || project.status === "company_selected");
   const quotes = useQuery(api.quotes.index.listReceivedInitialQuotes, relevant ? { projectId: project.id } : "skip");
   const threads = useQuery(api.messages.index.listMyThreads, relevant ? {} : "skip");
-  const thread = threads?.find((item) => item.projectId === project.id) ?? null;
+  const deal = useQuery(api.deals.index.getByProject, relevant ? { projectId: project.id } : "skip");
+  const thread = threads?.find((item) => deal ? item.id === deal.conversationId : item.projectId === project.id) ?? null;
   const quote = useQuery(
     api.finalQuotes.index.getForConversation,
     relevant && thread ? { conversationId: thread.id } : "skip",
   );
-  if (!relevant || quotes === undefined || threads === undefined) return null;
+  if (!relevant || quotes === undefined || threads === undefined || (project.status === "company_selected" && deal === undefined)) return null;
 
-  const openQuote = quotes.find((item) => item.status === "discussion_open") ?? quotes[0] ?? null;
-  const companyName = thread?.otherPartyName || openQuote?.company.name || "";
-  const conversationId = thread?.id ?? null;
+  const openQuote = deal ? quotes.find((item) => item.id === deal.initialQuoteId) ?? null
+    : quotes.find((item) => item.status === "discussion_open") ?? quotes[0] ?? null;
+  const companyName = deal?.companyName || thread?.otherPartyName || openQuote?.company.name || "";
+  const conversationId = deal?.conversationId ?? thread?.id ?? null;
   const finalQuote = quote?.finalQuote ?? null;
   const latest = latestRevision(finalQuote);
   const selected = project.status === "company_selected" || finalQuote?.status === "accepted";

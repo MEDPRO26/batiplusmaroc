@@ -1,4 +1,5 @@
 import { ConvexError } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { MAX_UPLOAD_FILE_NAME_LENGTH, messagePdfFileNameAliasPattern, sanitizeMessagePdfFileName } from "../messages/attachmentRules";
@@ -12,7 +13,7 @@ export function maskCompanyName(name: unknown): string {
   }).join(" ");
 }
 
-export type CompanyNameAudience = "public" | "client" | "own_company" | "admin";
+export type CompanyNameAudience = "public" | "client" | "deal_client" | "own_company" | "admin";
 export type CompanyFileNameReference = {
   originalFileName: string;
   uploadFileName?: string;
@@ -21,19 +22,60 @@ export type CompanyFileNameReference = {
 
 /**
  * The caller must establish Admin or own-Company authority before selecting a
- * full-name audience. Client Deal-based reveal is deliberately deferred.
+ * full-name audience. Deal Clients must be resolved by the server-side policy.
  */
 export function companyNameForAudience(name: unknown, audience: CompanyNameAudience): string {
-  if (audience === "admin" || audience === "own_company") {
+  if (audience === "admin" || audience === "own_company" || audience === "deal_client") {
     return typeof name === "string" ? name : "";
   }
   return maskCompanyName(name);
+}
+
+/** Public endpoints must keep their explicit public policy and never call this. */
+export async function resolveCompanyIdentityAudience(
+  ctx: QueryCtx | MutationCtx,
+  companyId: Id<"companies">,
+): Promise<CompanyNameAudience> {
+  const userId = await getAuthUserId(ctx);
+  return resolveCompanyIdentityAudienceForUser(ctx, companyId, userId ? await ctx.db.get(userId) : null);
+}
+
+/**
+ * Server-only recipient policy. The user must be loaded from the database;
+ * notification delivery uses its stored recipient, independently of caller auth.
+ * This changes identity visibility only, never permission to read an entity.
+ */
+export async function resolveCompanyIdentityAudienceForUser(
+  ctx: QueryCtx | MutationCtx,
+  companyId: Id<"companies">,
+  user: Doc<"users"> | null,
+): Promise<CompanyNameAudience> {
+  if (user?.accountType === "admin") return "admin";
+  if (user?.accountType === "company") {
+    const member = await ctx.db.query("companyMembers").withIndex("by_companyId_and_userId", q =>
+      q.eq("companyId", companyId).eq("userId", user._id)).unique();
+    if (member?.status === "active") return "own_company";
+  }
+  if (user?.accountType === "client" && user.onboardingStatus === "completed") {
+    // Any persisted Deal grants this exact relationship visibility, including
+    // completed/cancelled Deals. No status filter, project flag, scan or cache.
+    const deal = await ctx.db.query("deals").withIndex("by_clientUserId_and_companyId", q =>
+      q.eq("clientUserId", user._id).eq("companyId", companyId)).first();
+    return deal?.clientUserId === user._id && deal.companyId === companyId ? "deal_client" : "client";
+  }
+  return "public";
+}
+
+/** Names in authorized text follow identity policy; file aliases remain private. */
+export function companyNamesToMask(company: Pick<Doc<"companies">, "name" | "legalName">, audience: CompanyNameAudience) {
+  return audience === "public" || audience === "client" ? [company.name, company.legalName] : [];
 }
 
 /**
  * Shared Company attachments and Final Quotes are validated PDFs. Never copy
  * any user-controlled basename (or unknown extension) into a public/Client DTO.
  * Privileged audiences must already have passed the existing access checks.
+ * A Deal reveals names only: deal_client still gets generated safe filenames.
  */
 export function companyPdfFileNameForAudience(
   fileName: string,
