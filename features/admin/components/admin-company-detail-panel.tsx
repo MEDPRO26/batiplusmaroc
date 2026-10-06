@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminCompanyCoverSection } from "./admin-company-cover-review";
+
 import { AdminCompanyLogoSection } from "./admin-company-logo-review";
 import { AdminCompanyPortfolioImages } from "./admin-portfolio-image-review";
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
@@ -22,13 +24,13 @@ import { OperationalConversation } from "@/features/operations/components/operat
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 
-export type AdminCompanyTab = "overview" | "verification" | "logo" | "portfolioImages" | "projectsDeals" | "commissions" | "reviews" | "activity" | "messages" | "internalNotes";
+export type AdminCompanyTab = "overview" | "verification" | "logo" | "cover" | "portfolioImages" | "projectsDeals" | "commissions" | "reviews" | "activity" | "messages" | "internalNotes";
 type Summary = NonNullable<FunctionReturnType<typeof api.admin.companies.getCompanySummary>>;
 type Commission = FunctionReturnType<typeof api.admin.deals.listCommissionObligations>["page"][number];
 type Review = FunctionReturnType<typeof api.admin.companies.listCompanyReviews>["page"][number];
 type OperationalStatus = "normal" | "needs_attention" | "suspended";
 
-const TABS: AdminCompanyTab[] = ["overview", "verification", "logo", "portfolioImages", "projectsDeals", "commissions", "reviews", "activity", "messages", "internalNotes"];
+const TABS: AdminCompanyTab[] = ["overview", "verification", "logo", "cover", "portfolioImages", "projectsDeals", "commissions", "reviews", "activity", "messages", "internalNotes"];
 const OPERATIONAL_STATUSES: OperationalStatus[] = ["normal", "needs_attention", "suspended"];
 
 /** Returns to the Companies list with the filters the Admin left it with. */
@@ -121,6 +123,7 @@ export function AdminCompanyDetailPanel({ companyId, initialTab = "overview" }: 
         {tab === "overview" ? <Overview currentStatus={currentStatus} onChangeStatus={setStatusTarget} onSelectTab={selectTab} summary={summary} unreadMessages={operationalSummary?.unreadCount ?? 0} /> : null}
         {tab === "verification" ? <AdminCompanyVerification companyId={companyId} companyName={summary.name} /> : null}
         {tab === "logo" ? <AdminCompanyLogoSection approvedImageId={summary.approvedLogoImageId} submittedImageId={summary.submittedLogoImageId} /> : null}
+        {tab === "cover" ? <AdminCompanyCoverSection key={companyId} approvedImageId={summary.approvedCoverImageId} submittedImageId={summary.submittedCoverImageId} /> : null}
         {tab === "portfolioImages" ? <AdminCompanyPortfolioImages companyId={companyId} /> : null}
         {tab === "projectsDeals" ? <ProjectsDeals companyId={companyId} /> : null}
         {tab === "commissions" ? <Commissions companyId={companyId} /> : null}
@@ -388,7 +391,6 @@ function OperationalStatusDialog({ companyId, currentStatus, target, onClose }: 
     </div>
   );
 }
-
 
 function ProjectsDeals({ companyId }: { companyId: Id<"companies"> }) {
   const t = useTranslations("adminCompanies");

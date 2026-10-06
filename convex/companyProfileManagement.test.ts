@@ -286,7 +286,7 @@ describe("company public profile management", () => {
         kind: "cover",
         uploadToken: companyBCover,
       }),
-    ).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
+    ).rejects.toThrow("COMPANY_COVER_PRIVATE_UPLOAD_REQUIRED");
 
     const state = await t.run(async (ctx) => ({
       companyA: await ctx.db.get(companyA.companyId),
@@ -296,7 +296,7 @@ describe("company public profile management", () => {
     expect(state.companyB?.name).toBe("company-b Company");
   });
 
-  test("preserves unreviewed legacy logos while cover replacement keeps its verified R2 flow", async () => {
+  test("preserves legacy logo and cover records while requiring private moderated uploads", async () => {
     const t = convexTest(schema, modules);
     const { userId, companyId } = await seedCompany(t, "branding");
     const oldMedia = await t.run(async (ctx) => {
@@ -330,10 +330,10 @@ describe("company public profile management", () => {
       kind: "logo",
       uploadToken: logoUploadToken,
     })).rejects.toThrow("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
-    await asUser(t, userId).mutation(api.companies.index.setCompanyPublicImage, {
+    await expect(asUser(t, userId).mutation(api.companies.index.setCompanyPublicImage, {
       kind: "cover",
       uploadToken: coverUploadToken,
-    });
+    })).rejects.toThrow("COMPANY_COVER_PRIVATE_UPLOAD_REQUIRED");
 
     const state = await t.run(async (ctx) => {
       const company = await ctx.db.get(companyId);
@@ -349,11 +349,12 @@ describe("company public profile management", () => {
     expect(state.cover).toMatchObject({ purpose: "companyCover", uploadedBy: userId });
     expect(state.oldLogo?._id).toBe(oldMedia.logoMediaId);
     expect(state.company?.logoMediaId).toBe(oldMedia.logoMediaId);
-    expect(state.oldCover).toBeNull();
+    expect(state.oldCover?._id).toBe(oldMedia.coverMediaId);
+    expect(state.company?.coverMediaId).toBe(oldMedia.coverMediaId);
 
     const manager = await asUser(t, userId).query(api.companies.index.getProfileManager, {});
     expect(manager.logoUrl).toBeNull();
-    expect(manager.coverImageUrl).toContain(`/companies/${companyId}/cover/`);
+    expect(manager.coverImageUrl).toBeNull();
   });
 
   test("updates services and service areas without duplicate companyServices", async () => {

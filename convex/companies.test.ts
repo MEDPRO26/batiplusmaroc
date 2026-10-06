@@ -218,7 +218,7 @@ describe("company onboarding", () => {
     expect(state.memberships).toHaveLength(1);
   });
 
-  test("rejects legacy public logo uploads while company covers retain the R2 flow", async () => {
+  test("rejects legacy logo and cover claims while onboarding remains optional", async () => {
     const t = convexTest(schema, modules);
     const { userId, companyId } = await seedCompany(t);
     const owner = asUser(t, userId);
@@ -229,10 +229,10 @@ describe("company onboarding", () => {
     })).rejects.toThrow("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
     await owner.mutation(api.companies.index.completeOnboarding, validInput);
     const coverUploadToken = await uploadedCompanyImage(t, userId, companyId, "companyCover");
-    await owner.mutation(api.companies.index.setCompanyPublicImage, {
+    await expect(owner.mutation(api.companies.index.setCompanyPublicImage, {
       kind: "cover",
       uploadToken: coverUploadToken,
-    });
+    })).rejects.toThrow("COMPANY_COVER_PRIVATE_UPLOAD_REQUIRED");
 
     const state = await t.run(async (ctx) => {
       const company = await ctx.db.get(companyId);
@@ -244,7 +244,7 @@ describe("company onboarding", () => {
     });
     expect(state.company?.logoStorageId).toBeUndefined();
     expect(state.logo).toBeNull();
-    expect(state.cover).toMatchObject({ storageProvider: "r2", purpose: "companyCover", uploadedBy: userId });
+    expect(state.cover).toBeNull();
     const profile = await owner.query(api.companies.index.getOnboardingProfile, {});
     expect(profile?.logoUrl).toBeNull();
   });

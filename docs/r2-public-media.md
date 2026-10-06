@@ -1,8 +1,9 @@
 # R2 public media
 
-Batiplus stores Company covers and other existing public marketplace media in
-Cloudflare R2. New Company logos and portfolio cover/gallery images use private
-Convex Storage with exact-file moderation. See
+Batiplus retains legacy Company covers and other existing public marketplace media
+in Cloudflare R2. New Company logos, Company covers and portfolio cover/gallery
+images use private Convex Storage with exact-file moderation. See
+[Company cover moderation](company-cover-moderation-v1.md),
 [portfolio image moderation](portfolio-image-moderation-v1.md) and
 [Company logo moderation](company-logo-moderation-v1.md). Private Company
 verification documents also use Convex Storage.

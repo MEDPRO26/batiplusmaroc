@@ -62,6 +62,7 @@ export const requestPublicMediaUpload = action({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new ConvexError("NOT_AUTHENTICATED");
     if (args.purpose === "companyLogo") throw new ConvexError("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
+    if (args.purpose === "companyCover") throw new ConvexError("COMPANY_COVER_PRIVATE_UPLOAD_REQUIRED");
     if (args.purpose === "portfolioCover" || args.purpose === "portfolioMedia") throw new ConvexError("PORTFOLIO_PRIVATE_UPLOAD_REQUIRED");
     if (!getPublicMediaBaseUrl()) throw new ConvexError("PUBLIC_MEDIA_URL_NOT_CONFIGURED");
 

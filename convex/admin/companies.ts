@@ -96,6 +96,8 @@ const companySummaryValidator = v.object({
   logoUrl: v.union(v.string(), v.null()),
   submittedLogoImageId: v.union(v.id("companyLogoImages"), v.null()),
   approvedLogoImageId: v.union(v.id("companyLogoImages"), v.null()),
+  submittedCoverImageId: v.union(v.id("companyCoverImages"), v.null()),
+  approvedCoverImageId: v.union(v.id("companyCoverImages"), v.null()),
   publicProfileSlug: v.union(v.string(), v.null()),
   activeMemberCount: v.number(),
   membersTruncated: v.boolean(),
@@ -395,6 +397,8 @@ export const getCompanySummary = query({
       logoUrl: resolvedLogo,
       submittedLogoImageId: company.submittedLogoImageId ?? null,
       approvedLogoImageId: company.approvedLogoImageId ?? null,
+      submittedCoverImageId: company.submittedCoverImageId ?? null,
+      approvedCoverImageId: company.approvedCoverImageId ?? null,
       publicProfileSlug:
         company.onboardingStatus === "completed" &&
         company.slug && company.name && company.city && company.description

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAction, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Pencil, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -16,9 +16,6 @@ export type ProfileManager = FunctionReturnType<typeof api.companies.index.getPr
 type UpdateArgs = FunctionArgs<typeof api.companies.index.updatePublicProfile>;
 export type ProfilePatch = UpdateArgs;
 
-const imageTypes = ["image/jpeg", "image/png", "image/webp"];
-const maxCoverBytes = 10 * 1024 * 1024;
-
 class ProfileSaveError extends Error {}
 
 /** Each focused editor sends only the fields owned by its section. */
@@ -26,9 +23,6 @@ export function useProfileSave() {
   const t = useTranslations("companyProfileManager");
   const tUx = useTranslations("ux");
   const update = useMutation(api.companies.index.updatePublicProfile);
-  const setImage = useMutation(api.companies.index.setCompanyPublicImage);
-  const requestUpload = useAction(api.storage.r2.requestPublicMediaUpload);
-  const verifyUpload = useAction(api.storage.r2.verifyPublicMediaUpload);
   const { showToast } = useToast();
 
   async function save(patch: ProfilePatch) {
@@ -40,31 +34,7 @@ export function useProfileSave() {
     showToast(t("success"));
   }
 
-  async function saveImage(uploadToken: string) {
-    try {
-      await setImage({ kind: "cover", uploadToken });
-    } catch (caught) {
-      throw new ProfileSaveError(mapConvexFailure(caught, tUx).message);
-    }
-    showToast(t("success"));
-  }
-
-  async function uploadImage(file: File) {
-    if (!imageTypes.includes(file.type) || file.size < 1 || file.size > maxCoverBytes) {
-      throw new ProfileSaveError(t("branding.coverHelp"));
-    }
-    try {
-      const intent = await requestUpload({ purpose: "companyCover", contentType: file.type, size: file.size });
-      const response = await fetch(intent.uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
-      if (!response.ok) throw new Error("PUBLIC_MEDIA_UPLOAD_FAILED");
-      await verifyUpload({ uploadToken: intent.uploadToken });
-      return intent.uploadToken;
-    } catch (caught) {
-      throw new ProfileSaveError(mapConvexFailure(caught, tUx).message);
-    }
-  }
-
-  return { save, saveImage, uploadImage };
+  return { save };
 }
 
 export function errorMessage(caught: unknown) {

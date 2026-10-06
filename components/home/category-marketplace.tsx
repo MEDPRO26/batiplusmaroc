@@ -1,10 +1,8 @@
 "use client";
 
-import { isApprovedPortfolioImageUrl } from "@/lib/files/portfolio-image";
-
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 
-import Image from "next/image";
+import { ApprovedCompanyCover } from "@/features/companies/components/approved-company-cover";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
@@ -129,12 +127,12 @@ function CompanyCard({ company }: { company: PublicMarketplaceCompany }) {
     <article className="flex h-full flex-col">
       <div className="relative mb-8">
         <div className="relative aspect-4/5 overflow-hidden rounded-md bg-surface-muted ring-1 ring-black/10">
-          {company.coverImageUrl ? <Image
+          {company.coverImageUrl ? <ApprovedCompanyCover
             alt={t("imageAlt", { company: company.name, city: company.city })}
             className="object-cover"
             fill
             sizes="(max-width: 767px) 78vw, (max-width: 1023px) 30vw, (max-width: 1279px) 22vw, 220px"
-            src={company.coverImageUrl} unoptimized={isApprovedPortfolioImageUrl(company.coverImageUrl)}
+            url={company.coverImageUrl}
           /> : null}
         </div>
         <div className="absolute -bottom-5 left-4 grid size-11 place-items-center overflow-hidden rounded-full bg-white shadow-[0_6px_16px_rgb(23_61_99/0.14)] ring-2 ring-white">

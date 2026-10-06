@@ -2,8 +2,11 @@ import { ConvexError } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { QueryCtx, MutationCtx } from "../_generated/server";
 
-/** Prevent private verification, logo and portfolio IDs from being reused through another file API. */
+/** Prevent private verification, logo, cover and portfolio IDs from being reused through another file API. */
 export async function assertNotVerificationStorage(ctx: QueryCtx | MutationCtx, storageId: Id<"_storage">) {
+  const cover = await ctx.db.query("companyCoverImages")
+    .withIndex("by_storageId", q => q.eq("storageId", storageId)).first();
+  if (cover) throw new ConvexError("PRIVATE_COMPANY_COVER_FILE");
   const portfolio = await ctx.db.query("portfolioImages")
     .withIndex("by_storageId", q => q.eq("storageId", storageId)).first();
   if (portfolio) throw new ConvexError("PRIVATE_PORTFOLIO_IMAGE_FILE");
@@ -21,7 +24,7 @@ export async function getNonVerificationStorageUrl(ctx: QueryCtx | MutationCtx, 
   try {
     await assertNotVerificationStorage(ctx, storageId);
   } catch (error) {
-    if (error instanceof ConvexError && ["PRIVATE_VERIFICATION_FILE", "PRIVATE_COMPANY_LOGO_FILE", "PRIVATE_PORTFOLIO_IMAGE_FILE"].includes(String(error.data))) return null;
+    if (error instanceof ConvexError && ["PRIVATE_VERIFICATION_FILE", "PRIVATE_COMPANY_LOGO_FILE", "PRIVATE_PORTFOLIO_IMAGE_FILE", "PRIVATE_COMPANY_COVER_FILE"].includes(String(error.data))) return null;
     throw error;
   }
   return ctx.storage.getUrl(storageId);

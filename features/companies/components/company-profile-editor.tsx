@@ -1,15 +1,17 @@
 "use client";
 
+import { ApprovedCompanyCover } from "./approved-company-cover";
+import { CompanyOwnerCoverManager } from "./company-owner-cover-manager";
+
 import { ApprovedPortfolioImage } from "@/features/portfolio/components/approved-portfolio-image";
 
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 
 import { VerifiedBadge } from "./verified-badge";
 import { useQuery } from "convex/react";
-import { ExternalLink, Loader2, MapPin, Pencil, Plus } from "lucide-react";
-import Image from "next/image";
+import { ExternalLink, MapPin, Plus } from "lucide-react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import { serviceName } from "@/features/companies/lib/service-label";
 import { ProfileSectionSkeleton } from "@/features/shared/components/skeletons";
@@ -18,7 +20,7 @@ import { WorkspaceTabs, workspaceButton } from "@/features/shared/components/wor
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
-import { errorMessage, useProfileSave, type ProfileManager } from "./profile/profile-editing";
+import type { ProfileManager } from "./profile/profile-editing";
 import { CompanyOwnerLogoManager } from "./company-owner-logo-manager";
 import {
   AboutEditor,
@@ -70,6 +72,7 @@ export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
       <div className="mx-auto w-full max-w-[1240px] px-4 pt-6 sm:px-6 sm:pt-8">
         <article className="overflow-hidden rounded-2xl border border-brand-border bg-white">
           <ProfileHeader isVerified={isVerified} profile={profile} />
+          <div className="border-b border-brand-border px-5 py-6 sm:px-7"><CompanyOwnerCoverManager /></div>
           <div className="border-b border-brand-border px-5 py-6 sm:px-7"><CompanyOwnerLogoManager /></div>
 
           <div className="grid lg:grid-cols-[minmax(260px,30%)_minmax(0,1fr)]">
@@ -131,26 +134,16 @@ export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
 
 function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVerified: boolean }) {
   const t = useTranslations("companyProfileManager");
-  const cover = useCoverReplace();
-  const coverUrl = cover.previewUrl ?? profile.coverImageUrl;
   const logoUrl = profile.logoUrl;
 
   return (
     <header>
       <div className="relative aspect-[16/5] min-h-[150px] bg-brand-soft sm:min-h-[200px]">
-        {coverUrl ? (
-          <Image alt={t("branding.coverAlt")} className="object-cover" fill priority sizes="(max-width: 1240px) 100vw, 1240px" src={coverUrl} unoptimized={coverUrl.startsWith("blob:")} />
+        {profile.coverImageUrl ? (
+          <ApprovedCompanyCover alt={t("branding.coverAlt")} className="object-cover" fill priority sizes="(max-width: 1240px) 100vw, 1240px" url={profile.coverImageUrl} />
         ) : (
           <div className="absolute inset-0 bg-[linear-gradient(135deg,rgb(5_79_132/0.20),rgb(5_79_132/0.04))]" />
         )}
-        <div className="absolute right-3 bottom-3 flex flex-col items-end gap-2 sm:right-5 sm:bottom-4">
-          {cover.error ? <p className="m-0 max-w-xs rounded-[10px] bg-white/95 px-3 py-2 text-xs text-[#9b2c20] shadow-sm" role="alert">{cover.error}</p> : null}
-          <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full bg-white/95 px-4 text-sm font-semibold text-ink shadow-sm backdrop-blur transition-transform duration-150 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand active:scale-[0.97]">
-            {cover.uploading ? <Loader2 aria-hidden className="size-3.5 animate-spin text-brand" /> : <Pencil aria-hidden className="size-3.5 text-brand" strokeWidth={2} />}
-            {cover.uploading ? t("profileView.uploading") : profile.coverImageUrl ? t("branding.replaceCover") : t("branding.uploadCover")}
-            <input accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={cover.uploading} onChange={cover.onChange} type="file" />
-          </label>
-        </div>
       </div>
 
       <div className="flex flex-col gap-5 border-b border-brand-border px-5 pb-6 sm:flex-row sm:items-end sm:justify-between sm:px-7">
@@ -184,39 +177,6 @@ function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVer
       </div>
     </header>
   );
-}
-
-/** Covers keep their existing upload flow; moderated logos use the separate owner manager. */
-function useCoverReplace() {
-  const { saveImage, uploadImage } = useProfileSave();
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => () => {
-    if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
-  }, [previewUrl]);
-
-  async function onChange(event: ChangeEvent<HTMLInputElement>) {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    input.value = "";
-    if (!file) return;
-    setError(null);
-    setUploading(true);
-    setPreviewUrl(URL.createObjectURL(file));
-    try {
-      const token = await uploadImage(file);
-      await saveImage(token);
-    } catch (caught) {
-      setPreviewUrl(null);
-      setError(errorMessage(caught));
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  return { previewUrl, uploading, error, onChange };
 }
 
 function PortfolioShowcase() {

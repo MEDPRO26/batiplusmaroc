@@ -504,7 +504,7 @@ test("a Client Deal reveals the name under the existing policy but never pending
   }
 });
 
-test("every legacy portfolio R2 request/verify/bind path is closed while Company cover uploads remain available", async () => {
+test("every legacy portfolio R2 request/verify/bind path is closed while Company cover uploads also require moderation", async () => {
   const { t, owner, company, target } = await fixture();
   for (const purpose of ["portfolioCover", "portfolioMedia"] as const) {
     const args = { purpose, contentType: "image/png", size: png.length, portfolioProjectId: target.portfolioProjectId };
@@ -518,5 +518,5 @@ test("every legacy portfolio R2 request/verify/bind path is closed while Company
     await expect(t.mutation(internal.storage.publicMedia.markUploadVerified, { userId: company.userId, uploadToken: token, objectKey, contentType: "image/png", size: png.length })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
     await expect(owner.action(api.storage.r2.verifyPublicMediaUpload, { uploadToken: token })).rejects.toThrow("INVALID_PUBLIC_MEDIA_UPLOAD");
   }
-  expect(await t.query(internal.storage.publicMedia.getUploadAccess, { userId: company.userId, purpose: "companyCover", contentType: "image/png", size: png.length })).toEqual({ companyId: company.companyId });
+  await expect(t.query(internal.storage.publicMedia.getUploadAccess, { userId: company.userId, purpose: "companyCover", contentType: "image/png", size: png.length })).rejects.toThrow("COMPANY_COVER_PRIVATE_UPLOAD_REQUIRED");
 });

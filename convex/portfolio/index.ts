@@ -1,10 +1,10 @@
+import { resolveApprovedCoverUrl } from "../companyCovers/model";
 import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { createUniqueCompanySlug, requireOwnerCompany } from "../companies/index";
-import { getPublicMediaUrl } from "../storage/publicUrl";
 import { getCompanyOperationalStatus } from "../companies/operationalStatus";
 import { companyInvitationEligibilityError } from "../invitations/eligibility";
 import { resolvedServiceNames } from "../serviceCatalog";
@@ -139,10 +139,9 @@ export const getPublicCompanyProfile = query({
   handler: async (ctx, args) => {
     const company = await ctx.db.query("companies").withIndex("by_slug", (q) => q.eq("slug", args.slug)).unique();
     if (!company || company.onboardingStatus !== "completed" || !company.slug || !company.name || !company.city || !company.description) return null;
-    const [services, projects, coverMedia, reviewRows] = await Promise.all([
+    const [services, projects, reviewRows] = await Promise.all([
       ctx.db.query("companyServices").withIndex("by_companyId", (q) => q.eq("companyId", company._id)).take(200),
       ctx.db.query("portfolioProjects").withIndex("by_companyId_and_status", (q) => q.eq("companyId", company._id).eq("status", "published")).order("desc").take(24),
-      company.coverMediaId ? ctx.db.get(company.coverMediaId) : Promise.resolve(null),
       ctx.db.query("reviews")
         .withIndex("by_companyId_and_moderationStatus_and_createdAt", (q) =>
           q.eq("companyId", company._id).eq("moderationStatus", "visible"),
@@ -152,9 +151,7 @@ export const getPublicCompanyProfile = query({
     ]);
     const serviceNames = await resolvedServiceNames(ctx, services);
     const logoUrl = await resolveApprovedLogoUrl(ctx, company);
-    const coverImageUrl = coverMedia && coverMedia.companyId === company._id && coverMedia.purpose === "companyCover"
-      ? getPublicMediaUrl(coverMedia.objectKey)
-      : null;
+    const coverImageUrl = await resolveApprovedCoverUrl(ctx, company);
     const names = [company.name, company.legalName];
     const portfolio = (await Promise.all(projects.map((project) => resolveProject(ctx, project, names))))
       .filter((project): project is NonNullable<typeof project> => project !== null);
