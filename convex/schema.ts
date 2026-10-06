@@ -758,6 +758,8 @@ export default defineSchema({
 
   messageAttachmentUploadIntents: defineTable({
     conversationId: v.id("conversations"),
+    /** Optional only for old grants, which cannot upload/commit through the bound flow. */
+    companyId: v.optional(v.id("companies")),
     userId: v.id("users"),
     token: v.string(),
     originalFileName: v.string(),
@@ -766,8 +768,11 @@ export default defineSchema({
     expectedSize: v.number(),
     expiresAt: v.number(),
     claimedAt: v.optional(v.number()),
+    /** Bound server-side after receiving actual bytes, never by a browser mutation. */
+    storageId: v.optional(v.id("_storage")),
+    discardedAt: v.optional(v.number()),
     createdAt: v.number(),
-  }).index("by_token", ["token"]),
+  }).index("by_token", ["token"]).index("by_storageId", ["storageId"]),
 
   companies: defineTable({
     name: v.optional(v.string()),

@@ -3,6 +3,8 @@
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 
 import { useAction, useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { useAuthToken } from "@convex-dev/auth/react";
+import { uploadMessagePdf } from "@/lib/files/private-pdf";
 import type { FunctionReturnType } from "convex/server";
 import Image from "next/image";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
@@ -33,7 +35,6 @@ type PendingMessageAttachment = {
   sizeBytes: number;
   status: "uploading" | "ready";
   uploadToken?: string;
-  storageId?: Id<"_storage">;
 };
 
 export function validateMessagePdfSelection(file: Pick<File, "type" | "size">) {
@@ -277,6 +278,7 @@ export function MessagesInboxView({
 }
 
 function ActiveConversation({ accountType, conversationId }: { accountType: "client" | "company"; conversationId: Id<"conversations"> }) {
+  const sessionToken = useAuthToken();
   const t = useTranslations("messages");
   const tUx = useTranslations("ux");
   const locale = useLocale();
@@ -344,7 +346,6 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
         await discardAttachmentUpload({
           conversationId,
           uploadToken: current.uploadToken,
-          ...(current.storageId ? { storageId: current.storageId } : {}),
         });
       } catch {
         // The intent may already be expired or claimed; removal remains safe locally.
@@ -367,7 +368,6 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
     setError(null);
     setAttachment({ fileName: file.name, sizeBytes: file.size, status: "uploading" });
     let uploadToken: string | undefined;
-    let storageId: Id<"_storage"> | undefined;
     try {
       const upload = await generateAttachmentUploadUrl({
         conversationId,
@@ -376,20 +376,12 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
         size: file.size,
       });
       uploadToken = upload.uploadToken;
-      const response = await fetch(upload.uploadUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/pdf" },
-        body: file,
-      });
-      if (!response.ok) throw new Error("MESSAGE_ATTACHMENT_UPLOAD_FAILED");
-      const uploaded = await response.json() as { storageId?: Id<"_storage"> };
-      if (!uploaded.storageId) throw new Error("MESSAGE_ATTACHMENT_UPLOAD_FAILED");
-      storageId = uploaded.storageId;
+      await uploadMessagePdf({ file, sessionToken, uploadToken });
       if (operationId !== attachmentOperationRef.current) {
-        await discardAttachmentUpload({ conversationId, uploadToken, storageId });
+        await discardAttachmentUpload({ conversationId, uploadToken });
         return;
       }
-      setAttachment({ fileName: upload.fileName, sizeBytes: file.size, status: "ready", uploadToken, storageId });
+      setAttachment({ fileName: upload.fileName, sizeBytes: file.size, status: "ready", uploadToken });
     } catch (cause) {
       if (operationId === attachmentOperationRef.current) {
         setAttachment(null);
@@ -397,7 +389,7 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
       }
       if (uploadToken) {
         try {
-          await discardAttachmentUpload({ conversationId, uploadToken, ...(storageId ? { storageId } : {}) });
+          await discardAttachmentUpload({ conversationId, uploadToken });
         } catch {
           // A failed upload may not have produced storage to discard.
         }
@@ -413,8 +405,8 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
     setError(null);
     try {
       const clientMessageId = crypto.randomUUID();
-      if (attachment?.status === "ready" && attachment.uploadToken && attachment.storageId) {
-        await sendMessageWithAttachment({ conversationId, body: normalized, clientMessageId, uploadToken: attachment.uploadToken, storageId: attachment.storageId });
+      if (attachment?.status === "ready" && attachment.uploadToken) {
+        await sendMessageWithAttachment({ conversationId, body: normalized, clientMessageId, uploadToken: attachment.uploadToken });
         setAttachment(null);
       } else {
         await sendMessage({ conversationId, body: normalized, clientMessageId });

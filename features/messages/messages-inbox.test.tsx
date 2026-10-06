@@ -5,6 +5,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 import { routes } from "@/lib/routes";
+vi.mock("@convex-dev/auth/react", () => ({ useAuthToken: () => "session" }));
 
 vi.mock("convex/react", () => ({
   useAction: () => vi.fn(),

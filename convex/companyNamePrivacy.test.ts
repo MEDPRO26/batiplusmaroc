@@ -138,9 +138,12 @@ async function uploadMessageFile(s: Awaited<ReturnType<typeof setup>>, fileName:
   const upload = await company.mutation(api.messages.attachments.generateAttachmentUploadUrl, {
     conversationId: s.conversationId, fileName, contentType: "application/pdf", size: blob.size,
   });
-  const storageId = await s.t.run(ctx => ctx.storage.store(blob));
+  const response = await company.fetch("/messages/attachments/upload", {
+    method: "POST", headers: { "Content-Type": "application/pdf", "X-Upload-Token": upload.uploadToken }, body: blob,
+  });
+  expect(response.status).toBe(200);
   return company.action(api.messages.attachments.sendMessageWithAttachment, {
-    conversationId: s.conversationId, body, clientMessageId: key, storageId, uploadToken: upload.uploadToken,
+    conversationId: s.conversationId, body, clientMessageId: key, uploadToken: upload.uploadToken,
   });
 }
 
@@ -877,9 +880,12 @@ describe("Company name DTO privacy", () => {
     const upload = await owner.mutation(api.messages.attachments.generateAttachmentUploadUrl, {
       conversationId: s.conversationId, fileName, contentType: "application/pdf", size: blob.size,
     });
-    const storageId = await s.t.run(ctx => ctx.storage.store(blob));
+    const response = await owner.fetch("/messages/attachments/upload", {
+      method: "POST", headers: { "Content-Type": "application/pdf", "X-Upload-Token": upload.uploadToken }, body: blob,
+    });
+    expect(response.status).toBe(200);
     const sent = await owner.action(api.messages.attachments.sendMessageWithAttachment, {
-      conversationId: s.conversationId, body, clientMessageId: "filename-reference", storageId, uploadToken: upload.uploadToken,
+      conversationId: s.conversationId, body, clientMessageId: "filename-reference", uploadToken: upload.uploadToken,
     });
     const client = asUser(s.t, s.clientId);
     expect((await client.query(api.messages.index.listMessages, { conversationId: s.conversationId, paginationOpts: pageOpts })).page[0].body).toBe("Please see attachment.pdf.");
