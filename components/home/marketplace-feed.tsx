@@ -1,10 +1,8 @@
 "use client";
 
-import { isApprovedPortfolioImageUrl } from "@/lib/files/portfolio-image";
-
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 
-import Image from "next/image";
+import { ApprovedCompanyCover } from "@/features/companies/components/approved-company-cover";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Link } from "@/i18n/navigation";
@@ -170,12 +168,12 @@ function FeaturedCompanyCard({ company }: { company: PublicMarketplaceCompany })
   return (
     <article className="flex h-full flex-col gap-5 rounded-md border border-brand-border bg-white p-5 shadow-[0_8px_24px_rgb(23_61_99/0.05)] transition-[border-color,box-shadow] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:border-brand hover:shadow-[0_12px_32px_rgb(23_61_99/0.08)] sm:flex-row sm:p-6">
       <div className="relative aspect-4/3 w-full shrink-0 overflow-hidden rounded-md bg-surface-muted outline-1 outline-black/10 sm:aspect-auto sm:h-auto sm:w-[148px]">
-        {company.coverImageUrl ? <Image
+        {company.coverImageUrl ? <ApprovedCompanyCover
           alt={tMarket("imageAlt", { company: company.name, city: company.city })}
           className="object-cover"
           fill
           sizes="(max-width: 639px) 100vw, 148px"
-          src={company.coverImageUrl} unoptimized={isApprovedPortfolioImageUrl(company.coverImageUrl)}
+          url={company.coverImageUrl}
         /> : null}
       </div>
 

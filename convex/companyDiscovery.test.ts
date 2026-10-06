@@ -463,7 +463,7 @@ describe("public company discovery", () => {
     const company = result.page[0];
     expect(company.portfolio).toHaveLength(2);
     expect(company.portfolio.every((item) => item.title.startsWith("published"))).toBe(true);
-    expect(company.coverImageUrl).toMatch(/^https:\/\/example\.convex\.site\/portfolio-images\/public\//);
+    expect(company.coverImageUrl).toBeNull();
     expect(company).not.toHaveProperty("legalName");
     expect(company).not.toHaveProperty("phone");
     expect(company).not.toHaveProperty("website");

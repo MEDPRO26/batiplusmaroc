@@ -1,12 +1,10 @@
+import { resolveApprovedCoverUrl } from "../companyCovers/model";
 import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { consumeVerifiedPublicMediaIntent } from "../storage/publicMediaModel";
-import { getPublicMediaUrl } from "../storage/publicUrl";
 import { buildCompanyDirectorySearchText } from "./directory";
 import { getCompanyOperationalStatus } from "./operationalStatus";
 import { existingServiceIds, listCatalog, validateNewServiceIds } from "../serviceCatalog";
@@ -248,18 +246,6 @@ function validateLanguages(languages: readonly CompanyLanguage[]) {
   return languages;
 }
 
-async function resolveManagedImageUrl(
-  ctx: QueryCtx,
-  companyId: Id<"companies">,
-  mediaId: Id<"publicMedia"> | undefined,
-  purpose: "companyCover",
-) {
-  if (!mediaId) return null;
-  const media = await ctx.db.get(mediaId);
-  if (!media || media.companyId !== companyId || media.purpose !== purpose) return null;
-  return getPublicMediaUrl(media.objectKey);
-}
-
 function slugifyCompanyName(value: string) {
   const slug = value
     .normalize("NFKD")
@@ -386,7 +372,7 @@ export const getProfileManager = query({
         .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
         .take(5),
       resolveApprovedLogoUrl(ctx, company),
-      resolveManagedImageUrl(ctx, company._id, company.coverMediaId, "companyCover"),
+      resolveApprovedCoverUrl(ctx, company),
     ]);
 
     if (selectedServices.length > 200) {
@@ -667,27 +653,11 @@ export const setCompanyPublicImage = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const { company, userId } = await requireOwnerCompany(ctx);
+    const { company } = await requireOwnerCompany(ctx);
     if (args.kind === "logo") throw new ConvexError("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
     if (company.onboardingStatus !== "completed") {
       throw new ConvexError("COMPANY_ONBOARDING_REQUIRED");
     }
-    const field = "coverMediaId";
-    const previousId = company[field];
-    const previous = previousId ? await ctx.db.get(previousId) : null;
-    const mediaId = await consumeVerifiedPublicMediaIntent(ctx, {
-      uploadToken: args.uploadToken,
-      companyId: company._id,
-      userId,
-      purpose: "companyCover",
-    });
-    await ctx.db.patch(company._id, { [field]: mediaId, updatedAt: Date.now() });
-    if (previous) {
-      await ctx.db.delete(previous._id);
-      await ctx.scheduler.runAfter(0, internal.storage.r2.deleteObjectIfUnreferenced, {
-        objectKey: previous.objectKey,
-      });
-    }
-    return null;
+    throw new ConvexError("COMPANY_COVER_PRIVATE_UPLOAD_REQUIRED");
   },
 });

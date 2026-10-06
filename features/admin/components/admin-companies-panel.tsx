@@ -1,5 +1,7 @@
 "use client";
 
+import { AdminPendingCoverQueue } from "./admin-company-cover-review";
+
 import { AdminPendingLogoQueue } from "./admin-company-logo-review";
 import { AdminPortfolioImageQueue } from "./admin-portfolio-image-review";
 
@@ -69,6 +71,7 @@ export function AdminCompaniesPanel({ initialFilters }: { initialFilters: AdminC
     <AdminPage breadcrumb={t("title")} title={t("title")}>
       <p className="-mt-2 max-w-3xl text-sm leading-6 text-[#626970]">{t("lead")}</p>
       <div className="mt-5"><AdminPendingLogoQueue /></div>
+      <AdminPendingCoverQueue />
       <AdminPortfolioImageQueue />
       <section className="overflow-hidden rounded-[16px] border border-[#e7eaee] bg-white">
         <div className="overflow-x-auto border-b border-[#eef1f4]">

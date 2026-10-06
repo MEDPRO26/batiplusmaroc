@@ -2,7 +2,7 @@ import { ApprovedPortfolioImage } from "@/features/portfolio/components/approved
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 import type { FunctionReturnType } from "convex/server";
 import { ExternalLink, MapPin } from "lucide-react";
-import Image from "next/image";
+import { ApprovedCompanyCover } from "@/features/companies/components/approved-company-cover";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import type { api } from "@/convex/_generated/api";
@@ -24,13 +24,13 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
         <article className="overflow-hidden rounded-2xl border border-brand-border bg-white shadow-[0_1px_2px_rgb(23_61_99/0.04)]">
           {company.coverImageUrl ? (
             <div className="relative aspect-[3.2/1] min-h-[140px] bg-[#e8eef3] sm:min-h-[180px]">
-              <Image
+              <ApprovedCompanyCover
                 alt={t("coverAlt", { name: company.name })}
                 className="object-cover"
                 fill
                 priority
                 sizes="(max-width: 1240px) 100vw, 1240px"
-                src={company.coverImageUrl}
+                url={company.coverImageUrl}
               />
             </div>
           ) : (
@@ -179,7 +179,6 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                   <p className="m-0 text-sm text-muted">{t("notSpecified")}</p>
                 )}
               </MainSection>
-
 
               <MainSection
                 title={

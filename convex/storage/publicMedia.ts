@@ -20,12 +20,10 @@ export const getUploadAccess = internalQuery({
   handler: async (ctx, args) => {
     const { company } = await requireOwnerCompanyByUserId(ctx, args.userId);
     if (args.purpose === "companyLogo") throw new ConvexError("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
+    if (args.purpose === "companyCover") throw new ConvexError("COMPANY_COVER_PRIVATE_UPLOAD_REQUIRED");
     if (args.purpose === "portfolioCover" || args.purpose === "portfolioMedia") throw new ConvexError("PORTFOLIO_PRIVATE_UPLOAD_REQUIRED");
     if (!validatePublicImageInput(args.purpose, args.contentType, args.size)) {
       throw new ConvexError("INVALID_PUBLIC_MEDIA_UPLOAD");
-    }
-    if (args.purpose.startsWith("portfolio") && company.onboardingStatus !== "completed") {
-      throw new ConvexError("COMPANY_ONBOARDING_REQUIRED");
     }
     if (args.portfolioProjectId) {
       const project = await ctx.db.get(args.portfolioProjectId);
@@ -52,6 +50,7 @@ export const createUploadIntent = internalMutation({
   handler: async (ctx, args) => {
     const { company } = await requireOwnerCompanyByUserId(ctx, args.userId);
     if (args.purpose === "companyLogo") throw new ConvexError("COMPANY_LOGO_PRIVATE_UPLOAD_REQUIRED");
+    if (args.purpose === "companyCover") throw new ConvexError("COMPANY_COVER_PRIVATE_UPLOAD_REQUIRED");
     if (args.purpose === "portfolioCover" || args.purpose === "portfolioMedia") throw new ConvexError("PORTFOLIO_PRIVATE_UPLOAD_REQUIRED");
     if (
       company._id !== args.companyId ||
@@ -102,7 +101,7 @@ export const getUploadIntentForVerification = internalQuery({
       .unique();
     if (
       !intent ||
-      ["companyLogo", "portfolioCover", "portfolioMedia"].includes(intent.purpose) ||
+      ["companyLogo", "companyCover", "portfolioCover", "portfolioMedia"].includes(intent.purpose) ||
       intent.userId !== args.userId ||
       intent.claimedAt !== undefined ||
       intent.verifiedAt !== undefined ||
@@ -139,7 +138,7 @@ export const markUploadVerified = internalMutation({
       .unique();
     if (
       !intent ||
-      ["companyLogo", "portfolioCover", "portfolioMedia"].includes(intent.purpose) ||
+      ["companyLogo", "companyCover", "portfolioCover", "portfolioMedia"].includes(intent.purpose) ||
       intent.userId !== args.userId ||
       intent.claimedAt !== undefined ||
       intent.verifiedAt !== undefined ||

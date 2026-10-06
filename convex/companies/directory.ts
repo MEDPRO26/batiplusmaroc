@@ -1,5 +1,5 @@
+import { resolveApprovedCoverUrl } from "../companyCovers/model";
 import { resolveApprovedPortfolioImageUrl } from "../portfolioImages/model";
-import { getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
 import { resolveApprovedLogoUrl } from "../companyLogos/model";
 import {
   paginationOptsValidator,
@@ -10,7 +10,6 @@ import { ConvexError, v } from "convex/values";
 import type { DataModel, Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
-import { getPublicMediaUrl } from "../storage/publicUrl";
 import { resolvedServiceNames } from "../serviceCatalog";
 import { getCompanyOperationalStatus } from "./operationalStatus";
 import { maskCompanyName, maskPublicCompanyText } from "../lib/companyName";
@@ -159,20 +158,6 @@ function matchesPublicDirectoryEligibility(q: FilterBuilder<DataModel["companies
   );
 }
 
-async function resolvePublicMediaUrl(
-  ctx: QueryCtx,
-  reference: {
-    storageId?: Id<"_storage">;
-    publicMediaId?: Id<"publicMedia">;
-  },
-) {
-  if (reference.publicMediaId) {
-    const media = await ctx.db.get(reference.publicMediaId);
-    return media ? getPublicMediaUrl(media.objectKey) : null;
-  }
-  return reference.storageId ? await getNonVerificationStorageUrl(ctx, reference.storageId) : null;
-}
-
 async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, serviceFilter?: ServiceFilter) {
   const names = [company.name, company.legalName];
   if (
@@ -199,7 +184,7 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, s
       .order("desc")
       .take(3),
     resolveApprovedLogoUrl(ctx, company),
-    resolvePublicMediaUrl(ctx, { publicMediaId: company.coverMediaId }),
+    resolveApprovedCoverUrl(ctx, company),
   ]);
   if (serviceFilter && !serviceRows.some(row => row.serviceId
     ? row.serviceId === serviceFilter.id
@@ -229,7 +214,7 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, s
     serviceNames,
     serviceAreas: company.serviceAreas ?? [],
     logoUrl,
-    coverImageUrl: companyCoverUrl ?? portfolio[0]?.url ?? null,
+    coverImageUrl: companyCoverUrl,
     portfolio,
     rating: company.reviewCount && company.reviewRatingTotal !== undefined
       ? company.reviewRatingTotal / company.reviewCount

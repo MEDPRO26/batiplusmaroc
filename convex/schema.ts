@@ -1,3 +1,4 @@
+import { coverContentTypeValidator, coverStatusValidator } from "./companyCovers/constants";
 import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
@@ -782,7 +783,10 @@ export default defineSchema({
     /** Private immutable submission and independently selected public logo. Legacy fields stay untouched. */
     submittedLogoImageId: v.optional(v.id("companyLogoImages")),
     approvedLogoImageId: v.optional(v.id("companyLogoImages")),
+    /** Unreviewed legacy R2 reference retained for a separately authorized rollout. */
     coverMediaId: v.optional(v.id("publicMedia")),
+    submittedCoverImageId: v.optional(v.id("companyCoverImages")),
+    approvedCoverImageId: v.optional(v.id("companyCoverImages")),
     /** Denormalized public-only text used by the company directory search index. */
     directorySearchText: v.optional(v.string()),
     /** Visible-review aggregates, maintained transactionally with review moderation. */
@@ -903,6 +907,48 @@ export default defineSchema({
     action: v.union(v.literal("uploaded"), v.literal("approved"), v.literal("rejected"), v.literal("hidden")),
     oldStatus: v.union(logoStatusValidator, v.null()),
     newStatus: logoStatusValidator,
+    changedBy: v.id("users"),
+    changedAt: v.number(),
+    reason: v.optional(v.string()),
+  })
+    .index("by_companyId_and_changedAt", ["companyId", "changedAt"])
+    .index("by_imageId_and_changedAt", ["imageId", "changedAt"]),
+
+  companyCoverImages: defineTable({
+    companyId: v.id("companies"),
+    storageId: v.id("_storage"),
+    contentType: coverContentTypeValidator,
+    size: v.number(),
+    sha256: v.string(),
+    uploadedBy: v.id("users"),
+    uploadedAt: v.number(),
+    moderationStatus: coverStatusValidator,
+    moderationReason: v.optional(v.string()),
+    moderatedBy: v.optional(v.id("users")),
+    moderatedAt: v.optional(v.number()),
+  })
+    .index("by_companyId_and_uploadedAt", ["companyId", "uploadedAt"])
+    .index("by_moderationStatus_and_uploadedAt", ["moderationStatus", "uploadedAt"])
+    .index("by_storageId", ["storageId"]),
+
+  companyCoverUploadIntents: defineTable({
+    companyId: v.id("companies"),
+    userId: v.id("users"),
+    token: v.string(),
+    expectedContentType: coverContentTypeValidator,
+    expectedSize: v.number(),
+    expiresAt: v.number(),
+    claimedAt: v.optional(v.number()),
+    imageId: v.optional(v.id("companyCoverImages")),
+    createdAt: v.number(),
+  }).index("by_token", ["token"]),
+
+  companyCoverModerationHistory: defineTable({
+    companyId: v.id("companies"),
+    imageId: v.id("companyCoverImages"),
+    action: v.union(v.literal("uploaded"), v.literal("approved"), v.literal("rejected"), v.literal("hidden")),
+    oldStatus: v.union(coverStatusValidator, v.null()),
+    newStatus: coverStatusValidator,
     changedBy: v.id("users"),
     changedAt: v.number(),
     reason: v.optional(v.string()),
