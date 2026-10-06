@@ -383,18 +383,14 @@ describe("filename-reference regressions", () => {
       await ctx.db.patch(s.invitationId, { message: body });
       await ctx.db.patch(s.assessmentId, { companyNote: body });
     });
-    const upload = await company.mutation(api.finalQuotes.index.generatePdfUploadUrl, { finalQuoteId: s.finalQuoteId });
-    const storageId = await s.t.run(async ctx => {
-      const id = await ctx.storage.store(new Blob(["%PDF-1.7 quote"], { type: "application/pdf" }));
-      // convex-test omits Blob Content-Type; model the metadata from a browser PDF upload.
-      const patchTestStorage = ctx.db.patch as unknown as (id: Id<"_storage">, metadata: { contentType: string }) => Promise<void>;
-      await patchTestStorage(id, { contentType: "application/pdf" });
-      return id;
-    });
+    const pdfBody = "%PDF-1.7 quote";
+    const upload = await company.mutation(api.finalQuotes.index.generatePdfUploadUrl, { finalQuoteId: s.finalQuoteId, fileName, contentType: "application/pdf", size: pdfBody.length });
+    const response = await company.fetch("/final-quotes/pdf/upload", { method: "POST", headers: { "Content-Type": "application/pdf", "X-Upload-Token": upload.uploadToken }, body: pdfBody });
+    expect(response.status).toBe(200);
     const submitted = await company.mutation(api.finalQuotes.index.submitRevision, {
       conversationId: s.conversationId, price: 100_000, duration: 30, plannedStartDate: "2099-01-01", validUntil: "2099-12-31",
       scope: body, inclusions: body, exclusions: body, paymentTerms: body, companyNote: body,
-      pdf: { storageId, uploadToken: upload.uploadToken, fileName },
+      pdf: { uploadToken: upload.uploadToken },
     });
     const sent = await company.mutation(api.messages.index.sendMessage, { conversationId: s.conversationId, body, clientMessageId: "extensionless-reference" });
     const expected = `Please see final-quote${/\.pdf$/i.exec(fileName)?.[0] ?? ".pdf"}.`;
@@ -537,18 +533,15 @@ describe("final release filename privacy regressions", () => {
       await ctx.db.patch(s.assessmentId, { status: "cancelled", active: false });
       await ctx.db.patch(s.finalQuoteId, { status: "changes_requested" });
     });
-    const upload = await company.mutation(api.finalQuotes.index.generatePdfUploadUrl, { finalQuoteId: s.finalQuoteId });
-    const storageId = await s.t.run(async ctx => {
-      const id = await ctx.storage.store(new Blob(["%PDF-1.7 separator regression"], { type: "application/pdf" }));
-      const patchTestStorage = ctx.db.patch as unknown as (id: Id<"_storage">, metadata: { contentType: string }) => Promise<void>;
-      await patchTestStorage(id, { contentType: "application/pdf" });
-      return id;
-    });
+    const pdfBody = "%PDF-1.7 separator regression";
+    const upload = await company.mutation(api.finalQuotes.index.generatePdfUploadUrl, { finalQuoteId: s.finalQuoteId, fileName, contentType: "application/pdf", size: pdfBody.length });
+    const response = await company.fetch("/final-quotes/pdf/upload", { method: "POST", headers: { "Content-Type": "application/pdf", "X-Upload-Token": upload.uploadToken }, body: pdfBody });
+    expect(response.status).toBe(200);
     const scope = `Work completed by ${NAME}. See ${fileName}.`;
     const submitted = await company.mutation(api.finalQuotes.index.submitRevision, {
       conversationId: s.conversationId, price: 100_000, duration: 30, plannedStartDate: "2099-01-01", validUntil: "2099-12-31",
       scope, inclusions: "All materials and labour.", exclusions: "Municipal fees.", paymentTerms: "Payments after completion.",
-      pdf: { storageId, uploadToken: upload.uploadToken, fileName },
+      pdf: { uploadToken: upload.uploadToken },
     });
     const sent = await company.mutation(api.messages.index.sendMessage, { conversationId: s.conversationId, body: scope, clientMessageId: "separator-reference" });
     await expectSafeReferenceOutputs(s, sent.messageId, scope, `Work completed by ${MASKED}. See final-quote.pdf.`);

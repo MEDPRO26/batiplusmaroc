@@ -18,13 +18,10 @@ import {
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import { assertProjectTransition } from "../projects/state";
 import { assertFinalQuoteTransition } from "./state";
-import { validateUploadFileName } from "../messages/attachmentRules";
-import { assertNotVerificationStorage } from "../storage/verificationPrivacy";
+import { claimPdfUpload, createPdfUploadIntent } from "./pdfUploads";
 
 const MAX_PRICE_MAD = 100_000_000;
 const MAX_DURATION_DAYS = 1_825;
-const PDF_MAX_BYTES = 15 * 1024 * 1024;
-const UPLOAD_TTL_MS = 10 * 60 * 1000;
 const MAX_REVISIONS = 100;
 const statusValidator = v.union(v.literal("draft"), v.literal("submitted"), v.literal("changes_requested"), v.literal("accepted"), v.literal("declined"), v.literal("withdrawn"));
 const nullableString = v.union(v.string(), v.null());
@@ -370,21 +367,15 @@ export const prepareAfterSiteVisit = mutation({
 });
 
 export const generatePdfUploadUrl = mutation({
-  args: { finalQuoteId: v.id("finalQuotes") }, returns: v.object({ uploadUrl: v.string(), uploadToken: v.string() }),
-  handler: async (ctx, args) => {
-    const access = await requireVerifiedCompanyMarketplaceUser(ctx);
-    const parent = await ctx.db.get(args.finalQuoteId);
-    if (!parent || parent.companyId !== access.company._id || (parent.status !== "draft" && parent.status !== "changes_requested")) throw new ConvexError("FINAL_QUOTE_NOT_FOUND");
-    const token = `${crypto.randomUUID()}${crypto.randomUUID()}`; const now = Date.now();
-    await ctx.db.insert("finalQuoteUploadIntents", { finalQuoteId: parent._id, userId: access.userId, token, expiresAt: now + UPLOAD_TTL_MS, createdAt: now });
-    return { uploadUrl: await ctx.storage.generateUploadUrl(), uploadToken: token };
-  },
+  args: { finalQuoteId: v.id("finalQuotes"), fileName: v.string(), contentType: v.string(), size: v.number() },
+  returns: v.object({ uploadUrl: v.string(), uploadToken: v.string() }),
+  handler: createPdfUploadIntent,
 });
 
 export const submitRevision = mutation({
   args: { conversationId: v.id("conversations"), price: v.number(), duration: v.number(), plannedStartDate: v.string(), validUntil: v.string(),
     scope: v.string(), inclusions: v.string(), exclusions: v.string(), paymentTerms: v.string(), companyNote: v.optional(v.string()),
-    pdf: v.optional(v.object({ storageId: v.id("_storage"), uploadToken: v.string(), fileName: v.string() })) },
+    pdf: v.optional(v.object({ uploadToken: v.string() })) },
   returns: v.object({ finalQuoteId: v.id("finalQuotes"), revisionId: v.id("finalQuoteRevisions"), revisionNumber: v.number() }),
   handler: async (ctx, args) => {
     const access = await requireVerifiedCompanyMarketplaceUser(ctx); const context = await contextForConversation(ctx, args.conversationId);
@@ -406,13 +397,9 @@ export const submitRevision = mutation({
     if (revisionNumber > MAX_REVISIONS) throw new ConvexError("FINAL_QUOTE_REVISION_LIMIT_REACHED");
     let pdfFields: { pdfStorageId?: Id<"_storage">; pdfFileName?: string; pdfUploadFileName?: string; pdfSize?: number } = {};
     if (args.pdf) {
-      await assertNotVerificationStorage(ctx, args.pdf.storageId);
-      const intent = await ctx.db.query("finalQuoteUploadIntents").withIndex("by_token", (q) => q.eq("token", args.pdf!.uploadToken)).unique();
-      const metadata = await ctx.db.system.get("_storage", args.pdf.storageId); const mime = metadata?.contentType?.split(";", 1)[0]?.trim().toLowerCase();
-      if (!intent || intent.finalQuoteId !== parent._id || intent.userId !== access.userId || intent.claimedAt || intent.expiresAt < now || !metadata || mime !== "application/pdf" || metadata.size < 1 || metadata.size > PDF_MAX_BYTES) throw new ConvexError("INVALID_FINAL_QUOTE_PDF");
-      pdfFields = { pdfStorageId: args.pdf.storageId, pdfFileName: normalizeText(args.pdf.fileName, 1, 180, "INVALID_FINAL_QUOTE_PDF"),
-        pdfUploadFileName: validateUploadFileName(args.pdf.fileName, "INVALID_FINAL_QUOTE_PDF"), pdfSize: metadata.size };
-      await ctx.db.patch(intent._id, { claimedAt: now });
+      const file = await claimPdfUpload(ctx, parent._id, args.pdf.uploadToken);
+      pdfFields = { pdfStorageId: file.storageId, pdfFileName: file.fileName, pdfUploadFileName: file.uploadFileName, pdfSize: file.size };
+      await ctx.db.patch(file.intent._id, { claimedAt: now });
     }
     if (!Number.isFinite(args.price) || args.price <= 0 || args.price > MAX_PRICE_MAD) throw new ConvexError("INVALID_FINAL_QUOTE_PRICE");
     if (!Number.isInteger(args.duration) || args.duration < 1 || args.duration > MAX_DURATION_DAYS) throw new ConvexError("INVALID_FINAL_QUOTE_DURATION");

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import type { Id } from "@/convex/_generated/dataModel";
-import { fetchProjectAttachment, uploadMessagePdf } from "./private-pdf";
+import { fetchProjectAttachment, uploadMessagePdf, uploadProjectPdf, uploadFinalQuotePdf } from "./private-pdf";
 
 const fetchMock = vi.fn();
 beforeEach(() => {
@@ -44,4 +44,27 @@ test("missing authentication, unsafe configured origins and failed uploads never
   await expect(uploadMessagePdf({ file, sessionToken: "token", uploadToken: "token" })).rejects.toThrow("MESSAGE_ATTACHMENT_UPLOAD_FAILED");
   fetchMock.mockResolvedValueOnce(Response.json({ storageId: "untrusted-id" }));
   await expect(uploadMessagePdf({ file, sessionToken: "token", uploadToken: "token" })).rejects.toThrow("MESSAGE_ATTACHMENT_UPLOAD_FAILED");
+});
+
+test.each([
+  [uploadProjectPdf, "/projects/attachments/upload", "INVALID_PROJECT_DOCUMENT"],
+  [uploadFinalQuotePdf, "/final-quotes/pdf/upload", "INVALID_FINAL_QUOTE_PDF"],
+] as const)("bound PDF transport sends bytes and credentials only to the fixed endpoint: %s", async (upload, path, code) => {
+  const file = new File(["%PDF-1.7"], "private.pdf", { type: "application/pdf" });
+  const args = { file, sessionToken: "session-secret", uploadToken: "upload-secret" };
+  fetchMock.mockResolvedValueOnce(Response.json({ uploaded: true }));
+  expect(await upload(args)).toBeUndefined();
+  expect(fetchMock).toHaveBeenLastCalledWith(`https://example.convex.site${path}`, expect.objectContaining({
+    method: "POST", body: file, credentials: "omit", redirect: "error", cache: "no-store",
+    headers: { Authorization: "Bearer session-secret", "Content-Type": "application/pdf", "X-Upload-Token": "upload-secret" },
+  }));
+  await expect(upload({ ...args, sessionToken: null })).rejects.toThrow("NOT_AUTHENTICATED");
+  fetchMock.mockResolvedValueOnce(Response.json({ uploaded: true, storageId: "forbidden" }));
+  await expect(upload(args)).rejects.toThrow(code);
+  fetchMock.mockResolvedValueOnce(new Response("Upload rejected", { status: 400 }));
+  await expect(upload(args)).rejects.toThrow(code);
+  for (const origin of ["http://evil.example", "https://name:pass@example.convex.site", "https://example.convex.site/proxy", "https://example.convex.site/?token=x"]) {
+    vi.stubEnv("NEXT_PUBLIC_CONVEX_SITE_URL", origin);
+    await expect(upload(args)).rejects.toThrow();
+  }
 });

@@ -16,6 +16,27 @@ function sessionHeaders(token: string | null | undefined) {
   return { Authorization: `Bearer ${token}` };
 }
 
+type PdfUploadArgs = { file: File; sessionToken: string | null | undefined; uploadToken: string; signal?: AbortSignal };
+
+async function uploadBoundPdf(path: string, args: PdfUploadArgs, code: string) {
+  const response = await fetch(endpoint(path), {
+    method: "POST", credentials: "omit", redirect: "error", cache: "no-store", signal: args.signal,
+    headers: { ...sessionHeaders(args.sessionToken), "Content-Type": "application/pdf", "X-Upload-Token": args.uploadToken },
+    body: args.file,
+  });
+  if (!response.ok) throw new Error(code);
+  const payload: unknown = await response.json();
+  if (!payload || typeof payload !== "object" || !("uploaded" in payload) || payload.uploaded !== true || "storageId" in payload) throw new Error(code);
+}
+
+export async function uploadProjectPdf(args: PdfUploadArgs) {
+  await uploadBoundPdf("/projects/attachments/upload", args, "INVALID_PROJECT_DOCUMENT");
+}
+
+export async function uploadFinalQuotePdf(args: PdfUploadArgs) {
+  await uploadBoundPdf("/final-quotes/pdf/upload", args, "INVALID_FINAL_QUOTE_PDF");
+}
+
 export async function uploadMessagePdf(args: {
   file: File; sessionToken: string | null | undefined; uploadToken: string; signal?: AbortSignal;
 }) {

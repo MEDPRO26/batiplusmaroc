@@ -1,5 +1,8 @@
 "use client";
 
+import { useAuthToken } from "@convex-dev/auth/react";
+import { uploadFinalQuotePdf } from "@/lib/files/private-pdf";
+
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
@@ -454,7 +457,7 @@ function CompanyQuoteForm({
 }: {
   conversationId: Id<"conversations">;
   finalQuoteId: Id<"finalQuotes">;
-  generateUpload: (args: { finalQuoteId: Id<"finalQuotes"> }) => Promise<{
+  generateUpload: (args: { finalQuoteId: Id<"finalQuotes">; fileName: string; contentType: string; size: number }) => Promise<{
     uploadUrl: string;
     uploadToken: string;
   }>;
@@ -472,13 +475,14 @@ function CompanyQuoteForm({
     exclusions: string;
     paymentTerms: string;
     companyNote?: string;
-    pdf?: { storageId: Id<"_storage">; uploadToken: string; fileName: string };
+    pdf?: { uploadToken: string };
   }) => Promise<unknown>;
 }) {
+  const sessionToken = useAuthToken();
   const t = useTranslations("finalQuote"); const tUx = useTranslations("ux"); const [busy, setBusy] = useState(false); const [file, setFile] = useState<File | null>(null);
   async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (busy) return; setBusy(true); onError(""); const data = new FormData(event.currentTarget);
-    try { let pdf: { storageId: Id<"_storage">; uploadToken: string; fileName: string } | undefined;
-      if (file) { if (file.type !== "application/pdf" || file.size < 1 || file.size > 15 * 1024 * 1024) throw new Error("INVALID_FINAL_QUOTE_PDF"); const intent = await generateUpload({ finalQuoteId }); const response = await fetch(intent.uploadUrl, { method: "POST", headers: { "Content-Type": file.type }, body: file }); if (!response.ok) throw new Error("INVALID_FINAL_QUOTE_PDF"); const uploaded = await response.json() as { storageId: Id<"_storage"> }; pdf = { storageId: uploaded.storageId, uploadToken: intent.uploadToken, fileName: file.name }; }
+    try { let pdf: { uploadToken: string } | undefined;
+      if (file) { if (file.type !== "application/pdf" || file.size < 1 || file.size > 15 * 1024 * 1024) throw new Error("INVALID_FINAL_QUOTE_PDF"); const intent = await generateUpload({ finalQuoteId, fileName: file.name, contentType: file.type, size: file.size }); await uploadFinalQuotePdf({ file, sessionToken, uploadToken: intent.uploadToken }); pdf = { uploadToken: intent.uploadToken }; }
       const price = parseMadInput(String(data.get("price") ?? ""));
       if (price === null) throw new Error("INVALID_FINAL_QUOTE_PRICE");
       await submitRevision({ conversationId, price, duration: Number(data.get("duration")), plannedStartDate: String(data.get("plannedStartDate")), validUntil: String(data.get("validUntil")), scope: String(data.get("scope")), inclusions: String(data.get("inclusions")), exclusions: String(data.get("exclusions")), paymentTerms: String(data.get("paymentTerms")), companyNote: String(data.get("companyNote") || "") || undefined, pdf }); onSubmitted();
