@@ -41,8 +41,13 @@ async function preparePdfUpload(
     contentType: "application/pdf",
     size: blob.size,
   });
-  const storageId = await state.t.run((ctx) => ctx.storage.store(blob));
-  return { ...intent, storageId, size: blob.size };
+  const response = await company.fetch("/messages/attachments/upload", {
+    method: "POST", headers: { "Content-Type": "application/pdf", "X-Upload-Token": intent.uploadToken }, body: blob,
+  });
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ uploaded: true });
+  const stored = await state.t.run(ctx => ctx.db.query("messageAttachmentUploadIntents").withIndex("by_token", q => q.eq("token", intent.uploadToken)).unique());
+  return { ...intent, storageId: stored!.storageId!, size: blob.size };
 }
 
 async function seedCompany(t: Backend) {
@@ -746,22 +751,21 @@ describe("private company PDF message attachments", () => {
     await expect(asUser(state.t, state.company.userId).mutation(api.messages.attachments.generateAttachmentUploadUrl, { ...args, size: 10 * 1024 * 1024 + 1 })).rejects.toThrow("MESSAGE_PDF_TOO_LARGE");
   });
 
-  test("rejects spoofed PDF bytes and removes the rejected upload", async () => {
+  test("rejects spoofed PDF bytes before storing or binding an upload", async () => {
     const state = await setup();
     const { conversationId } = await openDiscussion(state);
-    const upload = await preparePdfUpload(state, conversationId!, "this is not a PDF", "fake.pdf");
-    await expect(asUser(state.t, state.company.userId).action(api.messages.attachments.sendMessageWithAttachment, {
-      conversationId: conversationId!, body: "Keep this text", clientMessageId: "fake-pdf",
-      uploadToken: upload.uploadToken, storageId: upload.storageId,
-    })).rejects.toThrow("INVALID_MESSAGE_PDF");
-    const cleanup = await state.t.run(async (ctx) => ({
-      blobExists: Boolean(await ctx.storage.get(upload.storageId)),
-      intent: await ctx.db.query("messageAttachmentUploadIntents").withIndex("by_token", (q) => q.eq("token", upload.uploadToken)).unique(),
-      messages: await ctx.db.query("messages").withIndex("by_conversationId_and_createdAt", (q) => q.eq("conversationId", conversationId!)).collect(),
-    }));
-    expect(cleanup.blobExists).toBe(false);
-    expect(cleanup.intent).toBeNull();
-    expect(cleanup.messages).toEqual([]);
+    const company = asUser(state.t, state.company.userId);
+    const contents = "this is not a PDF";
+    const intent = await company.mutation(api.messages.attachments.generateAttachmentUploadUrl, {
+      conversationId: conversationId!, fileName: "fake.pdf", contentType: "application/pdf", size: contents.length,
+    });
+    const response = await company.fetch("/messages/attachments/upload", {
+      method: "POST", headers: { "Content-Type": "application/pdf", "X-Upload-Token": intent.uploadToken }, body: contents,
+    });
+    expect(response.status).toBe(400);
+    const stored = await state.t.run(ctx => ctx.db.query("messageAttachmentUploadIntents").withIndex("by_token", q => q.eq("token", intent.uploadToken)).unique());
+    expect(stored?.storageId).toBeUndefined();
+    expect(await state.t.run(ctx => ctx.db.query("messageAttachments").take(1))).toEqual([]);
   });
 
   test("binds each upload token to its conversation and current messaging permission", async () => {

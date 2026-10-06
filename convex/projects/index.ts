@@ -1,7 +1,8 @@
-import { assertNotVerificationStorage, getNonVerificationStorageUrl } from "../storage/verificationPrivacy";
+import { assertNotVerificationStorage } from "../storage/verificationPrivacy";
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
-import { mutation, query } from "../_generated/server";
+import { env, mutation, query } from "../_generated/server";
+import { requireOwnedAttachment } from "./download";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { getProjectViewer, requireClientUser, requireOwnedEditableProject, requireOwnedProject } from "./access";
@@ -178,5 +179,13 @@ export const saveFiles = mutation({ args: { projectId: v.id("projects"), imageUp
 
 export const publishProject = mutation({ args: { projectId: v.id("projects") }, returns: v.object({ status: v.literal("pending_review"), alreadySubmitted: v.boolean() }), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); const p = await requireOwnedProject(ctx, userId, args.projectId); if (p.status === "pending_review") return { status: "pending_review" as const, alreadySubmitted: true }; assertProjectTransition(p.status, "pending_review"); if (!p.primaryCategory || !p.city || !p.title || !p.description || !p.timeline || (p.primaryCategory === "other" && !p.customCategoryText)) throw new ConvexError("PROJECT_INCOMPLETE"); const now = Date.now(); await ctx.db.patch(p._id, { status: "pending_review", submittedAt: now, updatedAt: now }); await ctx.db.insert("projectStatusHistory", { projectId: p._id, oldStatus: p.status, newStatus: "pending_review", changedBy: userId, changedAt: now }); await appendMarketplaceActivity(ctx, { projectId: p._id, eventType: "project_submitted", actorUserId: userId, actorType: "client", oldStatus: p.status, newStatus: "pending_review", createdAt: now }); return { status: "pending_review" as const, alreadySubmitted: false }; } });
 
-export const getAttachmentDownloadUrl = query({ args: { attachmentId: v.id("projectAttachments") }, returns: v.union(v.string(), v.null()), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); const attachment = await ctx.db.get(args.attachmentId); if (!attachment || attachment.clientId !== userId) throw new ConvexError("PROJECT_ATTACHMENT_NOT_FOUND"); await requireOwnedProject(ctx, userId, attachment.projectId); return await getNonVerificationStorageUrl(ctx, attachment.storageId); } });
+export const getAttachmentDownloadUrl = query({
+  args: { attachmentId: v.id("projectAttachments") }, returns: v.union(v.string(), v.null()),
+  handler: async (ctx, args) => {
+    const attachment = await requireOwnedAttachment(ctx, args.attachmentId);
+    try { await assertNotVerificationStorage(ctx, attachment.storageId); }
+    catch { return null; }
+    return `${env.CONVEX_SITE_URL.replace(/\/$/, "")}/projects/attachments/${attachment._id}`;
+  },
+});
 export const getPublicProject = query({ args: { projectId: v.id("projects") }, returns: v.union(v.null(), v.object({ title: v.string(), description: v.string(), city: projectCityValidator, primaryCategory: projectCategoryValidator })), handler: async (ctx, args) => { const p = await ctx.db.get(args.projectId); if (!p || p.status !== "published" || p.visibility !== "marketplace" || !p.title || !p.description || !p.city || !p.primaryCategory) return null; return { title: p.title, description: p.description, city: p.city, primaryCategory: p.primaryCategory }; } });

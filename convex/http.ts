@@ -3,12 +3,18 @@ import { httpRouter } from "convex/server";
 import { auth } from "./auth";
 import { servePdf } from "./finalQuotes/download";
 import { serveAttachment } from "./messages/download";
+import * as projectAttachments from "./projects/download";
+import * as messageUploads from "./messages/upload";
 import { uploadLogo, privatePreview, publicLogo, uploadPreflight, previewPreflight } from "./companyLogos/http";
 import * as portfolioImages from "./portfolioImages/http";
 
 import { uploadDocument, downloadDocument, uploadDocumentPreflight, downloadDocumentPreflight } from "./companyVerification/index";
 
 const http = httpRouter();
+http.route({ pathPrefix: "/projects/attachments/", method: "GET", handler: projectAttachments.serveAttachment });
+http.route({ pathPrefix: "/projects/attachments/", method: "OPTIONS", handler: projectAttachments.downloadPreflight });
+http.route({ path: "/messages/attachments/upload", method: "POST", handler: messageUploads.uploadAttachment });
+http.route({ path: "/messages/attachments/upload", method: "OPTIONS", handler: messageUploads.uploadPreflight });
 http.route({ path: "/portfolio-images/upload", method: "POST", handler: portfolioImages.uploadImage });
 http.route({ path: "/portfolio-images/upload", method: "OPTIONS", handler: portfolioImages.uploadPreflight });
 http.route({ pathPrefix: "/portfolio-images/private/", method: "GET", handler: portfolioImages.privatePreview });

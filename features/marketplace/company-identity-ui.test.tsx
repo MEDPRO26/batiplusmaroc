@@ -3,6 +3,7 @@ import { createFormatter, createTranslator, NextIntlClientProvider } from "next-
 import { getFunctionName, type FunctionReturnType } from "convex/server";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+vi.mock("@convex-dev/auth/react", () => ({ useAuthToken: () => "session" }));
 import type { ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
