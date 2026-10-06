@@ -5269,5 +5269,39 @@
     },
     "loadMore": "Charger plus",
     "noCover": "Cette entreprise n’a aucune couverture soumise ou approuvée."
+  },
+  "adminLegacyMedia": {
+    "title": "Import des anciens médias",
+    "lead": "Copiez une ancienne image en privé pour examen manuel. L’import crée une image en attente ; il ne l’approuve pas et ne révoque pas son ancien lien public. Les envois et approbations existants sont préservés.",
+    "mediaType": "Type de média",
+    "types": {
+      "companyLogo": "Logo de l’entreprise",
+      "companyCover": "Couverture de l’entreprise",
+      "portfolioCover": "Couverture du portfolio",
+      "portfolioGallery": "Galerie du portfolio"
+    },
+    "providers": {
+      "r2": "R2",
+      "convex": "Convex"
+    },
+    "slot": "Emplacement de galerie {order}",
+    "loading": "Chargement des anciens médias…",
+    "empty": "Aucune source ancienne admissible sur cette page. Parcourez les pages disponibles.",
+    "loadMore": "Charger plus de médias",
+    "loadError": "Impossible de charger les anciens médias. Réessayez.",
+    "actionError": "L’import a échoué. L’original reste inchangé. Réessayez ou rechargez la liste.",
+    "companyFallback": "Entreprise",
+    "ingest": "Importer pour examen",
+    "retry": "Réessayer",
+    "review": "Ouvrir l’examen de modération",
+    "ingesting": "Copie privée en cours…",
+    "conflict": "Les médias modérés existants ont été préservés. Cette ancienne image ne peut pas les remplacer.",
+    "status": {
+      "notStarted": "Non importée",
+      "processing": "Import en cours",
+      "ingested": "Copiée en privé. En attente d’examen.",
+      "conflict": "Ignorée ou conservée en privé en raison d’un conflit",
+      "failed": "Échec de l’import"
+    }
   }
 }
