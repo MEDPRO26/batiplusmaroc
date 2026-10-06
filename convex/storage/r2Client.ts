@@ -1,6 +1,7 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadBucketCommand,
   HeadObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -119,4 +120,40 @@ export async function readLegacyImageObject(objectKey: string, maximumBytes: num
 export async function deletePublicMediaObject(objectKey: string) {
   const { bucket, s3 } = client();
   await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: objectKey }));
+}
+
+function objectNotFound(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+  const name = "name" in error ? error.name : null;
+  const metadata = "$metadata" in error ? error.$metadata : null;
+  return (name === "NoSuchKey" || name === "NotFound") && !!metadata && typeof metadata === "object" &&
+    "httpStatusCode" in metadata && metadata.httpStatusCode === 404;
+}
+
+/** Gate-protected retirement only. Never downgrade conditional deletion to an unconditional call. */
+export async function retireLegacyImageObject(
+  source: { objectKey: string; etag: string; size: number; contentType: string },
+  authorizeDeletion: () => Promise<void>,
+) {
+  const { bucket, s3 } = client(); const signal = AbortSignal.timeout(30_000);
+  const head = async () => {
+    try { return await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: source.objectKey }), { abortSignal: signal }); }
+    catch (error) {
+      if (!objectNotFound(error)) throw error;
+      // S3 HEAD has no error body: NotFound can mean a missing bucket/gateway, not
+      // an absent object. Verify authenticated access to this exact configured bucket.
+      const verified = await s3.send(new HeadBucketCommand({ Bucket: bucket }), { abortSignal: signal });
+      if (verified.$metadata.httpStatusCode !== 200) throw new Error("Bucket access not confirmed");
+      return null;
+    }
+  };
+  const metadata = await head();
+  if (metadata && (metadata.ETag !== source.etag || metadata.ContentLength !== source.size || metadata.ContentType !== source.contentType)) {
+    throw new Error("Legacy source changed");
+  }
+  await authorizeDeletion();
+  if (!metadata) return;
+  const result = await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: source.objectKey, IfMatch: source.etag }), { abortSignal: signal });
+  if (result.$metadata.httpStatusCode !== 200 && result.$metadata.httpStatusCode !== 204) throw new Error("Deletion not confirmed");
+  if (await head()) throw new Error("Legacy source still exists");
 }

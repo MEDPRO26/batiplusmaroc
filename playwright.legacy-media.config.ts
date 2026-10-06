@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 /** Run in an isolated source copy without deployment environment files. All backend calls are mocked. */
 export default defineConfig({
-  testDir: "./tests/e2e", testMatch: ["admin-legacy-media-ingestion.spec.ts", "admin-companies.spec.ts"],
+  testDir: "./tests/e2e", testMatch: ["admin-legacy-media-ingestion.spec.ts", "admin-legacy-media-retirement.spec.ts", "admin-companies.spec.ts"],
   workers: 1, fullyParallel: false, forbidOnly: Boolean(process.env.CI), reporter: "list",
   use: { baseURL: "http://127.0.0.1:3176", screenshot: "only-on-failure", trace: "retain-on-failure" },
   projects: [{ name: "chrome", use: { ...devices["Desktop Chrome"], channel: "chrome" } }],

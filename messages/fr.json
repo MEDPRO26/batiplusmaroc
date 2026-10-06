@@ -5303,5 +5303,54 @@
       "conflict": "Ignorée ou conservée en privé en raison d’un conflit",
       "failed": "Échec de l’import"
     }
+  },
+  "adminLegacyRetirement": {
+    "title": "Retrait des sources historiques",
+    "lead": "Vérifiez une source conservée et examinée à la fois. Le retrait reste désactivé tant que le serveur n’a pas été explicitement activé. Les décisions restent dans les écrans de modération existants.",
+    "loading": "Chargement…",
+    "empty": "Aucun enregistrement d’import pour le moment.",
+    "loadMore": "Charger plus de retraits",
+    "check": "Vérifier les conditions de retrait",
+    "retire": "Retirer la source historique",
+    "retry": "Réessayer le retrait",
+    "retiring": "Retrait à l’origine…",
+    "ingestionState": "Import : {state}",
+    "moderationState": "Examen : {state}",
+    "moderation": {
+      "pending": "En attente d’examen",
+      "approved": "Approuvée",
+      "rejected": "Rejetée ou masquée",
+      "missing": "Aucune image conservée"
+    },
+    "status": {
+      "not_ready": "Conditions de retrait non confirmées",
+      "ready": "Source exacte prête pour le retrait",
+      "retiring": "Retrait en cours",
+      "retired": "Source retirée à l’origine",
+      "failed": "Échec du retrait — vérifiez les conditions et réessayez"
+    },
+    "confirmTitle": "Retirer cette source historique exacte ?",
+    "warning": "Cette action supprime définitivement le fichier original. L’image privée conservée et sa modération sont préservées. Des copies en cache ou téléchargées peuvent rester accessibles. Après une suppression Convex native, la même ancienne URL ne peut pas être restaurée.",
+    "confirmationWord": "RETIRER",
+    "typeIntent": "Saisissez {word} pour confirmer.",
+    "cancel": "Annuler",
+    "confirmRetire": "Confirmer le retrait",
+    "stale": "L’image, la source ou son état a changé. La confirmation a été annulée. Vérifiez les conditions actuelles et confirmez à nouveau.",
+    "error": "Le retrait n’a pas abouti. Il peut être désactivé, bloqué par un changement ou nécessiter un nouvel essai. L’image privée conservée reste disponible. Vérifiez les conditions avant de réessayer.",
+    "cacheRequired": "Vérification des caches nécessaire",
+    "cacheChecklist": "Vérifiez l’ancienne URL d’origine, les domaines inventoriés séparément et les variantes Next/Vercel observées. Les purges nécessitent une autorisation distincte. Vérifiez l’image actuellement approuvée ou l’absence volontaire d’image publique. Les copies téléchargées ne peuvent pas être supprimées.",
+    "knownUrls": "Anciennes URL connues",
+    "unknownAliases": "Seules les URL calculées ou capturées de façon fiable sont listées. Les anciens domaines et variantes optimisées peuvent être inconnus.",
+    "blockers": {
+      "ingestion_incomplete": "Un import réussi et une provenance complète de conservation sont nécessaires.",
+      "preservation_invalid": "L’image privée conservée manque ou son identité, empreinte, taille ou type ne correspond pas.",
+      "relationship_changed": "Le lien exact avec l’entreprise, le projet, l’emplacement ou la source a changé.",
+      "moderation_pending": "L’image conservée nécessite une décision finale de modération Admin.",
+      "public_state_unsafe": "Une image approuvée valide ou une absence volontaire d’image publique est nécessaire.",
+      "dependency_found": "Une autre référence de média ou de fichier dépend encore de cette source.",
+      "dependency_ambiguous": "La source comporte des références dupliquées ou ambiguës. Un examen manuel est nécessaire.",
+      "source_invalid": "L’identité ou les métadonnées de la source d’origine ne peuvent pas être vérifiées.",
+      "upload_grant_active": "Une autorisation de téléversement historique peut encore recréer ce fichier. Attendez son expiration vérifiée."
+    }
   }
 }

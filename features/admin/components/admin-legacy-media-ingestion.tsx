@@ -9,6 +9,7 @@ import { api } from "@/convex/_generated/api";
 import { Link } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 import { ADMIN_PRESS } from "./admin-shell";
+import { AdminLegacyMediaRetirement } from "./admin-legacy-media-retirement";
 
 type Candidate = FunctionReturnType<typeof api.legacyMediaIngestion.index.listCandidates>["page"][number];
 type MediaType = Candidate["mediaType"];
@@ -45,6 +46,7 @@ function IngestionTypes() {
       </select>
     </label>
     <CandidateList key={mediaType} mediaType={mediaType} />
+    <AdminLegacyMediaRetirement />
   </>;
 }
 function CandidateList({ mediaType }: { mediaType: MediaType }) {

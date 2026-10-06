@@ -5303,5 +5303,54 @@
       "conflict": "Skipped or retained privately due to a conflict",
       "failed": "Ingestion failed"
     }
+  },
+  "adminLegacyRetirement": {
+    "title": "Legacy source retirement",
+    "lead": "Check one preserved and reviewed source at a time. Retirement is disabled unless the server has been explicitly enabled. Review decisions stay in the existing image review screens.",
+    "loading": "Loading…",
+    "empty": "No ingestion records yet.",
+    "loadMore": "Load more retirement records",
+    "check": "Check retirement readiness",
+    "retire": "Retire legacy source",
+    "retry": "Retry retirement",
+    "retiring": "Retiring origin…",
+    "ingestionState": "Ingestion: {state}",
+    "moderationState": "Review: {state}",
+    "moderation": {
+      "pending": "Waiting for review",
+      "approved": "Approved",
+      "rejected": "Rejected or hidden",
+      "missing": "No preserved image"
+    },
+    "status": {
+      "not_ready": "Readiness not confirmed",
+      "ready": "Ready for exact-source retirement",
+      "retiring": "Retirement in progress",
+      "retired": "Origin retired",
+      "failed": "Retirement failed — check readiness and retry"
+    },
+    "confirmTitle": "Retire this exact legacy source?",
+    "warning": "This permanently deletes the original object. The preserved private image and moderation state remain. Old cached or downloaded copies may remain available. Native Convex deletion cannot restore the same old URL.",
+    "confirmationWord": "RETIRE",
+    "typeIntent": "Type {word} to confirm.",
+    "cancel": "Cancel",
+    "confirmRetire": "Confirm retirement",
+    "stale": "The image, source or current state changed. The confirmation was cancelled. Check the current readiness and confirm again.",
+    "error": "Retirement could not finish. It may be disabled, blocked by a changed state, or need a retry. The preserved private image remains. Check readiness before trying again.",
+    "cacheRequired": "Cache verification required",
+    "cacheChecklist": "Verify the old origin URL, separately inventoried domain aliases, and observed Next/Vercel optimized variants. Cache purges require separate authorization. Check the current approved image or intentional generic/omitted state. Downloaded copies cannot be removed.",
+    "knownUrls": "Known old source URLs",
+    "unknownAliases": "Only safely derived or captured URLs are listed. Historical domains and optimizer variants may be unknown.",
+    "blockers": {
+      "ingestion_incomplete": "Successful ingestion and complete preservation provenance are required.",
+      "preservation_invalid": "The preserved private image is missing or its identity, hash, size or type does not match.",
+      "relationship_changed": "The exact Company, project, slot or legacy source relationship changed.",
+      "moderation_pending": "The preserved image needs a final Admin review decision.",
+      "public_state_unsafe": "A valid approved replacement or an intentionally generic/omitted public state is required.",
+      "dependency_found": "Another media or file reference still depends on this source.",
+      "dependency_ambiguous": "The source has duplicate or ambiguous references. Manual review is required.",
+      "source_invalid": "The original source identity or metadata cannot be verified.",
+      "upload_grant_active": "A legacy upload grant may still recreate this object. Wait for verified expiry."
+    }
   }
 }

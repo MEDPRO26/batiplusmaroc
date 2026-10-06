@@ -1,3 +1,4 @@
+import { retirementStatusValidator } from "./legacyMediaIngestion/retirementConstants";
 import { coverContentTypeValidator, coverStatusValidator } from "./companyCovers/constants";
 import { ingestionStatusValidator, ingestionImageValidator, mediaTypeValidator, providerValidator } from "./legacyMediaIngestion/constants";
 import { authTables } from "@convex-dev/auth/server";
@@ -419,7 +420,7 @@ export default defineSchema({
   projectAttachments: defineTable({
     projectId: v.id("projects"), clientId: v.id("users"), storageId: v.id("_storage"), fileName: v.string(),
     contentType: v.string(), size: v.number(), createdAt: v.number(),
-  }).index("by_projectId", ["projectId"]).index("by_clientId", ["clientId"]),
+  }).index("by_projectId", ["projectId"]).index("by_clientId", ["clientId"]).index("by_storageId", ["storageId"]),
 
   projectAttachmentUploadIntents: defineTable({
     projectId: v.id("projects"), userId: v.id("users"), token: v.string(), expiresAt: v.number(),
@@ -510,7 +511,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_finalQuoteId_and_revisionNumber", ["finalQuoteId", "revisionNumber"])
-    .index("by_finalQuoteId_and_createdAt", ["finalQuoteId", "createdAt"]),
+    .index("by_finalQuoteId_and_createdAt", ["finalQuoteId", "createdAt"])
+    .index("by_pdfStorageId", ["pdfStorageId"]),
 
   finalQuoteUploadIntents: defineTable({
     finalQuoteId: v.id("finalQuotes"),
@@ -751,7 +753,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_messageId", ["messageId"])
-    .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"]),
+    .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"])
+    .index("by_storageId", ["storageId"]),
 
   messageAttachmentUploadIntents: defineTable({
     conversationId: v.id("conversations"),
@@ -806,6 +809,9 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_logoStorageId", ["logoStorageId"])
+    .index("by_logoMediaId", ["logoMediaId"])
+    .index("by_coverMediaId", ["coverMediaId"])
     .index("by_slug", ["slug"])
     .index("by_updatedAt", ["updatedAt"])
     .index("by_onboardingStatus", ["onboardingStatus"])
@@ -882,9 +888,25 @@ export default defineSchema({
     imageId: v.optional(ingestionImageValidator), sha256: v.optional(v.string()),
     contentType: v.optional(v.string()), size: v.optional(v.number()), sourceEtag: v.optional(v.string()),
     completedAt: v.optional(v.number()), failureCode: v.optional(v.literal("COPY_FAILED")),
+    retirementStatus: v.optional(retirementStatusValidator), retirementAttemptId: v.optional(v.string()),
+    retirementLeaseUntil: v.optional(v.number()), retirementAttempts: v.optional(v.number()),
+    retirementAttemptedBy: v.optional(v.id("users")), retirementFingerprint: v.optional(v.string()),
+    retirementErrorCode: v.optional(v.literal("RETIREMENT_FAILED")),
+    retiredBy: v.optional(v.id("users")), retiredAt: v.optional(v.number()),
+    retirementUrls: v.optional(v.array(v.string())),
+    cacheVerification: v.optional(v.literal("verification_required")),
   })
+    .index("by_provider_and_sourceRef", ["provider", "sourceRef"])
     .index("by_sourceKey", ["sourceKey"])
     .index("by_companyId_and_updatedAt", ["companyId", "updatedAt"]),
+
+  legacyMediaRetirementHistory: defineTable({
+    ingestionId: v.id("legacyMediaIngestions"), sourceKey: v.string(),
+    recoveryImageId: ingestionImageValidator, attemptId: v.string(),
+    action: v.union(v.literal("requested"), v.literal("retired"), v.literal("failed")),
+    changedBy: v.id("users"), changedAt: v.number(),
+    errorCode: v.optional(v.literal("RETIREMENT_FAILED")),
+  }).index("by_ingestionId_and_changedAt", ["ingestionId", "changedAt"]),
 
   companyLogoImages: defineTable({
     companyId: v.id("companies"),
@@ -1085,7 +1107,9 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_companyId", ["companyId"])
-    .index("by_companyId_and_status", ["companyId", "status"]),
+    .index("by_companyId_and_status", ["companyId", "status"])
+    .index("by_coverImageStorageId", ["coverImageStorageId"])
+    .index("by_coverMediaId", ["coverMediaId"]),
 
   portfolioMedia: defineTable({
     portfolioProjectId: v.id("portfolioProjects"),
@@ -1097,7 +1121,8 @@ export default defineSchema({
     sortOrder: v.number(),
     caption: v.optional(v.string()),
     createdAt: v.number(),
-  }).index("by_portfolioProjectId", ["portfolioProjectId"]),
+  }).index("by_portfolioProjectId", ["portfolioProjectId"])
+    .index("by_storageId", ["storageId"]).index("by_publicMediaId", ["publicMediaId"]),
 
   portfolioImages: defineTable({
     companyId: v.id("companies"), portfolioProjectId: v.id("portfolioProjects"),
