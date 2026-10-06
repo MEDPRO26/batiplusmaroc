@@ -567,9 +567,10 @@ describe("logo isolation and existing marketplace rules", () => {
     const owner = asUser(t, company.userId);
     const client = asUser(t, relationship.clientId);
     const draft = await client.mutation(api.projects.index.initializeDraft, {});
+    const forgedDocument = { storageId: image.storageId, uploadToken: "arbitrary", fileName: "document.pdf" };
     await expect(client.mutation(api.projects.index.saveFiles, { projectId: draft.projectId, imageUploadTokens: [],
-      documents: [{ storageId: image.storageId, uploadToken: "arbitrary", fileName: "document.pdf" }],
-    })).rejects.toThrow("PRIVATE_COMPANY_LOGO_FILE");
+      documents: [forgedDocument],
+    })).rejects.toThrow();
     const messageIntent = await owner.mutation(api.messages.attachments.generateAttachmentUploadUrl, {
       conversationId: relationship.conversationId, fileName: "quote.pdf", contentType: "application/pdf", size: png.length,
     });
@@ -580,11 +581,12 @@ describe("logo isolation and existing marketplace rules", () => {
       uploadToken: messageIntent.uploadToken, storageId: image.storageId,
     })).rejects.toThrow("PRIVATE_COMPANY_LOGO_FILE");
     const finalQuote = await client.mutation(api.finalQuotes.index.request, { conversationId: relationship.conversationId });
+    const forgedPdf = { storageId: image.storageId, uploadToken: "arbitrary", fileName: "quote.pdf" };
     await expect(owner.mutation(api.finalQuotes.index.submitRevision, { conversationId: relationship.conversationId,
       price: 100000, duration: 30, plannedStartDate: "2099-01-01", validUntil: "2099-02-01", scope: "Full construction and finishing work.",
       inclusions: "Materials and labour", exclusions: "Municipal fees", paymentTerms: "Monthly milestones",
-      pdf: { storageId: image.storageId, uploadToken: "arbitrary", fileName: "quote.pdf" },
-    })).rejects.toThrow("PRIVATE_COMPANY_LOGO_FILE");
+      pdf: forgedPdf,
+    })).rejects.toThrow();
     const ids = await t.run(async ctx => {
       const messageId = await ctx.db.insert("messages", { conversationId: relationship.conversationId, senderUserId: company.userId,
         senderType: "company", body: "A legacy attachment", createdAt: 1 });

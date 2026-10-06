@@ -3,10 +3,11 @@ import { ConvexError, v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { env, mutation, query } from "../_generated/server";
 import { requireOwnedAttachment } from "./download";
+import { claimAttachmentUpload, createAttachmentUploadIntent } from "./attachments";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { getPublicMediaUrl } from "../storage/publicUrl";
 import { getProjectViewer, requireClientUser, requireOwnedEditableProject, requireOwnedProject } from "./access";
-import { PROJECT_DOCUMENT_MAX_BYTES, PROJECT_MAX_DOCUMENTS, PROJECT_MAX_IMAGES, PROJECT_UPLOAD_TTL_MS, projectCategories, projectCategoryValidator, projectCities, projectCityValidator, projectPropertyTypes, projectPropertyTypeValidator, projectStatusValidator, projectTimelines, projectTimelineValidator } from "./constants";
+import { PROJECT_MAX_DOCUMENTS, PROJECT_MAX_IMAGES, projectCategories, projectCategoryValidator, projectCities, projectCityValidator, projectPropertyTypes, projectPropertyTypeValidator, projectStatusValidator, projectTimelines, projectTimelineValidator } from "./constants";
 import { assertProjectTransition, isProjectEditable } from "./state";
 
 const draftValidator = v.object({
@@ -160,20 +161,24 @@ export const saveLocation = mutation({ args: { projectId: v.id("projects"), city
 export const saveDetails = mutation({ args: { projectId: v.id("projects"), title: v.string(), propertyType: projectPropertyTypeValidator, surface: v.optional(v.number()), surfaceUnknown: v.boolean(), description: v.string() }, returns: v.null(), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); const p = await requireOwnedEditableProject(ctx, userId, args.projectId); if ((!args.surfaceUnknown && (args.surface === undefined || !Number.isFinite(args.surface) || args.surface <= 0 || args.surface > 100_000)) || (args.surfaceUnknown && args.surface !== undefined)) throw new ConvexError("INVALID_PROJECT_SURFACE"); await ctx.db.patch(p._id, { title: text(args.title, 5, 120, "INVALID_PROJECT_TITLE"), propertyType: args.propertyType, surface: args.surfaceUnknown ? undefined : args.surface, surfaceUnknown: args.surfaceUnknown, description: text(args.description, 20, 2_000, "INVALID_PROJECT_DESCRIPTION"), lastCompletedStep: completed(p.lastCompletedStep, 3), updatedAt: Date.now() }); return null; } });
 export const saveTimeline = mutation({ args: { projectId: v.id("projects"), timeline: projectTimelineValidator }, returns: v.null(), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); const p = await requireOwnedEditableProject(ctx, userId, args.projectId); await ctx.db.patch(p._id, { timeline: args.timeline, lastCompletedStep: completed(p.lastCompletedStep, 5), updatedAt: Date.now() }); return null; } });
 
-export const generateAttachmentUploadUrl = mutation({ args: { projectId: v.id("projects") }, returns: v.object({ uploadUrl: v.string(), uploadToken: v.string() }), handler: async (ctx, args) => { const { userId } = await requireClientUser(ctx); await requireOwnedEditableProject(ctx, userId, args.projectId); const uploadToken = `${crypto.randomUUID()}${crypto.randomUUID()}`; const now = Date.now(); await ctx.db.insert("projectAttachmentUploadIntents", { projectId: args.projectId, userId, token: uploadToken, expiresAt: now + PROJECT_UPLOAD_TTL_MS, createdAt: now }); return { uploadUrl: await ctx.storage.generateUploadUrl(), uploadToken }; } });
+export const generateAttachmentUploadUrl = mutation({
+  args: { projectId: v.id("projects"), fileName: v.string(), contentType: v.string(), size: v.number() },
+  returns: v.object({ uploadUrl: v.string(), uploadToken: v.string() }),
+  handler: createAttachmentUploadIntent,
+});
 
-export const saveFiles = mutation({ args: { projectId: v.id("projects"), imageUploadTokens: v.array(v.string()), documents: v.array(v.object({ uploadToken: v.string(), storageId: v.id("_storage"), fileName: v.string() })) }, returns: v.null(), handler: async (ctx, args) => {
+export const saveFiles = mutation({ args: { projectId: v.id("projects"), imageUploadTokens: v.array(v.string()), documents: v.array(v.object({ uploadToken: v.string() })) }, returns: v.null(), handler: async (ctx, args) => {
   const { userId } = await requireClientUser(ctx); const p = await requireOwnedEditableProject(ctx, userId, args.projectId);
   if (args.imageUploadTokens.length > PROJECT_MAX_IMAGES || new Set(args.imageUploadTokens).size !== args.imageUploadTokens.length) throw new ConvexError("INVALID_PROJECT_IMAGE");
-  if (args.documents.length > PROJECT_MAX_DOCUMENTS || new Set(args.documents.map((d) => d.uploadToken)).size !== args.documents.length || new Set(args.documents.map((d) => d.storageId)).size !== args.documents.length) throw new ConvexError("INVALID_PROJECT_DOCUMENT");
+  if (args.documents.length > PROJECT_MAX_DOCUMENTS || new Set(args.documents.map((d) => d.uploadToken)).size !== args.documents.length) throw new ConvexError("INVALID_PROJECT_DOCUMENT");
   const [existingImages, existingDocs] = await Promise.all([ctx.db.query("projectMedia").withIndex("by_projectId", (q) => q.eq("projectId", p._id)).take(PROJECT_MAX_IMAGES + 1), ctx.db.query("projectAttachments").withIndex("by_projectId", (q) => q.eq("projectId", p._id)).take(PROJECT_MAX_DOCUMENTS + 1)]);
   if (existingImages.length + args.imageUploadTokens.length > PROJECT_MAX_IMAGES) throw new ConvexError("INVALID_PROJECT_IMAGE"); if (existingDocs.length + args.documents.length > PROJECT_MAX_DOCUMENTS) throw new ConvexError("INVALID_PROJECT_DOCUMENT");
   const now = Date.now(); const imageIntents = [];
   for (const token of args.imageUploadTokens) { const intent = await ctx.db.query("projectMediaUploadIntents").withIndex("by_token", (q) => q.eq("token", token)).unique(); if (!intent || intent.projectId !== p._id || intent.userId !== userId || !intent.verifiedAt || intent.claimedAt || intent.expiresAt < now) throw new ConvexError("INVALID_PROJECT_IMAGE"); imageIntents.push(intent); }
   const docs = [];
-  for (const document of args.documents) { await assertNotVerificationStorage(ctx, document.storageId); const intent = await ctx.db.query("projectAttachmentUploadIntents").withIndex("by_token", (q) => q.eq("token", document.uploadToken)).unique(); const metadata = await ctx.db.system.get("_storage", document.storageId); const mime = metadata?.contentType?.split(";", 1)[0]?.trim().toLowerCase(); if (!intent || intent.projectId !== p._id || intent.userId !== userId || intent.claimedAt || intent.expiresAt < now || !metadata || mime !== "application/pdf" || metadata.size < 1 || metadata.size > PROJECT_DOCUMENT_MAX_BYTES) throw new ConvexError("INVALID_PROJECT_DOCUMENT"); docs.push({ document, intent, metadata }); }
+  for (const document of args.documents) docs.push(await claimAttachmentUpload(ctx, p._id, document.uploadToken));
   for (const [offset, intent] of imageIntents.entries()) { await ctx.db.insert("projectMedia", { projectId: p._id, clientId: userId, storageProvider: "r2", objectKey: intent.objectKey, mimeType: intent.expectedContentType, size: intent.expectedSize, etag: intent.etag, sortOrder: existingImages.length + offset, createdAt: now }); await ctx.db.patch(intent._id, { claimedAt: now }); }
-  for (const { document, intent, metadata } of docs) { await ctx.db.insert("projectAttachments", { projectId: p._id, clientId: userId, storageId: document.storageId, fileName: text(document.fileName, 1, 180, "INVALID_PROJECT_DOCUMENT"), contentType: "application/pdf", size: metadata.size, createdAt: now }); await ctx.db.patch(intent._id, { claimedAt: now }); }
+  for (const file of docs) { await ctx.db.insert("projectAttachments", { projectId: p._id, clientId: userId, storageId: file.storageId, fileName: file.fileName, contentType: "application/pdf", size: file.size, createdAt: now }); await ctx.db.patch(file.intent._id, { claimedAt: now }); }
   await ctx.db.patch(p._id, { lastCompletedStep: completed(p.lastCompletedStep, 6), updatedAt: now }); return null;
 } });
 

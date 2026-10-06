@@ -119,7 +119,7 @@ describe("final quote request and privacy", () => {
     )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
     await expect(asUser(companyBlocked.t, companyBlocked.companyUserId).mutation(
       api.finalQuotes.index.generatePdfUploadUrl,
-      { finalQuoteId: parent.finalQuoteId },
+      { finalQuoteId: parent.finalQuoteId, fileName: "quote.pdf", contentType: "application/pdf", size: 8 },
     )).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");
     await expect(asUser(companyBlocked.t, companyBlocked.companyUserId).mutation(
       api.finalQuotes.index.submitRevision,

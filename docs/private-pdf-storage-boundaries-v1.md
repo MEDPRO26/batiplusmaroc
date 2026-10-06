@@ -36,6 +36,43 @@ downloaded copies. Inventory and any copy/revocation/deletion require a separate
 explicitly authorized rollout. This change performs no production migration,
 deployment, legacy-file deletion or URL revocation.
 
+## Project attachment and Final Quote claim binding
+
+Project attachment and Final Quote PDF uploads now follow the same authenticated
+direct Convex HTTP pattern. The public intent mutations retain their names but
+require filename, PDF MIME type and exact size. Both preserve the existing
+15 MiB limit. JWT and upload token travel in headers to the configured Convex
+origin; no image/PDF bytes pass through Vercel. The HTTP response is only
+`{ uploaded: true }`, never a storage reference.
+
+Actual size and `%PDF-` signature are checked before storing a new immutable
+file. Internal binding rechecks the current owner/Company relationship, intent
+expiry and unused state, then persists its exact storage ID, size and storage
+SHA-256. Final Quote intents also bind the Company and conversation. The public
+Project `saveFiles.documents` and Final Quote `submitRevision.pdf` inputs accept
+only an upload token. Extra caller-supplied storage IDs are rejected by validators.
+Commit rechecks the binding, current metadata/hash, relationship and persistent
+reference guard, then creates the domain record and consumes the intent in one
+transaction. Final Quote suspension and existing workflow gates remain enforced.
+
+Discard accepts domain ID plus token, derives the exact file from the persisted
+intent, protects all existing private-file references and leaves a tombstone.
+Commit first blocks discard; discard first blocks commit and late binding.
+Duplicate commits/reused uploads fail closed. Failed HTTP cleanup keeps any
+file bound to a Project, Final Quote or message intent, or persistently referenced.
+Historical unbound grants must be re-uploaded; no backfill, deletion or migration
+is performed. Interrupted uploads can still leave private orphan files.
+
+The pre-edit inventory found these two equivalent unsafe claim paths; message
+and verification claims already require server-bound file equality. New runtime
+modules required with this change: `convex/projects/attachments.ts`,
+`convex/finalQuotes/pdfUploads.ts`, and `convex/storage/privatePdf.ts`.
+The existing Project wizard currently has no document upload control; the
+browser helper `uploadProjectPdf` is ready for callers without adding a new UI.
+The existing Final Quote form uses `uploadFinalQuotePdf` and submits only its token.
+Local regressions are in `convex/privatePdfClaims.test.ts` and
+`lib/files/private-pdf.test.ts`. Live development JWT/CORS checks remain outstanding.
+
 Offline regressions use registered Convex handlers and HTTP routes with
 `convex-test` authentication, in-memory database and storage. Browser transport
 tests mock fetch. Live development checks remain required for JWT forwarding,

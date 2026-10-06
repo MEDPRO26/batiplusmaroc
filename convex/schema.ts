@@ -424,8 +424,12 @@ export default defineSchema({
 
   projectAttachmentUploadIntents: defineTable({
     projectId: v.id("projects"), userId: v.id("users"), token: v.string(), expiresAt: v.number(),
+    // Optional for historical grants; unbound grants cannot be committed.
+    fileName: v.optional(v.string()), expectedSize: v.optional(v.number()),
+    storageId: v.optional(v.id("_storage")), size: v.optional(v.number()), sha256: v.optional(v.string()),
+    discardedAt: v.optional(v.number()),
     claimedAt: v.optional(v.number()), createdAt: v.number(),
-  }).index("by_token", ["token"]),
+  }).index("by_token", ["token"]).index("by_storageId", ["storageId"]),
 
   projectQuotes: defineTable({
     projectId: v.id("projects"),
@@ -517,12 +521,17 @@ export default defineSchema({
   finalQuoteUploadIntents: defineTable({
     finalQuoteId: v.id("finalQuotes"),
     userId: v.id("users"),
+    companyId: v.optional(v.id("companies")), conversationId: v.optional(v.id("conversations")),
+    fileName: v.optional(v.string()), uploadFileName: v.optional(v.string()), expectedSize: v.optional(v.number()),
+    storageId: v.optional(v.id("_storage")), size: v.optional(v.number()), sha256: v.optional(v.string()),
+    discardedAt: v.optional(v.number()),
     token: v.string(),
     expiresAt: v.number(),
     claimedAt: v.optional(v.number()),
     createdAt: v.number(),
   })
     .index("by_token", ["token"])
+    .index("by_storageId", ["storageId"])
     .index("by_finalQuoteId", ["finalQuoteId"]),
 
   deals: defineTable({
