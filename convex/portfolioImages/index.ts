@@ -111,6 +111,16 @@ export const authorizeUpload = internalQuery({
   },
 });
 
+/** Shared immutable pending record/history creation; callers own authorization and pointer checks. */
+export async function createPendingPortfolioImage(ctx: MutationCtx, file: Pick<Doc<"portfolioImages">, "companyId" | "storageId" | "contentType" | "size" | "sha256" | "uploadedBy" | "portfolioProjectId" | "purpose" | "gallerySlotId">, now: number) {
+  const imageId = await ctx.db.insert("portfolioImages", { ...file, uploadedAt: now, moderationStatus: "pending" });
+  await ctx.db.insert("portfolioImageModerationHistory", {
+    companyId: file.companyId, portfolioProjectId: file.portfolioProjectId, imageId, action: "uploaded", oldStatus: null, newStatus: "pending",
+    changedBy: file.uploadedBy, changedAt: now,
+  });
+  return imageId;
+}
+
 /** Internal only: the authenticated HTTP handler binds the newly received, validated bytes. */
 export const bindUpload = internalMutation({
   args: { uploadToken: v.string(), storageId: v.id("_storage"), contentType: portfolioImageTypeValidator, size: v.number() }, returns: v.id("portfolioImages"),
@@ -123,17 +133,13 @@ export const bindUpload = internalMutation({
         !validatePublicImageInput("portfolioCover", args.contentType, args.size)) throw new ConvexError("INVALID_PORTFOLIO_IMAGE_UPLOAD");
     const referenced = await ctx.db.query("portfolioImages").withIndex("by_storageId", q => q.eq("storageId", args.storageId)).first();
     if (referenced) throw new ConvexError("INVALID_PORTFOLIO_IMAGE_UPLOAD");
-    const imageId = await ctx.db.insert("portfolioImages", {
+    const imageId = await createPendingPortfolioImage(ctx, {
       companyId: company._id, portfolioProjectId: intent.portfolioProjectId, purpose: intent.purpose, gallerySlotId: intent.gallerySlotId,
-      storageId: args.storageId, contentType: args.contentType, size: metadata.size, sha256: metadata.sha256,
-      uploadedBy: userId, uploadedAt: now, moderationStatus: "pending",
-    });
+      storageId: args.storageId, contentType: args.contentType,
+      size: metadata.size, sha256: metadata.sha256, uploadedBy: userId,
+    }, now);
     await ctx.db.patch(intent._id, { claimedAt: now, imageId });
     await ctx.db.patch(slot._id, { submittedImageId: imageId });
-    await ctx.db.insert("portfolioImageModerationHistory", {
-      companyId: company._id, portfolioProjectId: intent.portfolioProjectId, imageId,
-      action: "uploaded", oldStatus: null, newStatus: "pending", changedBy: userId, changedAt: now,
-    });
     return imageId;
   },
 });

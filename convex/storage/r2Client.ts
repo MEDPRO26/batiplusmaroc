@@ -80,6 +80,42 @@ export async function readPublicMediaBytes(objectKey: string, maximumBytes: numb
   return await result.Body.transformToByteArray();
 }
 
+/** Full, bounded authenticated read for ingestion. Never follows a public delivery URL. */
+export async function readLegacyImageObject(objectKey: string, maximumBytes: number) {
+  const { bucket, s3 } = client();
+  const signal = AbortSignal.timeout(30_000);
+  const head = await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: objectKey }), { abortSignal: signal });
+  const size = head.ContentLength;
+  if (!Number.isInteger(size) || !size || size < 1 || size > maximumBytes || !head.ETag || !head.ContentType) {
+    throw new Error("Invalid legacy image metadata");
+  }
+  const result = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: objectKey, IfMatch: head.ETag }), { abortSignal: signal });
+  if (!result.Body || result.ContentLength !== size || result.ETag !== head.ETag || result.ContentType !== head.ContentType) {
+    if (result.Body) await result.Body.transformToWebStream().cancel();
+    throw new Error("Legacy image changed during read");
+  }
+  const reader = result.Body.transformToWebStream().getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  try {
+    for (;;) {
+      const part = await reader.read();
+      if (part.done) break;
+      received += part.value.byteLength;
+      if (received > maximumBytes || received > size) throw new Error("Legacy image exceeds limit");
+      chunks.push(part.value);
+    }
+  } finally {
+    await reader.cancel();
+    reader.releaseLock();
+  }
+  if (received !== size) throw new Error("Incomplete legacy image");
+  const bytes = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return { bytes, contentType: head.ContentType, size, etag: head.ETag };
+}
+
 export async function deletePublicMediaObject(objectKey: string) {
   const { bucket, s3 } = client();
   await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: objectKey }));

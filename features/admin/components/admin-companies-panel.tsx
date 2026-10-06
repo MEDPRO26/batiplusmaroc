@@ -4,6 +4,7 @@ import { AdminPendingCoverQueue } from "./admin-company-cover-review";
 
 import { AdminPendingLogoQueue } from "./admin-company-logo-review";
 import { AdminPortfolioImageQueue } from "./admin-portfolio-image-review";
+import { AdminLegacyMediaIngestion } from "./admin-legacy-media-ingestion";
 
 import { usePaginatedQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -73,6 +74,7 @@ export function AdminCompaniesPanel({ initialFilters }: { initialFilters: AdminC
       <div className="mt-5"><AdminPendingLogoQueue /></div>
       <AdminPendingCoverQueue />
       <AdminPortfolioImageQueue />
+      <AdminLegacyMediaIngestion />
       <section className="overflow-hidden rounded-[16px] border border-[#e7eaee] bg-white">
         <div className="overflow-x-auto border-b border-[#eef1f4]">
           <div aria-label={t("views.label")} className="flex min-w-max gap-5 px-4 sm:px-5" role="group">

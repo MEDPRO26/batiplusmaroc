@@ -1,4 +1,5 @@
 import { coverContentTypeValidator, coverStatusValidator } from "./companyCovers/constants";
+import { ingestionStatusValidator, ingestionImageValidator, mediaTypeValidator, providerValidator } from "./legacyMediaIngestion/constants";
 import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
@@ -871,6 +872,19 @@ export default defineSchema({
     .index("by_companyId_and_service", ["companyId", "service"])
     .index("by_service", ["service"])
     .index("by_serviceId", ["serviceId"]),
+
+  legacyMediaIngestions: defineTable({
+    sourceKey: v.string(), provider: providerValidator, sourceRef: v.string(), sourceRecordId: v.string(),
+    mediaType: mediaTypeValidator, companyId: v.id("companies"),
+    portfolioProjectId: v.optional(v.id("portfolioProjects")), gallerySlotId: v.optional(v.id("portfolioMedia")),
+    status: ingestionStatusValidator, attemptId: v.string(), leaseUntil: v.number(), attempts: v.number(),
+    createdBy: v.id("users"), attemptedBy: v.id("users"), createdAt: v.number(), updatedAt: v.number(),
+    imageId: v.optional(ingestionImageValidator), sha256: v.optional(v.string()),
+    contentType: v.optional(v.string()), size: v.optional(v.number()), sourceEtag: v.optional(v.string()),
+    completedAt: v.optional(v.number()), failureCode: v.optional(v.literal("COPY_FAILED")),
+  })
+    .index("by_sourceKey", ["sourceKey"])
+    .index("by_companyId_and_updatedAt", ["companyId", "updatedAt"]),
 
   companyLogoImages: defineTable({
     companyId: v.id("companies"),

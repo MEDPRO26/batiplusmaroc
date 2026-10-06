@@ -64,6 +64,16 @@ export const authorizeUpload = internalQuery({
   },
 });
 
+/** Shared immutable pending record/history creation; callers own authorization and pointer checks. */
+export async function createPendingLogo(ctx: MutationCtx, file: Pick<Doc<"companyLogoImages">, "companyId" | "storageId" | "contentType" | "size" | "sha256" | "uploadedBy">, now: number) {
+  const imageId = await ctx.db.insert("companyLogoImages", { ...file, uploadedAt: now, moderationStatus: "pending" });
+  await ctx.db.insert("companyLogoModerationHistory", {
+    companyId: file.companyId, imageId, action: "uploaded", oldStatus: null, newStatus: "pending",
+    changedBy: file.uploadedBy, changedAt: now,
+  });
+  return imageId;
+}
+
 /** Only the HTTP handler that received and validated these bytes can bind a storage ID. */
 export const bindUpload = internalMutation({
   args: { uploadToken: v.string(), storageId: v.id("_storage"), contentType: logoContentTypeValidator, size: v.number() },
@@ -77,16 +87,12 @@ export const bindUpload = internalMutation({
         !validatePublicImageInput("companyLogo", args.contentType, args.size)) throw new ConvexError("INVALID_COMPANY_LOGO_UPLOAD");
     const referenced = await ctx.db.query("companyLogoImages").withIndex("by_storageId", q => q.eq("storageId", args.storageId)).first();
     if (referenced) throw new ConvexError("INVALID_COMPANY_LOGO_UPLOAD");
-    const imageId = await ctx.db.insert("companyLogoImages", {
+    const imageId = await createPendingLogo(ctx, {
       companyId: company._id, storageId: args.storageId, contentType: args.contentType,
-      size: metadata.size, sha256: metadata.sha256, uploadedBy: userId, uploadedAt: now,
-      moderationStatus: "pending",
-    });
+      size: metadata.size, sha256: metadata.sha256, uploadedBy: userId,
+    }, now);
     await ctx.db.patch(intent._id, { claimedAt: now, imageId });
     await ctx.db.patch(company._id, { submittedLogoImageId: imageId, updatedAt: now });
-    await ctx.db.insert("companyLogoModerationHistory", {
-      companyId: company._id, imageId, action: "uploaded", oldStatus: null, newStatus: "pending", changedBy: userId, changedAt: now,
-    });
     return imageId;
   },
 });

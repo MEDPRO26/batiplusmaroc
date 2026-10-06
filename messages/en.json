@@ -5269,5 +5269,39 @@
       "hidden": "Hidden"
     },
     "loadMore": "Load more"
+  },
+  "adminLegacyMedia": {
+    "title": "Legacy media ingestion",
+    "lead": "Copy one legacy image privately for manual review. Ingestion creates a pending image; it does not approve it or revoke its old public link. Existing moderated submissions and approvals are preserved.",
+    "mediaType": "Media type",
+    "types": {
+      "companyLogo": "Company logo",
+      "companyCover": "Company cover",
+      "portfolioCover": "Portfolio cover",
+      "portfolioGallery": "Portfolio gallery"
+    },
+    "providers": {
+      "r2": "R2",
+      "convex": "Convex"
+    },
+    "slot": "Gallery slot {order}",
+    "loading": "Loading legacy candidates…",
+    "empty": "No eligible legacy source on this page. Continue through available pages.",
+    "loadMore": "Load more candidates",
+    "loadError": "Legacy candidates could not load. Try again.",
+    "actionError": "Ingestion failed. The original is unchanged. Retry or reload the list.",
+    "companyFallback": "Company",
+    "ingest": "Ingest for review",
+    "retry": "Retry",
+    "review": "Open moderation review",
+    "ingesting": "Copying privately…",
+    "conflict": "Existing moderated work was preserved. This legacy image cannot replace it.",
+    "status": {
+      "notStarted": "Not ingested",
+      "processing": "Ingestion in progress",
+      "ingested": "Copied privately. Waiting for review.",
+      "conflict": "Skipped or retained privately due to a conflict",
+      "failed": "Ingestion failed"
+    }
   }
 }
