@@ -60,6 +60,11 @@ import type * as legacyMediaIngestion_actions from "../legacyMediaIngestion/acti
 import type * as legacyMediaIngestion_constants from "../legacyMediaIngestion/constants.js";
 import type * as legacyMediaIngestion_index from "../legacyMediaIngestion/index.js";
 import type * as legacyMediaIngestion_model from "../legacyMediaIngestion/model.js";
+import type * as legacyMediaIngestion_retirement from "../legacyMediaIngestion/retirement.js";
+import type * as legacyMediaIngestion_retirementActions from "../legacyMediaIngestion/retirementActions.js";
+import type * as legacyMediaIngestion_retirementConstants from "../legacyMediaIngestion/retirementConstants.js";
+import type * as legacyMediaIngestion_retirementDependencies from "../legacyMediaIngestion/retirementDependencies.js";
+import type * as legacyMediaIngestion_retirementModel from "../legacyMediaIngestion/retirementModel.js";
 import type * as lib_accountFoundation from "../lib/accountFoundation.js";
 import type * as lib_authSecurity from "../lib/authSecurity.js";
 import type * as lib_clientPublicShape from "../lib/clientPublicShape.js";
@@ -188,6 +193,11 @@ declare const fullApi: ApiFromModules<{
   "legacyMediaIngestion/constants": typeof legacyMediaIngestion_constants;
   "legacyMediaIngestion/index": typeof legacyMediaIngestion_index;
   "legacyMediaIngestion/model": typeof legacyMediaIngestion_model;
+  "legacyMediaIngestion/retirement": typeof legacyMediaIngestion_retirement;
+  "legacyMediaIngestion/retirementActions": typeof legacyMediaIngestion_retirementActions;
+  "legacyMediaIngestion/retirementConstants": typeof legacyMediaIngestion_retirementConstants;
+  "legacyMediaIngestion/retirementDependencies": typeof legacyMediaIngestion_retirementDependencies;
+  "legacyMediaIngestion/retirementModel": typeof legacyMediaIngestion_retirementModel;
   "lib/accountFoundation": typeof lib_accountFoundation;
   "lib/authSecurity": typeof lib_authSecurity;
   "lib/clientPublicShape": typeof lib_clientPublicShape;

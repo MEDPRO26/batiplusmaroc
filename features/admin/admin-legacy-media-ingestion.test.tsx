@@ -11,6 +11,7 @@ vi.mock("@convex-dev/auth/react", () => ({ useAuthToken: () => session.token }))
 vi.mock("convex/react", () => ({ useQuery: vi.fn(), usePaginatedQuery: vi.fn(), useAction: () => vi.fn() }));
 vi.mock("next/font/google", () => ({ Outfit: () => ({ className: "font-outfit" }) }));
 vi.mock("@/i18n/navigation", () => ({ Link: ({ children }: { children: ReactNode }) => <a>{children}</a>, usePathname: () => "/admin/companies" }));
+vi.mock("./components/admin-legacy-media-retirement", () => ({ AdminLegacyMediaRetirement: () => null }));
 import { AdminLegacyMediaIngestion } from "./components/admin-legacy-media-ingestion";
 beforeEach(() => {
   vi.clearAllMocks(); session.token = "admin-session"; session.role = "admin";
