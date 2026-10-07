@@ -49,14 +49,14 @@ export function SeoMediaLibrary() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-5">
-      {notice ? <p className="fixed bottom-6 left-1/2 z-[90] max-w-sm -translate-x-1/2 rounded-full bg-[#17191d] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(16,24,40,0.24)]" role="status">{notice}</p> : null}
+      {notice ? <p className="fixed bottom-6 left-1/2 z-[90] max-w-sm -translate-x-1/2 rounded-sm bg-[#17191d] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(16,24,40,0.24)]" role="status">{notice}</p> : null}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-[0.72rem] font-bold tracking-[0.12em] text-[#2f6bff] uppercase">{t("eyebrow")}</p>
           <h1 className="mt-2 text-[1.9rem] font-semibold tracking-[-0.04em] sm:text-[2.2rem]">{t("title")}</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#626970]">{t("description")}</p>
         </div>
-        <label className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#2f6bff] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,107,255,0.24)] ${SEO_PRESS} ${uploading ? "pointer-events-none opacity-60" : ""}`}>
+        <label className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-sm bg-[#2f6bff] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,107,255,0.24)] ${SEO_PRESS} ${uploading ? "pointer-events-none opacity-60" : ""}`}>
           <Upload aria-hidden className="size-4" />
           {uploading ? t("uploading") : t("upload")}
           <input accept={SEO_MEDIA_ACCEPT} className="sr-only" disabled={uploading} onChange={(event) => void handleUpload(event.target.files?.[0])} type="file" />
@@ -70,11 +70,11 @@ export function SeoMediaLibrary() {
           <label className="relative block">
             <span className="sr-only">{t("searchLabel")}</span>
             <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[#8b919a]" />
-            <input className="min-h-11 w-full rounded-full border border-[#dfe3e8] pl-10 pr-4 text-sm outline-none focus:border-[#2f6bff] focus:ring-2 focus:ring-[#2f6bff]/15" onChange={(event) => setSearch(event.target.value)} placeholder={t("searchPlaceholder")} value={search} />
+            <input className="min-h-11 w-full rounded-sm border border-[#dfe3e8] pl-10 pr-4 text-sm outline-none focus:border-[#2f6bff] focus:ring-2 focus:ring-[#2f6bff]/15" onChange={(event) => setSearch(event.target.value)} placeholder={t("searchPlaceholder")} value={search} />
           </label>
           <label>
             <span className="sr-only">{t("statusLabel")}</span>
-            <select className="min-h-11 w-full rounded-full border border-[#dfe3e8] bg-white px-4 text-sm outline-none focus:border-[#2f6bff] focus:ring-2 focus:ring-[#2f6bff]/15" onChange={(event) => setStatus(event.target.value as MediaStatus)} value={status}>
+            <select className="min-h-11 w-full rounded-sm border border-[#dfe3e8] bg-white px-4 text-sm outline-none focus:border-[#2f6bff] focus:ring-2 focus:ring-[#2f6bff]/15" onChange={(event) => setStatus(event.target.value as MediaStatus)} value={status}>
               <option value="active">{t("statuses.active")}</option>
               <option value="archived">{t("statuses.archived")}</option>
             </select>
@@ -99,7 +99,7 @@ export function SeoMediaLibrary() {
                 <span className="block p-3.5">
                   <span className="block truncate text-sm font-semibold text-[#272a2f]">{item.filename}</span>
                   <span className="mt-1 block text-xs text-[#707780]">{item.width && item.height ? `${item.width} × ${item.height}` : t("dimensionsUnknown")} · {formatBytes(item.size, locale)}</span>
-                  <span className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-[0.7rem] font-semibold ${metadataReady ? "bg-[#e7f8ee] text-[#157a3e]" : "bg-[#fff4df] text-[#8a5a00]"}`}>{metadataReady ? t("metadataComplete") : t("metadataMissing")}</span>
+                  <span className={`mt-3 inline-flex rounded-sm px-2.5 py-1 text-[0.7rem] font-semibold ${metadataReady ? "bg-[#e7f8ee] text-[#157a3e]" : "bg-[#fff4df] text-[#8a5a00]"}`}>{metadataReady ? t("metadataComplete") : t("metadataMissing")}</span>
                 </span>
               </button>
             );
@@ -195,7 +195,7 @@ function MediaDetailsDialog({ mediaId, onClose, onSuccess, onError }: {
       <div className="flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl" ref={dialogRef}>
         <div className="flex items-start justify-between gap-4 border-b border-[#e7eaee] p-5 sm:p-6">
           <div className="min-w-0"><p className="text-[0.7rem] font-bold tracking-[0.12em] text-[#2f6bff] uppercase">{t("detailsEyebrow")}</p><h2 className="mt-1 truncate text-xl font-semibold" id="media-details-title">{details?.media.filename ?? t("detailsTitle")}</h2></div>
-          <button ref={closeRef} aria-label={t("close")} className={`grid size-11 shrink-0 place-items-center rounded-full border border-[#e6e9ee] ${SEO_PRESS}`} onClick={onClose} type="button"><X aria-hidden className="size-5" /></button>
+          <button ref={closeRef} aria-label={t("close")} className={`grid size-11 shrink-0 place-items-center rounded-sm border border-[#e6e9ee] ${SEO_PRESS}`} onClick={onClose} type="button"><X aria-hidden className="size-5" /></button>
         </div>
         <div aria-label={t("tabsLabel")} className="flex gap-1 overflow-x-auto border-b border-[#e7eaee] px-5 pt-3 sm:px-6" role="tablist">
           {(["general", "fr", "en"] as const).map((value) => <button aria-selected={tab === value} className={`min-h-11 border-b-2 px-4 text-sm font-semibold ${tab === value ? "border-[#2f6bff] text-[#2f6bff]" : "border-transparent text-[#626970]"}`} key={value} onClick={() => setTab(value)} role="tab" type="button">{t(`tabs.${value}`)}</button>)}
@@ -213,8 +213,8 @@ function MediaDetailsDialog({ mediaId, onClose, onSuccess, onError }: {
                 <Info label={t("fields.usage")} value={t("usageCount", { count: usageTotal })} />
               </dl>
               <div className="grid gap-2 sm:grid-cols-2">
-                <label className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold ${SEO_PRESS} ${uploading ? "pointer-events-none opacity-60" : ""}`}><RefreshCw aria-hidden className="size-4" />{uploading ? t("replacing") : t("replace")}<input accept={SEO_MEDIA_ACCEPT} className="sr-only" disabled={uploading} onChange={(event) => void replace(event.target.files?.[0])} type="file" /></label>
-                <button className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#f4c7c2] px-4 text-sm font-semibold text-[#b42318] disabled:cursor-not-allowed disabled:opacity-50 ${SEO_PRESS}`} disabled={saving || details.media.status === "archived"} onClick={() => void archive()} type="button"><Archive aria-hidden className="size-4" />{t("archive")}</button>
+                <label className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-sm border border-[#dfe3e8] px-4 text-sm font-semibold ${SEO_PRESS} ${uploading ? "pointer-events-none opacity-60" : ""}`}><RefreshCw aria-hidden className="size-4" />{uploading ? t("replacing") : t("replace")}<input accept={SEO_MEDIA_ACCEPT} className="sr-only" disabled={uploading} onChange={(event) => void replace(event.target.files?.[0])} type="file" /></label>
+                <button className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-[#f4c7c2] px-4 text-sm font-semibold text-[#b42318] disabled:cursor-not-allowed disabled:opacity-50 ${SEO_PRESS}`} disabled={saving || details.media.status === "archived"} onClick={() => void archive()} type="button"><Archive aria-hidden className="size-4" />{t("archive")}</button>
               </div>
               {usageTotal > 0 ? <p className="text-xs leading-5 text-[#7a5300]">{t("replacementHint")}</p> : null}
             </div>
@@ -229,10 +229,10 @@ function MediaDetailsDialog({ mediaId, onClose, onSuccess, onError }: {
 
 function MetadataEditor({ form, onChange, onSave, disabled, t }: { form: MetadataForm; onChange: (value: MetadataForm) => void; onSave: () => void; disabled: boolean; t: ReturnType<typeof useTranslations<"seoCms.media">> }) {
   function update(key: keyof MetadataForm, value: string) { onChange({ ...form, [key]: value }); }
-  return <div className="grid gap-4"><MetadataField label={t("fields.altText")} required><input disabled={disabled} maxLength={300} onChange={(event) => update("altText", event.target.value)} required value={form.altText} /></MetadataField><MetadataField label={t("fields.title")}><input disabled={disabled} maxLength={300} onChange={(event) => update("title", event.target.value)} value={form.title} /></MetadataField><MetadataField label={t("fields.caption")}><textarea disabled={disabled} maxLength={1000} onChange={(event) => update("caption", event.target.value)} rows={3} value={form.caption} /></MetadataField><MetadataField label={t("fields.description")}><textarea disabled={disabled} maxLength={2000} onChange={(event) => update("description", event.target.value)} rows={4} value={form.description} /></MetadataField><MetadataField hint={t("seoFilenameHint")} label={t("fields.seoFilename")}><input disabled={disabled} maxLength={160} onChange={(event) => update("seoFilename", event.target.value)} value={form.seoFilename} /></MetadataField><button className={`min-h-11 rounded-full bg-[#2f6bff] px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${SEO_PRESS}`} disabled={disabled || !form.altText.trim()} onClick={onSave} type="button">{t("saveMetadata")}</button></div>;
+  return <div className="grid gap-4"><MetadataField label={t("fields.altText")} required><input disabled={disabled} maxLength={300} onChange={(event) => update("altText", event.target.value)} required value={form.altText} /></MetadataField><MetadataField label={t("fields.title")}><input disabled={disabled} maxLength={300} onChange={(event) => update("title", event.target.value)} value={form.title} /></MetadataField><MetadataField label={t("fields.caption")}><textarea disabled={disabled} maxLength={1000} onChange={(event) => update("caption", event.target.value)} rows={3} value={form.caption} /></MetadataField><MetadataField label={t("fields.description")}><textarea disabled={disabled} maxLength={2000} onChange={(event) => update("description", event.target.value)} rows={4} value={form.description} /></MetadataField><MetadataField hint={t("seoFilenameHint")} label={t("fields.seoFilename")}><input disabled={disabled} maxLength={160} onChange={(event) => update("seoFilename", event.target.value)} value={form.seoFilename} /></MetadataField><button className={`min-h-11 rounded-sm bg-[#2f6bff] px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${SEO_PRESS}`} disabled={disabled || !form.altText.trim()} onClick={onSave} type="button">{t("saveMetadata")}</button></div>;
 }
 
-function MetadataField({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: ReactNode }) { return <label className="grid gap-2 text-sm font-semibold text-[#34383e]"><span>{label}{required ? <span aria-hidden className="text-[#b42318]"> *</span> : null}</span><span className="[&_input]:min-h-11 [&_input]:w-full [&_input]:rounded-[12px] [&_input]:border [&_input]:border-[#dfe3e8] [&_input]:px-3.5 [&_input]:font-normal [&_input]:outline-none [&_input]:focus:border-[#2f6bff] [&_input]:focus:ring-2 [&_input]:focus:ring-[#2f6bff]/15 [&_textarea]:w-full [&_textarea]:rounded-[12px] [&_textarea]:border [&_textarea]:border-[#dfe3e8] [&_textarea]:px-3.5 [&_textarea]:py-3 [&_textarea]:font-normal [&_textarea]:outline-none [&_textarea]:focus:border-[#2f6bff] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#2f6bff]/15 [&_:disabled]:bg-[#f4f6f8]">{children}</span>{hint ? <span className="text-xs font-normal text-[#8b919a]">{hint}</span> : null}</label>; }
+function MetadataField({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: ReactNode }) { return <label className="grid gap-2 text-sm font-semibold text-[#34383e]"><span>{label}{required ? <span aria-hidden className="text-[#b42318]"> *</span> : null}</span><span className="[&_input]:min-h-11 [&_input]:w-full [&_input]:rounded-sm [&_input]:border [&_input]:border-[#dfe3e8] [&_input]:px-3.5 [&_input]:font-normal [&_input]:outline-none [&_input]:focus:border-[#2f6bff] [&_input]:focus:ring-2 [&_input]:focus:ring-[#2f6bff]/15 [&_textarea]:w-full [&_textarea]:rounded-sm [&_textarea]:border [&_textarea]:border-[#dfe3e8] [&_textarea]:px-3.5 [&_textarea]:py-3 [&_textarea]:font-normal [&_textarea]:outline-none [&_textarea]:focus:border-[#2f6bff] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-[#2f6bff]/15 [&_:disabled]:bg-[#f4f6f8]">{children}</span>{hint ? <span className="text-xs font-normal text-[#8b919a]">{hint}</span> : null}</label>; }
 function Info({ label, value }: { label: string; value: string }) { return <div><dt className="text-xs font-semibold text-[#707780]">{label}</dt><dd className="mt-1 break-words font-medium text-[#272a2f]">{value}</dd></div>; }
 function toMetadataForm(value: { altText: string; title?: string; caption?: string; description?: string; seoFilename?: string } | null): MetadataForm { return value ? { altText: value.altText, title: value.title ?? "", caption: value.caption ?? "", description: value.description ?? "", seoFilename: value.seoFilename ?? "" } : { ...EMPTY_METADATA }; }
 function formatBytes(bytes: number, locale: string) { if (bytes < 1024) return `${bytes} B`; if (bytes < 1024 * 1024) return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(bytes / 1024)} KB`; return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(bytes / (1024 * 1024))} MB`; }

@@ -7,8 +7,8 @@ export function ServicesHero() {
   return (
     <section className="relative overflow-hidden bg-[#eef4f7]" aria-labelledby="services-title">
       <div className="pointer-events-none absolute inset-y-0 left-[8%] hidden w-px bg-brand-border/80 lg:block" aria-hidden="true" />
-      <div className="pointer-events-none absolute -top-40 -right-40 size-[520px] rounded-full border border-brand/10" aria-hidden="true" />
-      <div className="pointer-events-none absolute -top-22 -right-22 size-[340px] rounded-full border border-brand/10" aria-hidden="true" />
+      <div className="pointer-events-none absolute -top-40 -right-40 size-[520px] rounded-sm border border-brand/10" aria-hidden="true" />
+      <div className="pointer-events-none absolute -top-22 -right-22 size-[340px] rounded-sm border border-brand/10" aria-hidden="true" />
 
       <div className="relative mx-auto grid max-w-[1280px] gap-12 px-[18px] pt-10 pb-18 sm:px-6 sm:pt-14 sm:pb-24 lg:min-h-[780px] lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:gap-16 lg:px-8 lg:py-24">
         <div className="relative z-10">
@@ -45,7 +45,7 @@ export function ServicesHero() {
               <p className="mb-2 text-[0.64rem] font-bold tracking-[0.18em] text-[#e8bd50] uppercase">Construction & gros œuvre</p>
               <p className="m-0 max-w-[430px] text-lg leading-6 font-semibold">Immeuble R+5 — Quartier Al-Huda, Agadir</p>
             </div>
-            <span className="grid size-12 shrink-0 place-items-center rounded-full border border-white/35 text-lg" aria-hidden="true">01</span>
+            <span className="grid size-12 shrink-0 place-items-center rounded-sm border border-white/35 text-lg" aria-hidden="true">01</span>
           </figcaption>
         </figure>
       </div>

@@ -8,7 +8,7 @@ const stages = [
 export function ServiceProcess() {
   return (
     <section className="relative overflow-hidden bg-[#08192a] py-20 text-white sm:py-28 lg:py-36" aria-labelledby="service-process-title">
-      <div className="pointer-events-none absolute -right-48 -top-48 size-[520px] rounded-full border border-white/6" aria-hidden="true" />
+      <div className="pointer-events-none absolute -right-48 -top-48 size-[520px] rounded-sm border border-white/6" aria-hidden="true" />
       <div className="mx-auto max-w-[1280px] px-[18px] sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
           <p className="text-[0.7rem] font-bold tracking-[0.2em] text-[#81c6ed] uppercase">Notre accompagnement</p>

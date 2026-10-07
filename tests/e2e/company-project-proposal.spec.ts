@@ -68,6 +68,7 @@ async function expectNoHorizontalOverflow(page: Page) {
 const submissionContext = {
   project: { id: "project-1", title: project.title, city: "agadir", primaryCategory: "renovation", timeline: "one_to_three_months" },
   verificationStatus: "verified",
+  marketplaceWriteAllowed: true,
   activeQuoteId: null,
   latestQuoteId: null,
 };

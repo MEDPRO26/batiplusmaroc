@@ -29,7 +29,7 @@ export async function Services() {
                 <div className="mt-auto mb-5 h-px bg-slate-200" aria-hidden="true" />
                 <Link className="group/link inline-flex items-center justify-between gap-4 font-semibold text-brand transition-colors hover:text-brand-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand" href={service.href}>
                   <span>{tItems(`${service.id}.cta`)}</span>
-                  <span className="grid size-11 shrink-0 place-items-center rounded-full border border-brand-border text-lg transition-[background-color,color,transform] group-hover/link:translate-x-0.5 group-hover/link:bg-brand group-hover/link:text-white" aria-hidden="true">↗</span>
+                  <span className="grid size-11 shrink-0 place-items-center rounded-sm border border-brand-border text-lg transition-[background-color,color,transform] group-hover/link:translate-x-0.5 group-hover/link:bg-brand group-hover/link:text-white" aria-hidden="true">↗</span>
                 </Link>
               </article>
 

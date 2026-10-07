@@ -45,7 +45,7 @@ export function ProjectProgression() {
             <li key={stage.number} className="relative">
               <div className="relative mb-5 aspect-[4/5] overflow-hidden rounded-[22px] bg-[#17314e]">
                 <Image src={stage.image} alt={stage.alt} fill sizes="(max-width: 767px) calc(100vw - 36px), 33vw" className="object-cover" />
-                <span className="absolute top-4 left-4 grid size-11 place-items-center rounded-full bg-white text-[0.68rem] font-bold tracking-[0.1em] text-brand-dark shadow-lg">{stage.number}</span>
+                <span className="absolute top-4 left-4 grid size-11 place-items-center rounded-sm bg-white text-[0.68rem] font-bold tracking-[0.1em] text-brand-dark shadow-lg">{stage.number}</span>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <h3 className="m-0! text-lg tracking-[-0.025em] text-white! sm:text-xl">{stage.title}</h3>

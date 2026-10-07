@@ -48,7 +48,7 @@ export function MarketplaceFeed() {
 
           <div
             aria-label={t("feedLabel")}
-            className="how-it-works-audience flex w-full max-w-full shrink-0 rounded-full border border-brand-border bg-white p-1 sm:w-fit"
+            className="how-it-works-audience flex w-full max-w-full shrink-0 rounded-sm border border-brand-border bg-white p-1 sm:w-fit"
             role="radiogroup"
           >
             {(["projects", "companies"] as const).map((value) => {
@@ -58,7 +58,7 @@ export function MarketplaceFeed() {
                 <button
                   aria-checked={selected}
                   className={joinClassNames(
-                    "min-h-11 flex-1 cursor-pointer appearance-none rounded-full px-4 py-2 text-[0.88rem] font-medium tracking-[-0.015em] transition-[background-color,color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] sm:min-h-12 sm:flex-none sm:px-5",
+                    "min-h-11 flex-1 cursor-pointer appearance-none rounded-sm px-4 py-2 text-[0.88rem] font-medium tracking-[-0.015em] transition-[background-color,color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] sm:min-h-12 sm:flex-none sm:px-5",
                     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96]",
                   )}
                   key={value}
@@ -97,7 +97,7 @@ export function MarketplaceFeed() {
 
         <div className="mt-10 sm:mt-12">
           <Link
-            className="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-6 text-[0.92rem] font-semibold text-white! transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover hover:text-white! active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex min-h-12 items-center justify-center rounded-sm bg-brand px-6 text-[0.92rem] font-semibold text-white! transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover hover:text-white! active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             href={feed === "projects" ? routes.browseProjects : routes.companies}
           >
             {t(`${feed}.cta`)}
@@ -141,7 +141,7 @@ function OpenProjectCard({ project }: { project: MarketplaceOpenProject }) {
       <p className="mt-2 mb-0 line-clamp-2 text-[0.92rem] leading-6 text-muted">{t(`projects.${project.id}.text` as Parameters<typeof t>[0])}</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-brand-soft px-3 py-1 text-[0.78rem] font-medium text-brand">
+        <span className="rounded-sm bg-brand-soft px-3 py-1 text-[0.78rem] font-medium text-brand">
           {tMarket(`categories.${project.category}`)}
         </span>
       </div>
@@ -149,7 +149,7 @@ function OpenProjectCard({ project }: { project: MarketplaceOpenProject }) {
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-brand-border pt-4">
         <p className="mb-0 text-[0.84rem] text-muted">{t("proposals", { count: project.proposals })}</p>
         <Link
-          className="inline-flex min-h-10 items-center justify-center rounded-full bg-brand px-4 text-[0.82rem] font-semibold text-white! hover:bg-brand-hover hover:text-white! focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          className="inline-flex min-h-10 items-center justify-center rounded-sm bg-brand px-4 text-[0.82rem] font-semibold text-white! hover:bg-brand-hover hover:text-white! focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           href={routes.browseProjects}
         >
           {t("viewProject")}
@@ -179,7 +179,7 @@ function FeaturedCompanyCard({ company }: { company: PublicMarketplaceCompany })
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-1.5">
-          <span className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-soft text-brand"><ApprovedCompanyLogo alt="" className="object-cover" fill sizes="36px" url={company.logoUrl} /></span>
+          <span className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-sm bg-brand-soft text-brand"><ApprovedCompanyLogo alt="" className="object-cover" fill sizes="36px" url={company.logoUrl} /></span>
           <h3 className="mb-0 text-[1.05rem] leading-tight font-semibold tracking-[-0.02em] text-ink">{company.name}</h3>
           {company.isVerified ? (
             <span className="inline-flex text-brand" title={tMarket("verified")}>
@@ -205,13 +205,13 @@ function FeaturedCompanyCard({ company }: { company: PublicMarketplaceCompany })
 
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
-            className="inline-flex min-h-10 items-center justify-center rounded-full bg-brand px-4 text-[0.82rem] font-semibold text-white! hover:bg-brand-hover hover:text-white! focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex min-h-10 items-center justify-center rounded-sm bg-brand px-4 text-[0.82rem] font-semibold text-white! hover:bg-brand-hover hover:text-white! focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             href={companyPath(company.slug)}
           >
             {tMarket("viewProfile")}
           </Link>
           <Link
-            className="inline-flex min-h-10 items-center justify-center rounded-full border border-brand-border bg-white px-4 text-[0.82rem] font-semibold text-ink hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex min-h-10 items-center justify-center rounded-sm border border-brand-border bg-white px-4 text-[0.82rem] font-semibold text-ink hover:border-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             href={routes.postProject}
           >
             {tMarket("invite")}

@@ -93,7 +93,7 @@ export function SeoMediaPicker({ open, locale, selectedMediaId, onClose, onSelec
             <h2 className="text-xl font-semibold tracking-[-0.02em]" id="seo-media-picker-title">{t("title")}</h2>
             <p className="mt-1 text-sm text-[#626970]">{t("description")}</p>
           </div>
-          <button aria-label={t("close")} className={`grid size-11 shrink-0 place-items-center rounded-full border border-[#e6e9ee] ${SEO_PRESS}`} onClick={onClose} type="button">
+          <button aria-label={t("close")} className={`grid size-11 shrink-0 place-items-center rounded-sm border border-[#e6e9ee] ${SEO_PRESS}`} onClick={onClose} type="button">
             <X aria-hidden className="size-5" />
           </button>
         </div>
@@ -102,16 +102,16 @@ export function SeoMediaPicker({ open, locale, selectedMediaId, onClose, onSelec
           <label className="relative block w-full max-w-md">
             <span className="sr-only">{t("searchLabel")}</span>
             <Search aria-hidden className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[#8b919a]" />
-            <input ref={searchRef} className="min-h-11 w-full rounded-full border border-[#dfe3e8] pl-10 pr-4 text-sm outline-none focus:border-[#2f6bff] focus:ring-2 focus:ring-[#2f6bff]/15" onChange={(event) => setSearch(event.target.value)} placeholder={t("searchPlaceholder")} value={search} />
+            <input ref={searchRef} className="min-h-11 w-full rounded-sm border border-[#dfe3e8] pl-10 pr-4 text-sm outline-none focus:border-[#2f6bff] focus:ring-2 focus:ring-[#2f6bff]/15" onChange={(event) => setSearch(event.target.value)} placeholder={t("searchPlaceholder")} value={search} />
           </label>
-          <label className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold ${SEO_PRESS} ${uploading ? "pointer-events-none opacity-60" : ""}`}>
+          <label className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-sm border border-[#dfe3e8] px-4 text-sm font-semibold ${SEO_PRESS} ${uploading ? "pointer-events-none opacity-60" : ""}`}>
             <Upload aria-hidden className="size-4" />
             {uploading ? t("uploading") : t("upload")}
             <input accept={SEO_MEDIA_ACCEPT} className="sr-only" disabled={uploading} onChange={(event) => void handleUpload(event.target.files?.[0])} type="file" />
           </label>
         </div>
 
-        {error ? <p className="mx-4 mt-4 rounded-[12px] bg-[#fdecec] px-4 py-3 text-sm text-[#b42318] sm:mx-6" role="alert">{error}</p> : null}
+        {error ? <p className="mx-4 mt-4 rounded-sm bg-[#fdecec] px-4 py-3 text-sm text-[#b42318] sm:mx-6" role="alert">{error}</p> : null}
 
         <div className="min-h-60 flex-1 overflow-y-auto p-4 sm:p-6">
           {media === undefined ? <PickerSkeleton label={t("loading")} /> : media.length === 0 ? (
@@ -133,7 +133,7 @@ export function SeoMediaPicker({ open, locale, selectedMediaId, onClose, onSelec
                   >
                     <span className="relative block aspect-[4/3] overflow-hidden bg-[#f1f3f5]">
                       {item.publicUrl ? <img alt={altText ?? ""} className="size-full object-cover transition duration-200 group-hover:scale-[1.02]" src={item.publicUrl} /> : <ImageIcon aria-hidden className="absolute inset-0 m-auto size-8 text-[#a3a8af]" />}
-                      {active ? <span className="absolute top-2 right-2 grid size-7 place-items-center rounded-full bg-[#2f6bff] text-white"><Check aria-hidden className="size-4" /></span> : null}
+                      {active ? <span className="absolute top-2 right-2 grid size-7 place-items-center rounded-sm bg-[#2f6bff] text-white"><Check aria-hidden className="size-4" /></span> : null}
                     </span>
                     <span className="block truncate px-3 pt-3 text-sm font-semibold">{item.filename}</span>
                     <span className="block px-3 pb-3 text-xs text-[#707780]">{item.width && item.height ? `${item.width} × ${item.height}` : t("dimensionsUnknown")}</span>
@@ -145,9 +145,9 @@ export function SeoMediaPicker({ open, locale, selectedMediaId, onClose, onSelec
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-[#e7eaee] p-4 sm:px-6">
-          <button className={`min-h-11 rounded-full border border-[#dfe3e8] px-4 text-sm font-semibold ${SEO_PRESS}`} onClick={onClose} type="button">{t("cancel")}</button>
+          <button className={`min-h-11 rounded-sm border border-[#dfe3e8] px-4 text-sm font-semibold ${SEO_PRESS}`} onClick={onClose} type="button">{t("cancel")}</button>
           <button
-            className={`min-h-11 rounded-full bg-[#2f6bff] px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${SEO_PRESS}`}
+            className={`min-h-11 rounded-sm bg-[#2f6bff] px-5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 ${SEO_PRESS}`}
             disabled={!selected}
             onClick={() => {
               if (!selected) return;

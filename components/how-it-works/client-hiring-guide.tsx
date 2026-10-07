@@ -50,7 +50,7 @@ export async function ClientHiringGuide() {
             </p>
             <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
               <Link
-                className="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-6 text-[0.95rem] font-semibold text-white! transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="inline-flex min-h-12 items-center justify-center rounded-sm bg-brand px-6 text-[0.95rem] font-semibold text-white! transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 href={routes.postProject}
               >
                 {t("hero.cta")}
@@ -109,7 +109,7 @@ export async function ClientHiringGuide() {
             </h3>
             <p className="mt-5 mb-0 max-w-[38ch] text-[1.02rem] leading-7 text-muted">{t("ways.post.body")}</p>
             <Link
-              className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-6 text-[0.95rem] font-semibold text-white! transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="mt-8 inline-flex min-h-12 items-center justify-center rounded-sm bg-brand px-6 text-[0.95rem] font-semibold text-white! transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               href={routes.postProject}
             >
               {t("ways.post.cta")}
@@ -135,7 +135,7 @@ export async function ClientHiringGuide() {
             </h3>
             <p className="mt-4 mb-0 text-[0.98rem] leading-7 text-muted">{t("ways.invite.body")}</p>
             <Link
-              className="mt-7 inline-flex min-h-12 w-fit items-center justify-center rounded-full bg-brand px-6 text-[0.95rem] font-semibold text-white! transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="mt-7 inline-flex min-h-12 w-fit items-center justify-center rounded-sm bg-brand px-6 text-[0.95rem] font-semibold text-white! transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               href={routes.companies}
             >
               {t("ways.invite.cta")}
@@ -160,7 +160,7 @@ export async function ClientHiringGuide() {
             <li className="relative border-brand-border py-6 md:border-t md:px-5 md:pt-8 md:pb-0 md:first:pl-0 md:last:pr-0" key={key}>
               <span
                 aria-hidden="true"
-                className="absolute top-0 left-0 hidden size-2.5 -translate-y-1/2 rounded-full bg-brand md:block"
+                className="absolute top-0 left-0 hidden size-2.5 -translate-y-1/2 rounded-sm bg-brand md:block"
               />
               <p className="mb-3 text-[0.78rem] font-semibold tracking-[0.14em] text-brand">
                 {String(index + 1).padStart(2, "0")}

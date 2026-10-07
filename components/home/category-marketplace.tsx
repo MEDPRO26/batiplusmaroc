@@ -135,7 +135,7 @@ function CompanyCard({ company }: { company: PublicMarketplaceCompany }) {
             url={company.coverImageUrl}
           /> : null}
         </div>
-        <div className="absolute -bottom-5 left-4 grid size-11 place-items-center overflow-hidden rounded-full bg-white shadow-[0_6px_16px_rgb(23_61_99/0.14)] ring-2 ring-white">
+        <div className="absolute -bottom-5 left-4 grid size-11 place-items-center overflow-hidden rounded-sm bg-white shadow-[0_6px_16px_rgb(23_61_99/0.14)] ring-2 ring-white">
           <ApprovedCompanyLogo alt="" className="object-contain p-1.5" height={44} url={company.logoUrl} width={44} />
         </div>
       </div>

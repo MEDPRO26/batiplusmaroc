@@ -48,7 +48,7 @@ export function ClientProjectInvitations({
                 })}
               </p>
             </div>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-ink">
+            <span className="rounded-sm bg-white px-3 py-1 text-xs font-semibold text-ink">
               {t(`status.${row.status}`)}
             </span>
           </li>

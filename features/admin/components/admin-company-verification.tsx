@@ -14,7 +14,7 @@ import { ADMIN_PRESS } from "./admin-shell";
 
 type Review = NonNullable<FunctionReturnType<typeof api.admin.verification.getCompanyVerificationReview>>;
 const CARD = "min-w-0 rounded-[14px] border border-[#e7eaee] bg-white p-5";
-const BUTTON = `min-h-11 rounded-full px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${ADMIN_PRESS}`;
+const BUTTON = `min-h-11 rounded-sm px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${ADMIN_PRESS}`;
 const OPTIONAL_TYPES = ["rc", "ice", "insurance", "other"] as const;
 
 /** This tab consumes only the Admin-authorized DTO; all decisions remain backend-authorized. */
@@ -58,10 +58,10 @@ function VerificationReview({ companyName, review }: { companyName: string; revi
 
   function documentCard(type: Review["documents"][number]["documentType"]) {
     const document = review.documents.find(item => item.documentType === type);
-    return <li className="min-w-0 rounded-[12px] border border-[#e7eaee] p-4" key={type}>
+    return <li className="min-w-0 rounded-sm border border-[#e7eaee] p-4" key={type}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h4 className="min-w-0 break-words text-sm font-semibold">{t(`documentTypes.${type}`)}</h4>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${type === "tax_compliance" ? "bg-blue-50 text-[#2456c7]" : "bg-[#f3f5f7] text-[#626970]"}`}>{t(type === "tax_compliance" ? "required" : "optional")}</span>
+        <span className={`rounded-sm px-2.5 py-1 text-xs font-semibold ${type === "tax_compliance" ? "bg-blue-50 text-[#2456c7]" : "bg-[#f3f5f7] text-[#626970]"}`}>{t(type === "tax_compliance" ? "required" : "optional")}</span>
       </div>
       {document ? <>
         <p className="mt-2 break-all text-sm text-[#626970]">{document.fileName}</p>
@@ -77,7 +77,7 @@ function VerificationReview({ companyName, review }: { companyName: string; revi
         <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">{t("title")}</h2><VerificationPill value={review.status} /></div>
         <p className="mt-3 text-sm text-[#626970]">{t(`state.${review.status}`)}</p>
         {review.status === "verified" ? <div className="mt-4"><VerifiedBadge label={tStatus("verified")} verificationStatus={review.status} /></div> : null}
-        {review.status === "rejected" && review.latestRejectionReason ? <div className="mt-4 rounded-[12px] bg-red-50 p-4 text-sm text-red-800"><h3 className="font-semibold">{t("reason")}</h3><p className="mt-1 whitespace-pre-wrap break-words">{review.latestRejectionReason}</p></div> : null}
+        {review.status === "rejected" && review.latestRejectionReason ? <div className="mt-4 rounded-sm bg-red-50 p-4 text-sm text-red-800"><h3 className="font-semibold">{t("reason")}</h3><p className="mt-1 whitespace-pre-wrap break-words">{review.latestRejectionReason}</p></div> : null}
         <dl className="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2">
           {(["legalName", "ice", "rc", "representative", "phone", "address"] as const).map((field) => {
             const value = { legalName: review.legalName, ice: review.ice, rc: review.rcNumber, representative: review.legalRepresentative, phone: review.phone, address: review.address }[field];
@@ -99,7 +99,7 @@ function VerificationReview({ companyName, review }: { companyName: string; revi
                 <Dialog.Description className="mt-2 break-words text-sm text-[#626970]">{t(action === "approve" ? "confirmApproveLead" : "confirmRejectLead", { company: companyName })}</Dialog.Description>
                 {action === "reject" ? <div className="mt-4">
                   <label className="block text-sm font-semibold" htmlFor={reasonId}>{t("reason")}</label>
-                  <textarea aria-describedby={`${reasonId}-help`} className="mt-2 min-h-28 w-full rounded-[12px] border border-[#d9e1ef] p-3 text-sm focus-visible:outline-2 focus-visible:outline-[#2f6bff]" disabled={busy} id={reasonId} maxLength={500} required onChange={event => setReason(event.target.value)} value={reason} />
+                  <textarea aria-describedby={`${reasonId}-help`} className="mt-2 min-h-28 w-full rounded-sm border border-[#d9e1ef] p-3 text-sm focus-visible:outline-2 focus-visible:outline-[#2f6bff]" disabled={busy} id={reasonId} maxLength={500} required onChange={event => setReason(event.target.value)} value={reason} />
                   <p className="mt-1 text-xs text-[#626970]" id={`${reasonId}-help`}>{t("reasonHelp")}</p>
                 </div> : null}
                 {error ? <p className="mt-4 break-words text-sm text-red-800" role="alert">{error}</p> : null}
@@ -111,7 +111,7 @@ function VerificationReview({ companyName, review }: { companyName: string; revi
             </Dialog.Portal>
           </Dialog.Root>
         </div> : null}
-        {notice ? <p className="mt-4 rounded-[12px] bg-emerald-50 p-3 text-sm text-emerald-800" role="status">{notice}</p> : null}
+        {notice ? <p className="mt-4 rounded-sm bg-emerald-50 p-3 text-sm text-emerald-800" role="status">{notice}</p> : null}
       </section>
       <section className={CARD}>
         <h2 className="font-semibold">{t("documents")}</h2>
@@ -131,7 +131,7 @@ function VerificationReview({ companyName, review }: { companyName: string; revi
           <p className="mt-1 text-[#626970]">{tStatus(item.oldStatus)} → {tStatus(item.newStatus)}</p>
           <p className="mt-1 break-all text-xs text-[#626970]">{t("actor", { actor })}</p>
           <time className="mt-1 block text-xs text-[#8b919a]" dateTime={new Date(item.changedAt).toISOString()}>{formatDate(item.changedAt)}</time>
-          {item.rejectionReason ? <p className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-red-50 p-2 text-red-800">{t("historyReason", { reason: item.rejectionReason })}</p> : null}
+          {item.rejectionReason ? <p className="mt-2 whitespace-pre-wrap break-words rounded-sm bg-red-50 p-2 text-red-800">{t("historyReason", { reason: item.rejectionReason })}</p> : null}
         </li>;
       })}</ol> : <p className="mt-3 text-sm text-[#8b919a]">{t("noHistory")}</p>}
     </section>

@@ -158,7 +158,7 @@ function OperationalThread({
         {status === "CanLoadMore" || status === "LoadingMore" ? (
           <div className="mb-4 flex justify-center">
             <button
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-brand-border bg-white px-4 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center rounded-sm border border-brand-border bg-white px-4 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
               disabled={status === "LoadingMore"}
               onClick={loadOlder}
               type="button"
@@ -232,10 +232,10 @@ function OperationalEmptyConversation({
   return (
     <div className="px-3 py-6 sm:px-6 sm:py-8">
       <div className="rounded-2xl bg-[#f7f9fb] px-5 py-9 text-center">
-        <span aria-hidden className="mx-auto grid size-12 place-items-center rounded-full bg-brand-soft text-brand"><ConversationIcon /></span>
+        <span aria-hidden className="mx-auto grid size-12 place-items-center rounded-sm bg-brand-soft text-brand"><ConversationIcon /></span>
         <h3 className="mt-4 mb-0 text-lg font-semibold text-ink">{title}</h3>
         <p className="mx-auto mt-2 mb-0 max-w-xl text-sm leading-6 text-muted">{lead}</p>
-        <button className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand" onClick={() => composerRef.current?.focus()} type="button">{action}</button>
+        <button className="mt-5 inline-flex min-h-11 items-center justify-center rounded-sm bg-brand px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand" onClick={() => composerRef.current?.focus()} type="button">{action}</button>
       </div>
       <div className="mt-4">
         <OperationalComposer onSend={onSend} textareaRef={composerRef} />
@@ -315,7 +315,7 @@ export function OperationalComposer({
           value={body}
         />
         <button
-          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-brand px-6 text-sm font-semibold text-white transition-[background-color,scale] hover:bg-brand-hover active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-55"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-sm bg-brand px-6 text-sm font-semibold text-white transition-[background-color,scale] hover:bg-brand-hover active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-55"
           disabled={sending || !trimmed}
           type="submit"
         >
@@ -344,7 +344,7 @@ function ConversationLoading() {
 function UnreadBadge({ count }: { count: number }) {
   const t = useTranslations("operationalMessaging.thread");
   return (
-    <span aria-label={t("unreadBadge", { count })} className="inline-flex min-h-7 items-center rounded-full bg-brand px-2.5 text-xs font-semibold text-white tabular-nums">
+    <span aria-label={t("unreadBadge", { count })} className="inline-flex min-h-7 items-center rounded-sm bg-brand px-2.5 text-xs font-semibold text-white tabular-nums">
       {count > 99 ? "99+" : count}
     </span>
   );

@@ -57,7 +57,7 @@ export function CompanyAdminNotes({ companyId }: { companyId: Id<"companies"> })
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]">
       <section className="min-w-0 rounded-[16px] border border-[#e7eaee] bg-white p-4 shadow-sm sm:p-5">
         <div className="flex items-start gap-3">
-          <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-[#fff6dd] text-[#8a5b00]">
+          <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-sm bg-[#fff6dd] text-[#8a5b00]">
             <PrivateNoteIcon />
           </span>
           <div className="min-w-0">
@@ -91,7 +91,7 @@ export function CompanyAdminNotes({ companyId }: { companyId: Id<"companies"> })
 
         {status === "CanLoadMore" || status === "LoadingMore" ? (
           <button
-            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full border border-[#d9dee4] bg-white px-4 text-sm font-semibold text-[#2456c7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6bff] disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-sm border border-[#d9dee4] bg-white px-4 text-sm font-semibold text-[#2456c7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6bff] disabled:cursor-not-allowed disabled:opacity-60"
             disabled={status === "LoadingMore"}
             onClick={() => loadMore(PAGE_SIZE)}
             type="button"
@@ -123,9 +123,9 @@ export function CompanyAdminNotes({ companyId }: { companyId: Id<"companies"> })
           <span className={body.length >= 4_500 ? "text-right text-xs text-[#626970]" : "sr-only"} id={`${inputId}-count`}>
             {t("characterCount", { count: body.length, maximum: MAX_NOTE_LENGTH })}
           </span>
-          {error ? <p className="m-0 rounded-[12px] bg-red-50 px-3 py-2 text-sm text-red-800" id={`${inputId}-error`} role="alert">{t("createError")}</p> : null}
+          {error ? <p className="m-0 rounded-sm bg-red-50 px-3 py-2 text-sm text-red-800" id={`${inputId}-error`} role="alert">{t("createError")}</p> : null}
           <button
-            className="mt-1 inline-flex min-h-11 items-center justify-center rounded-full bg-[#2f6bff] px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#2f6bff] disabled:cursor-not-allowed disabled:opacity-55"
+            className="mt-1 inline-flex min-h-11 items-center justify-center rounded-sm bg-[#2f6bff] px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#2f6bff] disabled:cursor-not-allowed disabled:opacity-55"
             disabled={sending || !trimmed}
             type="submit"
           >

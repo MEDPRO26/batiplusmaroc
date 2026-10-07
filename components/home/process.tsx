@@ -17,7 +17,7 @@ export async function Process() {
           <span />
         </div>
       </div>
-      <div className="pointer-events-none absolute -top-44 right-[8%] size-[520px] rounded-full bg-[#075d91]/18 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -top-44 right-[8%] size-[520px] rounded-sm bg-[#075d91]/18 blur-3xl" aria-hidden="true" />
 
       <div className="relative mx-auto max-w-[1280px]">
         <div className="grid items-end gap-9 border-b border-white/10 pb-10 md:grid-cols-[1fr_auto] md:pb-14">
@@ -56,8 +56,8 @@ export async function Process() {
               >
                 <div className="relative z-10 flex items-center justify-between">
                   <span className="text-xs font-bold tracking-[0.16em] text-[#80c9ee]">0{index + 1}</span>
-                  <span className="grid size-9 place-items-center rounded-full border border-white/10 bg-[#0b1929] transition-colors duration-300 group-hover:border-[#e7b63f]/60" aria-hidden="true">
-                    <span className="size-1.5 rounded-full bg-[#e7b63f]" />
+                  <span className="grid size-9 place-items-center rounded-sm border border-white/10 bg-[#0b1929] transition-colors duration-300 group-hover:border-[#e7b63f]/60" aria-hidden="true">
+                    <span className="size-1.5 rounded-sm bg-[#e7b63f]" />
                   </span>
                 </div>
 

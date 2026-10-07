@@ -37,6 +37,7 @@ function state(locale: "en" | "fr", pathname = "/espace-entreprise/commissions")
         publicSlug: "atlas-build",
         verificationStatus: "verified",
       },
+      "companyVerification.index.getVerificationStatus": { status: "verified", canManageDocuments: true },
       "notifications.index.getMyUnreadCount": 0,
       "deals.company.listMyDeals": [
         {

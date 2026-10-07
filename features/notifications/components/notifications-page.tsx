@@ -3,7 +3,7 @@
 import { Bell, CheckCheck } from "lucide-react";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { NotificationItem } from "@/features/notifications/components/notification-item";
 import { NotificationListSkeleton } from "@/features/notifications/components/notification-bell-view";
@@ -26,6 +26,10 @@ export function NotificationsPage({ accountType }: { accountType: NotificationAc
   const [error, setError] = useState(false);
   const openingRef = useRef(false);
   const count = unreadCount ?? 0;
+  const loading = status === "LoadingFirstPage" || (results.length === 0 && status !== "Exhausted");
+  useEffect(() => {
+    if (results.length === 0 && status === "CanLoadMore") loadMore(20);
+  }, [results.length, status, loadMore]);
 
   async function openNotification(notification: (typeof results)[number]) {
     if (openingRef.current) return;
@@ -71,7 +75,7 @@ export function NotificationsPage({ accountType }: { accountType: NotificationAc
         </div>
         {count > 0 ? (
           <button
-            className="inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex min-h-10 items-center gap-2 rounded-sm px-3 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             disabled={pendingId !== null}
             onClick={() => void markEverythingRead()}
             type="button"
@@ -83,10 +87,10 @@ export function NotificationsPage({ accountType }: { accountType: NotificationAc
       </div>
 
       {error ? (
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">
           <span>{t("error")}</span>
           <button
-            className="min-h-10 rounded-lg px-3 font-semibold hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
+            className="min-h-10 rounded-sm px-3 font-semibold hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
             onClick={() => setError(false)}
             type="button"
           >
@@ -96,13 +100,13 @@ export function NotificationsPage({ accountType }: { accountType: NotificationAc
       ) : null}
 
       <div
-        aria-busy={status === "LoadingFirstPage"}
-        className="mt-6 overflow-hidden rounded-2xl border border-brand-border bg-white"
+        aria-busy={loading}
+        className="mt-6 overflow-hidden rounded-sm border border-brand-border bg-white"
       >
-        {status === "LoadingFirstPage" ? <NotificationListSkeleton /> : null}
-        {status !== "LoadingFirstPage" && results.length === 0 ? (
+        {loading ? <NotificationListSkeleton /> : null}
+        {status === "Exhausted" && results.length === 0 ? (
           <div className="px-6 py-14 text-center">
-            <span className="mx-auto grid size-12 place-items-center rounded-full bg-brand-soft text-brand">
+            <span className="mx-auto grid size-12 place-items-center rounded-sm bg-brand-soft text-brand">
               <Bell aria-hidden className="size-5" />
             </span>
             <h2 className="mt-4 text-lg font-semibold text-ink">{t("emptyTitle")}</h2>
@@ -120,10 +124,10 @@ export function NotificationsPage({ accountType }: { accountType: NotificationAc
         ) : null}
       </div>
 
-      {status !== "Exhausted" && status !== "LoadingFirstPage" ? (
+      {!loading && status !== "Exhausted" ? (
         <div className="mt-5 text-center">
           <button
-            className="min-h-10 rounded-lg border border-brand-border bg-white px-4 text-sm font-semibold text-ink hover:bg-slate-50 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="min-h-10 rounded-sm border border-brand-border bg-white px-4 text-sm font-semibold text-ink hover:bg-slate-50 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             disabled={status === "LoadingMore"}
             onClick={() => loadMore(20)}
             type="button"

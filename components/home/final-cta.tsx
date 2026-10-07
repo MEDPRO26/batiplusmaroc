@@ -36,7 +36,7 @@ export async function FinalCta() {
         <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
           {cards.map((card) => (
             <article
-              className="flex flex-col gap-5 rounded-lg bg-surface-muted p-4 sm:flex-row sm:items-center sm:gap-7 sm:p-6"
+              className="flex flex-col gap-5 rounded-sm bg-surface-muted p-4 sm:flex-row sm:items-center sm:gap-7 sm:p-6"
               key={card.key}
             >
               <div className="relative aspect-4/3 w-full overflow-hidden rounded-md outline-1 outline-black/10 sm:aspect-square sm:h-[168px] sm:w-[168px] sm:shrink-0">
@@ -65,7 +65,7 @@ export async function FinalCta() {
 function CtaLink({ children, href }: { children: string; href: AppRoute }) {
   return (
     <Link
-      className="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-5 text-[0.88rem] font-semibold text-white! transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover hover:text-white! active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      className="inline-flex min-h-11 items-center justify-center rounded-sm bg-brand px-5 text-[0.88rem] font-semibold text-white! transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover hover:text-white! active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       href={href}
     >
       {children}

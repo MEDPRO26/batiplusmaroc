@@ -40,7 +40,7 @@ export function AboutHero() {
               <p className="mb-2 text-[0.65rem] font-bold tracking-[0.18em] text-[#efc85f] uppercase">Projet réel</p>
               <p className="max-w-xs text-lg leading-6 font-semibold">Construction d’une villa à Founty</p>
             </div>
-            <span className="grid size-12 shrink-0 place-items-center rounded-full border border-white/35 text-lg" aria-hidden="true">↗</span>
+            <span className="grid size-12 shrink-0 place-items-center rounded-sm border border-white/35 text-lg" aria-hidden="true">↗</span>
           </div>
         </div>
       </div>

@@ -21,6 +21,21 @@ import { notificationPushCategoriesValidator } from "./notifications/deliveryPol
 import { companyOperationalStatusValidator } from "./companies/operationalStatus";
 import { logoContentTypeValidator, logoStatusValidator } from "./companyLogos/constants";
 import { portfolioImageTypeValidator, portfolioImageStatusValidator, portfolioImagePurposeValidator } from "./portfolioImages/constants";
+import { supportRequestKindValidator, supportSenderTypeValidator } from "./clientSupport/constants";
+import {
+  termsValidator as coordinationTermsValidator,
+  readinessValidator as coordinationReadinessValidator,
+  declarationValidator as coordinationDeclarationValidator,
+  confirmationValidator as coordinationConfirmationValidator,
+  publicationInputValidator as coordinationPublicationInputValidator,
+} from "./coordinationAgreements/validators";
+
+const clientSupportEntryFields = {
+  conversationId: v.id("clientSupportConversations"),
+  senderUserId: v.id("users"),
+  sequence: v.number(),
+  createdAt: v.number(),
+};
 
 const accountType = v.union(
   v.literal("client"),
@@ -160,11 +175,12 @@ export default defineSchema({
     pushFailedCount: v.optional(v.number()),
   })
     .index("by_recipientUserId_and_createdAt", ["recipientUserId", "createdAt"])
-    .index("by_recipientUserId_and_dedupeKey", ["recipientUserId", "dedupeKey"]),
+    .index("by_recipientUserId_and_dedupeKey", ["recipientUserId", "dedupeKey"])
+    .index("by_recipientUserId_and_type_and_readAt_and_createdAt", ["recipientUserId", "type", "readAt", "createdAt"]),
 
   notificationRecipientStates: defineTable({
     recipientUserId: v.id("users"),
-    /** Logical read boundary used by the O(1) mark-all operation. */
+    /** Logical read boundary lets mark-all avoid rewriting notification documents. */
     readThroughAt: v.optional(v.number()),
     /** Exact transactional aggregate; notification documents remain canonical. */
     unreadCount: v.number(),
@@ -739,6 +755,86 @@ export default defineSchema({
     readThroughSequence: v.number(),
     updatedAt: v.number(),
   }).index("by_conversationId_and_userId", ["conversationId", "userId"]),
+
+  /** Private Client–Batiplus support. No marketplace or Company participants. */
+  clientSupportConversations: defineTable({
+    projectId: v.id("projects"),
+    /** Captured owner; every operation must also verify current Project ownership. */
+    clientId: v.id("users"),
+    entryCount: v.number(),
+    lastEntryId: v.optional(v.id("clientSupportMessages")),
+    freeHelpRequestId: v.optional(v.id("clientSupportMessages")),
+    coordinationRequestId: v.optional(v.id("clientSupportMessages")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_projectId", ["projectId"])
+    .index("by_updatedAt", ["updatedAt"]),
+
+  // Both variants are append-only. Only requestSupport can create request events.
+  clientSupportMessages: defineTable(v.union(
+    v.object({
+      ...clientSupportEntryFields,
+      kind: v.literal("request"),
+      senderType: v.literal("client"),
+      requestKind: supportRequestKindValidator,
+    }),
+    v.object({
+      ...clientSupportEntryFields,
+      kind: v.literal("message"),
+      senderType: supportSenderTypeValidator,
+      body: v.string(),
+      idempotencyKey: v.string(),
+    }),
+  ))
+    .index("by_conversationId_and_sequence", ["conversationId", "sequence"])
+    .index("by_senderUserId_and_idempotencyKey", ["senderUserId", "idempotencyKey"]),
+
+  clientSupportConversationReads: defineTable({
+    conversationId: v.id("clientSupportConversations"),
+    userId: v.id("users"),
+    readThroughSequence: v.number(),
+    updatedAt: v.number(),
+  }).index("by_conversationId_and_userId", ["conversationId", "userId"]),
+
+  /** Private agreement workspace. Drafts never appear in Client DTOs. */
+  coordinationAgreements: defineTable({
+    projectId: v.id("projects"),
+    supportConversationId: v.id("clientSupportConversations"),
+    clientId: v.id("users"),
+    readinessRevision: v.number(),
+    readiness: v.optional(coordinationReadinessValidator),
+    draftRevision: v.number(),
+    draft: v.optional(coordinationTermsValidator),
+    draftSavedByUserId: v.optional(v.id("users")),
+    draftSavedAt: v.optional(v.number()),
+    versionCount: v.number(),
+    pendingVersionId: v.optional(v.id("coordinationAgreementVersions")),
+    currentConfirmedVersionId: v.optional(v.id("coordinationAgreementVersions")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_projectId", ["projectId"])
+    .index("by_supportConversationId", ["supportConversationId"]),
+
+  /** Published terms are immutable; only confirmation may be written, once. */
+  coordinationAgreementVersions: defineTable({
+    agreementId: v.id("coordinationAgreements"),
+    versionNumber: v.number(),
+    terms: coordinationTermsValidator,
+    readinessRevision: v.number(),
+    readiness: coordinationReadinessValidator,
+    replacesVersionId: v.optional(v.id("coordinationAgreementVersions")),
+    publishedByUserId: v.id("users"),
+    publishedByDisplayName: v.string(),
+    publishedAt: v.number(),
+    publicationKey: v.string(),
+    publicationInput: coordinationPublicationInputValidator,
+    adminNotStartedDeclaration: v.optional(coordinationDeclarationValidator),
+    confirmation: v.optional(coordinationConfirmationValidator),
+  })
+    .index("by_agreementId_and_versionNumber", ["agreementId", "versionNumber"])
+    .index("by_publishedByUserId_and_publicationKey", ["publishedByUserId", "publicationKey"]),
 
   /** Append-only, Admin-visible operational records about one Company. */
   companyAdminNotes: defineTable({

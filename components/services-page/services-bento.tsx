@@ -12,7 +12,7 @@ const terms = {
 function TermList({ items, dark = false }: { items: readonly string[]; dark?: boolean }) {
   return (
     <ul className="mt-7 flex flex-wrap gap-2 p-0" aria-label="Prestations comprises">
-      {items.map((item) => <li key={item} className={`list-none rounded-full border px-3 py-1.5 text-xs font-semibold ${dark ? "border-white/16 bg-white/7 text-white/78" : "border-brand-border bg-[#f5f8fa] text-[#46535d]"}`}>{item}</li>)}
+      {items.map((item) => <li key={item} className={`list-none rounded-sm border px-3 py-1.5 text-xs font-semibold ${dark ? "border-white/16 bg-white/7 text-white/78" : "border-brand-border bg-[#f5f8fa] text-[#46535d]"}`}>{item}</li>)}
     </ul>
   );
 }
@@ -31,7 +31,7 @@ export function ServicesBento() {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12 lg:auto-rows-[245px]">
           <article className="relative overflow-hidden rounded-[28px] bg-[#0b2d49] p-7 text-white md:col-span-2 lg:col-span-7 lg:row-span-2 lg:p-10">
-            <div className="pointer-events-none absolute -right-24 -bottom-24 size-80 rounded-full border border-white/8" aria-hidden="true" />
+            <div className="pointer-events-none absolute -right-24 -bottom-24 size-80 rounded-sm border border-white/8" aria-hidden="true" />
             <div className="relative flex h-full flex-col">
               <div className="flex items-center justify-between gap-4 text-[0.66rem] font-bold tracking-[0.18em] uppercase">
                 <span className="text-[#e8bd50]">01</span><span className="text-white/44">Structure</span>
@@ -73,7 +73,7 @@ export function ServicesBento() {
             <span className="text-[0.66rem] font-bold tracking-[0.18em] text-brand uppercase">04</span>
             <h3 className="mt-14 mb-4 text-[clamp(1.8rem,3vw,2.8rem)] leading-[1] tracking-[-0.045em]">Aménagement intérieur & façades</h3>
             <p className="m-0 max-w-[460px] leading-7 text-muted">Espaces intérieurs, habillages, revêtements, décoration et finitions extérieures.</p>
-            <div className="pointer-events-none absolute -right-20 -bottom-28 size-72 rounded-full border border-brand/12" aria-hidden="true" />
+            <div className="pointer-events-none absolute -right-20 -bottom-28 size-72 rounded-sm border border-brand/12" aria-hidden="true" />
           </article>
 
           <article className="min-h-[340px] rounded-[28px] border border-slate-200/70 bg-white p-7 lg:col-span-7 lg:row-span-2 lg:min-h-0 lg:p-9">

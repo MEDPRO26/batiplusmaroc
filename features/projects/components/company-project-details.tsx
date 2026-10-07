@@ -80,7 +80,7 @@ export function ProjectDetailsView({ project }: { project: Details }) {
 
             <DetailSection title={t("detail.servicesTitle")}>
               <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
-                <li className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-[#eef1f4] px-3.5 text-sm font-medium text-ink"><FolderOpen aria-hidden className="size-3.5 text-muted" />{category}</li>
+                <li className="inline-flex min-h-8 items-center gap-1.5 rounded-sm bg-[#eef1f4] px-3.5 text-sm font-medium text-ink"><FolderOpen aria-hidden className="size-3.5 text-muted" />{category}</li>
               </ul>
             </DetailSection>
 
@@ -114,7 +114,7 @@ export function ProjectDetailsView({ project }: { project: Details }) {
 function ProposalAction({ project, className = "", compact = false }: { project: Details; className?: string; compact?: boolean }) {
   const t = useTranslations("companyProjects");
   const href = { pathname: routes.companyInitialQuote, params: { projectId: project.id } } as const;
-  const buttonClass = "inline-flex min-h-12 w-full items-center justify-center rounded-full px-5 text-sm font-semibold transition-[transform,background-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand";
+  const buttonClass = "inline-flex min-h-12 w-full items-center justify-center rounded-sm px-5 text-sm font-semibold transition-[transform,background-color] duration-150 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand";
 
   if (project.myQuoteId) {
     return (
@@ -168,7 +168,7 @@ function ClientDetails({ client }: { client: Details["client"] }) {
   return (
     <div>
       <div className="flex items-center gap-3">
-        <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-soft text-brand"><UserRound className="size-5" /></span>
+        <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-sm bg-brand-soft text-brand"><UserRound className="size-5" /></span>
         <div className="min-w-0">
           <p className="m-0 truncate text-sm font-semibold text-ink">{client.displayName}</p>
           <p className="mt-0.5 mb-0 text-xs text-muted">{t("detail.clientSince", { date: formatMarketplaceDateTime(client.joinedAt, locale, { month: "long", year: "numeric" }) })}</p>
@@ -228,4 +228,4 @@ function ProjectDetailsSkeleton({ label }: { label: string }) {
   );
 }
 
-function UnavailableProject() { const t = useTranslations("companyProjects"); return <main className="mx-auto flex min-h-[60vh] w-[calc(100%-36px)] max-w-[720px] items-center justify-center py-12 text-center"><div><h1 className="m-0 text-2xl font-semibold text-ink">{t("detail.unavailableTitle")}</h1><p className="mt-3 mb-0 text-sm leading-6 text-muted">{t("detail.unavailableLead")}</p><Link className="mt-6 inline-flex min-h-11 items-center rounded-full bg-brand px-5 text-sm font-semibold text-white" href={routes.companyProjects}>{t("detail.back")}</Link></div></main>; }
+function UnavailableProject() { const t = useTranslations("companyProjects"); return <main className="mx-auto flex min-h-[60vh] w-[calc(100%-36px)] max-w-[720px] items-center justify-center py-12 text-center"><div><h1 className="m-0 text-2xl font-semibold text-ink">{t("detail.unavailableTitle")}</h1><p className="mt-3 mb-0 text-sm leading-6 text-muted">{t("detail.unavailableLead")}</p><Link className="mt-6 inline-flex min-h-11 items-center rounded-sm bg-brand px-5 text-sm font-semibold text-white" href={routes.companyProjects}>{t("detail.back")}</Link></div></main>; }

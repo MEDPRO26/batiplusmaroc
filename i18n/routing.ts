@@ -116,6 +116,10 @@ export const routing = defineRouting({
       fr: "/espace-client/projets/[projectId]",
       en: "/client/projects/[projectId]",
     },
+    "/espace-client/projets/[projectId]/batiplus": {
+      fr: "/espace-client/projets/[projectId]/batiplus",
+      en: "/client/projects/[projectId]/batiplus",
+    },
     "/espace-client/onboarding": {
       fr: "/espace-client/onboarding",
       en: "/client/onboarding",
@@ -204,6 +208,10 @@ export const routing = defineRouting({
     "/admin/site-visits": {
       fr: "/admin/visites-techniques",
       en: "/admin/site-visits",
+    },
+    "/admin/support": {
+      fr: "/admin/assistance",
+      en: "/admin/support",
     },
     "/admin/verification": {
       fr: "/admin/verification",

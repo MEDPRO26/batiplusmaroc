@@ -50,7 +50,7 @@ export async function Testimonials() {
                   </div>
                   <Image
                     alt={t(`items.${item.key}.name`)}
-                    className="size-12 shrink-0 rounded-full object-cover outline-1 outline-black/10 sm:size-[3.25rem]"
+                    className="size-12 shrink-0 rounded-sm object-cover outline-1 outline-black/10 sm:size-[3.25rem]"
                     height={52}
                     src={item.photo}
                     width={52}

@@ -44,7 +44,7 @@ const ADMIN_NAVIGATION: { id: AdminNavId; label: AdminNavLabel; href?: AppRoute 
   { id: "deals", label: "navDeals", href: routes.adminDeals },
   { id: "reviews", label: "navReviews", href: routes.adminReviews },
   { id: "profile", label: "navProfile" },
-  { id: "support", label: "navSupport" },
+  { id: "support", label: "navSupport", href: routes.adminSupport },
   { id: "settings", label: "navSettings", href: routes.adminSettings },
 ];
 
@@ -83,7 +83,7 @@ export function AdminShell({
     <div className="flex min-h-dvh w-full bg-[#f4f6f8] text-[#17191d]">
       {localNotice ? (
         <p
-          className="fixed bottom-6 left-1/2 z-50 max-w-sm -translate-x-1/2 rounded-full bg-[#17191d] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(16,24,40,0.24)]"
+          className="fixed bottom-6 left-1/2 z-50 max-w-sm -translate-x-1/2 rounded-sm bg-[#17191d] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(16,24,40,0.24)]"
           role="status"
         >
           {localNotice}
@@ -147,7 +147,7 @@ export function AdminPage({
     <>
       {notice ? (
         <p
-          className="fixed bottom-6 left-1/2 z-50 max-w-sm -translate-x-1/2 rounded-full bg-[#17191d] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(16,24,40,0.24)]"
+          className="fixed bottom-6 left-1/2 z-50 max-w-sm -translate-x-1/2 rounded-sm bg-[#17191d] px-4 py-3 text-sm text-white shadow-[0_12px_32px_rgba(16,24,40,0.24)]"
           role="status"
         >
           {notice}
@@ -156,7 +156,7 @@ export function AdminPage({
       <header className="flex flex-wrap items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
         <button
           aria-label={t("openSidebar")}
-          className={`inline-flex size-11 items-center justify-center rounded-full border border-[#e6e9ee] bg-white text-[#17191d] lg:hidden ${ADMIN_PRESS}`}
+          className={`inline-flex size-11 items-center justify-center rounded-sm border border-[#e6e9ee] bg-white text-[#17191d] lg:hidden ${ADMIN_PRESS}`}
           onClick={openSidebar}
           type="button"
         >
@@ -232,14 +232,14 @@ function AdminSidebar({
         <NavbarLogo homeAria={tBrand("homeAria")} name={tBrand("name")} />
         <button
           aria-label={t("closeSidebar")}
-          className={`inline-flex size-11 items-center justify-center rounded-full text-[#626970] lg:hidden ${ADMIN_PRESS}`}
+          className={`inline-flex size-11 items-center justify-center rounded-sm text-[#626970] lg:hidden ${ADMIN_PRESS}`}
           onClick={onClose}
           type="button"
         >
           <CloseIcon />
         </button>
       </div>
-      <label className="mt-4 flex min-h-11 items-center gap-2 rounded-full bg-[#f4f6f8] px-3 text-sm text-[#8b919a]">
+      <label className="mt-4 flex min-h-11 items-center gap-2 rounded-sm bg-[#f4f6f8] px-3 text-sm text-[#8b919a]">
         <SearchIcon />
         <span className="sr-only">{t("searchLabel")}</span>
         <input
@@ -288,7 +288,7 @@ function AdminSidebar({
         })}
       </nav>
       <div className="mt-4 flex items-center gap-3 rounded-[16px] border border-[#eceef2] px-3 py-2">
-        <span aria-hidden className="grid size-9 place-items-center rounded-full bg-[#2f6bff] text-sm font-semibold text-white">
+        <span aria-hidden className="grid size-9 place-items-center rounded-sm bg-[#2f6bff] text-sm font-semibold text-white">
           {displayName.slice(0, 1).toLocaleUpperCase()}
         </span>
         <span className="min-w-0">

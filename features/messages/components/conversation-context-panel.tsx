@@ -63,14 +63,14 @@ export function ConversationContextPanel({
         <p className="mt-0.5 mb-0 text-xs text-muted">{accountType === "company" ? t("roleClient") : t("roleCompany")}</p>
         <div className="mt-4 flex w-full flex-col gap-2">
           <Link
-            className="inline-flex min-h-10 w-full items-center justify-center rounded-full border border-brand-border text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-sm border border-brand-border text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             href={projectHref}
           >
             {t("viewProject")}
           </Link>
           {accountType === "client" && conversation.companySlug ? (
             <Link
-              className="inline-flex min-h-10 w-full items-center justify-center rounded-full text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-sm text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               href={{ pathname: "/entreprises/[slug]", params: { slug: conversation.companySlug } }}
             >
               {tMessages("viewCompanyProfile")}
@@ -183,7 +183,7 @@ function ProgressTimeline({
 }
 
 function StageMarker({ state }: { state: ProgressStage["state"] }) {
-  const base = "relative z-10 grid size-6 shrink-0 place-items-center rounded-full";
+  const base = "relative z-10 grid size-6 shrink-0 place-items-center rounded-sm";
   if (state === "done") {
     return (
       <span aria-hidden className={`${base} bg-brand text-white`}>
@@ -196,7 +196,7 @@ function StageMarker({ state }: { state: ProgressStage["state"] }) {
   if (state === "current") {
     return (
       <span aria-hidden className={`${base} border-2 border-brand bg-white`}>
-        <span className="size-2 rounded-full bg-brand" />
+        <span className="size-2 rounded-sm bg-brand" />
       </span>
     );
   }
@@ -224,7 +224,7 @@ function PartyAvatar({ name, url, company }: { name: string; url: string | null;
     .map((part) => part[0]?.toUpperCase())
     .join("");
   return (
-    <span className="relative grid size-16 place-items-center overflow-hidden rounded-full bg-brand-soft text-lg font-semibold text-brand-dark outline outline-1 -outline-offset-1 outline-black/10">
+    <span className="relative grid size-16 place-items-center overflow-hidden rounded-sm bg-brand-soft text-lg font-semibold text-brand-dark outline outline-1 -outline-offset-1 outline-black/10">
       {company ? <ApprovedCompanyLogo alt="" className="object-cover" fill sizes="64px" url={url} /> : url ? <Image alt="" className="object-cover" fill sizes="64px" src={url} /> : <span aria-hidden>{initials || "?"}</span>}
     </span>
   );

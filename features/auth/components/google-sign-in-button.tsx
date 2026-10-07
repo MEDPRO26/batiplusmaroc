@@ -17,7 +17,7 @@ export function GoogleSignInButton({
 }: GoogleSignInButtonProps) {
   return (
     <button
-      className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full border border-brand-border bg-white px-5 text-[0.95rem] font-semibold text-ink transition-[background-color,transform] hover:-translate-y-0.5 hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-sm border border-brand-border bg-white px-5 text-[0.95rem] font-semibold text-ink transition-[background-color,transform] hover:-translate-y-0.5 hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
       disabled={disabled || pending}
       onClick={onClick}
       type="button"

@@ -16,11 +16,12 @@ const mocks: Plugin = {
       "@/convex/_generated/api": "api",
       "next/font/google": "next-font-google",
       "next/image": "image",
+      "next/link": "next-link",
       "next/navigation": "next-navigation",
       "next-intl/server": "next-intl-server",
       "@convex-dev/auth/react": "convex-auth",
     };
-    builder.onResolve({ filter: /^(convex\/react|@\/i18n\/navigation|@\/convex\/_generated\/api|next\/font\/google|next\/image|next\/navigation|next-intl\/server|@convex-dev\/auth\/react)$/ }, (args) => ({ path: mocked[args.path], namespace: "mock" }));
+    builder.onResolve({ filter: /^(convex\/react|@\/i18n\/navigation|@\/convex\/_generated\/api|next\/font\/google|next\/image|next\/link|next\/navigation|next-intl\/server|@convex-dev\/auth\/react)$/ }, (args) => ({ path: mocked[args.path], namespace: "mock" }));
     builder.onLoad({ filter: /.*/, namespace: "mock" }, (args) => {
       const contents: Record<string, string> = {
         api: `
@@ -85,6 +86,8 @@ const mocks: Plugin = {
             };
           }
         `,
+        // Plain Next links use the same anchor behavior as localized links in this standalone harness.
+        "next-link": `export { Link as default } from "@/i18n/navigation";`,
         navigation: `
           import React from "react";
           export function Link({ children, href, ...props }) {
@@ -92,7 +95,8 @@ const mocks: Plugin = {
             const query = typeof href === "string" ? "" : new URLSearchParams(href.query || {}).toString();
             return <a href={query ? url + "?" + query : url} {...props}>{children}</a>;
           }
-          export function useRouter() { return { replace() {}, push() {} }; }
+          const navigate = (method) => (href) => { window.__navigationCalls = [...(window.__navigationCalls || []), { method, href }]; };
+          export function useRouter() { return { replace: navigate("replace"), push: navigate("push") }; }
           export function usePathname() { return window.__pathname || "/admin/verification"; }
           export function getPathname({ href, locale }) {
             const pathname = typeof href === "string" ? href : href.pathname;
@@ -159,11 +163,25 @@ export async function buildHarness(imports: string, render: string) {
   return result.outputFiles[0].text;
 }
 
-/** Loads the running app once to borrow its compiled stylesheets, then mounts the harness. */
+/** Borrow real CSS without leaving Next's hydrated app/HMR running behind the mocked component. */
 export async function mountHarness(page: Page, bundle: string, state: Record<string, unknown>) {
-  await page.goto("/en");
-  const styles = await page.$$eval('link[rel="stylesheet"]', (links) => links.map((link) => (link as HTMLLinkElement).href));
-  await page.setContent(`<html><head>${styles.map((href) => `<link rel="stylesheet" href="${href}">`).join("")}</head><body><div id="root"></div></body></html>`, { waitUntil: "load" });
+  const response = await page.request.get("/en");
+  if (!response.ok()) throw new Error(`Harness stylesheet page returned ${response.status()}`);
+  const html = await response.text();
+  const url = response.url();
+  const styles = [...new Set([...html.matchAll(/<link\b(?=[^>]*\brel="stylesheet")[^>]*\bhref="([^"]+)"[^>]*>/g)]
+    .map((match) => new URL(match[1].replaceAll("&amp;", "&"), url).href))];
+  if (!styles.length) throw new Error("Harness stylesheet page contained no stylesheets");
+  const shell = `<html><head>${styles.map((href) => `<link rel="stylesheet" href="${href}">`).join("")}</head><body><div id="root"></div></body></html>`;
+  const serveShell = (route: import("@playwright/test").Route) => route.fulfill({ contentType: "text/html", body: shell });
+  await page.route(url, serveShell);
+  try {
+    // A navigation creates a fresh JavaScript realm. setContent on a live Next
+    // page lets its pending hydration overwrite the harness and delay "load".
+    await page.goto(url);
+  } finally {
+    await page.unroute(url, serveShell);
+  }
   await page.evaluate((values) => Object.assign(window, values), state);
   await page.addScriptTag({ content: bundle });
 }

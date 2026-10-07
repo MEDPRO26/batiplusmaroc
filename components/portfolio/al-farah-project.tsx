@@ -15,7 +15,7 @@ export function AlFarahProject() {
           </div>
           <figure className="relative min-h-[620px] overflow-hidden rounded-[22px] lg:min-h-full">
             <Image src="/images/portfolio-2026/projects/immeuble-r5-al-farah-etat-final.webp" alt="État final de l’immeuble R+5 à Al Farah, Agadir" fill sizes="(max-width: 1023px) 100vw, 65vw" className="object-cover" />
-            <figcaption className="absolute right-5 bottom-5 rounded-full bg-white/95 px-4 py-2 text-xs font-bold tracking-[0.12em] text-ink uppercase">État final</figcaption>
+            <figcaption className="absolute right-5 bottom-5 rounded-sm bg-white/95 px-4 py-2 text-xs font-bold tracking-[0.12em] text-ink uppercase">État final</figcaption>
           </figure>
         </div>
       </div>

@@ -59,11 +59,11 @@ export function CompanyActivityTimeline({
         <div aria-busy="true" className="mt-4 space-y-3" role="status">
           <span className="sr-only">{t("loading")}</span>
           {Array.from({ length: 3 }).map((_, index) => (
-            <div className="h-20 animate-pulse rounded-[12px] bg-[#f4f6f8]" key={index} />
+            <div className="h-20 animate-pulse rounded-sm bg-[#f4f6f8]" key={index} />
           ))}
         </div>
       ) : empty ? (
-        <p className="mt-4 rounded-[12px] bg-[#f8fafb] px-3 py-5 text-center text-sm text-[#8b919a]">
+        <p className="mt-4 rounded-sm bg-[#f8fafb] px-3 py-5 text-center text-sm text-[#8b919a]">
           {t("empty")}
         </p>
       ) : (
@@ -77,7 +77,7 @@ export function CompanyActivityTimeline({
       {footer}
       {!limit && (status === "CanLoadMore" || status === "LoadingMore") ? (
         <button
-          className={`mt-4 min-h-11 w-full rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold text-[#17191d] disabled:opacity-50 ${ADMIN_PRESS}`}
+          className={`mt-4 min-h-11 w-full rounded-sm border border-[#e6e9ee] px-4 text-sm font-semibold text-[#17191d] disabled:opacity-50 ${ADMIN_PRESS}`}
           disabled={status === "LoadingMore"}
           onClick={() => loadMore(20)}
           type="button"
@@ -103,16 +103,16 @@ function TimelineRow({ item, locale }: { item: TimelineItem; locale: string }) {
         : null;
 
   return (
-    <li className="relative rounded-[12px] border border-[#eef1f4] px-3 py-3 pl-9">
+    <li className="relative rounded-sm border border-[#eef1f4] px-3 py-3 pl-9">
       <span
         aria-hidden="true"
-        className={`absolute top-4 left-3 inline-flex size-4 rounded-full ${CATEGORY_STYLES[item.category]}`}
+        className={`absolute top-4 left-3 inline-flex size-4 rounded-sm ${CATEGORY_STYLES[item.category]}`}
       />
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="text-sm font-semibold text-[#17191d]">
           {t(`events.${item.eventType}`)}
         </p>
-        <span className={`rounded-full px-2 py-1 text-[0.68rem] font-semibold ${CATEGORY_STYLES[item.category]}`}>
+        <span className={`rounded-sm px-2 py-1 text-[0.68rem] font-semibold ${CATEGORY_STYLES[item.category]}`}>
           {t(`categories.${item.category}`)}
         </span>
       </div>

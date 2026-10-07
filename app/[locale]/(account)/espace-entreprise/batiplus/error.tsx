@@ -12,7 +12,7 @@ export default function CompanyBatiplusError({ reset }: { reset: () => void }) {
         <div role="alert">
           <h1 className="m-0 text-2xl font-semibold text-ink">{t("title")}</h1>
           <p className="mt-3 mb-0 text-sm leading-6 text-muted">{t("lead")}</p>
-          <button className="mt-6 min-h-11 rounded-full bg-brand px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand" onClick={reset} type="button">{t("retry")}</button>
+          <button className="mt-6 min-h-11 rounded-sm bg-brand px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand" onClick={reset} type="button">{t("retry")}</button>
         </div>
       </main>
     </>

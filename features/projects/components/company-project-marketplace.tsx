@@ -162,7 +162,7 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
             <span className="sr-only">{t("searchLabel")}</span>
             <SearchIcon />
             <input
-              className="min-h-12 w-full rounded-full border border-brand-border bg-white pr-4 pl-11 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
+              className="min-h-12 w-full rounded-sm border border-brand-border bg-white pr-4 pl-11 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
               id="project-marketplace-search"
               onChange={(event) => setSearch(event.target.value)}
               placeholder={t("searchPlaceholder")}
@@ -350,7 +350,7 @@ export function ProjectDetailsSheet({ projectId, onClose }: { projectId: string 
         <header className="sticky top-0 z-20 flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-[#e4e8eb] bg-white px-3 sm:min-h-16 sm:px-5">
           <button
             aria-label={t("detail.close")}
-            className="grid size-11 shrink-0 place-items-center rounded-full text-ink transition-[background-color,transform] duration-150 hover:bg-[#f4f7fa] active:scale-[0.96]"
+            className="grid size-11 shrink-0 place-items-center rounded-sm text-ink transition-[background-color,transform] duration-150 hover:bg-[#f4f7fa] active:scale-[0.96]"
             onClick={onClose}
             ref={closeRef}
             type="button"
@@ -380,7 +380,7 @@ export function ProjectDetailsSheet({ projectId, onClose }: { projectId: string 
               </h2>
               <p className="mx-auto mt-3 mb-0 max-w-md text-sm leading-6 text-muted">{t("detail.unavailableLead")}</p>
               <button
-                className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full border border-brand px-5 text-sm font-semibold text-brand transition-transform duration-150 active:scale-[0.96]"
+                className="mt-6 inline-flex min-h-11 items-center justify-center rounded-sm border border-brand px-5 text-sm font-semibold text-brand transition-transform duration-150 active:scale-[0.96]"
                 onClick={onClose}
                 type="button"
               >
@@ -484,12 +484,12 @@ function QuoteActionRail({ project }: { project: Details }) {
       <h3 className="m-0 text-[1.05rem] font-semibold tracking-[-0.02em] text-ink">{t("quote.title")}</h3>
       <p className="mt-2 mb-0 text-sm leading-6 text-muted">{t("quote.lead")}</p>
       {project.myQuoteId ? (
-        <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.98]" href={quoteHref}>{t("quote.view")}</Link>
+        <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-sm bg-brand px-5 text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.98]" href={quoteHref}>{t("quote.view")}</Link>
       ) : project.canSubmitQuote ? (
-        <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.98]" href={quoteHref}>{t("quote.submit")}</Link>
+        <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-sm bg-brand px-5 text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.98]" href={quoteHref}>{t("quote.submit")}</Link>
       ) : (
         <>
-          <button className="mt-5 inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white opacity-55" disabled type="button">{t("quote.submit")}</button>
+          <button className="mt-5 inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center rounded-sm bg-brand px-5 text-sm font-semibold text-white opacity-55" disabled type="button">{t("quote.submit")}</button>
           <p className="mt-3 mb-0 text-sm leading-6 text-[#8a2f28]">{t("quote.verificationRequired")}</p>
           <Link
             className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-brand hover:underline"
@@ -588,7 +588,7 @@ function ProjectSheetSkeleton({ label }: { label: string }) {
       <aside className="hidden animate-pulse border-l border-[#e4e8eb] px-6 py-8 lg:block">
         <div className="h-5 w-44 rounded bg-[#e6eef3]" />
         <div className="mt-3 h-4 w-full rounded bg-[#eef3f6]" />
-        <div className="mt-5 h-12 w-full rounded-full bg-[#e6eef3]" />
+        <div className="mt-5 h-12 w-full rounded-sm bg-[#e6eef3]" />
         <div className="mt-10 h-5 w-36 rounded bg-[#e6eef3]" />
         <div className="mt-4 h-4 w-28 rounded bg-[#eef3f6]" />
         <div className="mt-2 h-4 w-40 rounded bg-[#eef3f6]" />
@@ -615,7 +615,7 @@ function SortDropdown({ value, onChange }: { value: SortOption; onChange: (value
       <DropdownMenuTrigger asChild>
         <button
           aria-label={t("sort.triggerAria", { option: selectedLabel })}
-          className="group/sort inline-flex min-h-10 items-center gap-2 rounded-full border border-[#c5c8cb] bg-white px-3.5 text-sm text-ink transition-[border-color,background-color,transform] duration-150 hover:border-[#9aa3ab] data-[state=open]:border-ink active:scale-[0.96]"
+          className="group/sort inline-flex min-h-10 items-center gap-2 rounded-sm border border-[#c5c8cb] bg-white px-3.5 text-sm text-ink transition-[border-color,background-color,transform] duration-150 hover:border-[#9aa3ab] data-[state=open]:border-ink active:scale-[0.96]"
           type="button"
         >
           <span>
@@ -637,7 +637,7 @@ function SortDropdown({ value, onChange }: { value: SortOption; onChange: (value
           const selected = option === value;
           return (
             <DropdownMenuItem
-              className="min-h-10 cursor-pointer rounded-lg px-2.5 text-sm text-ink focus:bg-[#f4f7fa] focus:text-ink"
+              className="min-h-10 cursor-pointer rounded-sm px-2.5 text-sm text-ink focus:bg-[#f4f7fa] focus:text-ink"
               key={option}
               onSelect={() => onChange(option)}
             >
@@ -730,7 +730,7 @@ function FilterFields({
           />
           <Input
             aria-label={t("filters.city")}
-            className="h-10 rounded-lg border-[#c5c8cb] bg-white pr-3 pl-9 text-sm text-ink shadow-none placeholder:text-muted focus-visible:border-brand focus-visible:ring-brand/15"
+            className="h-10 rounded-sm border-[#c5c8cb] bg-white pr-3 pl-9 text-sm text-ink shadow-none placeholder:text-muted focus-visible:border-brand focus-visible:ring-brand/15"
             id={`${idPrefix}-city`}
             onChange={(event) => onCitySearchChange(event.target.value)}
             placeholder={t("filters.cityPlaceholder")}
@@ -745,7 +745,7 @@ function FilterFields({
           <DropdownMenuTrigger asChild>
             <Button
               aria-label={t("filters.category")}
-              className="h-10 w-full justify-between rounded-lg border-[#c5c8cb] bg-white px-3 text-sm font-normal text-ink shadow-none hover:border-[#9aa3ab] hover:bg-white hover:text-ink"
+              className="h-10 w-full justify-between rounded-sm border-[#c5c8cb] bg-white px-3 text-sm font-normal text-ink shadow-none hover:border-[#9aa3ab] hover:bg-white hover:text-ink"
               id={`${idPrefix}-category`}
               variant="outline"
             >
@@ -764,7 +764,7 @@ function FilterFields({
             {projectCategories.map((item) => (
               <DropdownMenuCheckboxItem
                 checked={categories.includes(item)}
-                className="min-h-10 cursor-pointer rounded-lg py-2 pr-2 pl-8 text-sm"
+                className="min-h-10 cursor-pointer rounded-sm py-2 pr-2 pl-8 text-sm"
                 key={item}
                 onCheckedChange={() => onCategoriesChange(toggleSelection(categories, item))}
                 onSelect={(event) => event.preventDefault()}
@@ -919,17 +919,17 @@ function FilterSheet({ open, onClose, title, children }: { open: boolean; onClos
     };
   }, [onClose, open]);
   if (!open) return null;
-  const sheet = <div aria-label={title} aria-modal="true" className="fixed inset-0 z-[80] lg:hidden" id="project-mobile-filters" role="dialog"><button aria-label={t("filters.close")} className="absolute inset-0 bg-ink/45" onClick={onClose} type="button" /><div className="absolute inset-y-0 right-0 w-[min(88vw,360px)] overflow-y-auto bg-white p-5 shadow-[-20px_0_50px_rgb(23_61_99/0.15)]" ref={panelRef}><div className="mb-7 flex items-center justify-between border-b border-brand-border pb-4"><h2 className="m-0 text-lg font-semibold text-ink">{title}</h2><button aria-label={t("filters.close")} className="grid size-11 place-items-center rounded-full border border-brand-border text-ink" onClick={onClose} ref={closeRef} type="button"><CloseIcon /></button></div>{children}</div></div>;
+  const sheet = <div aria-label={title} aria-modal="true" className="fixed inset-0 z-[80] lg:hidden" id="project-mobile-filters" role="dialog"><button aria-label={t("filters.close")} className="absolute inset-0 bg-ink/45" onClick={onClose} type="button" /><div className="absolute inset-y-0 right-0 w-[min(88vw,360px)] overflow-y-auto bg-white p-5 shadow-[-20px_0_50px_rgb(23_61_99/0.15)]" ref={panelRef}><div className="mb-7 flex items-center justify-between border-b border-brand-border pb-4"><h2 className="m-0 text-lg font-semibold text-ink">{title}</h2><button aria-label={t("filters.close")} className="grid size-11 place-items-center rounded-sm border border-brand-border text-ink" onClick={onClose} ref={closeRef} type="button"><CloseIcon /></button></div>{children}</div></div>;
   return typeof document === "undefined" ? sheet : createPortal(sheet, document.body);
 }
 
 function EmptyProjects({ onClear }: { onClear: () => void }) {
   const t = useTranslations("companyProjects");
-  return <div className="rounded-2xl border border-dashed border-brand-border bg-white px-5 py-14 text-center"><div className="mx-auto grid size-14 place-items-center rounded-full bg-brand-soft text-brand"><SearchIcon staticPosition /></div><h2 className="mt-4 mb-0 text-lg font-semibold text-ink">{t("empty.title")}</h2><p className="mx-auto mt-2 mb-0 max-w-md text-sm leading-6 text-muted">{t("empty.lead")}</p><button className="mt-5 min-h-11 rounded-full border border-brand px-5 text-sm font-semibold text-brand active:scale-[0.96]" onClick={onClear} type="button">{t("clearFilters")}</button></div>;
+  return <div className="rounded-2xl border border-dashed border-brand-border bg-white px-5 py-14 text-center"><div className="mx-auto grid size-14 place-items-center rounded-sm bg-brand-soft text-brand"><SearchIcon staticPosition /></div><h2 className="mt-4 mb-0 text-lg font-semibold text-ink">{t("empty.title")}</h2><p className="mx-auto mt-2 mb-0 max-w-md text-sm leading-6 text-muted">{t("empty.lead")}</p><button className="mt-5 min-h-11 rounded-sm border border-brand px-5 text-sm font-semibold text-brand active:scale-[0.96]" onClick={onClear} type="button">{t("clearFilters")}</button></div>;
 }
 
 export function ProjectFeedSkeleton({ label, compact = false }: { label: string; compact?: boolean }) {
-  return <div aria-busy="true" className={compact ? "mt-4 grid gap-4" : "mx-auto w-[calc(100%-36px)] max-w-[1120px] py-10"} role="status"><span className="sr-only">{label}</span>{Array.from({ length: compact ? 2 : 4 }, (_, index) => <div className="animate-pulse rounded-2xl border border-brand-border bg-white p-6" key={index}><div className="h-3 w-48 rounded bg-[#e9edf1]" /><div className="mt-4 h-7 w-3/4 rounded bg-[#e9edf1]" /><div className="mt-4 h-4 w-full rounded bg-[#eef1f4]" /><div className="mt-2 h-4 w-2/3 rounded bg-[#eef1f4]" /><div className="mt-6 h-11 w-32 rounded-full bg-[#e9edf1]" /></div>)}</div>;
+  return <div aria-busy="true" className={compact ? "mt-4 grid gap-4" : "mx-auto w-[calc(100%-36px)] max-w-[1120px] py-10"} role="status"><span className="sr-only">{label}</span>{Array.from({ length: compact ? 2 : 4 }, (_, index) => <div className="animate-pulse rounded-2xl border border-brand-border bg-white p-6" key={index}><div className="h-3 w-48 rounded bg-[#e9edf1]" /><div className="mt-4 h-7 w-3/4 rounded bg-[#e9edf1]" /><div className="mt-4 h-4 w-full rounded bg-[#eef1f4]" /><div className="mt-2 h-4 w-2/3 rounded bg-[#eef1f4]" /><div className="mt-6 h-11 w-32 rounded-sm bg-[#e9edf1]" /></div>)}</div>;
 }
 
 function useDebouncedValue(value: string, delay: number) {

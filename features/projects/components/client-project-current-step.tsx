@@ -55,7 +55,7 @@ export function ClientProjectCurrentStep({ project }: { project: ProjectDetails 
         </div>
         {conversationId ? (
           <Link
-            className="inline-flex min-h-10 items-center justify-center rounded-full bg-brand px-4 text-[14px] font-medium text-white"
+            className="inline-flex min-h-10 items-center justify-center rounded-sm bg-brand px-4 text-[14px] font-medium text-white"
             href={{ pathname: routes.messagesConversation, params: { conversationId } }}
           >
             {selected ? t("openConversation") : t("continueConversation")}

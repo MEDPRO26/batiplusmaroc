@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
+import { Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
@@ -22,6 +23,29 @@ type Wizard = FunctionReturnType<typeof api.projects.index.getWizard>;
 type Draft = NonNullable<Wizard["draft"]>;
 type Step = 1 | 2 | 3 | 4 | 5;
 type Translate = (key: string, values?: Record<string, string | number>) => string;
+
+/**
+ * Screen order. Step numbers stay the saved sections (1 category, 2 location,
+ * 3 details, 4 timeline, 5 review); only the order they are asked in changes,
+ * so the project is named and described first.
+ */
+export const WIZARD_ORDER: readonly Step[] = [3, 2, 1, 4, 5];
+const positionOf = (step: Step) => WIZARD_ORDER.indexOf(step) + 1;
+const stepAfter = (step: Step) => WIZARD_ORDER[Math.min(WIZARD_ORDER.length - 1, WIZARD_ORDER.indexOf(step) + 1)];
+const stepBefore = (step: Step) => WIZARD_ORDER[Math.max(0, WIZARD_ORDER.indexOf(step) - 1)];
+
+/** First unanswered screen in display order; a complete draft opens on the review. */
+export function wizardResumeStep(
+  draft: Pick<Draft, "primaryCategory" | "customCategoryText" | "city" | "title" | "propertyType" | "surface" | "surfaceUnknown" | "description" | "timeline">,
+): Step {
+  const complete: Record<Exclude<Step, 5>, boolean> = {
+    1: Boolean(draft.primaryCategory) && !(draft.primaryCategory === "other" && !draft.customCategoryText),
+    2: Boolean(draft.city),
+    3: Boolean(draft.title && draft.propertyType && draft.description) && (draft.surfaceUnknown || draft.surface !== null),
+    4: Boolean(draft.timeline),
+  };
+  return WIZARD_ORDER.find((step) => step !== 5 && !complete[step]) ?? 5;
+}
 
 export function shouldInitializeDraft({
   submitted,
@@ -62,7 +86,7 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
   const lock = useRef(createSubmitLock());
   const formRef = useRef<HTMLFormElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<Step>(WIZARD_ORDER[0]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<{ name: string; message: string } | null>(null);
@@ -95,7 +119,7 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
   useEffect(() => {
     if (wizard?.draft && loadedDraft.current !== wizard.draft.id) {
       loadedDraft.current = wizard.draft.id;
-      setStep(wizard.draft.resumeStep);
+      setStep(wizardResumeStep(wizard.draft));
     }
   }, [wizard?.draft]);
 
@@ -110,15 +134,16 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
     return () => window.clearTimeout(timer);
   }, [router, submitted]);
 
-  const progressLabel = t("progress", { current: step, total: totalSteps });
-  const progressValue = Math.round((step / totalSteps) * 100);
+  const position = positionOf(step);
+  const progressLabel = t("progress", { current: position, total: totalSteps });
+  const progressValue = Math.round((position / totalSteps) * 100);
 
   if (submitted) {
     return (
       <>
         <OnboardingChrome progressLabel={t("progressComplete")} progressValue={100} />
         <main className="mx-auto flex w-full max-w-[680px] flex-1 items-center px-5 py-14">
-          <section className="w-full rounded-3xl border border-brand-border bg-white p-8 text-center sm:p-10" role="status">
+          <section className="w-full rounded-sm border border-brand-border bg-white p-8 text-center sm:p-10" role="status">
             <span aria-hidden className="text-4xl text-emerald-700">✓</span>
             <h1 className="mt-5 text-[clamp(1.75rem,4vw,2.25rem)] font-semibold tracking-[-0.03em] text-ink">
               {t("success.title")}
@@ -214,7 +239,7 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
         setReturnToReview(false);
         go(5);
       } else {
-        go(Math.min(5, (step + 1) as Step) as Step);
+        go(stepAfter(step));
       }
     } catch (caught) {
       const mapped = mapConvexFailure(caught, tUx);
@@ -247,18 +272,48 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
     }
   }
 
+  const stepName = (value: Step) => t(`steps.${value}.eyebrow`);
+  const footer = (
+    <WizardFooter
+      disabled={saving}
+      first={position === 1}
+      progressLabel={progressLabel}
+      progressValue={progressValue}
+      step={step}
+      t={t}
+      nextLabel={step < 5 ? t("nextStep", { step: stepName(stepAfter(step)) }) : ""}
+      onBack={() => go(stepBefore(step))}
+      onPublish={() => void submitProject()}
+      onSave={() => {
+        if (formRef.current) void persist(formRef.current, true);
+      }}
+    />
+  );
+  const intro = (
+    <header className="min-w-0">
+      <p className="m-0 flex items-center gap-4 text-sm text-muted">
+        <span className="tabular-nums">{position}/{totalSteps}</span>
+        <span>{stepName(step)}</span>
+      </p>
+      <h1
+        className="mt-5 mb-0 text-[clamp(1.75rem,3.6vw,2.4rem)] leading-[1.1] font-semibold tracking-[-0.035em] text-balance text-ink outline-none"
+        ref={headingRef}
+        tabIndex={-1}
+      >
+        {t(`steps.${step}.title`)}
+      </h1>
+      <p className="mt-5 mb-0 max-w-md text-[0.95rem] leading-6 text-pretty text-muted">{t(`steps.${step}.lead`)}</p>
+    </header>
+  );
+
   return (
     <>
-      <OnboardingChrome progressLabel={progressLabel} progressValue={progressValue} />
-      <main className="mx-auto flex w-full max-w-[720px] flex-1 flex-col px-5 py-8 sm:px-8 sm:py-14">
-        <div className="mb-8 flex justify-between gap-3 text-sm text-muted">
-          <span>{progressLabel}</span>
-          <span aria-live="polite">{saving ? t("saving") : t("autosaveHint")}</span>
-        </div>
-
+      <OnboardingChrome progressLabel={progressLabel} progressValue={progressValue} showProgress={false} />
+      {/* Bottom padding keeps the last field clear of the fixed footer. */}
+      <main className="mx-auto w-full max-w-[1120px] flex-1 px-5 pt-8 pb-40 sm:px-8 sm:pt-14 lg:pt-20">
         {step < 5 ? (
           <form
-            className="flex min-h-[520px] flex-1 flex-col"
+            className={WIZARD_GRID}
             noValidate
             onSubmit={(event: FormEvent<HTMLFormElement>) => {
               event.preventDefault();
@@ -266,58 +321,39 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
             }}
             ref={formRef}
           >
-            <div className="flex-1">
-              <header className="max-w-xl">
-                <p className="m-0 text-xs font-semibold tracking-[0.15em] text-brand uppercase">
-                  {t(`steps.${step}.eyebrow`)}
-                </p>
-                <h1
-                  className="mt-4 text-[clamp(1.85rem,4.5vw,2.75rem)] font-semibold tracking-[-0.045em] text-ink outline-none"
-                  ref={headingRef}
-                  tabIndex={-1}
-                >
-                  {t(`steps.${step}.title`)}
-                </h1>
-                <p className="mt-4 mb-0 text-base leading-7 text-muted sm:text-lg">
-                  {t(`steps.${step}.lead`)}
-                </p>
-              </header>
-
+            {intro}
+            <div className="min-w-0">
               <StepBody data={data} draft={draft} fieldError={fieldError} step={step as Exclude<Step, 5>} t={t} />
               {error ? (
-                <div className="mt-8">
+                <div className="mt-6">
                   <FriendlyAlert>{error}</FriendlyAlert>
                 </div>
               ) : null}
             </div>
-
-            <Actions
-              disabled={saving}
-              step={step as Exclude<Step, 5>}
-              t={t}
-              onBack={() => go((step - 1) as Step)}
-              onSave={() => {
-                if (formRef.current) void persist(formRef.current, true);
-              }}
-            />
+            {footer}
           </form>
         ) : (
-          <Review
-            draft={draft}
-            error={error}
-            publishing={saving}
-            t={t}
-            onEdit={(editStep) => {
-              setReturnToReview(true);
-              go(editStep);
-            }}
-            onPublish={() => void submitProject()}
-          />
+          <section className={WIZARD_GRID}>
+            {intro}
+            <Review
+              draft={draft}
+              error={error}
+              t={t}
+              onEdit={(editStep) => {
+                setReturnToReview(true);
+                go(editStep);
+              }}
+            />
+            {footer}
+          </section>
         )}
       </main>
     </>
   );
 }
+
+/** Question on the left, answer on the right; stacked on small screens. */
+const WIZARD_GRID = "grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-20";
 
 function StepBody({
   step,
@@ -339,7 +375,7 @@ function StepBody({
     return (
       <fieldset
         aria-describedby={message("primaryCategory") ? errorId("primaryCategory") : undefined}
-        className="mt-10 border-0 p-0"
+        className="m-0 min-w-0 border-0 p-0"
       >
         <legend className="sr-only">{t("steps.1.title")}</legend>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -356,6 +392,7 @@ function StepBody({
         {message("primaryCategory") ? (
           <ErrorText id={errorId("primaryCategory")}>{message("primaryCategory")}</ErrorText>
         ) : null}
+        <div className="mt-6">
         <Field
           error={message("customCategoryText")}
           errorId={errorId("customCategoryText")}
@@ -372,13 +409,14 @@ function StepBody({
             placeholder={t("fields.customCategoryPlaceholder")}
           />
         </Field>
+        </div>
       </fieldset>
     );
   }
 
   if (step === 2) {
     return (
-      <div className="mt-10 grid max-w-lg gap-7">
+      <div className="grid gap-6">
         <Field error={message("city")} errorId={errorId("city")} label={t("fields.city")}>
           <select
             aria-describedby={message("city") ? errorId("city") : undefined}
@@ -412,7 +450,7 @@ function StepBody({
 
   if (step === 3) {
     return (
-      <div className="mt-10 grid max-w-xl gap-7">
+      <div className="grid gap-6">
         <Field error={message("title")} errorId={errorId("title")} label={t("fields.title")}>
           <input
             aria-describedby={message("title") ? errorId("title") : undefined}
@@ -424,6 +462,14 @@ function StepBody({
             placeholder={t("fields.titlePlaceholder")}
           />
         </Field>
+        <div className="-mt-1 text-sm">
+          <p className="m-0 font-semibold text-ink">{t("fields.titleExamplesTitle")}</p>
+          <ul className="mt-2 mb-0 grid list-disc gap-1 pl-5 text-muted">
+            <li>{t("fields.titleExample1")}</li>
+            <li>{t("fields.titleExample2")}</li>
+            <li>{t("fields.titleExample3")}</li>
+          </ul>
+        </div>
         <Field
           error={message("propertyType")}
           errorId={errorId("propertyType")}
@@ -456,8 +502,8 @@ function StepBody({
             name="surface"
             type="number"
           />
-          <label className="mt-3 flex min-h-11 items-center gap-2 text-sm font-normal text-ink">
-            <input defaultChecked={draft.surfaceUnknown} name="surfaceUnknown" type="checkbox" />
+          <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2.5 text-sm font-normal text-ink">
+            <input className="size-[18px] accent-brand" defaultChecked={draft.surfaceUnknown} name="surfaceUnknown" type="checkbox" />
             {t("fields.surfaceUnknown")}
           </label>
         </Field>
@@ -484,10 +530,10 @@ function StepBody({
   return (
     <fieldset
       aria-describedby={message(name) ? errorId(name) : undefined}
-      className="mt-10 border-0 p-0"
+      className="m-0 min-w-0 border-0 p-0"
     >
       <legend className="sr-only">{t(`steps.${step}.title`)}</legend>
-      <div className="grid max-w-xl gap-3">
+      <div className="grid gap-3">
         {values.map((item) => (
           <Choice
             checked={selected === item}
@@ -507,15 +553,11 @@ function Review({
   draft,
   t,
   onEdit,
-  onPublish,
-  publishing,
   error,
 }: {
   draft: Draft;
   t: Translate;
   onEdit: (step: Exclude<Step, 5>) => void;
-  onPublish: () => void;
-  publishing: boolean;
   error: string | null;
 }) {
   const category = draft.primaryCategory
@@ -527,15 +569,6 @@ function Review({
     : t("notProvided");
 
   const rows: Array<{ step: Exclude<Step, 5>; label: string; value: ReactNode }> = [
-    { step: 1, label: t("review.category"), value: category },
-    {
-      step: 2,
-      label: t("review.location"),
-      value:
-        [draft.city ? t(`cityOptions.${draft.city}`) : null, draft.neighborhood]
-          .filter(Boolean)
-          .join(" · ") || t("notProvided"),
-    },
     {
       step: 3,
       label: t("review.projectTitle"),
@@ -561,35 +594,37 @@ function Review({
       value: draft.description ?? t("notProvided"),
     },
     {
+      step: 2,
+      label: t("review.location"),
+      value:
+        [draft.city ? t(`cityOptions.${draft.city}`) : null, draft.neighborhood]
+          .filter(Boolean)
+          .join(" · ") || t("notProvided"),
+    },
+    { step: 1, label: t("review.category"), value: category },
+    {
       step: 4,
       label: t("review.timeline"),
       value: draft.timeline ? t(`timelineOptions.${draft.timeline}`) : t("notProvided"),
     },
   ];
-
   return (
-    <section>
-      <header className="max-w-xl">
-        <p className="m-0 text-xs font-semibold tracking-[0.15em] text-brand uppercase">
-          {t("steps.5.eyebrow")}
-        </p>
-        <h1 className="mt-4 text-[clamp(1.85rem,4.5vw,2.75rem)] font-semibold tracking-[-0.045em] text-ink">
-          {t("steps.5.title")}
-        </h1>
-        <p className="mt-4 mb-0 text-base leading-7 text-muted sm:text-lg">{t("steps.5.lead")}</p>
-      </header>
-
-      <div className="mt-10 divide-y divide-brand-border border-y border-brand-border">
+    <div className="min-w-0">
+      <div className="divide-y divide-brand-border border-y border-brand-border">
         {rows.map((row) => (
-          <article className="grid gap-3 py-6 sm:grid-cols-[160px_1fr_auto] sm:items-start" key={row.label}>
-            <h2 className="m-0 text-sm font-semibold text-ink">{row.label}</h2>
-            <div className="text-base leading-7 text-muted">{row.value}</div>
+          <article className="flex items-start gap-4 py-4" key={row.label}>
+            <div className="min-w-0 flex-1">
+              <h2 className="m-0 text-sm font-semibold text-ink">{row.label}</h2>
+              <div className="mt-1 text-[0.95rem] leading-6 break-words whitespace-pre-wrap text-muted">{row.value}</div>
+            </div>
             <button
-              className="min-h-11 justify-self-start text-sm font-semibold text-brand sm:justify-self-end"
+              aria-label={t("editField", { field: row.label })}
+              className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full border border-brand-border bg-white text-brand transition-[background-color,border-color,scale] duration-150 hover:border-brand/40 hover:bg-brand-soft active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               onClick={() => onEdit(row.step)}
+              title={t("edit")}
               type="button"
             >
-              {t("edit")}
+              <Pencil aria-hidden className="size-4" />
             </button>
           </article>
         ))}
@@ -600,56 +635,84 @@ function Review({
           <FriendlyAlert>{error}</FriendlyAlert>
         </div>
       ) : null}
-
-      <div className="sticky bottom-0 z-20 -mx-5 mt-8 border-t border-brand-border bg-white/95 px-5 py-4 sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
-        <button
-          className="button button-primary min-h-12 w-full sm:w-auto sm:min-w-[12rem]"
-          disabled={publishing}
-          onClick={onPublish}
-          type="button"
-        >
-          {publishing ? t("publishing") : t("publish")}
-        </button>
-      </div>
-    </section>
+    </div>
   );
 }
 
-function Actions({
+/** Fixed action bar: progress on top, Back on the left, the next action on the right. */
+function WizardFooter({
   step,
+  first,
   disabled,
   t,
+  nextLabel,
+  progressLabel,
+  progressValue,
   onBack,
   onSave,
+  onPublish,
 }: {
-  step: Exclude<Step, 5>;
+  step: Step;
+  first: boolean;
   disabled: boolean;
   t: Translate;
+  nextLabel: string;
+  progressLabel: string;
+  progressValue: number;
   onBack: () => void;
   onSave: () => void;
+  onPublish: () => void;
 }) {
+  const secondary =
+    "inline-flex min-h-11 cursor-pointer items-center justify-center rounded-sm border border-brand-border bg-white px-5 text-sm font-semibold text-brand transition-[background-color,border-color,scale] duration-150 hover:border-brand/40 hover:bg-brand-soft/60 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-40";
+  const primary =
+    "inline-flex min-h-11 cursor-pointer items-center justify-center rounded-sm bg-brand px-5 text-sm font-semibold text-white transition-[background-color,scale] duration-150 hover:bg-brand-hover active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-55";
   return (
-    <div className="sticky bottom-0 z-20 -mx-5 mt-10 border-t border-brand-border bg-white/95 px-5 py-4 sm:mx-0 sm:mt-12 sm:flex sm:items-center sm:justify-between sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
-      <button
-        className="mb-3 min-h-12 px-1 font-semibold text-ink disabled:opacity-40 sm:mb-0"
-        disabled={step === 1 || disabled}
-        onClick={onBack}
-        type="button"
+    <div className="fixed inset-x-0 bottom-0 z-30 bg-white lg:col-span-2">
+      <div
+        aria-label={progressLabel}
+        aria-valuemax={100}
+        aria-valuemin={0}
+        aria-valuenow={progressValue}
+        className="h-1 w-full bg-[#e8eef2]"
+        role="progressbar"
       >
-        {t("back")}
-      </button>
-      <div className="grid grid-cols-2 gap-3 sm:flex">
-        <button
-          className="min-h-12 rounded-xl border border-brand-border px-4 font-semibold text-ink"
-          disabled={disabled}
-          onClick={onSave}
-          type="button"
-        >
-          {t("saveAndExit")}
+        <div className="h-full bg-brand transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)]" style={{ width: `${progressValue}%` }} />
+      </div>
+      <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+        <button className={secondary} disabled={first || disabled} onClick={onBack} type="button">
+          {t("back")}
         </button>
-        <button className="button button-primary min-h-12" disabled={disabled} type="submit">
-          {disabled ? t("saving") : step === 4 ? t("reviewProject") : t("continue")}
-        </button>
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <span aria-live="polite" className="hidden text-sm text-muted md:inline">
+            {disabled ? t("saving") : t("autosaveHint")}
+          </span>
+          {step < 5 ? (
+            <>
+              <button
+                className="inline-flex min-h-11 cursor-pointer items-center rounded-sm px-2.5 text-sm font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-40 sm:px-3"
+                disabled={disabled}
+                onClick={onSave}
+                type="button"
+              >
+                {t("saveAndExit")}
+              </button>
+              <button className={primary} disabled={disabled} type="submit">
+                {disabled ? t("saving") : (
+                  <>
+                    {/* Short label on phones; the destination is named when there is room. */}
+                    <span className="sm:hidden">{step === 4 ? t("reviewProject") : t("continue")}</span>
+                    <span className="hidden sm:inline">{nextLabel}</span>
+                  </>
+                )}
+              </button>
+            </>
+          ) : (
+            <button className={primary} disabled={disabled} onClick={onPublish} type="button">
+              {disabled ? t("publishing") : t("publish")}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -667,18 +730,15 @@ function Choice({
   checked: boolean;
 }) {
   return (
-    <label className="group flex min-h-[3.75rem] cursor-pointer items-center gap-3 rounded-2xl border border-brand-border px-4 py-3.5 text-[0.95rem] font-semibold text-ink transition-[border-color,background-color] duration-150 has-[:checked]:border-brand has-[:checked]:bg-brand-soft focus-within:outline-2 focus-within:outline-brand">
-      <input className="size-5 accent-brand" defaultChecked={checked} name={name} type="radio" value={value} />
+    <label className="group flex min-h-14 cursor-pointer items-center gap-3 rounded-sm border border-brand-border bg-white px-4 py-3 text-[0.95rem] font-medium text-ink transition-[border-color,background-color] duration-150 hover:border-brand/40 has-[:checked]:border-brand has-[:checked]:bg-brand-soft has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand">
+      <input className="size-5 shrink-0 accent-brand" defaultChecked={checked} name={name} type="radio" value={value} />
       <span className="flex-1 leading-snug">{label}</span>
-      <span aria-hidden className="opacity-0 group-has-[:checked]:opacity-100">
-        ✓
-      </span>
     </label>
   );
 }
 
 const inputClass =
-  "mt-2 min-h-12 w-full rounded-xl border border-brand-border bg-white px-4 text-base text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/15";
+  "mt-2 min-h-12 w-full rounded-sm border border-brand-border bg-white px-4 text-base font-normal text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted/70 focus:border-brand focus:ring-2 focus:ring-brand/15 aria-invalid:border-red-600";
 
 function Field({
   label,
@@ -694,7 +754,7 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="block text-sm font-semibold text-ink">
+    <label className="block text-[0.95rem] font-semibold text-ink">
       {label}
       {optional ? <span className="ml-1 font-normal text-muted">({optional})</span> : null}
       {children}
@@ -721,7 +781,7 @@ export function ProjectWizardSkeleton({
   return (
     <>
       <OnboardingChrome progressLabel={progressLabel} progressValue={15} />
-      <main className="mx-auto w-full max-w-[720px] flex-1 px-5 py-10">
+      <main className="mx-auto w-full max-w-[1120px] flex-1 px-5 py-10 sm:px-8 sm:py-14">
         <FormSkeleton label={label} />
       </main>
     </>

@@ -84,7 +84,7 @@ export function CompanyInvitations() {
         {(["all", "pending", "accepted", "declined"] as const).map((item) => (
           <button
             aria-pressed={filter === item}
-            className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${filter === item ? "border-brand bg-brand text-white" : "border-brand-border bg-white text-ink"}`}
+            className={`min-h-11 rounded-sm border px-4 text-sm font-semibold ${filter === item ? "border-brand bg-brand text-white" : "border-brand-border bg-white text-ink"}`}
             key={item}
             onClick={() => setFilter(item)}
             type="button"
@@ -125,7 +125,7 @@ export function CompanyInvitations() {
                     </p>
                   </div>
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${row.status === "accepted" ? "bg-emerald-50 text-emerald-700" : row.status === "declined" ? "bg-slate-100 text-slate-600" : "bg-amber-50 text-amber-800"}`}
+                    className={`rounded-sm px-3 py-1 text-xs font-semibold ${row.status === "accepted" ? "bg-emerald-50 text-emerald-700" : row.status === "declined" ? "bg-slate-100 text-slate-600" : "bg-amber-50 text-amber-800"}`}
                   >
                     {t(`status.${row.status}`)}
                   </span>
@@ -164,7 +164,7 @@ export function CompanyInvitations() {
                   {row.status === "pending" ? (
                     <>
                       <button
-                        className="min-h-11 rounded-full bg-brand px-5 text-sm font-semibold text-white disabled:opacity-60"
+                        className="min-h-11 rounded-sm bg-brand px-5 text-sm font-semibold text-white disabled:opacity-60"
                         disabled={busyId === row.id || !row.canAccept}
                         title={!row.canAccept ? t("suspended") : undefined}
                         onClick={() => void decide(row.id, "accept")}
@@ -173,7 +173,7 @@ export function CompanyInvitations() {
                         {busyId === row.id ? t("working") : t("accept")}
                       </button>
                       <button
-                        className="min-h-11 rounded-full border border-brand-border px-5 text-sm font-semibold text-ink disabled:opacity-60"
+                        className="min-h-11 rounded-sm border border-brand-border px-5 text-sm font-semibold text-ink disabled:opacity-60"
                         disabled={busyId === row.id}
                         onClick={() => void decide(row.id, "decline")}
                         type="button"
@@ -183,7 +183,7 @@ export function CompanyInvitations() {
                     </>
                   ) : row.status === "accepted" ? (
                     <Link
-                      className="inline-flex min-h-11 items-center rounded-full bg-brand px-5 text-sm font-semibold text-white"
+                      className="inline-flex min-h-11 items-center rounded-sm bg-brand px-5 text-sm font-semibold text-white"
                       href={{
                         pathname: routes.companyProject,
                         params: { projectId: row.projectId },

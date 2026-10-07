@@ -147,7 +147,7 @@ export function InviteCompanyButton({
               </div>
               <button
                 aria-label={t("close")}
-                className="grid size-11 shrink-0 place-items-center rounded-full bg-surface-muted text-xl"
+                className="grid size-11 shrink-0 place-items-center rounded-sm bg-surface-muted text-xl"
                 disabled={busy}
                 onClick={() => setOpen(false)}
                 ref={closeRef}
@@ -188,7 +188,7 @@ export function InviteCompanyButton({
               >
                 <p className="m-0 font-semibold">{t("sent")}</p>
                 <button
-                  className="mt-4 min-h-11 rounded-full border border-[#8fbea2] bg-white px-5 text-sm font-semibold"
+                  className="mt-4 min-h-11 rounded-sm border border-[#8fbea2] bg-white px-5 text-sm font-semibold"
                   onClick={() => setOpen(false)}
                   type="button"
                 >
@@ -272,7 +272,7 @@ export function InviteCompanyButton({
                 ) : null}
                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <button
-                    className="min-h-11 rounded-full px-5 text-sm font-semibold text-ink"
+                    className="min-h-11 rounded-sm px-5 text-sm font-semibold text-ink"
                     disabled={busy}
                     onClick={() => setOpen(false)}
                     type="button"
@@ -280,7 +280,7 @@ export function InviteCompanyButton({
                     {t("cancel")}
                   </button>
                   <button
-                    className="min-h-11 rounded-full bg-brand px-5 text-sm font-semibold text-white disabled:opacity-60"
+                    className="min-h-11 rounded-sm bg-brand px-5 text-sm font-semibold text-white disabled:opacity-60"
                     disabled={busy || !projectId}
                     type="submit"
                   >
@@ -312,7 +312,7 @@ function Gate({
     <div className="mt-6 rounded-2xl border border-dashed border-brand-border bg-surface-muted p-5">
       <p className="m-0 text-sm leading-6 text-muted">{message}</p>
       <Link
-        className="mt-4 inline-flex min-h-11 items-center rounded-full bg-brand px-5 text-sm font-semibold text-white"
+        className="mt-4 inline-flex min-h-11 items-center rounded-sm bg-brand px-5 text-sm font-semibold text-white"
         href={href}
       >
         {action}

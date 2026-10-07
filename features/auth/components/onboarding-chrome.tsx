@@ -10,9 +10,12 @@ import { routes } from "@/lib/routes";
 export function OnboardingChrome({
   progressLabel,
   progressValue,
+  showProgress = true,
 }: {
   progressLabel: string;
   progressValue: number;
+  /** Screens that draw their own progress bar (the project wizard footer) hide this one. */
+  showProgress?: boolean;
 }) {
   const tBrand = useTranslations("brand");
   const tAuth = useTranslations("auth");
@@ -45,7 +48,7 @@ export function OnboardingChrome({
           </button>
         </div>
       </div>
-      <div
+      {showProgress ? <div
         aria-label={progressLabel}
         aria-valuemax={100}
         aria-valuemin={0}
@@ -54,7 +57,7 @@ export function OnboardingChrome({
         role="progressbar"
       >
         <div className="h-full bg-brand transition-[width] duration-300 ease-[cubic-bezier(0.2,0,0,1)]" style={{ width: `${clamped}%` }} />
-      </div>
+      </div> : null}
     </header>
   );
 }

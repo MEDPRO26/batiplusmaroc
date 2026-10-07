@@ -57,7 +57,7 @@ export async function SiteFooter() {
                 <li key={network.key}>
                   <a
                     aria-label={t(`social.${network.key}`)}
-                    className="grid size-10 place-items-center rounded-full text-white/80 transition-colors duration-150 hover:bg-white/8 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    className="grid size-10 place-items-center rounded-sm text-white/80 transition-colors duration-150 hover:bg-white/8 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                     href={network.href}
                     rel="noreferrer"
                     target="_blank"

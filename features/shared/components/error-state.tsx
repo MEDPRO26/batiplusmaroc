@@ -89,7 +89,7 @@ export function FriendlyAlert({
         : "bg-red-50 text-red-700";
 
   return (
-    <p className={joinClassNames("mb-0 rounded-lg px-3 py-2 text-[0.88rem]", toneClass)} role={tone === "error" ? "alert" : "status"}>
+    <p className={joinClassNames("mb-0 rounded-sm px-3 py-2 text-[0.88rem]", toneClass)} role={tone === "error" ? "alert" : "status"}>
       {children}
     </p>
   );

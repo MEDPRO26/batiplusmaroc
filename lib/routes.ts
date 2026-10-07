@@ -28,6 +28,7 @@ export const routes = {
   clientProfile: "/espace-client/profil",
   postProjectWizard: "/espace-client/projets/nouveau",
   clientProject: "/espace-client/projets/[projectId]",
+  clientProjectSupport: "/espace-client/projets/[projectId]/batiplus",
   companyDashboard: "/espace-entreprise",
   companyProjects: "/espace-entreprise/projets",
   companyInvitations: "/espace-entreprise/invitations",
@@ -50,6 +51,7 @@ export const routes = {
   adminDeals: "/admin/deals",
   adminReviews: "/admin/reviews",
   adminSiteVisits: "/admin/site-visits",
+  adminSupport: "/admin/support",
   adminVerification: "/admin/verification",
   adminSettings: "/admin/settings",
   adminServices: "/admin/services",
@@ -70,10 +72,11 @@ export const routes = {
 
 export type AppRoute = Exclude<
   (typeof routes)[keyof typeof routes],
-  typeof routes.clientProject | typeof routes.companyProject | typeof routes.companyInitialQuote | typeof routes.companyProfile | typeof routes.adminCompany | typeof routes.messagesConversation | typeof routes.seoArticle
+  typeof routes.clientProject | typeof routes.clientProjectSupport | typeof routes.companyProject | typeof routes.companyInitialQuote | typeof routes.companyProfile | typeof routes.adminCompany | typeof routes.messagesConversation | typeof routes.seoArticle
 >;
 export type DynamicAppRoute =
   | typeof routes.clientProject
+  | typeof routes.clientProjectSupport
   | typeof routes.companyProject
   | typeof routes.companyInitialQuote
   | typeof routes.companyProfile

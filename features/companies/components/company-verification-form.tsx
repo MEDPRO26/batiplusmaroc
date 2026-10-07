@@ -27,7 +27,7 @@ type Verification = FunctionReturnType<typeof api.companyVerification.index.getV
 type UploadedFile = { file: File; storageId: Id<"_storage">; uploadToken: string; uploadedAt: number };
 type FileState = { file: File; uploading: boolean; uploaded?: UploadedFile; error?: string };
 const primaryClass = "inline-flex min-h-12 items-center justify-center rounded-[10px] bg-brand px-5 text-[0.95rem] font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-brand/40 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand";
-const actionClass = "inline-flex min-h-10 items-center justify-center rounded-lg border border-brand-border px-3 text-sm font-semibold text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
+const actionClass = "inline-flex min-h-10 items-center justify-center rounded-sm border border-brand-border px-3 text-sm font-semibold text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
 
 export function CompanyVerificationForm() {
   const t = useTranslations("auth.companyVerification");
@@ -73,7 +73,7 @@ export function VerificationStatusScreen({ status, staff = false }: { status: Ve
   const t = useTranslations("auth.companyVerification");
   const verified = status === "verified";
   return <div className="mx-auto max-w-[560px] rounded-2xl border border-brand-border bg-white p-6 text-center sm:p-10">
-    {verified ? <VerifiedGlyph className="mx-auto size-20" /> : <div className="mx-auto grid size-16 place-items-center rounded-full bg-brand-soft text-brand"><Clock3 aria-hidden="true" className="size-8" /></div>}
+    {verified ? <VerifiedGlyph className="mx-auto size-20" /> : <div className="mx-auto grid size-16 place-items-center rounded-sm bg-brand-soft text-brand"><Clock3 aria-hidden="true" className="size-8" /></div>}
     <div className="mt-5"><StatusBadge status={status} /></div>
     <h1 className="mt-4 text-[1.75rem] font-semibold tracking-[-0.03em] text-ink sm:text-[2rem]">{t(status === "pending" || verified ? `${status}.title` : `status.${status}`)}</h1>
     <p className="mt-3 text-[0.98rem] leading-6 text-muted">{t(status === "pending" || verified ? `${status}.lead` : "staffLead")}</p>
@@ -86,7 +86,7 @@ export function VerificationStatusScreen({ status, staff = false }: { status: Ve
 function StatusBadge({ status }: { status: VerificationStatus }) {
   const t = useTranslations("auth.companyVerification");
   if (status === "verified") return <VerifiedBadge label={t("verified.badge")} verificationStatus={status} />;
-  return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${status === "rejected" ? "bg-red-50 text-red-800" : "bg-brand-soft text-brand"}`}>{t(`status.${status}`)}</span>;
+  return <span className={`inline-flex rounded-sm px-3 py-1 text-xs font-semibold ${status === "rejected" ? "bg-red-50 text-red-800" : "bg-brand-soft text-brand"}`}>{t(`status.${status}`)}</span>;
 }
 
 function ExistingDocumentDownload({ document }: { document: Verification["documents"][number] }) {
@@ -201,7 +201,7 @@ function VerificationEditor({ verification }: { verification: Verification }) {
             const shownName = selected?.file.name ?? existing?.fileName;
             const title = t(`documents.${documentType}`);
             return <li key={documentType} className={`min-w-0 rounded-xl border p-4 ${documentType === "tax_compliance" ? "border-brand/25 bg-brand-soft/20" : "border-brand-border"}`}>
-              <div className="flex items-start gap-3"><FileText aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="min-w-0 break-words text-sm font-semibold text-ink">{title}</h3><span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-[0.7rem] font-semibold text-brand">{t(documentType === "tax_compliance" ? "required" : "optional")}</span></div><p className="mt-2 break-all text-xs leading-5 text-muted">{shownName || t("noFile")}</p>
+              <div className="flex items-start gap-3"><FileText aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand" /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="min-w-0 break-words text-sm font-semibold text-ink">{title}</h3><span className="rounded-sm bg-brand-soft px-2.5 py-0.5 text-[0.7rem] font-semibold text-brand">{t(documentType === "tax_compliance" ? "required" : "optional")}</span></div><p className="mt-2 break-all text-xs leading-5 text-muted">{shownName || t("noFile")}</p>
                 <p id={`${formId}-${documentType}-state`} className="mt-1 flex items-center gap-1 text-xs text-brand" role="status">{selected?.uploading ? t("uploading") : selected?.error ? selected.error : selected?.uploaded || existing ? <><FileCheck2 aria-hidden="true" className="size-3.5 shrink-0" />{t("uploaded")}</> : t("awaitingFile")}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <label className={`${actionClass} relative cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand ${selected?.uploading ? "pointer-events-none opacity-50" : ""}`} htmlFor={`${formId}-document-${documentType}`}>

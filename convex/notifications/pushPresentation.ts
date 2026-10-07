@@ -1,5 +1,6 @@
 import type { Doc, Id } from "../_generated/dataModel";
-import type { ActiveNotificationType } from "./constants";
+import type { PushNotificationType } from "./constants";
+import { getNotificationDeliveryPolicy } from "./deliveryPolicy";
 import { notificationCompanyIdentity } from "./companyIdentity";
 import type { CompanyNameAudience } from "../lib/companyName";
 import {
@@ -68,10 +69,10 @@ const BODY_TEMPLATES = {
     company_suspended: "L’accès de {companyName} à la marketplace a été suspendu. Consultez l’assistance Batiplus pour connaître les prochaines étapes.",
     company_reactivated: "L’accès de {companyName} à la marketplace a été rétabli.",
   },
-} as const satisfies Record<PushLocale, Record<ActiveNotificationType, string>>;
+} as const satisfies Record<PushLocale, Record<PushNotificationType, string>>;
 
 function bodyFor(notification: PushNotificationRecord, locale: PushLocale) {
-  const template = BODY_TEMPLATES[locale][notification.type as ActiveNotificationType];
+  const template = BODY_TEMPLATES[locale][notification.type as PushNotificationType];
   const generic = GENERIC_NAMES[locale];
   const values: Record<string, string> = {
     actorDisplayName: notification.payload.actorDisplayName?.trim()
@@ -91,6 +92,9 @@ export function marketplacePushPresentation(
   accountType: NotificationAccountType,
   locale: PushLocale,
 ) {
+  if (!getNotificationDeliveryPolicy(notification.type).pushEligible) {
+    throw new Error("NOTIFICATION_PUSH_INELIGIBLE");
+  }
   // Production delivery carries the server-resolved recipient audience. Raw
   // legacy presentation inputs retain the existing masked Client fallback.
   const audience = notification.companyIdentityAudience

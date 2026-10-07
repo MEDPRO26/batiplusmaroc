@@ -8,8 +8,8 @@ export function AboutCta() {
     <section className="bg-[#f6f8f9] px-[18px] py-14 sm:px-6 sm:py-18 lg:px-8 lg:py-24" aria-labelledby="about-cta-title">
       <div className="relative mx-auto grid max-w-[1280px] overflow-hidden rounded-[28px] bg-[#0a3152] text-white shadow-[0_28px_80px_rgb(8_35_58_/_0.16)] lg:grid-cols-[1.18fr_0.82fr]">
         <div className="relative flex flex-col justify-center px-6 py-12 sm:px-10 sm:py-16 lg:min-h-[590px] lg:px-16 lg:py-20 xl:px-20">
-          <div className="pointer-events-none absolute -bottom-44 -left-40 size-[390px] rounded-full border border-white/8" aria-hidden="true" />
-          <div className="pointer-events-none absolute -bottom-28 -left-28 size-[270px] rounded-full border border-white/8" aria-hidden="true" />
+          <div className="pointer-events-none absolute -bottom-44 -left-40 size-[390px] rounded-sm border border-white/8" aria-hidden="true" />
+          <div className="pointer-events-none absolute -bottom-28 -left-28 size-[270px] rounded-sm border border-white/8" aria-hidden="true" />
 
           <div className="relative">
             <div className="mb-8 flex items-center gap-4">
@@ -24,12 +24,12 @@ export function AboutCta() {
             </p>
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Link className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-[12px] bg-white px-7 py-4 font-semibold text-[#0a3152]! shadow-[0_16px_40px_rgb(2_18_32_/_0.22)] transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-[#f5f8fa] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white" href={routes.contact}>
+              <Link className="group inline-flex min-h-14 items-center justify-center gap-5 rounded-sm bg-white px-7 py-4 font-semibold text-[#0a3152]! shadow-[0_16px_40px_rgb(2_18_32_/_0.22)] transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-[#f5f8fa] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white" href={routes.contact}>
                 Demander un devis
                 <span className="transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true">↗</span>
               </Link>
-              <a className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-[12px] border border-white/22 px-6 py-4 font-semibold text-white! transition-[border-color,background-color] duration-200 hover:border-white/45 hover:bg-white/6 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white" href="tel:+212766018650" aria-label="Appeler S2MBOU au +212 766-018650">
-                <span className="grid size-7 place-items-center rounded-full border border-[#e7b63f]/70 text-xs text-[#e7b63f]" aria-hidden="true">↗</span>
+              <a className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-sm border border-white/22 px-6 py-4 font-semibold text-white! transition-[border-color,background-color] duration-200 hover:border-white/45 hover:bg-white/6 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white" href="tel:+212766018650" aria-label="Appeler S2MBOU au +212 766-018650">
+                <span className="grid size-7 place-items-center rounded-sm border border-[#e7b63f]/70 text-xs text-[#e7b63f]" aria-hidden="true">↗</span>
                 +212 766-018650
               </a>
             </div>

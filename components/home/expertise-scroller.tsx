@@ -67,7 +67,7 @@ export function ExpertiseScroller({ children }: ExpertiseScrollerProps) {
         </p>
         <button
           type="button"
-          className="grid size-11 place-items-center rounded-full border border-white/25 text-white transition-colors hover:border-sky-300 hover:bg-sky-300 hover:text-[#101f33] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300 disabled:cursor-not-allowed disabled:border-white/10 disabled:text-white/25 disabled:hover:bg-transparent sm:size-12"
+          className="grid size-11 place-items-center rounded-sm border border-white/25 text-white transition-colors hover:border-sky-300 hover:bg-sky-300 hover:text-[#101f33] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300 disabled:cursor-not-allowed disabled:border-white/10 disabled:text-white/25 disabled:hover:bg-transparent sm:size-12"
           aria-label={t("previous")}
           onClick={() => moveCards(-1)}
           disabled={!canScrollPrevious}
@@ -76,7 +76,7 @@ export function ExpertiseScroller({ children }: ExpertiseScrollerProps) {
         </button>
         <button
           type="button"
-          className="grid size-11 place-items-center rounded-full border border-sky-300 bg-sky-300 text-[#101f33] transition-colors hover:bg-white hover:text-[#101f33] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-transparent disabled:text-white/25 sm:size-12"
+          className="grid size-11 place-items-center rounded-sm border border-sky-300 bg-sky-300 text-[#101f33] transition-colors hover:bg-white hover:text-[#101f33] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-transparent disabled:text-white/25 sm:size-12"
           aria-label={t("next")}
           onClick={() => moveCards(1)}
           disabled={!canScrollNext}

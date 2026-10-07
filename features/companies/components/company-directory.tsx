@@ -91,7 +91,7 @@ export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: strin
             <span className="sr-only">{t("searchLabel")}</span>
             <SearchIcon />
             <input
-              className="min-h-11 w-full rounded-full border border-brand-border bg-white pr-4 pl-11 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted/70 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
+              className="min-h-11 w-full rounded-sm border border-brand-border bg-white pr-4 pl-11 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted/70 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
               id="company-search"
               onChange={(event) => setSearch(event.target.value)}
               placeholder={t("searchPlaceholder")}
@@ -222,7 +222,7 @@ function FilterFields({
         <label className="grid gap-2 text-sm font-medium text-ink" htmlFor={`${idPrefix}-city`}>
           {t("city.label")}
           <input
-            className="min-h-11 rounded-lg border border-brand-border bg-white px-3 text-sm font-normal outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
+            className="min-h-11 rounded-sm border border-brand-border bg-white px-3 text-sm font-normal outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
             id={`${idPrefix}-city`}
             onChange={(event) => onCityChange(event.target.value)}
             placeholder={t("city.placeholder")}
@@ -275,7 +275,7 @@ function FilterSheet({ open, onClose, title, children }: { open: boolean; onClos
       <div className="absolute inset-y-0 right-0 w-[min(88vw,360px)] overflow-y-auto bg-white p-5 shadow-[-20px_0_50px_rgb(23_61_99/0.15)]">
         <div className="mb-7 flex items-center justify-between border-b border-brand-border pb-4">
           <h2 className="m-0 text-lg font-semibold text-ink">{title}</h2>
-          <button ref={closeRef} aria-label={t("closeFilters")} className="grid size-11 place-items-center rounded-full border border-brand-border text-ink" onClick={onClose} type="button"><CloseIcon /></button>
+          <button ref={closeRef} aria-label={t("closeFilters")} className="grid size-11 place-items-center rounded-sm border border-brand-border text-ink" onClick={onClose} type="button"><CloseIcon /></button>
         </div>
         {children}
       </div>
@@ -320,7 +320,7 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
         <header className="flex shrink-0 items-center justify-between gap-3 border-b border-brand-border bg-white px-3 py-2.5 sm:px-4">
           <button
             aria-label={t("closeProfile")}
-            className="grid size-11 shrink-0 place-items-center rounded-full text-ink transition-colors duration-150 hover:bg-brand-soft"
+            className="grid size-11 shrink-0 place-items-center rounded-sm text-ink transition-colors duration-150 hover:bg-brand-soft"
             onClick={onClose}
             ref={closeRef}
             type="button"
@@ -346,7 +346,7 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
             <>
               <div className=" px-5 py-6 sm:px-6">
                 <div className="flex items-start gap-4">
-                  <div className="relative grid size-16 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-soft text-lg font-semibold text-brand outline outline-1 outline-black/10 sm:size-20">
+                  <div className="relative grid size-16 shrink-0 place-items-center overflow-hidden rounded-sm bg-brand-soft text-lg font-semibold text-brand outline outline-1 outline-black/10 sm:size-20">
                     <ApprovedCompanyLogo alt={t("logoAlt", { name: profile.name })} className="object-cover" fill sizes="80px" url={profile.logoUrl} />
                   </div>
                   <div className="min-w-0">
@@ -380,7 +380,7 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
                   <h3 className="m-0 text-base font-semibold text-ink">{tProfile("services")}</h3>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {profile.services.map((item) => (
-                      <span className="rounded-full bg-[#eef1f4] px-2.5 py-1 text-xs font-medium text-ink" key={item}>{serviceName(item, profile.serviceNames, locale, key => t(`service.options.${key}`))}</span>
+                      <span className="rounded-sm bg-[#eef1f4] px-2.5 py-1 text-xs font-medium text-ink" key={item}>{serviceName(item, profile.serviceNames, locale, key => t(`service.options.${key}`))}</span>
                     ))}
                   </div>
                 </section>
@@ -464,7 +464,7 @@ function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onVie
   ].filter(Boolean);
   return (
     <article className="-mx-2 flex gap-4 rounded-xl px-2 py-6 transition-[background-color] duration-150 ease-out hover:bg-[#f4f7fa] sm:-mx-3 sm:gap-5 sm:px-3">
-      <div className="relative mt-0.5 grid size-12 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-soft text-sm font-semibold text-brand ring-1 ring-black/5 sm:size-14">
+      <div className="relative mt-0.5 grid size-12 shrink-0 place-items-center overflow-hidden rounded-sm bg-brand-soft text-sm font-semibold text-brand ring-1 ring-black/5 sm:size-14">
         <ApprovedCompanyLogo alt={t("logoAlt", { name: company.name })} className="object-cover" fill sizes="56px" url={company.logoUrl} />
       </div>
       <div className="min-w-0 flex-1">
@@ -478,7 +478,7 @@ function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onVie
             {company.rating !== null ? <p className="mt-1 mb-0 text-xs font-semibold text-amber-700">★ {company.rating.toFixed(1)} <span className="font-normal text-muted">{t("reviewCount", { count: company.reviewCount })}</span></p> : null}
           </div>
           <button
-            className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-brand/80 bg-white px-3.5 text-sm font-semibold text-brand shadow-[0_0_0_0_transparent] transition-[background-color,border-color,color,box-shadow,transform] duration-150 hover:border-brand hover:bg-brand hover:text-white hover:shadow-[0_6px_16px_rgb(5_79_132/0.18)] active:scale-[0.96]"
+            className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-sm border border-brand/80 bg-white px-3.5 text-sm font-semibold text-brand shadow-[0_0_0_0_transparent] transition-[background-color,border-color,color,box-shadow,transform] duration-150 hover:border-brand hover:bg-brand hover:text-white hover:shadow-[0_6px_16px_rgb(5_79_132/0.18)] active:scale-[0.96]"
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
@@ -499,7 +499,7 @@ function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onVie
           <div className="mt-3.5 flex items-center gap-2">
             <span className="sr-only">{t("portfolioPreview")}</span>
             {company.portfolio.slice(0, 3).map((item) => (
-              <div className="relative size-12 overflow-hidden rounded-lg bg-surface-muted ring-1 ring-black/5" key={`${item.title}-${item.url}`}>
+              <div className="relative size-12 overflow-hidden rounded-sm bg-surface-muted ring-1 ring-black/5" key={`${item.title}-${item.url}`}>
                 <ApprovedPortfolioImage alt={t("portfolioAlt", { title: item.title })} className="object-cover" fill sizes="48px" url={item.url} />
               </div>
             ))}
@@ -515,7 +515,7 @@ function EmptyCompanies({ onClear }: { onClear: () => void }) {
   const t = useTranslations("companyDirectory");
   return (
     <div className="rounded-2xl border border-dashed border-brand-border bg-white px-5 py-14 text-center sm:px-8">
-      <div className="mx-auto grid size-14 place-items-center rounded-full bg-brand-soft text-brand"><SearchIcon staticPosition /></div>
+      <div className="mx-auto grid size-14 place-items-center rounded-sm bg-brand-soft text-brand"><SearchIcon staticPosition /></div>
       <h2 className="mt-5 mb-0 text-xl font-semibold text-ink">{t("empty")}</h2>
       <p className="mx-auto mt-3 mb-0 max-w-md text-sm leading-6 text-muted">{t("emptyLead")}</p>
       <button className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-brand px-5 text-sm font-semibold text-white active:scale-[0.96]" onClick={onClear} type="button">{t("clear")}</button>

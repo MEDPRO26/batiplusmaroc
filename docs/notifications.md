@@ -27,8 +27,9 @@ SMS delivery.
 `notificationRecipientStates` stores a recipient's exact transactional unread
 count and the optional `readThroughAt` watermark used by mark-all. A notification
 is logically read when it has `readAt`, or when it predates the recipient's
-watermark. This makes mark-all O(1) instead of scanning or rewriting an
-unbounded inbox. New notifications are timestamped after that watermark and
+watermark. Mark-all writes one state document rather than rewriting an inbox;
+OC3.4 additionally rechecks logically unread support alerts for its visible
+count, as described below. New notifications are timestamped after that watermark and
 increment the counter in the same transaction.
 
 ## Creation contract
@@ -60,9 +61,9 @@ incrementing unread count. The same key may be used for a different recipient.
 
 - `listMyNotifications`: authenticated, recipient-derived cursor pagination,
   newest first, maximum 50 per page
-- `getMyUnreadCount`: authenticated exact count without scanning history
+- `getMyUnreadCount`: authenticated exact visible count; OC3.4 rechecks only indexed, logically unread support alerts
 - `markNotificationRead`: authenticated, recipient-owned, idempotent
-- `markAllNotificationsRead`: authenticated O(1) watermark update
+- `markAllNotificationsRead`: authenticated watermark update; visible count uses the same support access policy
 
 All four account types (`client`, `company`, `admin`, and `seo_team`) can own
 notifications. Public calls derive the recipient from Convex Auth and expose no
@@ -81,8 +82,73 @@ interpolation data.
   retries idempotent without scanning notification history.
 - `notificationRecipientStates.by_recipientUserId` reads and transactionally
   updates one recipient's unread aggregate and mark-all watermark.
+- `notifications.by_recipientUserId_and_type_and_readAt_and_createdAt` selects
+  only logically unread support alerts for current-access count corrections.
 
 No notification query performs an unbounded `collect()`.
+
+## OC3.4 — Client support notifications
+
+Client support extends the same recipient-scoped table, counter, bell and feed.
+It introduces no preferences, subscriptions, delivery channel or backfill.
+
+| New support entry | Notification type | Recipients |
+| --- | --- | --- |
+| First `free_help` request | `client_support_free_help_requested` | All current admins |
+| First `coordination_discussion` request | `client_support_coordination_requested` | All current admins |
+| Client human message | `client_support_client_message_received` | All current admins |
+| Admin human reply | `client_support_admin_reply_received` | Current owning Client only |
+
+Each event references `{ type: "client_support_entry", id: entryId }` with an
+empty payload. Server event types map to generic `notifications.events.*` FR/EN
+copy. Names, titles, contact data, message text, previews, quotes and file URLs
+are absent. The internal actor ID binds the alert to its immutable source;
+support feed DTOs expose `actorUserId: null` and only an authorized `projectId`.
+
+`clientSupport/notifications.ts` runs only on successful new-entry branches in
+the support mutation. Notification writes and unread aggregate updates are
+transactional with the entry. The existing indexed admin fan-out excludes the
+actor and applies the same stored-role eligibility as `requireAdminUser`.
+Deduplication uses `client-support:${entryId}:received` within each recipient.
+Repeated requests and normalized send retries return before the creation hook;
+read acknowledgements and queries never invoke it. No historical alerts are
+created when opening a pre-existing conversation.
+
+The four support policies are active/in-app, push-ineligible, category `null`,
+and `defaultPushEnabled: false`, regardless of existing push preferences.
+Support creates no push jobs. Existing marketplace/OC2 eligibility, scheduling,
+provider behavior and the reserved event's legacy scheduling remain unchanged.
+Push templates enumerate `PUSH_NOTIFICATION_TYPES`; `ACTIVE_NOTIFICATION_TYPES`
+now also includes active in-app-only support events.
+
+`notifications/clientSupportAccess.ts` validates the current recipient role,
+source entry/type/actor, conversation, captured Client and current Project owner
+before notification creation/deduplication, listing or individual reads. Missing
+entities and ownership mismatches fail closed. An old conversation never
+transfers to a new owner. Inaccessible support alerts disappear from the feed;
+their logically unread entries are subtracted from the existing raw aggregate.
+This scans indexed **unread support entries only**, not marketplace history or
+all support history. It costs O(unread support entries) reads, while mark-all
+still writes just one watermark state. There is no capped count or silent
+recipient truncation; very large fan-outs/unread sets remain subject to Convex
+transaction limits and fail rather than partially committing.
+
+Listing retains native pagination cursors even when a page becomes empty after
+access checks. The shared bell/feed advance such empty pages and show loading
+until exhaustion, rather than announcing an empty inbox prematurely. Already
+read support alerts recheck access via `markNotificationRead` before navigating.
+Destinations use the existing localized routes:
+
+- FR Client: `/fr/espace-client/projets/[projectId]/batiplus`
+- EN Client: `/en/client/projects/[projectId]/batiplus`
+- FR Admin: `/fr/admin/assistance?projectId=...`
+- EN Admin: `/en/admin/support?projectId=...`
+
+Notification reads and support-thread reads remain independent. Clearing alerts
+changes only notification state; support reads change only per-reader support
+positions. Clicking an alert does not request a service or create a conversation.
+The existing visible-message acknowledgment behavior applies when the thread
+actually opens. See `client-support-notifications-oc34.md` for verification.
 
 ## Step 12.2.1 event map
 
@@ -418,7 +484,7 @@ The accessible Radix dropdown requests only the newest eight records through
 the existing cursor-paginated `listMyNotifications` API. Opening it does not
 change read state. Selecting an item first awaits `markNotificationRead` and
 only navigates after success. `markAllNotificationsRead` is called once for
-the O(1) watermark operation; the UI never iterates through rows. Loading,
+the watermark operation; the UI never iterates through rows. Loading,
 empty, and safe translated error feedback reuse Batiplus workspace styling.
 
 `/[locale]/notifications` is the single authenticated history route for every

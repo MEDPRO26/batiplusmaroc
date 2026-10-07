@@ -32,6 +32,7 @@ export function ClientNavbar({ user }: { user: ClientUser }) {
   const profileHref =
     user.onboardingStatus === "completed" ? routes.clientProfile : routes.clientOnboarding;
 
+  // Travaux / Manage-work nav is a separate feature; keep the OC3 navbar on existing routes.
   const links = [
     { href: projectsHref, label: t("myProjects") },
     { href: routes.companies, label: t("findCompanies") },
@@ -102,7 +103,7 @@ export function ClientNavbarUtilities() {
   }
 
   const iconButton =
-    "relative grid size-11 shrink-0 place-items-center rounded-full border-0 bg-transparent text-ink transition-[background-color,color,scale] duration-150 active:scale-[0.96] hover:bg-brand-soft hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand";
+    "relative grid size-11 shrink-0 place-items-center rounded-sm border-0 bg-transparent text-ink transition-[background-color,color,scale] duration-150 active:scale-[0.96] hover:bg-brand-soft hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand";
 
   return (
     <div className="flex items-center gap-1 sm:gap-1.5">
@@ -110,7 +111,7 @@ export function ClientNavbarUtilities() {
         <label className="sr-only" htmlFor="client-navbar-search">{t("searchLabel")}</label>
         <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-[18px] -translate-y-1/2 text-muted" />
         <input
-          className="min-h-11 w-full rounded-full border border-brand-border bg-white pr-4 pl-10 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted/75 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
+          className="min-h-11 w-full rounded-sm border border-brand-border bg-white pr-4 pl-10 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted/75 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
           id="client-navbar-search"
           name="query"
           placeholder={t("searchPlaceholder")}
@@ -131,21 +132,21 @@ export function ClientNavbarUtilities() {
         </button>
         {searchOpen ? (
           <form
-            className="absolute top-[calc(100%+14px)] right-[-7.5rem] z-50 flex w-[min(88vw,360px)] gap-2 rounded-2xl border border-brand-border bg-white p-3 shadow-[0_18px_50px_rgb(23_61_99_/_0.14)] sm:right-0"
+            className="absolute top-[calc(100%+14px)] right-[-7.5rem] z-50 flex w-[min(88vw,360px)] gap-2 rounded-sm border border-brand-border bg-white p-3 shadow-[0_18px_50px_rgb(23_61_99_/_0.14)] sm:right-0"
             id="client-mobile-search"
             onSubmit={submitSearch}
             role="search"
           >
             <label className="sr-only" htmlFor="client-mobile-search-input">{t("searchLabel")}</label>
             <input
-              className="min-h-11 min-w-0 flex-1 rounded-xl border border-brand-border px-3 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
+              className="min-h-11 min-w-0 flex-1 rounded-sm border border-brand-border px-3 text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
               id="client-mobile-search-input"
               name="query"
               placeholder={t("searchPlaceholder")}
               ref={searchInput}
               type="search"
             />
-            <button className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand text-white active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" type="submit">
+            <button className="grid size-11 shrink-0 place-items-center rounded-sm bg-brand text-white active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" type="submit">
               <span className="sr-only">{t("submitSearch")}</span>
               <ArrowIcon />
             </button>

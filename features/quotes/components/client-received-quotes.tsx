@@ -80,7 +80,7 @@ export function ProposalOverview({ projectId }: { projectId: Id<"projects"> }) {
         {stats.map((stat) => <div className="flex flex-col-reverse" key={stat.key}><dt className="mt-0.5 text-xs text-muted">{t(stat.key)}</dt><dd className="m-0 text-xl font-semibold tracking-[-0.02em] text-ink tabular-nums">{stat.value}</dd></div>)}
       </dl>
       <p className="mt-4 mb-0 border-t border-brand-border pt-4 text-sm leading-6 text-muted">{quotes.length === 0 ? t("nextEmpty") : count("submitted") > 0 ? t("nextNew", { count: count("submitted") }) : t("nextReview")}</p>
-      {quotes.length > 0 ? <a className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand" href="#proposals">{t("review")}</a> : null}
+      {quotes.length > 0 ? <a className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-sm bg-brand px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand" href="#proposals">{t("review")}</a> : null}
     </section>
   );
 }
@@ -109,7 +109,7 @@ export function ReceivedQuoteCard({ quote, onOpen }: { quote: ReceivedQuote; onO
           <p className="m-0 text-xs text-muted">{t("submittedAt", { date: formatMarketplaceDateTime(quote.submittedAt, locale, { dateStyle: "medium" }) })}</p>
           <div className="flex flex-wrap items-center gap-2">
             {quote.company.slug ? <CompanyProfileLink slug={quote.company.slug} /> : null}
-            <button className={`inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand ${inactive ? "border border-brand-border bg-white text-ink hover:bg-surface-muted" : "bg-brand text-white hover:bg-brand-hover"}`} onClick={onOpen} type="button">{t("openQuote")}</button>
+            <button className={`inline-flex min-h-11 items-center justify-center rounded-sm px-5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand ${inactive ? "border border-brand-border bg-white text-ink hover:bg-surface-muted" : "bg-brand text-white hover:bg-brand-hover"}`} onClick={onOpen} type="button">{t("openQuote")}</button>
           </div>
         </div>
       </div>
@@ -211,7 +211,7 @@ function QuoteReviewDialog({ quoteId, onClose }: { quoteId: Id<"projectQuotes">;
             <h2 className="mt-0.5 mb-0 truncate text-xl font-semibold tracking-[-0.02em] text-ink" id="quote-review-title">{quote?.company.name ?? t("detail.title")}</h2>
             {displayedQuote ? <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1"><QuoteStatus status={displayedQuote.status} /><span className="text-xs text-muted">{t("submittedAt", { date: formatMarketplaceDateTime(displayedQuote.submittedAt, locale, { dateStyle: "medium" }) })}</span></div> : null}
           </div>
-          <button ref={closeRef} aria-label={t("close")} className="grid size-11 shrink-0 place-items-center rounded-full border border-brand-border text-ink hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={onClose} type="button"><X aria-hidden className="size-5" /></button>
+          <button ref={closeRef} aria-label={t("close")} className="grid size-11 shrink-0 place-items-center rounded-sm border border-brand-border text-ink hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={onClose} type="button"><X aria-hidden className="size-5" /></button>
         </header>
         {displayedQuote === undefined ? <QuoteDetailSkeleton label={t("loadingDetail")} /> : displayedQuote === null ? <p className="p-8 text-sm text-muted">{t("unavailable")}</p> : <QuoteReviewContent confirmDecline={confirmDecline} conversationId={openedConversationId ?? listedConversationId} conversationLookupPending={threads === undefined || (displayedQuote.status === "discussion_open" && !openedConversationId && !listedConversationId && recoveryStatus !== "failed")} conversationRecoveryPending={recoveryStatus === "pending"} error={error} onCancelDecline={() => setConfirmDecline(false)} onConfirmDecline={() => void runAction("decline")} onRecoverConversation={() => void recoverConversation()} onReview={(action) => action === "decline" ? setConfirmDecline(true) : void runAction(action)} pendingAction={pendingAction} quote={displayedQuote} success={success} />}
       </section>
@@ -257,7 +257,7 @@ export function QuoteReviewContent({ quote, conversationId = null, conversationL
             <div aria-label={t("declineConfirm.title")} role="alertdialog">
               <h3 className="m-0 text-base font-semibold text-ink">{t("declineConfirm.title")}</h3>
               <p className="mt-1 mb-0 text-sm leading-6 text-muted">{t("declineConfirm.description")}</p>
-              <div className="mt-4 flex flex-wrap gap-3"><button className="min-h-11 rounded-full bg-[#9f3f35] px-5 text-sm font-semibold text-white disabled:opacity-60" disabled={pendingAction !== null} onClick={onConfirmDecline} type="button">{pendingAction === "decline" ? t("actions.working") : t("declineConfirm.confirm")}</button><button className="min-h-11 rounded-full border border-brand-border bg-white px-5 text-sm font-semibold text-ink" onClick={onCancelDecline} type="button">{t("declineConfirm.cancel")}</button></div>
+              <div className="mt-4 flex flex-wrap gap-3"><button className="min-h-11 rounded-sm bg-[#9f3f35] px-5 text-sm font-semibold text-white disabled:opacity-60" disabled={pendingAction !== null} onClick={onConfirmDecline} type="button">{pendingAction === "decline" ? t("actions.working") : t("declineConfirm.confirm")}</button><button className="min-h-11 rounded-sm border border-brand-border bg-white px-5 text-sm font-semibold text-ink" onClick={onCancelDecline} type="button">{t("declineConfirm.cancel")}</button></div>
             </div>
           ) : canAct ? (
             <>
@@ -265,14 +265,14 @@ export function QuoteReviewContent({ quote, conversationId = null, conversationL
               <div className="flex flex-wrap items-center gap-3">
                 <ActionButton disabled={pendingAction !== null} primary icon={<MessageSquareText aria-hidden className="size-4" />} label={t("actions.openDiscussion")} onClick={() => onReview("open_discussion")} pending={pendingAction === "open_discussion"} />
                 {canShortlist ? <ActionButton disabled={pendingAction !== null} icon={<Star aria-hidden className="size-4" />} label={t("actions.shortlist")} onClick={() => onReview("shortlist")} pending={pendingAction === "shortlist"} /> : null}
-                <button className="ml-auto inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-[#8a2f28] hover:bg-[#fff4f2] disabled:opacity-60" disabled={pendingAction !== null} onClick={() => onReview("decline")} type="button">{t("actions.decline")}</button>
+                <button className="ml-auto inline-flex min-h-11 items-center rounded-sm px-3 text-sm font-semibold text-[#8a2f28] hover:bg-[#fff4f2] disabled:opacity-60" disabled={pendingAction !== null} onClick={() => onReview("decline")} type="button">{t("actions.decline")}</button>
               </div>
             </>
           ) : discussionOpen ? (
             <div aria-live="polite" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-2.5"><span aria-hidden className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-[#e9f6ee] text-[#21633d]"><Check className="size-3.5" /></span><div><h3 className="m-0 text-sm font-semibold text-ink">{t("discussionOpenedTitle")}</h3><p className="mt-0.5 mb-0 text-sm leading-5 text-muted">{t("discussionOpenedNotice")}</p></div></div>
+              <div className="flex items-start gap-2.5"><span aria-hidden className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-sm bg-[#e9f6ee] text-[#21633d]"><Check className="size-3.5" /></span><div><h3 className="m-0 text-sm font-semibold text-ink">{t("discussionOpenedTitle")}</h3><p className="mt-0.5 mb-0 text-sm leading-5 text-muted">{t("discussionOpenedNotice")}</p></div></div>
               {conversationId ? (
-                <Link className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand" href={{ pathname: routes.messagesConversation, params: { conversationId } }}>
+                <Link className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-sm bg-brand px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand" href={{ pathname: routes.messagesConversation, params: { conversationId } }}>
                   {t("continueInMessages")}<ArrowRight aria-hidden className="size-4" />
                 </Link>
               ) : conversationLookupPending ? (
@@ -280,7 +280,7 @@ export function QuoteReviewContent({ quote, conversationId = null, conversationL
               ) : (
                 <div className="text-[#6e4b20]" role="alert">
                   <p className="m-0 text-sm font-semibold">{t("conversationUnavailableTitle")}</p>
-                  <button className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bd8c52] bg-white px-4 text-sm font-semibold disabled:cursor-wait disabled:opacity-60" disabled={conversationRecoveryPending} onClick={onRecoverConversation} type="button"><RefreshCw aria-hidden className="size-4" />{conversationRecoveryPending ? t("actions.working") : t("retryConversation")}</button>
+                  <button className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-sm border border-[#bd8c52] bg-white px-4 text-sm font-semibold disabled:cursor-wait disabled:opacity-60" disabled={conversationRecoveryPending} onClick={onRecoverConversation} type="button"><RefreshCw aria-hidden className="size-4" />{conversationRecoveryPending ? t("actions.working") : t("retryConversation")}</button>
                 </div>
               )}
             </div>
@@ -319,7 +319,7 @@ function CompanyIdentity({ company }: { company: ReceivedQuote["company"] }) {
 
 function CompanyProfileLink({ slug }: { slug: string }) {
   const t = useTranslations("receivedQuotes");
-  return <Link className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={{ pathname: "/entreprises/[slug]", params: { slug } }} target="_blank">{t("viewProfile")}<ExternalLink aria-hidden className="size-4" /><span className="sr-only">{t("opensInNewTab")}</span></Link>;
+  return <Link className="inline-flex min-h-11 items-center gap-1.5 rounded-sm px-3 text-sm font-semibold text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={{ pathname: "/entreprises/[slug]", params: { slug } }} target="_blank">{t("viewProfile")}<ExternalLink aria-hidden className="size-4" /><span className="sr-only">{t("opensInNewTab")}</span></Link>;
 }
 
 function DrawerSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -327,9 +327,9 @@ function DrawerSection({ title, children }: { title: string; children: React.Rea
 }
 
 function CompanyLogo({ url, alt }: { url: string | null; alt: string }) { return <div className="relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl border border-brand-border bg-brand-soft text-sm font-semibold text-brand"><ApprovedCompanyLogo alt={alt} className="object-cover" fill sizes="44px" url={url} /></div>; }
-function QuoteStatus({ status }: { status: ReceivedQuote["status"] }) { const t = useTranslations("receivedQuotes.status"); const tone = status === "declined" ? "bg-[#fff1ef] text-[#8a2f28]" : status === "withdrawn" ? "bg-[#f0f2f3] text-muted" : status === "discussion_open" ? "bg-[#e9f6ee] text-[#21633d]" : status === "shortlisted" ? "bg-[#fff7df] text-[#72540a]" : "bg-brand-soft text-brand"; return <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${tone}`}>{t(status)}</span>; }
+function QuoteStatus({ status }: { status: ReceivedQuote["status"] }) { const t = useTranslations("receivedQuotes.status"); const tone = status === "declined" ? "bg-[#fff1ef] text-[#8a2f28]" : status === "withdrawn" ? "bg-[#f0f2f3] text-muted" : status === "discussion_open" ? "bg-[#e9f6ee] text-[#21633d]" : status === "shortlisted" ? "bg-[#fff7df] text-[#72540a]" : "bg-brand-soft text-brand"; return <span className={`shrink-0 rounded-sm px-2.5 py-1 text-[11px] font-semibold ${tone}`}>{t(status)}</span>; }
 function Metric({ label, value }: { label: string; value: string }) { return <div className="flex min-w-0 flex-col-reverse"><dt className="mt-0.5 text-xs text-muted">{label}</dt><dd className="m-0 text-sm font-semibold text-ink">{value}</dd></div>; }
 function DetailMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) { return <div className="flex gap-3"><span aria-hidden className="mt-0.5 text-muted [&>svg]:size-5">{icon}</span><div className="flex flex-col-reverse"><dt className="mt-0.5 text-xs text-muted">{label}</dt><dd className="m-0 text-sm font-semibold text-ink">{value}</dd></div></div>; }
-function ActionButton({ label, icon, onClick, pending, disabled, primary = false }: { label: string; icon: React.ReactNode; onClick: () => void; pending: boolean; disabled: boolean; primary?: boolean }) { return <button className={`inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-sm font-semibold disabled:opacity-60 ${primary ? "bg-brand text-white" : "border border-brand-border bg-white text-ink"}`} disabled={disabled} onClick={onClick} type="button">{icon}{pending ? <span className="animate-pulse">…</span> : label}</button>; }
+function ActionButton({ label, icon, onClick, pending, disabled, primary = false }: { label: string; icon: React.ReactNode; onClick: () => void; pending: boolean; disabled: boolean; primary?: boolean }) { return <button className={`inline-flex min-h-11 items-center gap-2 rounded-sm px-5 text-sm font-semibold disabled:opacity-60 ${primary ? "bg-brand text-white" : "border border-brand-border bg-white text-ink"}`} disabled={disabled} onClick={onClick} type="button">{icon}{pending ? <span className="animate-pulse">…</span> : label}</button>; }
 function ReceivedQuotesSkeleton({ label }: { label: string }) { return <section aria-busy="true" className="mt-8" role="status"><span className="sr-only">{label}</span><div className="h-7 w-48 animate-pulse rounded bg-[#dfe8ed]" /><div className="mt-4 divide-y divide-brand-border rounded-2xl border border-brand-border bg-white">{[0, 1].map((row) => <div className="flex animate-pulse gap-4 p-6" key={row}><div className="size-12 rounded-xl bg-[#e8eef2]" /><div className="flex-1 space-y-3"><div className="h-4 w-1/3 rounded bg-[#e8eef2]" /><div className="h-4 w-2/3 rounded bg-[#eef2f5]" /><div className="h-10 rounded bg-[#eef2f5]" /></div></div>)}</div></section>; }
 function QuoteDetailSkeleton({ label }: { label: string }) { return <div aria-busy="true" className="animate-pulse p-8" role="status"><span className="sr-only">{label}</span><div className="h-8 w-32 rounded bg-[#dfe8ed]" /><div className="mt-6 h-24 rounded-xl bg-[#eef2f4]" /><div className="mt-6 h-44 rounded-xl bg-[#eef2f4]" /></div>; }

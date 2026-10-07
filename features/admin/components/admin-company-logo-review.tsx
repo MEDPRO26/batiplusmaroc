@@ -15,7 +15,7 @@ import { ADMIN_PRESS } from "./admin-shell";
 export type LogoReview = FunctionReturnType<typeof api.companyLogos.index.getAdminReview>;
 type Action = "approve" | "reject" | "hide";
 const CARD = "min-w-0 rounded-[14px] border border-[#e7eaee] bg-white p-4 sm:p-5";
-const BUTTON_BASE = `min-h-11 rounded-full border px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${ADMIN_PRESS}`;
+const BUTTON_BASE = `min-h-11 rounded-sm border px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${ADMIN_PRESS}`;
 const BUTTON = `${BUTTON_BASE} border-[#d9e1ef] bg-white`;
 const PRIMARY_BUTTON = `${BUTTON_BASE} border-transparent bg-[#2f6bff] text-white`;
 

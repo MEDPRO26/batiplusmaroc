@@ -17,6 +17,8 @@ vi.mock("@/i18n/navigation", () => ({
 import {
   ProjectWizardSkeleton,
   shouldInitializeDraft,
+  WIZARD_ORDER,
+  wizardResumeStep,
 } from "./components/project-wizard";
 
 describe("project wizard contract", () => {
@@ -64,6 +66,20 @@ describe("project wizard contract", () => {
     expect(
       shouldInitializeDraft({ ...ready, submitted: false, started: true }),
     ).toBe(false);
+  });
+
+  test("asks for the project details first and resumes at the first unanswered screen", () => {
+    expect(WIZARD_ORDER).toEqual([3, 2, 1, 4, 5]);
+    const empty = { primaryCategory: null, customCategoryText: null, city: null, title: null, propertyType: null, surface: null, surfaceUnknown: false, description: null, timeline: null };
+    const details = { ...empty, title: "Apartment renovation", propertyType: "apartment" as const, surfaceUnknown: true, description: "Complete apartment renovation." };
+    expect(wizardResumeStep(empty)).toBe(3);
+    // A category saved under the previous order does not skip the details screen.
+    expect(wizardResumeStep({ ...empty, primaryCategory: "renovation" })).toBe(3);
+    expect(wizardResumeStep(details)).toBe(2);
+    expect(wizardResumeStep({ ...details, city: "rabat" })).toBe(1);
+    expect(wizardResumeStep({ ...details, city: "rabat", primaryCategory: "other" })).toBe(1);
+    expect(wizardResumeStep({ ...details, city: "rabat", primaryCategory: "renovation" })).toBe(4);
+    expect(wizardResumeStep({ ...details, city: "rabat", primaryCategory: "renovation", timeline: "flexible" })).toBe(5);
   });
 
   test("loading skeleton is announced", () => {

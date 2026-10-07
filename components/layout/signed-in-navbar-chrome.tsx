@@ -57,7 +57,7 @@ function linkHref(link: NavbarLink): ComponentProps<typeof Link>["href"] {
 }
 
 const topLevelClass =
-  "relative inline-flex min-h-11 items-center gap-1 rounded-[10px] px-2.5 text-sm font-medium text-ink transition-colors duration-150 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand data-[active=true]:text-brand data-[state=open]:text-brand after:pointer-events-none after:absolute after:inset-x-2.5 after:-bottom-[15px] after:h-0.5 after:rounded-full after:bg-brand after:opacity-0 data-[active=true]:after:opacity-100";
+  "relative inline-flex min-h-11 items-center gap-1 rounded-[10px]  px-2.5 text-sm font-medium text-ink transition-colors duration-150 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand data-[active=true]:text-brand data-[state=open]:text-brand after:pointer-events-none after:absolute after:inset-x-2.5 after:-bottom-[15px] after:h-0.5 after:rounded-sm after:bg-brand after:opacity-0 data-[active=true]:after:opacity-100";
 
 export function SignedInNavbarChrome({
   logo,
@@ -98,7 +98,7 @@ export function SignedInNavbarChrome({
             ),
           )}
         </nav>
-        <div className="ml-auto flex items-center justify-end gap-1.5 sm:gap-2.5 lg:gap-3">
+        <div className="ml-auto flex items-center justify-end gap-1.5 sm:gap-2.5 lg:gap-3 ">
           {utilities}
           {cta ? (
             <Link
@@ -331,7 +331,7 @@ export function NavbarLoadingShell() {
         <div className="skeleton-block h-6 w-28 rounded-md" />
         <div className="flex items-center gap-3">
           <div className="skeleton-block hidden h-11 w-28 rounded-[11px] sm:block" />
-          <div className="skeleton-block size-11 rounded-full" />
+          <div className="skeleton-block size-11 rounded-sm" />
         </div>
       </div>
     </header>

@@ -64,8 +64,8 @@ export function GlobalNotFoundContent({
           <div className="mx-auto grid w-full max-w-[1180px] items-center gap-10 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:gap-20">
             <div className="relative min-h-[240px] overflow-hidden rounded-[28px] bg-brand-dark p-7 text-white shadow-[0_28px_80px_rgb(23_61_99_/_0.18)] sm:min-h-[340px] sm:p-10 lg:min-h-[430px]">
               <div aria-hidden className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgb(255_255_255_/_0.28)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255_/_0.28)_1px,transparent_1px)] [background-size:36px_36px]" />
-              <div aria-hidden className="absolute -right-16 -bottom-24 size-72 rounded-full border border-white/15 sm:size-96" />
-              <div aria-hidden className="absolute -right-4 -bottom-16 size-48 rounded-full border border-white/15 sm:size-64" />
+              <div aria-hidden className="absolute -right-16 -bottom-24 size-72 rounded-sm border border-white/15 sm:size-96" />
+              <div aria-hidden className="absolute -right-4 -bottom-16 size-48 rounded-sm border border-white/15 sm:size-64" />
               <div className="relative flex min-h-[190px] flex-col justify-between sm:min-h-[260px] lg:min-h-[350px]">
                 <p className="m-0 text-[0.68rem] font-bold tracking-[0.2em] text-white/65 uppercase">{copy.kicker}</p>
                 <h1 className="m-0 text-[clamp(6.5rem,22vw,12.5rem)] leading-[0.72] font-bold tracking-[-0.08em] text-white! select-none">404</h1>

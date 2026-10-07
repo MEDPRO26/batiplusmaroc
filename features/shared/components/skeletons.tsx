@@ -28,7 +28,7 @@ export function CardSkeleton({ className }: { className?: string }) {
       <Skeleton className="h-36 w-full rounded-xl" />
       <Skeleton className="mt-4 h-5 w-3/4" />
       <Skeleton className="mt-2 h-4 w-1/2" />
-      <Skeleton className="mt-5 h-10 w-28 rounded-full" />
+      <Skeleton className="mt-5 h-10 w-28 rounded-sm" />
     </div>
   );
 }
@@ -42,7 +42,7 @@ export function CompanyCardSkeleton() {
         <Skeleton className="h-4 w-16" />
         <Skeleton className="h-4 w-20" />
       </div>
-      <Skeleton className="mt-5 h-10 w-full rounded-full" />
+      <Skeleton className="mt-5 h-10 w-full rounded-sm" />
     </div>
   );
 }
@@ -56,7 +56,7 @@ export function ProjectCardSkeleton() {
       <Skeleton className="mt-2 h-4 w-2/3" />
       <div className="mt-5 flex justify-between">
         <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-9 w-28 rounded-full" />
+        <Skeleton className="h-9 w-28 rounded-sm" />
       </div>
     </div>
   );
@@ -66,7 +66,7 @@ export function ProposalCardSkeleton() {
   return (
     <div className="rounded-2xl border border-brand-border bg-white p-5">
       <div className="flex items-center gap-3">
-        <Skeleton className="size-10 rounded-full" />
+        <Skeleton className="size-10 rounded-sm" />
         <div className="flex-1">
           <Skeleton className="h-4 w-40" />
           <Skeleton className="mt-2 h-3 w-24" />
@@ -74,7 +74,7 @@ export function ProposalCardSkeleton() {
       </div>
       <Skeleton className="mt-4 h-4 w-full" />
       <Skeleton className="mt-2 h-4 w-3/4" />
-      <Skeleton className="mt-5 h-10 w-32 rounded-full" />
+      <Skeleton className="mt-5 h-10 w-32 rounded-sm" />
     </div>
   );
 }
@@ -104,7 +104,7 @@ export function ProfileSectionSkeleton() {
   return (
     <div className="rounded-2xl border border-brand-border bg-white p-5 sm:p-7">
       <div className="flex items-center gap-4">
-        <Skeleton className="size-16 rounded-full" />
+        <Skeleton className="size-16 rounded-sm" />
         <div className="flex-1">
           <Skeleton className="h-5 w-40" />
           <Skeleton className="mt-2 h-4 w-56" />
@@ -123,7 +123,7 @@ export function FormSkeleton({ label }: { label: string }) {
       <Skeleton className="h-11 w-full" />
       <Skeleton className="h-11 w-full" />
       <Skeleton className="h-24 w-full" />
-      <Skeleton className="h-12 w-full rounded-full" />
+      <Skeleton className="h-12 w-full rounded-sm" />
     </div>
   );
 }

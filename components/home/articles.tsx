@@ -128,7 +128,7 @@ export async function Articles() {
                   </Link>
                   <p className="mt-5 mb-0">
                     <Link
-                      className="inline-flex rounded-full bg-surface-muted px-3 py-1 text-[0.72rem] font-medium text-muted hover:text-ink"
+                      className="inline-flex rounded-sm bg-surface-muted px-3 py-1 text-[0.72rem] font-medium text-muted hover:text-ink"
                       href={article.categoryHref}
                     >
                       {tItems(`${article.id}.category`)}

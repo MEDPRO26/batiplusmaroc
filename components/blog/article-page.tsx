@@ -78,7 +78,7 @@ export function ArticlePage({ article }: { article: BlogArticle }) {
             <p className="mb-4 text-[0.68rem] font-bold tracking-[0.18em] text-[#07598e] uppercase">À lire ensuite</p>
             <h2 className="m-0 max-w-3xl text-[clamp(1.8rem,4vw,3.2rem)] leading-[1.08] text-[#111820]!"><Link className="hover:text-[#07598e]" href={nextArticle.href}>{nextArticle.title}</Link></h2>
           </div>
-          <Link className="grid size-14 place-items-center rounded-full border border-[#b9c8d1] text-xl text-[#07598e] transition hover:bg-[#07598e] hover:text-white!" href={nextArticle.href} aria-label={`Lire : ${nextArticle.title}`}>↗</Link>
+          <Link className="grid size-14 place-items-center rounded-sm border border-[#b9c8d1] text-xl text-[#07598e] transition hover:bg-[#07598e] hover:text-white!" href={nextArticle.href} aria-label={`Lire : ${nextArticle.title}`}>↗</Link>
         </div>
       </footer>
     </article>

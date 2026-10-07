@@ -26,7 +26,7 @@ export function ServiceProjectProof() {
             <article key={title} className="overflow-hidden rounded-[24px] border border-slate-200/70 bg-white">
               <figure className="group relative m-0 min-h-[360px] overflow-hidden bg-brand-soft">
                 <Image src={image} alt={alt} fill sizes="(max-width: 767px) 100vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
-                <span className="absolute top-5 left-5 grid size-10 place-items-center rounded-full bg-white/92 text-[0.62rem] font-bold text-brand backdrop-blur">0{index + 1}</span>
+                <span className="absolute top-5 left-5 grid size-10 place-items-center rounded-sm bg-white/92 text-[0.62rem] font-bold text-brand backdrop-blur">0{index + 1}</span>
               </figure>
               <div className="p-6 sm:p-7">
                 <p className="mb-3 text-[0.64rem] font-bold tracking-[0.15em] text-brand uppercase">{category}</p>

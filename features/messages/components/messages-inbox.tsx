@@ -57,8 +57,8 @@ export function MessagePdfCard({ fileName, sizeBytes, href, label, actionLabel, 
   onRemove?: () => void;
   pendingLabel?: string;
 }) {
-  const content = <><span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-lg bg-red-50 text-xs font-bold text-red-700">PDF</span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold" title={fileName}>{fileName}</span><span className="block text-xs opacity-75">{formatMessageFileSize(sizeBytes)}{pendingLabel ? ` · ${pendingLabel}` : ""}</span></span></>;
-  return <div aria-label={label} className="mt-2 flex min-w-0 items-center gap-2 rounded-xl border border-current/20 bg-white/10 p-2.5">{href ? <a className="flex min-w-0 flex-1 items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current" href={href} rel="noreferrer" target="_blank" title={fileName}>{content}<span className="shrink-0 text-xs font-semibold underline-offset-2 hover:underline">{actionLabel} →</span></a> : <div className="flex min-w-0 flex-1 items-center gap-2">{content}</div>}{onRemove ? <button aria-label={actionLabel} className="grid size-9 shrink-0 place-items-center rounded-full border border-current/20 text-lg hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current" onClick={onRemove} type="button">×</button> : null}</div>;
+  const content = <><span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-sm bg-red-50 text-xs font-bold text-red-700">PDF</span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold" title={fileName}>{fileName}</span><span className="block text-xs opacity-75">{formatMessageFileSize(sizeBytes)}{pendingLabel ? ` · ${pendingLabel}` : ""}</span></span></>;
+  return <div aria-label={label} className="mt-2 flex min-w-0 items-center gap-2 rounded-xl border border-current/20 bg-white/10 p-2.5">{href ? <a className="flex min-w-0 flex-1 items-center gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current" href={href} rel="noreferrer" target="_blank" title={fileName}>{content}<span className="shrink-0 text-xs font-semibold underline-offset-2 hover:underline">{actionLabel} →</span></a> : <div className="flex min-w-0 flex-1 items-center gap-2">{content}</div>}{onRemove ? <button aria-label={actionLabel} className="grid size-9 shrink-0 place-items-center rounded-sm border border-current/20 text-lg hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current" onClick={onRemove} type="button">×</button> : null}</div>;
 }
 
 export function resolveMessagesRedirect(user: DashboardUser) {
@@ -221,7 +221,7 @@ export function MessagesInboxView({
                         <p className="mt-0.5 mb-0 flex min-w-0 items-center gap-2 text-[0.8125rem] font-medium text-ink/85">
                           <span className="min-w-0 truncate">{thread.projectTitle ?? t("untitledProject")}</span>
                           {thread.status === "closed" ? (
-                            <span className="shrink-0 rounded-full bg-surface-muted px-1.5 py-px text-[10px] font-semibold text-muted">
+                            <span className="shrink-0 rounded-sm bg-surface-muted px-1.5 py-px text-[10px] font-semibold text-muted">
                               {t("statusClosed")}
                             </span>
                           ) : null}
@@ -235,7 +235,7 @@ export function MessagesInboxView({
                             {thread.preview ?? t("noMessagesYet")}
                           </p>
                           {thread.unread ? (
-                            <span className="size-2 shrink-0 rounded-full bg-brand">
+                            <span className="size-2 shrink-0 rounded-sm bg-brand">
                               <span className="sr-only">{t("unread")}</span>
                             </span>
                           ) : null}
@@ -256,7 +256,7 @@ export function MessagesInboxView({
           aria-label={t("threadPane")}
           className="flex min-h-[50vh] flex-1 flex-col items-center justify-center px-6 py-16 text-center"
         >
-          <span aria-hidden className="grid size-14 place-items-center rounded-lg bg-brand-soft text-brand">
+          <span aria-hidden className="grid size-14 place-items-center rounded-sm bg-brand-soft text-brand">
             <ChatIcon />
           </span>
           <h2 className="mt-5 mb-0 text-[1.4rem] font-semibold tracking-[-0.03em] text-ink">{t("welcomeTitle")}</h2>
@@ -433,11 +433,11 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
   <section aria-label={t("threadPane")} className="flex min-h-[70dvh] min-w-0 flex-1 flex-col lg:min-h-0">
     <header className="flex items-center justify-between gap-3 border-b border-brand-border px-4 py-3 sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
-        <Link aria-label={t("backToConversations")} className="grid size-11 shrink-0 place-items-center rounded-full border border-brand-border text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:hidden" href={routes.messages}>←</Link>
+        <Link aria-label={t("backToConversations")} className="grid size-11 shrink-0 place-items-center rounded-sm border border-brand-border text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand lg:hidden" href={routes.messages}>←</Link>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h2 className="m-0 truncate text-lg font-semibold tracking-[-0.01em] text-ink">{conversation.otherPartyName || t("unknownParty")}</h2>
-            {conversation.status === "closed" ? <span className="shrink-0 rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-semibold text-muted">{t("statusClosed")}</span> : null}
+            {conversation.status === "closed" ? <span className="shrink-0 rounded-sm bg-surface-muted px-2 py-0.5 text-[11px] font-semibold text-muted">{t("statusClosed")}</span> : null}
           </div>
           <Link className="mt-0.5 flex min-w-0 items-center gap-1.5 text-sm text-muted hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={projectHref}>
             <ProjectIcon />
@@ -449,7 +449,7 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
         aria-controls="conversation-context"
         aria-expanded={contextVisible}
         aria-label={contextVisible ? t("context.close") : t("context.open")}
-        className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-muted transition-colors hover:bg-brand-soft hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand aria-expanded:bg-brand-soft aria-expanded:text-brand"
+        className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-sm border-0 bg-transparent text-muted transition-colors hover:bg-brand-soft hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand aria-expanded:bg-brand-soft aria-expanded:text-brand"
         onClick={toggleContext}
         ref={contextToggleRef}
         title={contextVisible ? t("context.close") : t("context.open")}
@@ -460,7 +460,7 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
     </header>
     {conversation.quoteId ? <ConversationMarketplaceWorkflow conversationId={conversationId} /> : null}
     <div aria-live="polite" aria-relevant="additions text" className="flex flex-1 flex-col overflow-y-auto bg-[#fbfcfd] px-4 py-5 sm:px-8" role="log">
-      {status === "CanLoadMore" ? <button className="mx-auto mb-5 min-h-11 rounded-full border border-brand-border bg-white px-4 text-sm font-semibold text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={() => loadMore(30)} type="button">{t("loadOlder")}</button> : null}
+      {status === "CanLoadMore" ? <button className="mx-auto mb-5 min-h-11 rounded-sm border border-brand-border bg-white px-4 text-sm font-semibold text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={() => loadMore(30)} type="button">{t("loadOlder")}</button> : null}
       {status === "LoadingMore" ? <p className="mb-5 text-center text-sm text-muted">{t("loadingOlder")}</p> : null}
       {ordered.length === 0 ? <div className="my-auto text-center"><h3 className="m-0 text-lg font-semibold text-ink">{t("startConversation")}</h3><p className="mt-2 mb-0 text-sm text-muted">{t("startConversationDescription")}</p></div> : <ol className="m-0 mt-auto list-none space-y-3 p-0">{ordered.map((message) => <li className={`flex ${message.isMine ? "justify-end" : "justify-start"}`} key={message.id}><div className={`max-w-[min(88%,38rem)] overflow-hidden rounded-2xl px-4 py-3 ${message.isMine ? "rounded-br-md bg-brand text-white" : "rounded-bl-md border border-brand-border bg-white text-ink"}`}>{message.body ? <p className="m-0 whitespace-pre-wrap break-words text-sm leading-6">{message.body}</p> : null}{message.attachment ? <MessagePdfCard actionLabel={t("openPdf")} fileName={message.attachment.fileName} href={message.attachment.downloadUrl} label={t("pdfAttachment")} sizeBytes={message.attachment.sizeBytes} /> : null}<time className={`mt-1 block text-end text-[11px] ${message.isMine ? "text-white/75" : "text-muted"}`} dateTime={new Date(message.createdAt).toISOString()}>{formatMarketplaceDateTime(message.createdAt, locale, { hour: "2-digit", minute: "2-digit" })}</time></div></li>)}</ol>}
       <div ref={endRef} />
@@ -469,7 +469,7 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
       {error ? <p className="mb-3 rounded-xl bg-[#fff4f2] px-4 py-3 text-sm text-[#8a2f28]" role="alert">{error}</p> : null}
       {attachment ? <div className="mb-3 max-w-lg text-ink"><MessagePdfCard actionLabel={t("removeAttachment")} fileName={attachment.fileName} label={t("pdfAttachment")} onRemove={() => void removeAttachment()} pendingLabel={attachment.status === "uploading" ? t("uploadingAttachment") : t("attachmentReady")} sizeBytes={attachment.sizeBytes} /></div> : null}
       <label className="sr-only" htmlFor="message-composer">{t("composerLabel")}</label>
-      <div className="flex items-end gap-2 sm:gap-3"><textarea className="max-h-40 min-h-12 min-w-0 flex-1 resize-y rounded-2xl border border-brand-border px-4 py-3 text-sm text-ink outline-none focus:border-brand focus-visible:shadow-[0_0_0_3px_rgb(5_79_132/0.14)]" id="message-composer" maxLength={4000} onChange={(event) => setBody(event.target.value)} placeholder={t("composerPlaceholder")} rows={1} value={body} />{accountType === "company" ? <><input accept="application/pdf,.pdf" className="sr-only" onChange={(event) => void onAttachmentChange(event)} ref={fileInputRef} type="file" /><button aria-label={t("attachPdf")} className="grid size-12 shrink-0 place-items-center rounded-full border border-brand-border text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50" disabled={sending || attachment?.status === "uploading"} onClick={() => fileInputRef.current?.click()} title={t("attachPdf")} type="button"><PaperclipIcon /></button></> : null}<button className="min-h-12 shrink-0 rounded-full bg-brand px-4 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 sm:px-5" disabled={sending || attachment?.status === "uploading" || (!body.trim() && attachment?.status !== "ready")} type="submit">{sending ? t("sending") : t("send")}</button></div>
+      <div className="flex items-end gap-2 sm:gap-3"><textarea className="max-h-40 min-h-12 min-w-0 flex-1 resize-y rounded-2xl border border-brand-border px-4 py-3 text-sm text-ink outline-none focus:border-brand focus-visible:shadow-[0_0_0_3px_rgb(5_79_132/0.14)]" id="message-composer" maxLength={4000} onChange={(event) => setBody(event.target.value)} placeholder={t("composerPlaceholder")} rows={1} value={body} />{accountType === "company" ? <><input accept="application/pdf,.pdf" className="sr-only" onChange={(event) => void onAttachmentChange(event)} ref={fileInputRef} type="file" /><button aria-label={t("attachPdf")} className="grid size-12 shrink-0 place-items-center rounded-sm border border-brand-border text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50" disabled={sending || attachment?.status === "uploading"} onClick={() => fileInputRef.current?.click()} title={t("attachPdf")} type="button"><PaperclipIcon /></button></> : null}<button className="min-h-12 shrink-0 rounded-sm bg-brand px-4 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 sm:px-5" disabled={sending || attachment?.status === "uploading" || (!body.trim() && attachment?.status !== "ready")} type="submit">{sending ? t("sending") : t("send")}</button></div>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-2"><div>{accountType === "company" ? <p className="m-0 text-xs text-muted">{t("finalQuoteNotice")}</p> : null}</div><p className="m-0 text-end text-xs text-muted">{t("characterCount", { count: body.length, max: 4000 })}</p></div>
     </form> : <p className="m-0 border-t border-brand-border bg-surface-muted px-5 py-4 text-sm text-muted">{t("closedNotice")}</p>}
   </section>
@@ -481,7 +481,7 @@ function ActiveConversation({ accountType, conversationId }: { accountType: "cli
   >
     <div className="sticky top-0 z-10 flex items-center justify-between border-b border-brand-border bg-white px-5 py-3">
       <h2 className="m-0 text-sm font-semibold text-ink">{t("context.title")}</h2>
-      <button aria-label={t("context.close")} className="grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-muted hover:bg-brand-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={closeContext} ref={contextCloseRef} type="button">
+      <button aria-label={t("context.close")} className="grid size-9 cursor-pointer place-items-center rounded-sm border-0 bg-transparent text-muted hover:bg-brand-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={closeContext} ref={contextCloseRef} type="button">
         <svg aria-hidden className="size-4" fill="none" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" /></svg>
       </button>
     </div>
@@ -514,7 +514,7 @@ function ThreadAvatar({ name, url, company }: { name: string; url: string | null
   return (
     <span
       aria-hidden
-      className="relative mt-0.5 grid size-10 shrink-0 place-items-center overflow-hidden rounded-full border border-brand-border bg-brand-soft text-xs font-semibold text-brand"
+      className="relative mt-0.5 grid size-10 shrink-0 place-items-center overflow-hidden rounded-sm border border-brand-border bg-brand-soft text-xs font-semibold text-brand"
     >
       {company ? <ApprovedCompanyLogo alt="" className="object-cover" fill sizes="40px" url={url} /> : url ? <Image alt="" className="object-cover" fill sizes="40px" src={url} /> : initials}
     </span>

@@ -32,7 +32,7 @@ export async function ExpertiseGrid() {
                 sizes="(max-width: 639px) 78vw, (max-width: 1023px) 300px, (max-width: 1279px) 260px, 280px"
               />
               <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/10 to-transparent" aria-hidden="true" />
-              <span className="absolute top-5 left-5 rounded-full bg-black/20 px-3 py-1.5 text-xs font-semibold tracking-wider text-white backdrop-blur-sm" aria-hidden="true">
+              <span className="absolute top-5 left-5 rounded-sm bg-black/20 px-3 py-1.5 text-xs font-semibold tracking-wider text-white backdrop-blur-sm" aria-hidden="true">
                 {item.number}
               </span>
               <h3 className="absolute right-5 bottom-5 left-5 text-xl leading-tight font-semibold text-white!">{tItems(`${item.id}.title`)}</h3>

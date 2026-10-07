@@ -72,6 +72,16 @@
     "myWorkspace": "My workspace",
     "portfolio": "Portfolio",
     "clientMain": "Client navigation",
+    "client": {
+      "projects": "Projects",
+      "manageHeading": "Manage projects and proposals",
+      "companies": "Find companies",
+      "browseCompanies": "Browse companies",
+      "manageWork": "Manage work",
+      "workHeading": "Active and past work",
+      "contracts": "Your contracts",
+      "allProjects": "Projects and proposals"
+    },
     "companyMain": "Company navigation",
     "companySuspended": {
       "message": "Your marketplace access is temporarily suspended. You can still manage your profile, documents, messages, and existing obligations.",
@@ -2050,6 +2060,8 @@
     "autosaveHint": "Saved after each step",
     "back": "Back",
     "continue": "Continue",
+    "nextStep": "Next: {step}",
+    "editField": "Edit {field}",
     "reviewProject": "Review project",
     "saveAndExit": "Save and exit",
     "publishing": "Publishing…",
@@ -2105,6 +2117,10 @@
       "neighborhood": "Neighborhood or area",
       "title": "Project title",
       "titlePlaceholder": "For example: Renovate a 120 m² apartment",
+      "titleExamplesTitle": "Example titles",
+      "titleExample1": "Renovate a 120 m² apartment in Casablanca",
+      "titleExample2": "Build a two-storey villa with a pool",
+      "titleExample3": "Waterproof and repaint a building façade",
       "propertyType": "Property type",
       "propertyTypePlaceholder": "Choose a property type",
       "surface": "Surface in m²",
@@ -2360,6 +2376,48 @@
     "postCard": {
       "title": "Post a project",
       "description": "Tell us what you need and connect with qualified construction companies."
+    },
+    "stats": {
+      "label": "Project summary",
+      "drafts": "Drafts",
+      "review": "In review",
+      "active": "Active",
+      "completed": "Completed"
+    }
+  },
+  "clientWork": {
+    "metaTitle": "Manage work",
+    "metaDescription": "Your Batiplus projects and contracts in one place.",
+    "label": "Manage work",
+    "tabsLabel": "Work views",
+    "tabs": {
+      "projects": "All projects",
+      "contracts": "All contracts"
+    },
+    "postProject": "Post a new project",
+    "searchProjects": "Search projects",
+    "searchContracts": "Search by project name",
+    "loading": "Loading your work",
+    "projectCount": "{count, plural, one {# project} other {# projects}}",
+    "created": "Created {date}",
+    "noResults": "Nothing matches your search.",
+    "noProjectsTitle": "You don’t have any projects yet.",
+    "noProjectsLead": "Post a project to receive proposals from verified companies.",
+    "noContractsTitle": "You don’t have any contracts yet.",
+    "noContractsLead": "Your active and past contracts appear here once you select a company for a project.",
+    "reviewProjects": "Review your projects",
+    "contract": {
+      "loading": "Loading contract…",
+      "company": "Company",
+      "amount": "Agreed amount",
+      "started": "Started {date}",
+      "completed": "Completed {date}",
+      "viewProject": "View project",
+      "status": {
+        "active": "Active",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
     }
   },
   "clientProfileManager": {
@@ -2609,6 +2667,10 @@
       "company_admin_message_received": "{companyName} sent Batiplus a new operational message.",
       "company_suspended": "Marketplace access for {companyName} has been suspended. Open Batiplus support for next steps.",
       "company_reactivated": "Marketplace access for {companyName} has been restored.",
+      "client_support_free_help_requested": "A Client requested free help from Batiplus.",
+      "client_support_coordination_requested": "A Client wants to discuss site coordination.",
+      "client_support_client_message_received": "A Client sent a new support message.",
+      "client_support_admin_reply_received": "The Batiplus team replied to your support conversation.",
       "fallback": "Marketplace update"
     }
   },
@@ -2774,18 +2836,41 @@
     "title": "Deals & commissions",
     "lead": "Track commission owed by selected companies to Batiplus. Recording payment is an administrative confirmation only.",
     "filtersLabel": "Commission status",
-    "status": { "all": "All", "due": "Due", "paid": "Paid" },
+    "status": {
+      "all": "All",
+      "due": "Due",
+      "paid": "Paid"
+    },
     "searchLabel": "Search Deals",
     "searchPlaceholder": "Search project or company",
     "loading": "Loading commission obligations…",
     "empty": "No commission obligations match these filters.",
     "loadMore": "Load more",
     "loadingMore": "Loading…",
-    "columns": { "project": "Project", "company": "Company", "dealAmount": "Deal amount", "commission": "Commission owed", "statusLabel": "Status", "created": "Created", "action": "Action" },
+    "columns": {
+      "project": "Project",
+      "company": "Company",
+      "dealAmount": "Deal amount",
+      "commission": "Commission owed",
+      "statusLabel": "Status",
+      "created": "Created",
+      "action": "Action"
+    },
     "view": "View details",
     "commissionOf": "{rate} of {amount}",
     "close": "Close",
-    "fields": { "dealAmount": "Agreed Deal amount", "commission": "Commission owed", "rate": "Snapshotted rate", "configVersion": "Commission config version", "status": "Payment status", "created": "Deal created", "paidAt": "Paid at", "paidBy": "Recorded by", "reference": "Payment reference", "note": "Internal note" },
+    "fields": {
+      "dealAmount": "Agreed Deal amount",
+      "commission": "Commission owed",
+      "rate": "Snapshotted rate",
+      "configVersion": "Commission config version",
+      "status": "Payment status",
+      "created": "Deal created",
+      "paidAt": "Paid at",
+      "paidBy": "Recorded by",
+      "reference": "Payment reference",
+      "note": "Internal note"
+    },
     "markPaidTitle": "Mark commission as paid",
     "markPaidHelp": "Confirm that Batiplus received this commission from the company. This does not process a payment.",
     "referenceLabel": "Payment reference (optional)",
@@ -2794,7 +2879,11 @@
     "confirmPaid": "Confirm paid",
     "saving": "Saving…",
     "paidSuccess": "Commission marked as paid.",
-    "errors": { "alreadyPaid": "This commission has already been marked as paid.", "invalidInput": "Check the payment reference or note.", "generic": "The commission status could not be updated. Try again." }
+    "errors": {
+      "alreadyPaid": "This commission has already been marked as paid.",
+      "invalidInput": "Check the payment reference or note.",
+      "generic": "The commission status could not be updated. Try again."
+    }
   },
   "adminReviews": {
     "metaTitle": "Review moderation | Batiplus",
@@ -2802,7 +2891,11 @@
     "title": "Reviews",
     "lead": "Review client feedback and control public visibility. Review content is immutable and cannot be edited here.",
     "filtersLabel": "Review visibility",
-    "status": { "all": "All", "visible": "Visible", "hidden": "Hidden" },
+    "status": {
+      "all": "All",
+      "visible": "Visible",
+      "hidden": "Hidden"
+    },
     "searchLabel": "Search reviews",
     "searchPlaceholder": "Search company, project, client, or comment",
     "loading": "Loading reviews…",
@@ -3289,7 +3382,11 @@
       "declined": "Declined",
       "cancelled": "Cancelled"
     },
-    "actor": { "client": "Client", "company": "Company", "admin": "Administrator" },
+    "actor": {
+      "client": "Client",
+      "company": "Company",
+      "admin": "Administrator"
+    },
     "risk": {
       "scheduling_pending": "Scheduling pending",
       "visit_follow_up_needed": "Visit follow-up needed"
@@ -3328,7 +3425,10 @@
       "declined": "Declined",
       "withdrawn": "Withdrawn"
     },
-    "conversationStatus": { "active": "Active", "closed": "Closed" },
+    "conversationStatus": {
+      "active": "Active",
+      "closed": "Closed"
+    },
     "sections": {
       "project": "Project",
       "client": "Client",
@@ -3450,7 +3550,10 @@
       "paid": "Total commission paid",
       "count": "Due obligations"
     },
-    "status": { "due": "Due", "paid": "Paid" },
+    "status": {
+      "due": "Due",
+      "paid": "Paid"
+    },
     "columns": {
       "project": "Project",
       "dealAmount": "Deal amount",
@@ -3792,8 +3895,16 @@
         "allLocales": "All languages",
         "allStatuses": "All statuses"
       },
-      "locales": { "fr": "French", "en": "English" },
-      "statuses": { "draft": "Draft", "review": "In review", "published": "Published", "archived": "Archived" },
+      "locales": {
+        "fr": "French",
+        "en": "English"
+      },
+      "statuses": {
+        "draft": "Draft",
+        "review": "In review",
+        "published": "Published",
+        "archived": "Archived"
+      },
       "columns": {
         "title": "Title",
         "locale": "Language",
@@ -3870,7 +3981,10 @@
         "metaDescription": "{count}/180 characters",
         "canonical": "Optional. Must use https://batiplusmaroc.com or www.batiplusmaroc.com."
       },
-      "locales": { "fr": "French", "en": "English" },
+      "locales": {
+        "fr": "French",
+        "en": "English"
+      },
       "intents": {
         "informational": "Informational",
         "commercial": "Commercial",
@@ -3878,7 +3992,9 @@
         "navigational": "Navigational",
         "local": "Local"
       },
-      "options": { "none": "None" },
+      "options": {
+        "none": "None"
+      },
       "media": {
         "selectFeatured": "Choose featured image",
         "selectOg": "Choose Open Graph image",
@@ -3952,25 +4068,69 @@
         "allLocales": "All languages",
         "missingOnly": "Missing metadata only"
       },
-      "locales": { "fr": "French", "en": "English" },
-      "columns": { "page": "Page", "locale": "Language", "metadata": "Metadata", "canonical": "Canonical", "robots": "Robots", "updated": "Updated", "actions": "Actions" },
+      "locales": {
+        "fr": "French",
+        "en": "English"
+      },
+      "columns": {
+        "page": "Page",
+        "locale": "Language",
+        "metadata": "Metadata",
+        "canonical": "Canonical",
+        "robots": "Robots",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
       "ready": "Ready",
       "missing": "Missing",
       "neverUpdated": "Not configured",
       "editNamed": "Edit {page} metadata in {locale}",
       "editTitle": "Edit {page}",
       "close": "Close page metadata editor",
-      "fields": { "seoTitle": "SEO title", "metaDescription": "Meta description", "canonicalUrl": "Canonical URL", "robots": "Robots directive", "ogTitle": "Open Graph title", "ogDescription": "Open Graph description", "ogImage": "Open Graph image" },
-      "hints": { "seoTitle": "{count}/70 characters", "metaDescription": "{count}/180 characters", "canonical": "Optional. Must use an approved Batiplus HTTPS domain without a query string or fragment." },
+      "fields": {
+        "seoTitle": "SEO title",
+        "metaDescription": "Meta description",
+        "canonicalUrl": "Canonical URL",
+        "robots": "Robots directive",
+        "ogTitle": "Open Graph title",
+        "ogDescription": "Open Graph description",
+        "ogImage": "Open Graph image"
+      },
+      "hints": {
+        "seoTitle": "{count}/70 characters",
+        "metaDescription": "{count}/180 characters",
+        "canonical": "Optional. Must use an approved Batiplus HTTPS domain without a query string or fragment."
+      },
       "chooseImage": "Choose Open Graph image",
       "removeImage": "Remove Open Graph image",
-      "critical": { "title": "Critical page protection", "description": "I understand that noindex removes the homepage from search results and explicitly confirm this change." },
+      "critical": {
+        "title": "Critical page protection",
+        "description": "I understand that noindex removes the homepage from search results and explicitly confirm this change."
+      },
       "cancel": "Cancel",
       "save": "Save metadata",
       "saving": "Saving…",
-      "success": { "saved": "Page metadata saved." },
-      "errors": { "canonicalConflict": "This canonical URL is already assigned to another SEO record.", "invalidCanonical": "Use a valid Batiplus HTTPS canonical URL without a query string or fragment.", "confirmNoindex": "Explicitly confirm noindex for this critical page.", "invalidMedia": "Choose an active Media Library image.", "generic": "The page metadata could not be saved." },
-      "pageNames": { "homepage": "Homepage", "companiesDirectory": "Companies directory", "projectsDirectory": "Projects directory", "realisationsIndex": "Realisations", "servicesIndex": "Services", "structuralWork": "Structural work", "finishingWork": "Finishing work", "about": "About Batiplus", "contact": "Contact" }
+      "success": {
+        "saved": "Page metadata saved."
+      },
+      "errors": {
+        "canonicalConflict": "This canonical URL is already assigned to another SEO record.",
+        "invalidCanonical": "Use a valid Batiplus HTTPS canonical URL without a query string or fragment.",
+        "confirmNoindex": "Explicitly confirm noindex for this critical page.",
+        "invalidMedia": "Choose an active Media Library image.",
+        "generic": "The page metadata could not be saved."
+      },
+      "pageNames": {
+        "homepage": "Homepage",
+        "companiesDirectory": "Companies directory",
+        "projectsDirectory": "Projects directory",
+        "realisationsIndex": "Realisations",
+        "servicesIndex": "Services",
+        "structuralWork": "Structural work",
+        "finishingWork": "Finishing work",
+        "about": "About Batiplus",
+        "contact": "Contact"
+      }
     },
     "media": {
       "metaTitle": "SEO Media Library",
@@ -3983,7 +4143,10 @@
       "searchLabel": "Search media",
       "searchPlaceholder": "Search by filename",
       "statusLabel": "Filter media status",
-      "statuses": { "active": "Active images", "archived": "Archived images" },
+      "statuses": {
+        "active": "Active images",
+        "archived": "Archived images"
+      },
       "gridLabel": "Media assets",
       "loading": "Loading media…",
       "emptyTitle": "No images found",
@@ -3997,7 +4160,11 @@
       "notFound": "This media asset is no longer available.",
       "close": "Close media details",
       "tabsLabel": "Media detail sections",
-      "tabs": { "general": "General", "fr": "Français", "en": "English" },
+      "tabs": {
+        "general": "General",
+        "fr": "Français",
+        "en": "English"
+      },
       "fields": {
         "fileName": "Filename",
         "type": "File type",
@@ -4151,10 +4318,16 @@
         "title": "Proposal history ({count})",
         "item": "Proposal {sequence}: {date} at {time}"
       },
-      "cancel": { "reason": "Cancellation reason (optional)" },
+      "cancel": {
+        "reason": "Cancellation reason (optional)"
+      },
       "adminReadOnly": "Administrator tracking view — no edit actions."
     },
-    "actions": { "back": "Back", "cancel": "Cancel assessment", "complete": "Mark completed" }
+    "actions": {
+      "back": "Back",
+      "cancel": "Cancel assessment",
+      "complete": "Mark completed"
+    }
   },
   "finalQuote": {
     "title": "Final quote",
@@ -4198,7 +4371,14 @@
     "reasonPlaceholder": "Describe the changes needed…",
     "sendChanges": "Send change request",
     "confirmDecline": "Decline final quote",
-    "status": { "draft": "Final quote requested", "submitted": "Final quote submitted", "changes_requested": "Changes requested", "accepted": "Final quote accepted", "declined": "Final quote declined", "withdrawn": "Final quote withdrawn" },
+    "status": {
+      "draft": "Final quote requested",
+      "submitted": "Final quote submitted",
+      "changes_requested": "Changes requested",
+      "accepted": "Final quote accepted",
+      "declined": "Final quote declined",
+      "withdrawn": "Final quote withdrawn"
+    },
     "requestedLead": "The company can now prepare its binding final offer.",
     "submittedLead": "Review the company’s binding final offer.",
     "acceptedLead": "This company has been selected for the project.",
@@ -4293,16 +4473,29 @@
       "clientRequired": "Only a completed client account can send project invitations.",
       "clientWorkspace": "Client workspace",
       "unavailable": "This company is currently unavailable for project invitations.",
-      "status": { "pending": "Invitation sent", "accepted": "Invitation accepted", "declined": "Invitation declined" }
+      "status": {
+        "pending": "Invitation sent",
+        "accepted": "Invitation accepted",
+        "declined": "Invitation declined"
+      }
     },
     "company": {
       "eyebrow": "Company workspace",
       "title": "Project invitations",
       "lead": "Review direct invitations from clients. Messaging and the proposal path open only after you accept.",
       "filterLabel": "Filter invitations",
-      "filter": { "all": "All", "pending": "Pending", "accepted": "Accepted", "declined": "Declined" },
+      "filter": {
+        "all": "All",
+        "pending": "Pending",
+        "accepted": "Accepted",
+        "declined": "Declined"
+      },
       "suspended": "Marketplace access is temporarily suspended. Contact Batiplus support.",
-      "status": { "pending": "Pending", "accepted": "Accepted", "declined": "Declined" },
+      "status": {
+        "pending": "Pending",
+        "accepted": "Accepted",
+        "declined": "Declined"
+      },
       "emptyTitle": "No invitations to show",
       "emptyLead": "Direct project invitations will appear here.",
       "invitedAt": "Invited {date}",
@@ -4319,7 +4512,11 @@
     "project": {
       "title": "Company invitations",
       "loading": "Loading invitations…",
-      "status": { "pending": "Pending", "accepted": "Accepted", "declined": "Declined" }
+      "status": {
+        "pending": "Pending",
+        "accepted": "Accepted",
+        "declined": "Declined"
+      }
     }
   },
   "ux": {
@@ -4537,7 +4734,29 @@
         "INVALID_COMMISSION_PAYMENT_REFERENCE": "The payment reference is too long.",
         "INVALID_COMMISSION_PAYMENT_NOTE": "The internal payment note is too long.",
         "NETWORK": "Connection problem. We’ll try again.",
-        "UNKNOWN": "Something went wrong. Please try again."
+        "UNKNOWN": "Something went wrong. Please try again.",
+        "CLIENT_SUPPORT_CONVERSATION_NOT_FOUND": "This Batiplus support conversation is unavailable.",
+        "CLIENT_SUPPORT_MESSAGE_NOT_FOUND": "This support entry is no longer available.",
+        "INVALID_CLIENT_SUPPORT_MESSAGE_BODY": "Write a message between 1 and 5,000 characters.",
+        "INVALID_CLIENT_SUPPORT_PAGE_SIZE": "This list could not be loaded. Please try again.",
+        "INVALID_CLIENT_SUPPORT_READ_POSITION": "The conversation could not be marked as read.",
+        "INVALID_IDEMPOTENCY_KEY": "The message could not be sent. Please try again.",
+        "IDEMPOTENCY_KEY_CONFLICT": "This message conflicts with an earlier attempt. Edit it and send again.",
+        "COORDINATION_AGREEMENT_NOT_FOUND": "This coordination agreement is not accessible.",
+        "COORDINATION_VERSION_NOT_FOUND": "This agreement version is not accessible.",
+        "COORDINATION_DRAFT_CONFLICT": "The saved draft changed. Your inputs are preserved; reload and review the saved draft.",
+        "COORDINATION_VERSION_CONFLICT": "The agreement version changed. Refresh and review the current version before continuing.",
+        "COORDINATION_READINESS_CONFLICT": "The quote preference changed. Refresh and review it; pending terms may need a new publication.",
+        "COORDINATION_READINESS_NOT_ELIGIBLE": "The preferred quote is no longer eligible. Check it in your project before requesting a new summary.",
+        "COORDINATION_PROJECT_NOT_ELIGIBLE": "This project’s current status prevents a new publication or confirmation.",
+        "COORDINATION_NOT_STARTED_DECLARATION_REQUIRED": "The first agreement requires your explicit declaration that paid coordination has not started.",
+        "COORDINATION_START_DATE_PASSED": "The start date has passed. A new complete summary must be published.",
+        "INVALID_COORDINATION_TERMS": "Provide all negotiated terms within the indicated text limits.",
+        "INVALID_COORDINATION_DATE": "Enter a real start date.",
+        "INVALID_COORDINATION_AMOUNT": "Enter a positive MAD amount with at most two decimal digits and no thousands separator.",
+        "INVALID_COORDINATION_PERCENTAGE": "Enter a positive decimal percentage with at most 64 characters.",
+        "INVALID_COORDINATION_REVISION": "The draft revision is invalid. Reload and review before saving.",
+        "INVALID_COORDINATION_TIME": "Refresh the summary to check eligibility again."
       }
     },
     "empty": {
@@ -4919,6 +5138,124 @@
       "title": "Batiplus conversation unavailable",
       "lead": "You no longer have access to this operational conversation.",
       "retry": "Try again"
+    }
+  },
+  "clientSupport": {
+    "metaTitle": "Batiplus support",
+    "metaDescription": "Private conversation with the Batiplus team about your project.",
+    "events": {
+      "freeHelpRequested": "Free help from Batiplus requested",
+      "coordinationDiscussionRequested": "Site coordination discussion requested",
+      "unknown": "Support request recorded"
+    },
+    "kinds": {
+      "free_help": "Free help",
+      "coordination_discussion": "Site coordination"
+    },
+    "actions": {
+      "title": "Batiplus support",
+      "note": "Both services are optional. Requesting coordination does not commit you to pay.",
+      "freeHelp": {
+        "title": "Free help from Batiplus",
+        "description": "Help with documents and payment dates. Ask to arrange a phone call.",
+        "action": "Get free help from Batiplus"
+      },
+      "coordination": {
+        "title": "Site coordination by Batiplus",
+        "description": "Discuss site visits, tasks and price with the Batiplus team.",
+        "action": "Discuss site coordination"
+      },
+      "requested": "Requested",
+      "submitting": "Sending your request…",
+      "openConversation": "Open Batiplus conversation",
+      "unread": "{count, plural, one {# unread message} other {# unread messages}}",
+      "loading": "Loading Batiplus support",
+      "unavailable": "Batiplus support could not be loaded.",
+      "retry": "Try again",
+      "requestFailed": "Your request could not be sent. Nothing was requested — please try again."
+    },
+    "page": {
+      "label": "Batiplus support conversation",
+      "eyebrow": "Batiplus support",
+      "lead": "A private conversation between you and the Batiplus team. Companies cannot see it.",
+      "backToProject": "Back to project",
+      "backToProjects": "Back to my projects",
+      "untitledProject": "Untitled draft project",
+      "contextTitle": "Project",
+      "contextCity": "City",
+      "contextStatus": "Status",
+      "contextRequested": "Requested services",
+      "notProvided": "Not provided yet",
+      "noThreadTitle": "You have not asked Batiplus for help on this project yet",
+      "noThreadLead": "Choose a service to open a private conversation with the Batiplus team. Nothing is sent until you choose.",
+      "servicesTitle": "Batiplus services",
+      "loading": "Loading Batiplus support",
+      "notFoundTitle": "Project not found",
+      "notFoundLead": "This project does not exist or you do not have access to it.",
+      "deniedTitle": "Batiplus support unavailable",
+      "deniedLead": "You no longer have access to this conversation, or it could not be loaded.",
+      "retry": "Try again"
+    },
+    "thread": {
+      "title": "Conversation with Batiplus",
+      "messageList": "Batiplus support history",
+      "loading": "Loading conversation",
+      "loadOlder": "Load older messages",
+      "loadingOlder": "Loading older messages",
+      "composerLabel": "Message",
+      "composerPlaceholderClient": "Write to the Batiplus team…",
+      "composerPlaceholderAdmin": "Reply to the Client…",
+      "composerHint": "Text only. Press Enter to send, Shift+Enter for a new line.",
+      "send": "Send",
+      "sending": "Sending…",
+      "retry": "Retry",
+      "sendFailed": "The message could not be sent. Your text is still here — try again.",
+      "readFailed": "The conversation could not be marked as read.",
+      "characterCount": "{count} of {maximum} characters",
+      "senderAdmin": "Batiplus team",
+      "senderClient": "Client",
+      "yourMessage": "Your message",
+      "requestMeta": "{name} · {date}",
+      "unreadBadge": "{count, plural, one {# unread message} other {# unread messages}}"
+    },
+    "admin": {
+      "metaTitle": "Client support — Administration",
+      "metaDescription": "Private Client help and coordination requests for the Batiplus team.",
+      "title": "Client support",
+      "lead": "Private help and coordination requests from Clients. Companies never see these conversations.",
+      "inboxLabel": "Support requests",
+      "inboxTitle": "Requests",
+      "emptyTitle": "No support requests yet",
+      "emptyLead": "Requests appear here when a Client asks for free help or to discuss site coordination.",
+      "loading": "Loading support requests",
+      "loadingLead": "Checking for Client help and coordination requests.",
+      "conversationLabel": "Support conversation",
+      "loadMore": "Load more requests",
+      "loadingMore": "Loading more requests…",
+      "selectTitle": "Select a request",
+      "selectLead": "Choose a request to read the conversation and reply to the Client.",
+      "backToRequests": "Back to requests",
+      "untitledProject": "Untitled draft project",
+      "clientFallback": "Client",
+      "lastEntryClient": "Client: {preview}",
+      "lastEntryTeam": "Batiplus: {preview}",
+      "unread": "{count, plural, one {# unread entry} other {# unread entries}}",
+      "contextLabel": "Request context",
+      "contextClient": "Client",
+      "contextCity": "City",
+      "contextStatus": "Project status",
+      "contextRequested": "Requested",
+      "notProvided": "Not provided",
+      "noThreadTitle": "No support conversation for this project",
+      "noThreadLead": "The Client has not asked Batiplus for help on this project. A conversation opens only when they do.",
+      "deniedTitle": "Conversation unavailable",
+      "deniedLead": "This conversation no longer exists or you no longer have access to it.",
+      "inboxDeniedTitle": "Support requests unavailable",
+      "inboxDeniedLead": "The support inbox could not be loaded, or your admin access has changed.",
+      "retry": "Try again",
+      "openSupport": "Open Client support",
+      "errorTitle": "Client support could not be loaded",
+      "errorDescription": "Something went wrong while loading this workspace. Try again."
     }
   },
   "adminNotes": {
@@ -5352,5 +5689,136 @@
       "source_invalid": "The original source identity or metadata cannot be verified.",
       "upload_grant_active": "A legacy upload grant may still recreate this object. Wait for verified expiry."
     }
+  },
+  "coordinationAgreement": {
+    "title": "Coordination summary",
+    "lead": "Review the coordination details discussed with Batiplus. Both services remain optional.",
+    "loading": "Loading coordination summary…",
+    "denied": "This coordination summary is no longer accessible.",
+    "reload": "Reload",
+    "readiness": "Preferred quote",
+    "readinessSaved": "A quote preference is recorded and currently eligible. Saved:",
+    "readinessUnavailable": "The saved preference is no longer eligible. Recorded:",
+    "readinessAbsent": "No eligible quote preference is recorded yet.",
+    "readinessChangeNote": "Changing or clearing the preference invalidates pending confirmation. Confirmed history stays available.",
+    "chooseQuote": "Choose or change a quote in your project",
+    "clearReadiness": "Clear quote preference",
+    "readinessCleared": "Quote preference cleared.",
+    "current": "Current confirmed summary",
+    "confirmedStatus": "Coordination terms confirmed",
+    "confirmedMeta": "Version {number} · Confirmed",
+    "adminStatus": {
+      "label": "Coordination status",
+      "terms": "Terms",
+      "clientReview": "Client review",
+      "quote": "Quote readiness",
+      "draft": "Private draft",
+      "nothingPending": "Nothing awaiting the Client",
+      "quoteReady": "Quote ready",
+      "quoteNotEligible": "Quote no longer eligible",
+      "quoteMissing": "No quote preference yet",
+      "recordedOn": "Recorded",
+      "draftSaved": "Last saved",
+      "draftBy": "by {name}",
+      "draftNone": "No saved draft",
+      "draftUnsaved": "Unsaved changes"
+    },
+    "adminSections": {
+      "scope": "Scope",
+      "scopeHint": "What Batiplus will do, and what is excluded.",
+      "site": "Site coordination",
+      "siteHint": "Agreed visits and when the team is available.",
+      "schedule": "Schedule and pricing",
+      "scheduleHint": "The proposed start date and the fee exactly as negotiated.",
+      "payment": "Payment"
+    },
+    "clientWillReceive": "This is what the Client will receive.",
+    "showConfirmed": "View confirmed terms",
+    "pending": "Awaiting your confirmation",
+    "pendingBlocked": "Summary cannot be confirmed",
+    "confirmationStatus": {
+      "readiness_changed": "Your quote preference changed after this summary was sent. Ask Batiplus for an updated summary. You can still view this version and confirmed history.",
+      "source_unavailable": "The quote used for this summary is no longer eligible. Check your preferred quote and discuss an updated summary with Batiplus. Confirmed history remains available.",
+      "project_blocked": "This project’s current status does not allow a new confirmation. You can still view the summary and confirmed history.",
+      "start_date_passed": "The proposed start date has passed. Ask Batiplus for a new version with an agreed future start date. Confirmed history remains available.",
+      "declaration_missing": "This summary is missing Batiplus’s required declaration. Ask Batiplus for an updated summary before confirming.",
+      "unavailable": "Confirmation is unavailable. Refresh the summary before continuing. You can still view this version and confirmed history."
+    },
+    "previousConfirmed": "Previously confirmed",
+    "superseded": "Superseded before confirmation",
+    "noCurrent": "No coordination summary has been confirmed.",
+    "noPending": "No summary is awaiting confirmation.",
+    "replacementNote": "This proposed replacement is not current. The confirmed version stays current until you confirm the replacement.",
+    "pendingNote": "Review the complete version before confirming.",
+    "version": "Version {number}",
+    "reviewVersion": "Review version {number}",
+    "reviewTitle": "Review this exact summary",
+    "confirmationMeaning": "Client confirmation records agreement to this version. It is not another payer’s consent, a certified electronic signature, a payment or automatic work activation.",
+    "notStartedClient": "I declare that paid coordination has not started for this first agreement.",
+    "notStartedAdmin": "I declare that paid coordination has not started for this first agreement.",
+    "staleReview": "The agreement or quote preference changed. Close this review and review the latest state before continuing.",
+    "startPassed": "The proposed start date has passed. Batiplus must publish a new complete version; the date cannot be adjusted silently.",
+    "gatesRequired": "Sending or confirming requires eligible readiness, an allowed project status and a valid start date. Batiplus checks the source and version again on submission.",
+    "confirm": "Confirm this summary",
+    "confirming": "Confirming…",
+    "retryConfirmation": "Retry this exact confirmation",
+    "confirmationSaved": "This summary was confirmed.",
+    "closeReview": "Close review",
+    "askChanges": "Ask for changes",
+    "history": "Published history",
+    "noHistory": "No published versions yet.",
+    "loadMore": "Load more versions",
+    "publishedBy": "Published by {name} on",
+    "confirmedBy": "Confirmed by {name} on",
+    "effectiveFrom": "Effective for future work from",
+    "adminDeclared": "Admin’s not-started declaration recorded:",
+    "clientDeclared": "Client’s not-started declaration recorded:",
+    "quoteReadinessTitle": "Preferred quote for Batiplus coordination",
+    "quoteChoiceNote": "Use this revision as your preferred quote for coordination discussions. This does not accept the marketplace quote or hire the Company.",
+    "supportRequired": "Start a Batiplus support conversation explicitly before recording a quote preference. Free help is sufficient.",
+    "useQuote": "Use revision {number} for coordination",
+    "quoteUnavailable": "Only a current submitted, unexpired revision or a matching accepted revision can be used.",
+    "readinessSelected": "Quote preference recorded. Batiplus can now check readiness.",
+    "backSupport": "Back to Batiplus support",
+    "adminLead": "Prepare the complete terms discussed with the Client. Saving a draft keeps it private; sending publishes a version for Client review.",
+    "adminSourcePrivacy": "Only eligibility and declaration time are shared here. Private quotes and Company identities remain in the marketplace.",
+    "prepareRevision": "Prepare revised summary",
+    "privateDraft": "Private draft",
+    "privateDraftNote": "Only authorized Batiplus admins can see this draft. Draft preparation is allowed before readiness and on closed projects.",
+    "staleDraft": "The saved draft changed. Your inputs are preserved. Reload the saved draft before saving again.",
+    "reloadDraft": "Replace editor with saved draft",
+    "chooseFee": "Choose the negotiated fee type",
+    "fixedFee": "Fixed fee in MAD",
+    "percentageFee": "Percentage with explicit basis",
+    "centimeHint": "Use a dot or comma with up to two decimal digits. Do not use thousands separators.",
+    "percentageHint": "Use a dot or comma as the decimal separator. All digits and trailing zeros are preserved; no fee is calculated.",
+    "payerNote": "Name the agreed payer and payment conditions explicitly. The Client cannot consent on another payer’s behalf.",
+    "saveDraft": "Save draft",
+    "saving": "Saving…",
+    "draftSaved": "Private draft saved.",
+    "reviewSaved": "Review saved terms before sending",
+    "publicationReview": "Review saved summary for publication",
+    "sendSummary": "Send summary",
+    "sending": "Sending…",
+    "retryPublication": "Retry this exact publication",
+    "published": "Summary published for Client review.",
+    "workspaceTabs": "Support workspace views",
+    "messagesTab": "Messages",
+    "fields": {
+      "tasks": "Agreed tasks",
+      "exclusions": "Limits and exclusions",
+      "visits": "Agreed visits",
+      "availability": "Availability and visit conditions",
+      "startDate": "Proposed start date",
+      "fee": "Negotiated fee",
+      "amountMad": "Fixed fee (MAD)",
+      "rate": "Percentage rate (%)",
+      "basis": "Explicit calculation basis",
+      "basisAmountMad": "Explicit basis amount (MAD, optional)",
+      "payer": "Agreed payer",
+      "paymentTerms": "Payment dates and conditions"
+    },
+    "pendingAdmin": "Awaiting Client confirmation",
+    "replacementAdminNote": "This proposed replacement is not current. The confirmed version stays current until the Client confirms the replacement."
   }
 }

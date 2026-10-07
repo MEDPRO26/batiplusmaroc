@@ -54,7 +54,15 @@ type ReservedDeliveryPolicy = {
   defaultPushEnabled: false;
 };
 
-export type NotificationDeliveryPolicy = ActiveDeliveryPolicy | ReservedDeliveryPolicy;
+type InAppOnlyDeliveryPolicy = {
+  active: true;
+  inApp: true;
+  pushEligible: false;
+  category: null;
+  defaultPushEnabled: false;
+};
+
+export type NotificationDeliveryPolicy = ActiveDeliveryPolicy | InAppOnlyDeliveryPolicy | ReservedDeliveryPolicy;
 
 const active = (category: NotificationPreferenceCategory): ActiveDeliveryPolicy => ({
   active: true,
@@ -63,6 +71,14 @@ const active = (category: NotificationPreferenceCategory): ActiveDeliveryPolicy 
   category,
   defaultPushEnabled: true,
 });
+
+const inAppOnly: InAppOnlyDeliveryPolicy = {
+  active: true,
+  inApp: true,
+  pushEligible: false,
+  category: null,
+  defaultPushEnabled: false,
+};
 
 export const NOTIFICATION_DELIVERY_POLICY = {
   proposal_received: active("projects"),
@@ -94,6 +110,10 @@ export const NOTIFICATION_DELIVERY_POLICY = {
   company_admin_message_received: active("messages"),
   company_suspended: active("account"),
   company_reactivated: active("account"),
+  client_support_free_help_requested: inAppOnly,
+  client_support_coordination_requested: inAppOnly,
+  client_support_client_message_received: inAppOnly,
+  client_support_admin_reply_received: inAppOnly,
 } as const satisfies Record<NotificationType, NotificationDeliveryPolicy>;
 
 const UNKNOWN_DELIVERY_POLICY: ReservedDeliveryPolicy = {
