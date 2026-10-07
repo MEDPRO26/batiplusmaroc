@@ -1,4 +1,5 @@
 import { routes } from "../routes";
+import { isClientSupportNotificationType } from "../../convex/notifications/constants";
 
 export type NotificationAccountType = "client" | "company" | "admin" | "seo_team";
 export type NotificationDestinationInput = {
@@ -11,14 +12,18 @@ export type NotificationDestination =
   | Exclude<
       (typeof routes)[keyof typeof routes],
       typeof routes.clientProject
+        | typeof routes.clientProjectSupport
         | typeof routes.companyProject
         | typeof routes.companyInitialQuote
         | typeof routes.companyProfile
         | typeof routes.adminCompany
         | typeof routes.messagesConversation
+        | typeof routes.adminSupport
         | typeof routes.seoArticle
     >
   | { pathname: typeof routes.clientProject; params: { projectId: string } }
+  | { pathname: typeof routes.clientProjectSupport; params: { projectId: string } }
+  | { pathname: typeof routes.adminSupport; query: { projectId: string } }
   | { pathname: typeof routes.companyProject; params: { projectId: string } }
   | { pathname: typeof routes.adminCompany; params: { companyId: string }; query: { tab: "messages" } }
   | { pathname: typeof routes.messagesConversation; params: { conversationId: string } };
@@ -32,6 +37,17 @@ export function notificationDestination(
   accountType: NotificationAccountType,
   context: NotificationDestinationContext = {},
 ): NotificationDestination {
+  if (isClientSupportNotificationType(notification.type)) {
+    if (notification.entity.type !== "client_support_entry" || !context.projectId) return routes.notifications;
+    if (notification.type === "client_support_admin_reply_received") {
+      return accountType === "client"
+        ? { pathname: routes.clientProjectSupport, params: { projectId: context.projectId } }
+        : routes.notifications;
+    }
+    return accountType === "admin"
+      ? { pathname: routes.adminSupport, query: { projectId: context.projectId } }
+      : routes.notifications;
+  }
   if (
     notification.type === "company_admin_message_received"
     && accountType === "admin"
@@ -120,6 +136,9 @@ export function localizedNotificationDestination(
 ) {
   const destination = notificationDestination(notification, accountType, context);
   if (typeof destination !== "string") {
+    if (destination.pathname === routes.adminSupport) {
+      return `/${locale}/admin/${locale === "fr" ? "assistance" : "support"}?projectId=${encodeURIComponent(destination.query.projectId)}`;
+    }
     if (destination.pathname === routes.messagesConversation) {
       return `/${locale}/messages/${encodeURIComponent(destination.params.conversationId)}`;
     }
@@ -127,11 +146,12 @@ export function localizedNotificationDestination(
       return `/${locale}/admin/${locale === "en" ? "companies" : "entreprises"}/${encodeURIComponent(destination.params.companyId)}?tab=messages`;
     }
     const projectId = encodeURIComponent(destination.params.projectId);
-    const area = destination.pathname === routes.clientProject
+    const area = destination.pathname === routes.clientProject || destination.pathname === routes.clientProjectSupport
       ? locale === "en" ? "client" : "espace-client"
       : locale === "en" ? "company" : "espace-entreprise";
     const projects = locale === "en" ? "projects" : "projets";
-    return `/${locale}/${area}/${projects}/${projectId}`;
+    const suffix = destination.pathname === routes.clientProjectSupport ? "/batiplus" : "";
+    return `/${locale}/${area}/${projects}/${projectId}${suffix}`;
   }
   const pathname = locale === "en" ? ENGLISH_PATHS[destination] ?? destination : destination;
   return `/${locale}${pathname === "/" ? "" : pathname}`;

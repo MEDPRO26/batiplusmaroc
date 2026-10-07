@@ -7,7 +7,7 @@ export function GrosOeuvreHero() {
   return (
     <section className="relative overflow-hidden bg-white">
       <div className="pointer-events-none absolute inset-y-0 left-[8%] hidden w-px bg-brand-border/80 lg:block" aria-hidden="true" />
-      <div className="pointer-events-none absolute top-0 right-0 h-56 w-56 rounded-full border border-brand/10 sm:h-80 sm:w-80 lg:-top-24 lg:right-[4%] lg:h-[520px] lg:w-[520px]" aria-hidden="true" />
+      <div className="pointer-events-none absolute top-0 right-0 h-56 w-56 rounded-sm border border-brand/10 sm:h-80 sm:w-80 lg:-top-24 lg:right-[4%] lg:h-[520px] lg:w-[520px]" aria-hidden="true" />
 
       <div className="relative mx-auto grid max-w-[1280px] gap-12 px-[18px] pt-10 pb-18 sm:px-6 sm:pt-14 sm:pb-24 lg:min-h-[760px] lg:grid-cols-[0.88fr_1.12fr] lg:items-center lg:gap-16 lg:px-8 lg:py-24">
         <div className="relative z-10">

@@ -15,11 +15,11 @@ type View = "all" | "active" | "inactive";
 type Drawer = { mode: "create" } | { mode: "edit"; row: Service } | null;
 
 const VIEWS: View[] = ["all", "active", "inactive"];
-const PRIMARY = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-[#2f6bff] px-4 text-sm font-semibold text-white hover:bg-[#2456c7] disabled:opacity-50 ${ADMIN_PRESS}`;
-const SECONDARY = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-[#e6e9ee] bg-white px-4 text-sm font-semibold text-[#17191d] hover:bg-[#f7f9fc] disabled:opacity-50 ${ADMIN_PRESS}`;
-const ICON_BUTTON = `inline-flex size-9 items-center justify-center rounded-full text-[#626970] hover:bg-[#f2f4f7] hover:text-[#17191d] disabled:opacity-50 ${ADMIN_PRESS}`;
+const PRIMARY = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-sm bg-[#2f6bff] px-4 text-sm font-semibold text-white hover:bg-[#2456c7] disabled:opacity-50 ${ADMIN_PRESS}`;
+const SECONDARY = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-sm border border-[#e6e9ee] bg-white px-4 text-sm font-semibold text-[#17191d] hover:bg-[#f7f9fc] disabled:opacity-50 ${ADMIN_PRESS}`;
+const ICON_BUTTON = `inline-flex size-9 items-center justify-center rounded-sm text-[#626970] hover:bg-[#f2f4f7] hover:text-[#17191d] disabled:opacity-50 ${ADMIN_PRESS}`;
 const INPUT = "min-h-11 w-full rounded-[10px] border border-[#d8dce3] bg-white px-3 text-sm text-[#17191d] outline-none placeholder:text-[#a0a6ae] focus:border-[#2f6bff] focus:ring-3 focus:ring-[#2f6bff]/15";
-const PILL = "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap";
+const PILL = "inline-flex items-center gap-1.5 rounded-sm px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap";
 
 function errorKey(caught: unknown) {
   const text = String(caught);
@@ -139,11 +139,11 @@ export function AdminServicesPanel() {
               type="button"
             >
               {t(`views.${key}`)}
-              <span className="rounded-full bg-[#f2f4f7] px-2 py-0.5 text-xs font-semibold text-[#626970] tabular-nums">{counts[key]}</span>
+              <span className="rounded-sm bg-[#f2f4f7] px-2 py-0.5 text-xs font-semibold text-[#626970] tabular-nums">{counts[key]}</span>
             </button>
           ))}
         </div>
-        <label className="mb-3 flex min-h-10 w-full items-center gap-2 rounded-full border border-[#e7eaee] bg-white px-4 text-sm focus-within:border-[#2f6bff] sm:mb-0 sm:w-72">
+        <label className="mb-3 flex min-h-10 w-full items-center gap-2 rounded-sm border border-[#e7eaee] bg-white px-4 text-sm focus-within:border-[#2f6bff] sm:mb-0 sm:w-72">
           <Search aria-hidden className="size-4 shrink-0 text-[#8b919a]" />
           <span className="sr-only">{t("searchLabel")}</span>
           <input className="h-10 w-full bg-transparent outline-none placeholder:text-[#8b919a]" onChange={event => setSearch(event.target.value)} placeholder={t("searchPlaceholder")} type="search" value={search} />
@@ -220,7 +220,7 @@ function secondaryName(row: Service, locale: string) { return locale === "fr" ? 
 function StatusPill({ active }: { active: boolean }) {
   const t = useTranslations("adminServices");
   return <span className={`${PILL} ${active ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>
-    <span aria-hidden className={`size-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-slate-400"}`} />
+    <span aria-hidden className={`size-1.5 rounded-sm ${active ? "bg-emerald-500" : "bg-slate-400"}`} />
     {active ? t("statusActive") : t("statusInactive")}
   </span>;
 }
@@ -314,13 +314,13 @@ function ServiceForm({ row, nextOrder, onCancel, onSaved }: { row: Service | nul
         <input className={`${INPUT} w-32`} max={1_000_000} min={0} onChange={event => setSortOrder(event.target.value)} required step={1} type="number" value={sortOrder} />
       </FormField>
       {row ? (
-        <label className="flex cursor-pointer items-start justify-between gap-4 rounded-[12px] border border-[#e7eaee] p-4">
+        <label className="flex cursor-pointer items-start justify-between gap-4 rounded-sm border border-[#e7eaee] p-4">
           <span className="min-w-0">
             <span className="block text-sm font-semibold text-[#17191d]">{t("active")}</span>
             <span className="mt-0.5 block text-xs leading-5 text-[#626970]">{t("activeHint")}</span>
           </span>
           <input checked={isActive} className="peer sr-only" onChange={event => setIsActive(event.target.checked)} role="switch" type="checkbox" />
-          <span aria-hidden className="relative mt-0.5 h-6 w-10 shrink-0 rounded-full bg-[#d0d5dd] transition-colors peer-checked:bg-[#2f6bff] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#2f6bff] after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-4" />
+          <span aria-hidden className="relative mt-0.5 h-6 w-10 shrink-0 rounded-sm bg-[#d0d5dd] transition-colors peer-checked:bg-[#2f6bff] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#2f6bff] after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-sm after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-4" />
         </label>
       ) : null}
       {error ? <p className="m-0 rounded-[10px] bg-red-50 px-3 py-2.5 text-sm text-red-800" role="alert">{error}</p> : null}

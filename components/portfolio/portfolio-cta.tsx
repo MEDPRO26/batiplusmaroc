@@ -8,7 +8,7 @@ export function PortfolioCta() {
     <section className="bg-white px-[18px] py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
       <div className="mx-auto grid max-w-[1280px] overflow-hidden rounded-[28px] bg-brand text-white lg:grid-cols-[1.15fr_0.85fr]">
         <div className="relative px-6 py-14 sm:px-10 sm:py-16 lg:px-16 lg:py-20">
-          <div className="absolute -bottom-44 -left-32 size-80 rounded-full border border-white/10" aria-hidden="true" />
+          <div className="absolute -bottom-44 -left-32 size-80 rounded-sm border border-white/10" aria-hidden="true" />
           <p className="relative text-[0.68rem] font-bold tracking-[0.2em] text-[#e7b63f] uppercase">Parlons de votre projet</p>
           <h2 className="relative mt-5 max-w-3xl text-[clamp(2.8rem,5.5vw,5.6rem)] leading-[0.92] font-semibold tracking-[-0.06em] text-white!">Vous avez un projet à concrétiser ?</h2>
           <p className="relative mt-6 max-w-2xl text-lg leading-8 text-white/75">Construction, rénovation ou aménagement : échangeons sur votre projet.</p>

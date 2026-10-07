@@ -90,7 +90,7 @@ export function OAuthRoleFinalizer() {
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <button
-          className="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-4 text-[0.92rem] font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center rounded-sm bg-brand px-4 text-[0.92rem] font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
           disabled={pending !== null}
           onClick={() => void complete("client")}
           type="button"
@@ -98,7 +98,7 @@ export function OAuthRoleFinalizer() {
           {pending === "client" ? t("creating") : t("clientTitle")}
         </button>
         <button
-          className="inline-flex min-h-11 items-center justify-center rounded-full border-2 border-brand bg-white px-4 text-[0.92rem] font-semibold text-brand hover:bg-brand-soft disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center rounded-sm border-2 border-brand bg-white px-4 text-[0.92rem] font-semibold text-brand hover:bg-brand-soft disabled:opacity-60"
           disabled={pending !== null}
           onClick={() => void complete("company")}
           type="button"

@@ -102,7 +102,7 @@ test("the workspace shows the project, a real proposal summary and scannable pro
   await expect(page.getByText(/budget|quote/i)).toHaveCount(0);
   await expect(page.locator("header").getByText(/^Published \w+ \d+, 2026$/)).toBeVisible();
 
-  const overview = page.getByRole("region", { name: "Proposals" }).first();
+  const overview = page.locator('section[aria-labelledby="proposal-overview-title"]');
   await expect(overview.getByText("Received").locator("..")).toContainText("4");
   await expect(overview.getByText("New", { exact: true }).locator("..")).toContainText("1");
   await expect(overview.getByText("Shortlisted").locator("..")).toContainText("1");

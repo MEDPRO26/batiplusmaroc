@@ -36,7 +36,7 @@ export function AboutWhyUs() {
             <li key={principle.number} className="min-h-[280px] bg-white p-7 sm:p-9">
               <div className="flex items-center justify-between gap-6">
                 <span className="text-[0.7rem] font-bold tracking-[0.18em] text-brand">{principle.number}</span>
-                <span className="size-2 rounded-full bg-[#e7b63f]" aria-hidden="true" />
+                <span className="size-2 rounded-sm bg-[#e7b63f]" aria-hidden="true" />
               </div>
               <h3 className="mt-16 mb-4 text-2xl leading-tight tracking-[-0.04em]">{principle.title}</h3>
               <p className="max-w-sm leading-7 text-muted">{principle.text}</p>

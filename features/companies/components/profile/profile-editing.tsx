@@ -50,7 +50,7 @@ export function EditIconButton({
     <button
       {...props}
       aria-label={label}
-      className="grid size-9 shrink-0 cursor-pointer place-items-center rounded-full border border-brand-border bg-white text-brand transition-colors hover:border-brand/50 hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      className="grid size-9 shrink-0 cursor-pointer place-items-center rounded-sm border border-brand-border bg-white text-brand transition-colors hover:border-brand/50 hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       ref={ref}
       title={label}
       type="button"
@@ -121,7 +121,7 @@ export function EditDialog({
               </div>
               <Dialog.Close
                 aria-label={t("cancel")}
-                className="grid size-9 shrink-0 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-muted hover:bg-brand-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                className="grid size-9 shrink-0 cursor-pointer place-items-center rounded-sm border-0 bg-transparent text-muted hover:bg-brand-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               >
                 <X aria-hidden className="size-4" />
               </Dialog.Close>
@@ -188,7 +188,7 @@ export function MultiSelectField<T extends string>({
         {selected.map((value) => (
           <button
             aria-label={t("dialogs.remove", { item: labelFor(value) })}
-            className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border-0 bg-brand-soft pr-2.5 pl-3.5 text-sm font-medium text-brand-dark transition-colors hover:bg-[#dbe8f1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-sm border-0 bg-brand-soft pr-2.5 pl-3.5 text-sm font-medium text-brand-dark transition-colors hover:bg-[#dbe8f1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             key={value}
             onClick={() => toggle(value)}
             type="button"

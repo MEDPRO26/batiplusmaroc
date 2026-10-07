@@ -19,6 +19,7 @@ import { ClientReceivedQuotes, ProposalOverview } from "@/features/quotes/compon
 import { ClientProjectCurrentStep } from "@/features/projects/components/client-project-current-step";
 import { ReviewDialog, type ReviewDraft } from "@/features/projects/components/review-dialog";
 import { ClientProjectInvitations } from "@/features/invitations/components/client-project-invitations";
+import { ClientProjectSupport } from "@/features/client-support/components/client-support-actions";
 
 export { ReviewDialog } from "@/features/projects/components/review-dialog";
 
@@ -41,13 +42,14 @@ export function ClientProjectDetails({ projectId }: { projectId: string }) {
   }, [router, user]);
   if (user === undefined || project === undefined) return <PageSkeleton label={t("loadingDetails")} />;
   if (!canLoad || project === null) return <ErrorState backHref={routes.clientDashboard} backLabel={t("backToProjects")} description={tUx("notFound.project")} retryLabel={tUx("retry")} title={t("notFoundTitle")} />;
-  return <ClientProjectDetailsView project={project} quotesSlot={<ClientReceivedQuotes projectId={project.id} />} />;
+  // Support uses Client-only queries: never mount it in an admin preview.
+  return <ClientProjectDetailsView project={project} quotesSlot={<ClientReceivedQuotes projectId={project.id} />} supportSlot={project.viewerRole === "owner" ? <ClientProjectSupport projectId={project.id} /> : null} />;
 }
 
 /** Descriptions longer than this are collapsed behind "Show more". */
 const DESCRIPTION_PREVIEW_CHARS = 600;
 
-export function ClientProjectDetailsView({ project, quotesSlot }: { project: ProjectDetails; quotesSlot?: React.ReactNode }) {
+export function ClientProjectDetailsView({ project, quotesSlot, supportSlot }: { project: ProjectDetails; quotesSlot?: React.ReactNode; supportSlot?: React.ReactNode }) {
   const t = useTranslations("clientProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
@@ -84,7 +86,7 @@ export function ClientProjectDetailsView({ project, quotesSlot }: { project: Pro
       {project.status === "pending_review" ? <p className="mt-6 rounded-xl bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900" role="status">{t("statusDescription.pending_review")}</p> : null}
       {project.status === "needs_changes" ? <p className="mt-6 rounded-xl bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900" role="status">{t("statusDescription.needs_changes")}</p> : null}
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:grid-rows-[min-content_1fr] lg:items-start lg:gap-x-8 lg:gap-y-0">
         <article aria-label={t("detailsEyebrow")} className="min-w-0 overflow-hidden rounded-2xl border border-brand-border bg-white">
           <ProjectSection title={t("description")}>
             <CollapsibleText emptyLabel={t("notProvided")} text={project.description} />
@@ -102,8 +104,10 @@ export function ClientProjectDetailsView({ project, quotesSlot }: { project: Pro
           {project.attachments.length ? <ProjectSection title={t("documents")}><p className="mt-0 mb-3 text-sm text-muted">{t("documentsPrivate")}</p><ul className="m-0 grid list-none gap-2 p-0">{project.attachments.map((item) => <li className="flex items-center gap-2.5 text-sm text-ink" key={item.id}><FileText aria-hidden className="size-4 shrink-0 text-muted" /><span className="min-w-0 truncate">{item.fileName}</span><span className="shrink-0 text-muted">· {t("fileSizeKb", { count: format.number(Math.ceil(item.size / 1024)) })}</span></li>)}</ul></ProjectSection> : null}
         </article>
 
-        <aside className="grid content-start gap-4 lg:sticky lg:top-24">
+        <aside className="grid content-start gap-4 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          {project.canResume ? <Link className="button button-primary w-full" href={resumeHref}>{t("continueProject")}</Link> : null}
           {isOwner && project.status !== "draft" && project.status !== "pending_review" && project.status !== "needs_changes" ? <ProposalOverview projectId={project.id} /> : null}
+          {supportSlot}
           <section aria-labelledby="project-dates-title" className="rounded-2xl border border-brand-border bg-white p-5">
             <h2 className="m-0 text-base font-semibold text-ink" id="project-dates-title">{t("dates")}</h2>
             <dl className="mt-3 mb-0 grid gap-2 text-sm">
@@ -111,7 +115,6 @@ export function ClientProjectDetailsView({ project, quotesSlot }: { project: Pro
               {project.submittedAt ? <DateRow label={t("submittedLabel")} value={formatDate(project.submittedAt)} /> : null}
               {publishedAt ? <DateRow label={t("publishedLabel")} value={formatDate(publishedAt)} /> : null}
             </dl>
-            {project.canResume ? <Link className="button button-primary mt-5 w-full" href={resumeHref}>{t("continueProject")}</Link> : null}
             {project.history.length ? (
               <details className="group mt-4 border-t border-brand-border pt-3">
                 <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-md text-sm font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand [&::-webkit-details-marker]:hidden">
@@ -119,15 +122,17 @@ export function ClientProjectDetailsView({ project, quotesSlot }: { project: Pro
                   <ChevronDown aria-hidden className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180" />
                 </summary>
                 <ol className="mt-2 mb-0 grid list-none gap-3 border-l border-brand-border pl-4">
-                  {project.history.map((item, index) => <li className="relative text-sm leading-5 text-ink before:absolute before:top-1.5 before:-left-[21px] before:size-2 before:rounded-full before:bg-brand-border" key={`${item.changedAt}-${index}`}><span className="font-medium">{t("history.transition", { from: t(`status.${item.oldStatus}`), to: t(`status.${item.newStatus}`) })}</span><span className="mt-0.5 block text-xs text-muted">{t("history.meta", { actor: t(`history.actor.${item.actor}`), date: formatMarketplaceDateTime(item.changedAt, locale, { dateStyle: "medium", timeStyle: "short" }) })}</span>{item.reason ? <span className="mt-2 block rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">{item.reason}</span> : null}</li>)}
+                  {project.history.map((item, index) => <li className="relative text-sm leading-5 text-ink before:absolute before:top-1.5 before:-left-[21px] before:size-2 before:rounded-sm before:bg-brand-border" key={`${item.changedAt}-${index}`}><span className="font-medium">{t("history.transition", { from: t(`status.${item.oldStatus}`), to: t(`status.${item.newStatus}`) })}</span><span className="mt-0.5 block text-xs text-muted">{t("history.meta", { actor: t(`history.actor.${item.actor}`), date: formatMarketplaceDateTime(item.changedAt, locale, { dateStyle: "medium", timeStyle: "short" }) })}</span>{item.reason ? <span className="mt-2 block rounded-sm bg-amber-50 px-3 py-2 text-sm text-amber-900">{item.reason}</span> : null}</li>)}
                 </ol>
               </details>
             ) : null}
           </section>
         </aside>
+        <div className="min-w-0 lg:col-start-1 [&>section:first-child]:mt-0 lg:[&>section:first-child]:mt-8">
+          {isOwner ? <ClientProjectInvitations projectId={project.id} /> : null}
+          {quotesSlot}
+        </div>
       </div>
-      {isOwner ? <ClientProjectInvitations projectId={project.id} /> : null}
-      {quotesSlot}
     </main>
   );
 }
@@ -207,7 +212,7 @@ export function ClientDealCompletion({ project }: { project: ProjectDetails }) {
           </p>
           {completed && deal.reviewEligible ? <p className="mt-2 mb-0 text-sm font-medium text-emerald-700">{t("reviewEligible")}</p> : null}
         </div>
-        {!completed ? <button className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={() => { setError(""); setConfirming(true); }} type="button">{t("action")}</button> : null}
+        {!completed ? <button className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-sm bg-brand px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={() => { setError(""); setConfirming(true); }} type="button">{t("action")}</button> : null}
       </div>
       {error && !confirming ? <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}
       {confirming ? <DealCompletionDialog busy={busy} error={error} onCancel={() => setConfirming(false)} onConfirm={() => void confirm()} /> : null}
@@ -266,7 +271,7 @@ export function ClientReviewPanel({ dealId }: { dealId: Id<"deals"> }) {
     <div className="mt-5 border-t border-brand-border pt-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div><h3 className="m-0 text-base font-semibold text-ink">{t("title")}</h3><p className="mt-1 mb-0 text-sm text-muted">{t("lead")}</p></div>
-        <button className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-brand bg-white px-5 text-sm font-semibold text-brand hover:bg-brand-soft" onClick={() => { setError(""); setOpen(true); }} type="button">{t("action")}</button>
+        <button className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-sm border border-brand bg-white px-5 text-sm font-semibold text-brand hover:bg-brand-soft" onClick={() => { setError(""); setOpen(true); }} type="button">{t("action")}</button>
       </div>
       {open ? <ReviewDialog busy={busy} error={error} onCancel={closeReviewDialog} onSubmit={(draft) => void submit(draft)} /> : null}
     </div>
@@ -282,5 +287,5 @@ export function DealCompletionDialog({ busy, error, onCancel, onConfirm }: { bus
     document.addEventListener("keydown", onKey, true);
     return () => document.removeEventListener("keydown", onKey, true);
   }, [busy, onCancel]);
-  return <div className="fixed inset-0 z-[110] grid place-items-center bg-black/50 p-4"><button aria-label={t("cancel")} className="absolute inset-0" disabled={busy} onClick={onCancel} type="button" /><div aria-describedby="deal-completion-description" aria-labelledby="deal-completion-dialog-title" aria-modal="true" className="relative z-10 w-full max-w-md rounded-[20px] bg-white p-5 shadow-[0_24px_48px_rgba(16,24,40,0.18)] sm:p-6" role="dialog"><h2 className="m-0 text-lg font-semibold text-ink" id="deal-completion-dialog-title">{t("confirmTitle")}</h2><p className="mt-3 mb-0 text-sm leading-6 text-muted" id="deal-completion-description">{t("confirmLead")}</p>{error ? <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}<div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button className="min-h-11 rounded-full px-5 text-sm font-semibold text-muted disabled:opacity-55" disabled={busy} onClick={onCancel} type="button">{t("cancel")}</button><button className="min-h-11 rounded-full bg-brand px-5 text-sm font-semibold text-white disabled:opacity-55" disabled={busy} onClick={onConfirm} ref={confirmRef} type="button">{busy ? t("saving") : t("confirmAction")}</button></div></div></div>;
+  return <div className="fixed inset-0 z-[110] grid place-items-center bg-black/50 p-4"><button aria-label={t("cancel")} className="absolute inset-0" disabled={busy} onClick={onCancel} type="button" /><div aria-describedby="deal-completion-description" aria-labelledby="deal-completion-dialog-title" aria-modal="true" className="relative z-10 w-full max-w-md rounded-[20px] bg-white p-5 shadow-[0_24px_48px_rgba(16,24,40,0.18)] sm:p-6" role="dialog"><h2 className="m-0 text-lg font-semibold text-ink" id="deal-completion-dialog-title">{t("confirmTitle")}</h2><p className="mt-3 mb-0 text-sm leading-6 text-muted" id="deal-completion-description">{t("confirmLead")}</p>{error ? <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}<div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button className="min-h-11 rounded-sm px-5 text-sm font-semibold text-muted disabled:opacity-55" disabled={busy} onClick={onCancel} type="button">{t("cancel")}</button><button className="min-h-11 rounded-sm bg-brand px-5 text-sm font-semibold text-white disabled:opacity-55" disabled={busy} onClick={onConfirm} ref={confirmRef} type="button">{busy ? t("saving") : t("confirmAction")}</button></div></div></div>;
 }

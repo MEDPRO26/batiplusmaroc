@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Preserve archived QA evidence without linting temporary browser configs.
+    "design-qa-artifacts/**",
   ]),
 ]);
 

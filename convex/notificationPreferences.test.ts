@@ -6,6 +6,8 @@ import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import {
   ACTIVE_NOTIFICATION_TYPES,
+  CLIENT_SUPPORT_NOTIFICATION_TYPES,
+  PUSH_NOTIFICATION_TYPES,
   NOTIFICATION_TYPES,
 } from "./notifications/constants";
 import {
@@ -75,7 +77,8 @@ describe("notification delivery policy", () => {
       company_reactivated: "account",
     };
 
-    expect([...ACTIVE_NOTIFICATION_TYPES].sort()).toEqual(Object.keys(expectedCategories).sort());
+    expect([...PUSH_NOTIFICATION_TYPES].sort()).toEqual(Object.keys(expectedCategories).sort());
+    expect([...ACTIVE_NOTIFICATION_TYPES].sort()).toEqual([...PUSH_NOTIFICATION_TYPES, ...CLIENT_SUPPORT_NOTIFICATION_TYPES].sort());
     expect(Object.keys(NOTIFICATION_DELIVERY_POLICY).sort()).toEqual([...NOTIFICATION_TYPES].sort());
     for (const [type, category] of Object.entries(expectedCategories)) {
       expect(getNotificationDeliveryPolicy(type)).toEqual({
@@ -93,6 +96,15 @@ describe("notification delivery policy", () => {
       category: null,
       defaultPushEnabled: false,
     });
+  });
+
+  test.each(CLIENT_SUPPORT_NOTIFICATION_TYPES)("keeps %s active in-app and ineligible for push regardless of preferences", (type) => {
+    for (const pushEnabled of [false, true]) {
+      expect(resolveNotificationDelivery(type, { ...DEFAULT_NOTIFICATION_PREFERENCES, pushEnabled })).toEqual({
+        active: true, inApp: true, pushEligible: false, category: null,
+        defaultPushEnabled: false, pushEnabledForUser: false,
+      });
+    }
   });
 
   test("fails closed for an unknown notification type", () => {

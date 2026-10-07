@@ -162,7 +162,7 @@ function VerificationSettings({ profile }: { profile: ProfileManager }) {
       <SettingsCard title={t("settings.status")}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            {status === "verified" ? <span className="grid size-9 place-items-center rounded-full bg-brand-soft text-brand"><Check aria-hidden className="size-4" strokeWidth={2.4} /></span> : null}
+            {status === "verified" ? <span className="grid size-9 place-items-center rounded-sm bg-brand-soft text-brand"><Check aria-hidden className="size-4" strokeWidth={2.4} /></span> : null}
             <StatusBadge tone={VERIFICATION_TONE[status]}>{t(`verificationStatus.${status}`)}</StatusBadge>
           </div>
           {canSubmit ? <Link className={workspaceButton.primary} href={routes.companyVerification}>{t("sidebar.verifyAction")}</Link> : null}
@@ -190,7 +190,7 @@ function VerificationSettings({ profile }: { profile: ProfileManager }) {
         {profile.legal.documents.length > 0 ? (
           <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2">
             {profile.legal.documents.map((document) => (
-              <li className="rounded-[12px] bg-[#f7f9fb] px-4 py-3 text-sm" key={`${document.documentType}-${document.fileName}`}>
+              <li className="rounded-sm bg-[#f7f9fb] px-4 py-3 text-sm" key={`${document.documentType}-${document.fileName}`}>
                 <span className="block text-xs font-semibold text-brand">{t(`legal.documentTypes.${document.documentType}`)}</span>
                 <span className="mt-1 block break-all text-muted">{document.fileName}</span>
               </li>
@@ -237,7 +237,7 @@ function Chips({ items }: { items: string[] }) {
   if (items.length === 0) return <p className="m-0 text-sm text-muted">{t("profileView.notSpecified")}</p>;
   return (
     <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
-      {items.map((item) => <li className="rounded-full bg-[#eef2f5] px-3 py-1.5 text-sm font-medium text-ink" key={item}>{item}</li>)}
+      {items.map((item) => <li className="rounded-sm bg-[#eef2f5] px-3 py-1.5 text-sm font-medium text-ink" key={item}>{item}</li>)}
     </ul>
   );
 }

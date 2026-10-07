@@ -58,9 +58,9 @@ export function NotificationPreferencesView({
         <p className="mt-1.5 text-sm leading-6 text-muted">{t("description")}</p>
       </header>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-brand-border bg-white">
+      <div className="mt-6 overflow-hidden rounded-sm border border-brand-border bg-white">
         <div className="flex items-start gap-3 border-b border-brand-border px-5 py-4 sm:px-6">
-          <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
+          <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-sm bg-brand-soft text-brand">
             <ShieldCheck aria-hidden className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
@@ -77,7 +77,7 @@ export function NotificationPreferencesView({
         <div className="border-b border-brand-border px-5 py-4 sm:px-6">
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 gap-3">
-              <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
+              <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-sm bg-brand-soft text-brand">
                 <BellRing aria-hidden className="size-4" />
               </span>
               <div className="min-w-0">
@@ -145,7 +145,7 @@ export function NotificationPreferencesView({
             ) : null}
           </p>
           <button
-            className="min-h-11 rounded-xl bg-brand px-5 text-sm font-semibold text-white transition-[opacity,transform] active:scale-[0.96] hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="min-h-11 rounded-sm bg-brand px-5 text-sm font-semibold text-white transition-[opacity,transform] active:scale-[0.96] hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             disabled={saving || !dirty}
             onClick={onSave}
             type="button"
@@ -173,7 +173,7 @@ function PreferenceSwitch({
     <button
       aria-checked={checked}
       aria-label={label}
-      className="relative inline-flex size-11 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50"
+      className="relative inline-flex size-11 shrink-0 items-center justify-center rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50"
       disabled={disabled}
       onClick={() => onCheckedChange(!checked)}
       role="switch"
@@ -181,12 +181,12 @@ function PreferenceSwitch({
     >
       <span
         aria-hidden
-        className={`relative h-6 w-10 rounded-full transition-colors duration-150 ${
+        className={`relative h-6 w-10 rounded-sm transition-colors duration-150 ${
           checked ? "bg-brand" : "bg-slate-300"
         }`}
       >
         <span
-          className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-sm transition-transform duration-150 ease-[cubic-bezier(0.2,0,0,1)] ${
+          className={`absolute top-0.5 left-0.5 size-5 rounded-sm bg-white shadow-sm transition-transform duration-150 ease-[cubic-bezier(0.2,0,0,1)] ${
             checked ? "translate-x-4" : "translate-x-0"
           }`}
         />
@@ -198,12 +198,12 @@ function PreferenceSwitch({
 export function NotificationPreferencesSkeleton() {
   return (
     <div aria-label="loading" className="mt-12" role="status">
-      <div className="skeleton-block h-4 w-36 rounded" />
-      <div className="skeleton-block mt-3 h-6 w-56 rounded" />
-      <div className="skeleton-block mt-2 h-3 w-4/5 max-w-md rounded" />
-      <div className="mt-6 overflow-hidden rounded-2xl border border-brand-border bg-white">
-        <div className="skeleton-block m-5 h-14 rounded-xl" />
-        <div className="skeleton-block mx-5 mb-5 h-14 rounded-xl" />
+      <div className="skeleton-block h-4 w-36 rounded-sm" />
+      <div className="skeleton-block mt-3 h-6 w-56 rounded-sm" />
+      <div className="skeleton-block mt-2 h-3 w-4/5 max-w-md rounded-sm" />
+        <div className="mt-6 overflow-hidden rounded-sm border border-brand-border bg-white">
+        <div className="skeleton-block m-5 h-14 rounded-sm" />
+        <div className="skeleton-block mx-5 mb-5 h-14 rounded-sm" />
       </div>
     </div>
   );

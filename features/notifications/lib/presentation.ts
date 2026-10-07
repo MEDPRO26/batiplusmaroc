@@ -1,5 +1,5 @@
 import type { Doc, Id } from "@/convex/_generated/dataModel";
-import type { NotificationType } from "@/convex/notifications/constants";
+import { isClientSupportNotificationType, type NotificationType } from "@/convex/notifications/constants";
 import {
   notificationDestination,
   type NotificationAccountType,
@@ -53,6 +53,10 @@ export const NOTIFICATION_PRESENTATION = {
   company_admin_message_received: { translationKey: "events.company_admin_message_received", iconCategory: "message" },
   company_suspended: { translationKey: "events.company_suspended", iconCategory: "verification" },
   company_reactivated: { translationKey: "events.company_reactivated", iconCategory: "verification" },
+  client_support_free_help_requested: { translationKey: "events.client_support_free_help_requested", iconCategory: "message" },
+  client_support_coordination_requested: { translationKey: "events.client_support_coordination_requested", iconCategory: "message" },
+  client_support_client_message_received: { translationKey: "events.client_support_client_message_received", iconCategory: "message" },
+  client_support_admin_reply_received: { translationKey: "events.client_support_admin_reply_received", iconCategory: "message" },
 } as const satisfies Record<NotificationType, {
   translationKey: `events.${NotificationType}`;
   iconCategory: NotificationIconCategory;
@@ -92,12 +96,15 @@ export function unreadBadgeLabel(count: number) {
 }
 
 export async function readThenNavigate(
-  notification: Pick<NotificationRecord, "id" | "readAt">,
+  notification: Pick<NotificationRecord, "id" | "readAt"> & Partial<Pick<NotificationRecord, "type">>,
   destination: NotificationDestination,
   markRead: (notificationId: Id<"notifications">) => Promise<unknown>,
   navigate: (destination: NotificationDestination) => void,
 ) {
-  if (notification.readAt === null) await markRead(notification.id);
+  // Even a previously read support alert must recheck current access before navigation.
+  if (notification.readAt === null || (notification.type && isClientSupportNotificationType(notification.type))) {
+    await markRead(notification.id);
+  }
   navigate(destination);
 }
 
@@ -109,7 +116,7 @@ export async function openNotificationWithLock({
   navigate,
 }: {
   lock: { current: boolean };
-  notification: Pick<NotificationRecord, "id" | "readAt">;
+  notification: Pick<NotificationRecord, "id" | "readAt"> & Partial<Pick<NotificationRecord, "type">>;
   destination: NotificationDestination;
   markRead: (notificationId: Id<"notifications">) => Promise<unknown>;
   navigate: (destination: NotificationDestination) => void;
@@ -130,6 +137,9 @@ export function resolveNotificationDestinationForOpen(
   notification: NotificationRecord,
   accountType: NotificationAccountType,
 ): NotificationDestination {
+  if (isClientSupportNotificationType(notification.type)) {
+    return notificationDestination(notification, accountType, { projectId: notification.projectId ?? undefined });
+  }
   const needsProposalProject = (
     (notification.type === "proposal_received" && accountType === "client")
     || (notification.type === "proposal_accepted" && accountType === "company")

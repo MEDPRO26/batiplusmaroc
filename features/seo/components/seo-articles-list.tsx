@@ -42,7 +42,7 @@ export function SeoArticlesList() {
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#626970]">{t("description")}</p>
         </div>
         <Link
-          className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#2f6bff] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,107,255,0.24)] ${SEO_PRESS}`}
+          className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm bg-[#2f6bff] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,107,255,0.24)] ${SEO_PRESS}`}
           href={routes.seoArticleNew}
         >
           <Plus aria-hidden className="size-4" />
@@ -52,7 +52,7 @@ export function SeoArticlesList() {
 
       <section className="rounded-[20px] border border-[#e7eaee] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:p-5">
         <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_180px_180px]">
-          <label className="flex min-h-11 items-center gap-2 rounded-full bg-[#f4f6f8] px-3 text-sm text-[#8b919a]">
+          <label className="flex min-h-11 items-center gap-2 rounded-sm bg-[#f4f6f8] px-3 text-sm text-[#8b919a]">
             <Search aria-hidden className="size-4 shrink-0" />
             <span className="sr-only">{t("filters.searchLabel")}</span>
             <input
@@ -66,7 +66,7 @@ export function SeoArticlesList() {
           <label className="grid gap-1 text-xs font-semibold text-[#626970]">
             <span className="sr-only">{t("filters.localeLabel")}</span>
             <select
-              className="min-h-11 rounded-full border-0 bg-[#f4f6f8] px-4 text-sm font-medium text-[#17191d] outline-none focus-visible:ring-2 focus-visible:ring-[#2f6bff]"
+              className="min-h-11 rounded-sm border-0 bg-[#f4f6f8] px-4 text-sm font-medium text-[#17191d] outline-none focus-visible:ring-2 focus-visible:ring-[#2f6bff]"
               onChange={(event) => setArticleLocale(event.target.value as "all" | ArticleLocale)}
               value={articleLocale}
             >
@@ -78,7 +78,7 @@ export function SeoArticlesList() {
           <label className="grid gap-1 text-xs font-semibold text-[#626970]">
             <span className="sr-only">{t("filters.statusLabel")}</span>
             <select
-              className="min-h-11 rounded-full border-0 bg-[#f4f6f8] px-4 text-sm font-medium text-[#17191d] outline-none focus-visible:ring-2 focus-visible:ring-[#2f6bff]"
+              className="min-h-11 rounded-sm border-0 bg-[#f4f6f8] px-4 text-sm font-medium text-[#17191d] outline-none focus-visible:ring-2 focus-visible:ring-[#2f6bff]"
               onChange={(event) => setStatus(event.target.value as "all" | ArticleStatus)}
               value={status}
             >
@@ -164,7 +164,7 @@ export function SeoArticlesList() {
 function EditLink({ article, label, compact = false }: { article: ArticleRow; label: string; compact?: boolean }) {
   return (
     <Link
-      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#e6e9ee] bg-white px-3 text-sm font-semibold text-[#17191d] ${compact ? "" : "mt-4 w-full"} ${SEO_PRESS}`}
+      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-sm border border-[#e6e9ee] bg-white px-3 text-sm font-semibold text-[#17191d] ${compact ? "" : "mt-4 w-full"} ${SEO_PRESS}`}
       href={{ pathname: routes.seoArticle, params: { articleId: article.articleId } }}
     >
       <Pencil aria-hidden className="size-4" />
@@ -181,7 +181,7 @@ function StatusPill({ status }: { status: ArticleStatus }) {
     published: "bg-[#e7f8ee] text-[#157a3e]",
     archived: "bg-[#eef0f3] text-[#626970]",
   }[status];
-  return <span className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-semibold ${styles}`}>{t(status)}</span>;
+  return <span className={`inline-flex min-h-7 items-center rounded-sm px-2.5 text-xs font-semibold ${styles}`}>{t(status)}</span>;
 }
 
 function ArticlesLoading({ label }: { label: string }) {

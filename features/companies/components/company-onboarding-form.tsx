@@ -326,7 +326,7 @@ export function CompanyOnboardingForm() {
             <p className="m-0 text-[0.95rem] font-semibold text-ink">{t("contactTitle")}</p>
             <p className="mt-1 mb-6 text-[0.88rem] leading-5 text-muted">{t("contactLead")}</p>
             {ownerName ? (
-              <p className="mb-5 rounded-lg bg-brand-soft px-3 py-2 text-sm text-ink">{t("owner", { name: ownerName })}</p>
+              <p className="mb-5 rounded-sm bg-brand-soft px-3 py-2 text-sm text-ink">{t("owner", { name: ownerName })}</p>
             ) : null}
 
             <label className="block text-[0.88rem] font-medium text-ink" htmlFor={`${formId}-phone`}>

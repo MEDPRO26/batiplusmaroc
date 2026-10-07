@@ -73,7 +73,7 @@ export function OnboardingScreen({ accountType }: { accountType: "client" | "com
         <p className="mt-4 mb-0 text-sm text-ink">{t("signedInAs", { email: user.email })}</p>
       ) : null}
       {finalizeError ? (
-        <p className="mt-4 mb-0 rounded-lg bg-red-50 px-3 py-2 text-[0.88rem] text-red-700" role="alert">
+        <p className="mt-4 mb-0 rounded-sm bg-red-50 px-3 py-2 text-[0.88rem] text-red-700" role="alert">
           {finalizeError}
         </p>
       ) : null}

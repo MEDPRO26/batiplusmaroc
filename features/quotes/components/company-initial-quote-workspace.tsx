@@ -152,10 +152,10 @@ function InitialQuoteForm({ projectId, onSubmitted }: { projectId: Id<"projects"
 
       {error ? <p className="m-0 rounded-xl border border-[#edc7c2] bg-[#fff4f2] px-4 py-3 text-sm text-[#8a2f28]" role="alert">{error}</p> : null}
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
-        <button className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-brand px-7 text-sm font-semibold text-white transition-[transform,background-color] duration-150 hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:cursor-wait disabled:opacity-60 sm:w-auto" disabled={submitting} type="submit">
+        <button className="inline-flex min-h-12 w-full items-center justify-center rounded-sm bg-brand px-7 text-sm font-semibold text-white transition-[transform,background-color] duration-150 hover:bg-brand-hover active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:cursor-wait disabled:opacity-60 sm:w-auto" disabled={submitting} type="submit">
           {submitting ? t("form.submitting") : t("form.submit")}
         </button>
-        <Link className="inline-flex min-h-12 items-center justify-center rounded-full px-5 text-sm font-semibold text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={{ pathname: routes.companyProject, params: { projectId } }}>{t("form.cancel")}</Link>
+        <Link className="inline-flex min-h-12 items-center justify-center rounded-sm px-5 text-sm font-semibold text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={{ pathname: routes.companyProject, params: { projectId } }}>{t("form.cancel")}</Link>
       </div>
     </form>
   );
@@ -187,7 +187,7 @@ function QuoteDetail({ quote }: { quote: Quote }) {
     <article className="overflow-hidden rounded-2xl border border-brand-border bg-white">
       <div className="border-b border-brand-border px-5 py-5 sm:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${quote.status === "withdrawn" ? "bg-[#f1f2f3] text-muted" : "bg-[#e9f6ee] text-[#21633d]"}`}>{t(`detail.${quote.status}`)}</span>
+          <span className={`rounded-sm px-3 py-1.5 text-xs font-semibold ${quote.status === "withdrawn" ? "bg-[#f1f2f3] text-muted" : "bg-[#e9f6ee] text-[#21633d]"}`}>{t(`detail.${quote.status}`)}</span>
           <time className="text-xs text-muted" dateTime={new Date(quote.submittedAt).toISOString()}>{t("detail.submittedAt", { date: formatMarketplaceDateTime(quote.submittedAt, locale, { dateStyle: "medium" }) })}</time>
         </div>
       </div>
@@ -202,7 +202,7 @@ function QuoteDetail({ quote }: { quote: Quote }) {
         <QuoteText label={t("detail.scope")} value={quote.scope} />
         <QuoteText label={t("detail.message")} value={quote.message} />
         {quote.status === "discussion_open" ? <CompanyConversationContinuation quoteId={quote.id} /> : <div className="mt-7 flex gap-3 rounded-xl border border-[#c9dbe8] bg-[#f1f7fb] p-4 text-sm leading-6 text-[#31546d]"><LockKeyhole aria-hidden className="mt-0.5 size-5 shrink-0" /><p className="m-0">{t("detail.messagingLocked")}</p></div>}
-        {quote.status === "submitted" ? <button className="mt-7 inline-flex min-h-11 items-center rounded-full border border-[#c86458] px-5 text-sm font-semibold text-[#8a2f28] transition-colors hover:bg-[#fff4f2] disabled:opacity-60" disabled={withdrawing} onClick={onWithdraw} type="button">{withdrawing ? t("detail.withdrawing") : t("detail.withdraw")}</button> : null}
+        {quote.status === "submitted" ? <button className="mt-7 inline-flex min-h-11 items-center rounded-sm border border-[#c86458] px-5 text-sm font-semibold text-[#8a2f28] transition-colors hover:bg-[#fff4f2] disabled:opacity-60" disabled={withdrawing} onClick={onWithdraw} type="button">{withdrawing ? t("detail.withdrawing") : t("detail.withdraw")}</button> : null}
       </div>
     </article>
   );
@@ -252,7 +252,7 @@ export function CompanyConversationPanel({ conversationId, lookupPending, onRetr
     <section aria-live="polite" className="mt-7 rounded-2xl border border-[#b9dac7] bg-[#eff8f2] p-5 sm:p-6">
       <div className="flex items-start gap-3 text-[#21633d]"><Check aria-hidden className="mt-0.5 size-5 shrink-0" /><div><h2 className="m-0 text-base font-semibold">{t("detail.discussionOpenedTitle")}</h2><p className="mt-1 mb-0 text-sm leading-6">{t("detail.discussionPending")}</p></div></div>
       {conversationId ? (
-        <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand px-6 text-sm font-semibold text-white shadow-[0_8px_20px_rgb(5_79_132/0.18)] transition-[transform,opacity] duration-150 hover:opacity-95 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:w-auto" href={{ pathname: routes.messagesConversation, params: { conversationId } }}>
+        <Link className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-sm bg-brand px-6 text-sm font-semibold text-white shadow-[0_8px_20px_rgb(5_79_132/0.18)] transition-[transform,opacity] duration-150 hover:opacity-95 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand sm:w-auto" href={{ pathname: routes.messagesConversation, params: { conversationId } }}>
           {t("detail.continueInMessages")}<ArrowRight aria-hidden className="size-4" />
         </Link>
       ) : lookupPending ? (
@@ -261,7 +261,7 @@ export function CompanyConversationPanel({ conversationId, lookupPending, onRetr
         <div className="mt-4 rounded-xl border border-[#e5c9a8] bg-[#fffaf2] p-4 text-[#6e4b20]" role="alert">
           <p className="m-0 text-sm font-semibold">{t("detail.conversationUnavailableTitle")}</p>
           <p className="mt-1 mb-0 text-sm leading-6">{t("detail.conversationUnavailableLead")}</p>
-          <button className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#bd8c52] bg-white px-4 text-sm font-semibold transition-transform duration-150 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8b612f] disabled:cursor-wait disabled:opacity-60" disabled={recoveryPending} onClick={onRetry} type="button"><RefreshCw aria-hidden className="size-4" />{recoveryPending ? t("detail.conversationLoading") : t("detail.retryConversation")}</button>
+          <button className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-sm border border-[#bd8c52] bg-white px-4 text-sm font-semibold transition-transform duration-150 active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#8b612f] disabled:cursor-wait disabled:opacity-60" disabled={recoveryPending} onClick={onRetry} type="button"><RefreshCw aria-hidden className="size-4" />{recoveryPending ? t("detail.conversationLoading") : t("detail.retryConversation")}</button>
         </div>
       )}
     </section>
@@ -291,7 +291,7 @@ function ProjectSummary({ project }: { project: NonNullable<FunctionReturnType<t
 
 function VerificationRequired() {
   const t = useTranslations("initialQuote");
-  return <section className="rounded-2xl border border-brand-border bg-white p-6 sm:p-8"><h2 className="m-0 text-xl font-semibold text-ink">{t("verificationTitle")}</h2><p className="mt-3 mb-0 text-sm leading-6 text-muted">{t("verificationLead")}</p><Link className="mt-6 inline-flex min-h-12 items-center rounded-full bg-brand px-6 text-sm font-semibold text-white" href={routes.companyVerification}>{t("verifyAction")}</Link></section>;
+  return <section className="rounded-2xl border border-brand-border bg-white p-6 sm:p-8"><h2 className="m-0 text-xl font-semibold text-ink">{t("verificationTitle")}</h2><p className="mt-3 mb-0 text-sm leading-6 text-muted">{t("verificationLead")}</p><Link className="mt-6 inline-flex min-h-12 items-center rounded-sm bg-brand px-6 text-sm font-semibold text-white" href={routes.companyVerification}>{t("verifyAction")}</Link></section>;
 }
 
 function MarketplaceSuspended() {
@@ -301,7 +301,7 @@ function MarketplaceSuspended() {
 
 function UnavailableQuoteWorkspace({ projectId }: { projectId: string }) {
   const t = useTranslations("initialQuote");
-  return <main className="mx-auto flex min-h-[65vh] w-[calc(100%-36px)] max-w-[680px] items-center justify-center py-12 text-center"><div><h1 className="m-0 text-2xl font-semibold text-ink">{t("unavailableTitle")}</h1><p className="mt-3 mb-0 text-sm leading-6 text-muted">{t("unavailableLead")}</p><Link className="mt-6 inline-flex min-h-11 items-center rounded-full bg-brand px-5 text-sm font-semibold text-white" href={{ pathname: routes.companyProject, params: { projectId } }}>{t("backToProject")}</Link></div></main>;
+  return <main className="mx-auto flex min-h-[65vh] w-[calc(100%-36px)] max-w-[680px] items-center justify-center py-12 text-center"><div><h1 className="m-0 text-2xl font-semibold text-ink">{t("unavailableTitle")}</h1><p className="mt-3 mb-0 text-sm leading-6 text-muted">{t("unavailableLead")}</p><Link className="mt-6 inline-flex min-h-11 items-center rounded-sm bg-brand px-5 text-sm font-semibold text-white" href={{ pathname: routes.companyProject, params: { projectId } }}>{t("backToProject")}</Link></div></main>;
 }
 
 function QuoteWorkspaceSkeleton({ label }: { label: string }) {

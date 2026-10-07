@@ -40,7 +40,7 @@ export function ConversationMarketplaceWorkflow({ conversationId }: { conversati
     return (
       <section aria-busy="true" className="border-b border-[#e6eaee] bg-white px-5 py-3" role="status">
         <span className="sr-only">{t("loading")}</span>
-        <div className="mx-auto h-12 max-w-[720px] animate-pulse rounded-lg bg-[#f3f5f7]" />
+        <div className="mx-auto h-12 max-w-[720px] animate-pulse rounded-sm bg-[#f3f5f7]" />
       </section>
     );
   }
@@ -254,7 +254,7 @@ function CompactSiteVisit({
 
 function StatusPill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex rounded-full bg-[#f3f5f7] px-2 py-0.5 text-[12px] font-medium text-[#3d4a59]">
+    <span className="inline-flex rounded-sm bg-[#f3f5f7] px-2 py-0.5 text-[12px] font-medium text-[#3d4a59]">
       {children}
     </span>
   );
@@ -460,9 +460,9 @@ function WorkflowActions({
 }
 
 const primaryClass =
-  "inline-flex min-h-10 w-full items-center justify-center rounded-full bg-brand px-4 text-[14px] font-medium text-white transition-[transform,background-color] duration-150 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96] disabled:opacity-55 sm:w-auto";
+  "inline-flex min-h-10 w-full items-center justify-center rounded-sm bg-brand px-4 text-[14px] font-medium text-white transition-[transform,background-color] duration-150 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96] disabled:opacity-55 sm:w-auto";
 const secondaryClass =
-  "inline-flex min-h-10 w-full items-center justify-center rounded-full border border-[#d7dde3] bg-white px-4 text-[14px] font-medium text-ink transition-[transform,background-color] duration-150 hover:bg-[#f7f8f9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96] disabled:opacity-55 sm:w-auto";
+  "inline-flex min-h-10 w-full items-center justify-center rounded-sm border border-[#d7dde3] bg-white px-4 text-[14px] font-medium text-ink transition-[transform,background-color] duration-150 hover:bg-[#f7f8f9] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96] disabled:opacity-55 sm:w-auto";
 
 function PrimaryButton({ busy, onClick, children }: { busy: boolean; onClick: () => void; children: React.ReactNode }) {
   return (

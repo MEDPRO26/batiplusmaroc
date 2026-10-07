@@ -93,7 +93,7 @@ export function AdminCompaniesPanel({ initialFilters }: { initialFilters: AdminC
         </div>
 
         <div className="grid gap-2.5 p-4 sm:grid-cols-3 sm:p-5 xl:grid-cols-[minmax(220px,1fr)_auto_auto_auto]">
-          <label className="flex min-h-11 items-center gap-2 rounded-full border border-[#e7eaee] bg-white px-4 text-sm focus-within:border-[#2f6bff] sm:col-span-3 xl:col-span-1">
+          <label className="flex min-h-11 items-center gap-2 rounded-sm border border-[#e7eaee] bg-white px-4 text-sm focus-within:border-[#2f6bff] sm:col-span-3 xl:col-span-1">
             <SearchIcon />
             <span className="sr-only">{t("filters.searchLabel")}</span>
             <input
@@ -172,7 +172,7 @@ export function AdminCompaniesPanel({ initialFilters }: { initialFilters: AdminC
         {status === "CanLoadMore" || status === "LoadingMore" ? (
           <div className="border-t border-[#eef1f4] p-4">
             <button
-              className={`min-h-11 w-full rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold disabled:opacity-50 ${ADMIN_PRESS}`}
+              className={`min-h-11 w-full rounded-sm border border-[#e6e9ee] px-4 text-sm font-semibold disabled:opacity-50 ${ADMIN_PRESS}`}
               disabled={status === "LoadingMore"}
               onClick={() => loadMore(20)}
               type="button"
@@ -222,7 +222,7 @@ function CompanyRow({ row }: { row: Row }) {
       <td className="px-4 py-3 text-right">
         <Link
           aria-label={t("row.openAria", { name: row.name })}
-          className={`inline-flex min-h-10 items-center gap-1 rounded-full px-3 text-sm font-semibold whitespace-nowrap text-[#2456c7] hover:bg-[#eef4ff] ${ADMIN_PRESS}`}
+          className={`inline-flex min-h-10 items-center gap-1 rounded-sm px-3 text-sm font-semibold whitespace-nowrap text-[#2456c7] hover:bg-[#eef4ff] ${ADMIN_PRESS}`}
           href={companyHref(row)}
         >
           {row.verificationStatus === "pending" ? t("row.review") : t("viewCompany")}
@@ -279,7 +279,7 @@ function FilterSelect<T extends string>({ label, allLabel, value, options, label
   return (
     <select
       aria-label={label}
-      className="min-h-11 w-full min-w-0 rounded-full border border-[#e7eaee] bg-white px-4 pr-9 text-sm font-medium text-[#17191d] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6bff]"
+      className="min-h-11 w-full min-w-0 rounded-sm border border-[#e7eaee] bg-white px-4 pr-9 text-sm font-medium text-[#17191d] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6bff]"
       onChange={(event) => onChange(event.target.value ? (event.target.value as T) : null)}
       value={value ?? ""}
     >
@@ -289,7 +289,7 @@ function FilterSelect<T extends string>({ label, allLabel, value, options, label
   );
 }
 
-const PILL = "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap";
+const PILL = "inline-flex items-center rounded-sm px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap";
 
 export function VerificationPill({ value }: { value: Verification }) {
   const t = useTranslations("adminCompanies");

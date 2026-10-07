@@ -119,7 +119,7 @@ export function SignInForm({ brandName }: { brandName: string }) {
             </span>
             <input
               autoComplete="username"
-              className="w-full rounded-lg border border-brand-border bg-white py-3.5 pe-3.5 ps-11 text-[0.95rem] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-muted/75 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
+              className="w-full rounded-sm border border-brand-border bg-white py-3.5 pe-3.5 ps-11 text-[0.95rem] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-muted/75 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
               id={`${formId}-email`}
               name="email"
               placeholder={t("emailPlaceholder")}
@@ -133,7 +133,7 @@ export function SignInForm({ brandName }: { brandName: string }) {
           </label>
           <input
             autoComplete="current-password"
-            className="w-full rounded-lg border border-brand-border bg-white px-3.5 py-3.5 text-[0.95rem] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-muted/75 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
+            className="w-full rounded-sm border border-brand-border bg-white px-3.5 py-3.5 text-[0.95rem] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-muted/75 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
             id={`${formId}-password`}
             name="password"
             placeholder={t("passwordPlaceholder")}
@@ -144,7 +144,7 @@ export function SignInForm({ brandName }: { brandName: string }) {
           {error ? <FriendlyAlert>{error}</FriendlyAlert> : null}
 
           <button
-            className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-brand px-5 text-[0.95rem] font-semibold text-white transition-[background-color,transform] hover:-translate-y-0.5 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-sm bg-brand px-5 text-[0.95rem] font-semibold text-white transition-[background-color,transform] hover:-translate-y-0.5 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
             disabled={busy}
             type="submit"
           >
@@ -155,7 +155,7 @@ export function SignInForm({ brandName }: { brandName: string }) {
         <div className="mt-8 border-t border-brand-border pt-7 text-center">
           <p className="mb-4 text-[0.92rem] text-muted">{t("noAccount")}</p>
           <Link
-            className="inline-flex min-h-12 w-full items-center justify-center rounded-full border-2 border-brand bg-white px-5 text-[0.95rem] font-semibold text-brand transition-[background-color,transform] hover:-translate-y-0.5 hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-sm border-2 border-brand bg-white px-5 text-[0.95rem] font-semibold text-brand transition-[background-color,transform] hover:-translate-y-0.5 hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
             href={routes.signUp}
           >
             {t("signUp")}

@@ -22,7 +22,7 @@ export default function AdminVerificationError({
         <h1 className="text-xl font-semibold text-[#17191d]">{t("error.title")}</h1>
         <p className="mt-2 text-sm leading-6 text-[#626970]">{t("error.description")}</p>
         <button
-          className="mt-5 min-h-11 rounded-full bg-[#2f6bff] px-5 text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.96]"
+          className="mt-5 min-h-11 rounded-sm bg-[#2f6bff] px-5 text-sm font-semibold text-white transition-transform duration-150 active:scale-[0.96]"
           onClick={reset}
           type="button"
         >

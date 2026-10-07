@@ -252,7 +252,7 @@ export function AdminCommissionSettingsView({
           <div className="p-5 sm:p-7">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="max-w-2xl">
-                <span className="inline-flex rounded-full bg-[#eef3ff] px-3 py-1 text-xs font-semibold tracking-wide text-[#2457d6]">
+                <span className="inline-flex rounded-sm bg-[#eef3ff] px-3 py-1 text-xs font-semibold tracking-wide text-[#2457d6]">
                   {t("policyLabel")}
                 </span>
                 <h2 className="mt-4 text-xl font-semibold tracking-[-0.025em] text-[#17191d]">
@@ -261,7 +261,7 @@ export function AdminCommissionSettingsView({
                 <p className="mt-2 text-sm leading-6 text-[#626970]">{t("rulesDescription")}</p>
               </div>
               {setting.configured && setting.commissionConfigVersion !== null ? (
-                <p className="shrink-0 rounded-full bg-[#f2f4f7] px-3 py-1.5 text-xs font-semibold text-[#626970]">
+                <p className="shrink-0 rounded-sm bg-[#f2f4f7] px-3 py-1.5 text-xs font-semibold text-[#626970]">
                   {t("version", { version: setting.commissionConfigVersion })}
                 </p>
               ) : null}
@@ -302,7 +302,7 @@ export function AdminCommissionSettingsView({
                           <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-[#737a84] lg:sr-only">
                             {t("dealValueTo")}
                           </span>
-                          <div className="flex min-h-11 items-center rounded-[12px] border border-dashed border-[#b9c2cf] bg-white px-3 text-sm font-semibold text-[#2457d6]">
+                          <div className="flex min-h-11 items-center rounded-sm border border-dashed border-[#b9c2cf] bg-white px-3 text-sm font-semibold text-[#2457d6]">
                             {t("noLimit")}
                           </div>
                         </div>
@@ -324,7 +324,7 @@ export function AdminCommissionSettingsView({
                       />
                       <button
                         aria-label={`${t("removeTier")} ${index + 1}`}
-                        className={`min-h-11 rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#626970] disabled:cursor-not-allowed disabled:opacity-40 ${ADMIN_PRESS}`}
+                        className={`min-h-11 rounded-sm border border-[#dfe3e8] bg-white px-4 text-sm font-semibold text-[#626970] disabled:cursor-not-allowed disabled:opacity-40 ${ADMIN_PRESS}`}
                         disabled={drafts.length === 1 || saving}
                         onClick={() => onRemove(tier.id)}
                         type="button"
@@ -337,7 +337,7 @@ export function AdminCommissionSettingsView({
               </div>
 
               <button
-                className={`mt-4 inline-flex min-h-11 items-center justify-center rounded-full border border-[#bfd0ff] bg-[#f4f7ff] px-5 text-sm font-semibold text-[#2457d6] disabled:opacity-50 ${ADMIN_PRESS}`}
+                className={`mt-4 inline-flex min-h-11 items-center justify-center rounded-sm border border-[#bfd0ff] bg-[#f4f7ff] px-5 text-sm font-semibold text-[#2457d6] disabled:opacity-50 ${ADMIN_PRESS}`}
                 disabled={saving || drafts.length >= 20}
                 onClick={onAdd}
                 type="button"
@@ -356,7 +356,7 @@ export function AdminCommissionSettingsView({
                 </div>
                 <div className="flex justify-end">
                   <button
-                    className={`inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#2f6bff] px-7 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,107,255,0.22)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${ADMIN_PRESS}`}
+                    className={`inline-flex min-h-11 w-full items-center justify-center rounded-sm bg-[#2f6bff] px-7 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,107,255,0.22)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto ${ADMIN_PRESS}`}
                     disabled={saving}
                     type="submit"
                   >
@@ -390,7 +390,7 @@ function TierInput({
       <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-[#737a84] lg:sr-only">
         {label}
       </span>
-      <span className="flex min-h-11 items-center rounded-[12px] border border-[#dfe3e8] bg-white px-3 focus-within:border-[#2f6bff] focus-within:ring-2 focus-within:ring-[#2f6bff]/15">
+      <span className="flex min-h-11 items-center rounded-sm border border-[#dfe3e8] bg-white px-3 focus-within:border-[#2f6bff] focus-within:ring-2 focus-within:ring-[#2f6bff]/15">
         <input
           aria-label={ariaLabel}
           className="min-w-0 flex-1 bg-transparent text-sm font-semibold tabular-nums text-[#17191d] outline-none"

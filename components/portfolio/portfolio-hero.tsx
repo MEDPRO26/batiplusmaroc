@@ -8,8 +8,8 @@ export function PortfolioHero() {
     <section className="bg-[#f4f6f7] px-[18px] py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mx-auto grid min-h-[720px] max-w-[1500px] overflow-hidden rounded-[28px] bg-[#0b223b] text-white lg:grid-cols-[0.92fr_1.08fr] lg:rounded-[36px]">
         <div className="relative flex flex-col justify-end overflow-hidden px-6 py-14 sm:px-10 sm:py-16 lg:px-[clamp(3rem,6vw,7rem)] lg:py-20">
-          <div className="absolute -top-32 -left-28 size-96 rounded-full border border-white/8" aria-hidden="true" />
-          <div className="absolute -top-16 -left-8 size-56 rounded-full border border-white/8" aria-hidden="true" />
+          <div className="absolute -top-32 -left-28 size-96 rounded-sm border border-white/8" aria-hidden="true" />
+          <div className="absolute -top-16 -left-8 size-56 rounded-sm border border-white/8" aria-hidden="true" />
           <div className="relative max-w-2xl">
             <p className="mb-6 flex items-center gap-4 text-[0.68rem] font-bold tracking-[0.2em] text-[#e7b63f] uppercase">
               <span className="h-px w-9 bg-[#e7b63f]" aria-hidden="true" />

@@ -80,7 +80,7 @@ export function AdminCompanyDetailPanel({ companyId, initialTab = "overview" }: 
     return <AdminPage breadcrumb={t("detail.breadcrumb")} parent={companiesParent} title={t("detail.loading")}><div aria-busy="true" className="h-56 animate-pulse rounded-[16px] bg-white" role="status"><span className="sr-only">{t("loading")}</span></div></AdminPage>;
   }
   if (summary === null) {
-    return <AdminPage breadcrumb={t("detail.breadcrumb")} parent={companiesParent} title={t("detail.notFoundTitle")}><section className="rounded-[16px] border border-[#e7eaee] bg-white p-6"><p className="text-sm text-[#626970]">{t("detail.notFoundLead")}</p><Link className={`mt-5 inline-flex min-h-11 items-center rounded-full bg-[#2f6bff] px-5 text-sm font-semibold text-white ${ADMIN_PRESS}`} href={backHref}>{t("detail.back")}</Link></section></AdminPage>;
+    return <AdminPage breadcrumb={t("detail.breadcrumb")} parent={companiesParent} title={t("detail.notFoundTitle")}><section className="rounded-[16px] border border-[#e7eaee] bg-white p-6"><p className="text-sm text-[#626970]">{t("detail.notFoundLead")}</p><Link className={`mt-5 inline-flex min-h-11 items-center rounded-sm bg-[#2f6bff] px-5 text-sm font-semibold text-white ${ADMIN_PRESS}`} href={backHref}>{t("detail.back")}</Link></section></AdminPage>;
   }
 
   const currentStatus = operational?.status as OperationalStatus | undefined;
@@ -113,8 +113,8 @@ export function AdminCompanyDetailPanel({ companyId, initialTab = "overview" }: 
               type="button"
             >
               {t(`detail.tabs.${item}`)}
-              {item === "verification" && summary.verificationStatus === "pending" ? <span aria-label={t("detail.verificationPendingBadge")} className="size-2 rounded-full bg-amber-500" /> : null}
-              {item === "messages" && operationalSummary?.unreadCount ? <span aria-label={tMessaging("thread.unreadBadge", { count: operationalSummary.unreadCount })} className="inline-flex min-w-5 justify-center rounded-full bg-[#2f6bff] px-1.5 py-0.5 text-[11px] text-white">{operationalSummary.unreadCount > 99 ? "99+" : operationalSummary.unreadCount}</span> : null}
+              {item === "verification" && summary.verificationStatus === "pending" ? <span aria-label={t("detail.verificationPendingBadge")} className="size-2 rounded-sm bg-amber-500" /> : null}
+              {item === "messages" && operationalSummary?.unreadCount ? <span aria-label={tMessaging("thread.unreadBadge", { count: operationalSummary.unreadCount })} className="inline-flex min-w-5 justify-center rounded-sm bg-[#2f6bff] px-1.5 py-0.5 text-[11px] text-white">{operationalSummary.unreadCount > 99 ? "99+" : operationalSummary.unreadCount}</span> : null}
             </button>
           ))}
         </div>
@@ -171,7 +171,7 @@ function CompanyHeader({ summary, currentStatus, backHref, onChangeStatus, onRev
   const tStatus = useTranslations("adminCompanies.operationalStatus");
   return (
     <div>
-      <Link className={`-ml-2 inline-flex min-h-10 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-[#2456c7] hover:bg-[#eef4ff] ${ADMIN_PRESS}`} href={backHref}>
+      <Link className={`-ml-2 inline-flex min-h-10 items-center gap-1.5 rounded-sm px-2 text-sm font-semibold text-[#2456c7] hover:bg-[#eef4ff] ${ADMIN_PRESS}`} href={backHref}>
         <span aria-hidden>←</span>
         {t("detail.back")}
       </Link>
@@ -191,9 +191,9 @@ function CompanyHeader({ summary, currentStatus, backHref, onChangeStatus, onRev
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {summary.publicProfileSlug ? <Link className={`inline-flex min-h-11 items-center rounded-full border border-[#dfe3e8] bg-white px-4 text-sm font-semibold ${ADMIN_PRESS}`} href={{ pathname: routes.companyProfile, params: { slug: summary.publicProfileSlug } }}>{t("detail.publicProfile")}</Link> : null}
+          {summary.publicProfileSlug ? <Link className={`inline-flex min-h-11 items-center rounded-sm border border-[#dfe3e8] bg-white px-4 text-sm font-semibold ${ADMIN_PRESS}`} href={{ pathname: routes.companyProfile, params: { slug: summary.publicProfileSlug } }}>{t("detail.publicProfile")}</Link> : null}
           <DropdownMenu.Root modal={false}>
-            <DropdownMenu.Trigger aria-label={t("detail.moreActions")} className={`grid size-11 place-items-center rounded-full border border-[#dfe3e8] bg-white text-[#17191d] ${ADMIN_PRESS}`}>
+            <DropdownMenu.Trigger aria-label={t("detail.moreActions")} className={`grid size-11 place-items-center rounded-sm border border-[#dfe3e8] bg-white text-[#17191d] ${ADMIN_PRESS}`}>
               <svg aria-hidden className="size-5" fill="currentColor" viewBox="0 0 20 20"><circle cx="4.5" cy="10" r="1.5" /><circle cx="10" cy="10" r="1.5" /><circle cx="15.5" cy="10" r="1.5" /></svg>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
@@ -237,16 +237,16 @@ function Overview({ summary, currentStatus, unreadMessages, onSelectTab, onChang
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
       <section aria-label={t("attention.title")} className="rounded-[14px] border border-[#e7eaee] bg-white lg:col-span-2">
         {actions.length === 0 ? (
-          <p className="m-0 flex items-center gap-2 px-4 py-3 text-sm text-[#626970]"><span aria-hidden className="size-2 rounded-full bg-emerald-500" />{t("attention.none")}</p>
+          <p className="m-0 flex items-center gap-2 px-4 py-3 text-sm text-[#626970]"><span aria-hidden className="size-2 rounded-sm bg-emerald-500" />{t("attention.none")}</p>
         ) : (
           <ul className="m-0 list-none divide-y divide-[#eef1f4] p-0">
             {actions.map((action) => (
               <li className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5" key={action.key}>
                 <span className="flex items-center gap-2.5 text-sm font-medium text-[#17191d]">
-                  <span aria-hidden className={`size-2 shrink-0 rounded-full ${action.tone === "red" ? "bg-red-500" : action.tone === "blue" ? "bg-[#2f6bff]" : "bg-amber-500"}`} />
+                  <span aria-hidden className={`size-2 shrink-0 rounded-sm ${action.tone === "red" ? "bg-red-500" : action.tone === "blue" ? "bg-[#2f6bff]" : "bg-amber-500"}`} />
                   {action.text}
                 </span>
-                <button className={`min-h-10 rounded-full px-3 text-sm font-semibold text-[#2456c7] hover:bg-[#eef4ff] ${ADMIN_PRESS}`} onClick={() => onSelectTab(action.tab)} type="button">{action.cta} →</button>
+                <button className={`min-h-10 rounded-sm px-3 text-sm font-semibold text-[#2456c7] hover:bg-[#eef4ff] ${ADMIN_PRESS}`} onClick={() => onSelectTab(action.tab)} type="button">{action.cta} →</button>
               </li>
             ))}
           </ul>
@@ -262,7 +262,7 @@ function Overview({ summary, currentStatus, unreadMessages, onSelectTab, onChang
             <Field label={t("overview.created")} value={date(summary.createdAt, locale)} />
             <div className="sm:col-span-2">
               <dt className="text-xs font-semibold text-[#8b919a]">{t("overview.services")}</dt>
-              <dd className="mt-1.5 flex flex-wrap gap-1.5">{summary.services.length ? summary.services.map((service) => <span className="rounded-full bg-[#f4f6f8] px-2.5 py-1 text-xs font-medium text-[#30343a]" key={service}>{serviceName(service, catalog ?? [], locale, key => t(`services.${key}`))}</span>) : <span className="text-sm">—</span>}</dd>
+              <dd className="mt-1.5 flex flex-wrap gap-1.5">{summary.services.length ? summary.services.map((service) => <span className="rounded-sm bg-[#f4f6f8] px-2.5 py-1 text-xs font-medium text-[#30343a]" key={service}>{serviceName(service, catalog ?? [], locale, key => t(`services.${key}`))}</span>) : <span className="text-sm">—</span>}</dd>
             </div>
             <Field label={t("overview.serviceAreas")} value={summary.serviceAreas.join(", ") || "—"} />
           </dl>
@@ -270,7 +270,7 @@ function Overview({ summary, currentStatus, unreadMessages, onSelectTab, onChang
 
         <CompanyActivityTimeline
           companyId={summary.companyId}
-          footer={<button className={`mt-3 min-h-10 rounded-full px-3 text-sm font-semibold text-[#2456c7] hover:bg-[#eef4ff] ${ADMIN_PRESS}`} onClick={() => onSelectTab("activity")} type="button">{t("overview.allActivity")} →</button>}
+          footer={<button className={`mt-3 min-h-10 rounded-sm px-3 text-sm font-semibold text-[#2456c7] hover:bg-[#eef4ff] ${ADMIN_PRESS}`} onClick={() => onSelectTab("activity")} type="button">{t("overview.allActivity")} →</button>}
           limit={4}
         />
       </div>
@@ -324,7 +324,7 @@ function OperationalStatusHistory({ companyId, currentStatus, onChangeStatus }: 
       {currentStatus ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {OPERATIONAL_STATUSES.filter((item) => item !== currentStatus).map((item) => (
-            <button className={`min-h-10 rounded-full border px-3 text-xs font-semibold ${item === "suspended" ? "border-red-200 text-red-700" : "border-[#dfe3e8]"} ${ADMIN_PRESS}`} key={item} onClick={() => onChangeStatus(item)} type="button">
+            <button className={`min-h-10 rounded-sm border px-3 text-xs font-semibold ${item === "suspended" ? "border-red-200 text-red-700" : "border-[#dfe3e8]"} ${ADMIN_PRESS}`} key={item} onClick={() => onChangeStatus(item)} type="button">
               {t("changeTo", { status: t(`status.${item}`) })}
             </button>
           ))}
@@ -334,7 +334,7 @@ function OperationalStatusHistory({ companyId, currentStatus, onChangeStatus }: 
       {status === "LoadingFirstPage" ? <Loading /> : results.length ? (
         <ol className="mt-2 grid gap-3">
           {results.map((item) => <li className="border-l-2 border-[#e7eaee] pl-3 text-sm" key={item.id}><span className="font-semibold">{t(`status.${item.fromStatus}`)} → {t(`status.${item.toStatus}`)}</span><p className="mt-0.5 whitespace-pre-wrap text-[#626970]">{item.reason}</p><span className="mt-0.5 block text-xs text-[#8b919a]">{item.changedByDisplayName} · {date(item.createdAt, locale)}</span></li>)}
-          {status === "CanLoadMore" ? <li><button className={`min-h-10 rounded-full px-3 text-sm font-semibold text-[#2456c7] hover:bg-[#eef4ff] ${ADMIN_PRESS}`} onClick={() => loadMore(10)} type="button">{t("loadMore")}</button></li> : null}
+          {status === "CanLoadMore" ? <li><button className={`min-h-10 rounded-sm px-3 text-sm font-semibold text-[#2456c7] hover:bg-[#eef4ff] ${ADMIN_PRESS}`} onClick={() => loadMore(10)} type="button">{t("loadMore")}</button></li> : null}
         </ol>
       ) : <p className="mt-2 text-sm text-[#8b919a]">{t("emptyHistory")}</p>}
     </section>
@@ -382,10 +382,10 @@ function OperationalStatusDialog({ companyId, currentStatus, target, onClose }: 
         <p className="mt-2 text-sm leading-6 text-[#626970]">{highImpact ? t("highImpactConfirmation") : t("confirmation")}</p>
         <form className="mt-5" onSubmit={submit}>
           <label className="block text-sm font-semibold" htmlFor="operational-status-reason">{t("reason")}</label>
-          <textarea autoFocus className="mt-2 min-h-28 w-full rounded-[12px] border p-3 text-sm outline-none focus-visible:outline-2 focus-visible:outline-[#2f6bff]" id="operational-status-reason" maxLength={1000} minLength={10} onChange={(event) => setReason(event.target.value)} required value={reason} />
+          <textarea autoFocus className="mt-2 min-h-28 w-full rounded-sm border p-3 text-sm outline-none focus-visible:outline-2 focus-visible:outline-[#2f6bff]" id="operational-status-reason" maxLength={1000} minLength={10} onChange={(event) => setReason(event.target.value)} required value={reason} />
           <p className="mt-1 text-xs text-[#8b919a]">{t("reasonHelp")}</p>
-          {error ? <p className="mt-3 rounded-[12px] bg-red-50 p-3 text-sm text-red-800" role="alert">{error}</p> : null}
-          <div className="mt-5 flex flex-wrap justify-end gap-2"><button className={`min-h-11 rounded-full border px-4 text-sm font-semibold ${ADMIN_PRESS}`} onClick={onClose} type="button">{t("cancel")}</button><button className={`min-h-11 rounded-full px-5 text-sm font-semibold text-white disabled:opacity-50 ${target === "suspended" ? "bg-red-700" : "bg-[#2f6bff]"} ${ADMIN_PRESS}`} disabled={busy || reason.trim().length < 10} type="submit">{busy ? t("saving") : t("confirm")}</button></div>
+          {error ? <p className="mt-3 rounded-sm bg-red-50 p-3 text-sm text-red-800" role="alert">{error}</p> : null}
+          <div className="mt-5 flex flex-wrap justify-end gap-2"><button className={`min-h-11 rounded-sm border px-4 text-sm font-semibold ${ADMIN_PRESS}`} onClick={onClose} type="button">{t("cancel")}</button><button className={`min-h-11 rounded-sm px-5 text-sm font-semibold text-white disabled:opacity-50 ${target === "suspended" ? "bg-red-700" : "bg-[#2f6bff]"} ${ADMIN_PRESS}`} disabled={busy || reason.trim().length < 10} type="submit">{busy ? t("saving") : t("confirm")}</button></div>
         </form>
       </section>
     </div>
@@ -408,7 +408,7 @@ function Commissions({ companyId }: { companyId: Id<"companies"> }) {
     { initialNumItems: 15 },
   );
   const [selected, setSelected] = useState<Commission | null>(null);
-  return <DataSection title={t("commissions.title")}><PaginatedState empty={t("commissions.empty")} loadMore={() => loadMore(15)} loading={status === "LoadingFirstPage"} loadingMore={status === "LoadingMore"} canLoadMore={status === "CanLoadMore"}>{rows.map((row) => <article className="flex flex-col gap-3 rounded-[14px] bg-[#f8fafb] p-4 sm:flex-row sm:items-center sm:justify-between" key={row.dealId}><div><h3 className="font-semibold">{row.projectTitle}</h3><p className="mt-1 text-sm text-[#626970]">{money(row.commissionAmountMad, locale)} · {t(`commissions.status.${row.commissionStatus}`)}</p></div><button className={`min-h-10 rounded-full border bg-white px-4 text-sm font-semibold ${ADMIN_PRESS}`} onClick={() => setSelected(row)} type="button">{t("commissions.view")}</button></article>)}</PaginatedState>{selected ? <CommissionDialog locale={locale} onClose={() => setSelected(null)} row={selected} /> : null}</DataSection>;
+  return <DataSection title={t("commissions.title")}><PaginatedState empty={t("commissions.empty")} loadMore={() => loadMore(15)} loading={status === "LoadingFirstPage"} loadingMore={status === "LoadingMore"} canLoadMore={status === "CanLoadMore"}>{rows.map((row) => <article className="flex flex-col gap-3 rounded-[14px] bg-[#f8fafb] p-4 sm:flex-row sm:items-center sm:justify-between" key={row.dealId}><div><h3 className="font-semibold">{row.projectTitle}</h3><p className="mt-1 text-sm text-[#626970]">{money(row.commissionAmountMad, locale)} · {t(`commissions.status.${row.commissionStatus}`)}</p></div><button className={`min-h-10 rounded-sm border bg-white px-4 text-sm font-semibold ${ADMIN_PRESS}`} onClick={() => setSelected(row)} type="button">{t("commissions.view")}</button></article>)}</PaginatedState>{selected ? <CommissionDialog locale={locale} onClose={() => setSelected(null)} row={selected} /> : null}</DataSection>;
 }
 
 function CommissionDialog({ row, locale, onClose }: { row: Commission; locale: string; onClose: () => void }) {
@@ -417,7 +417,7 @@ function CommissionDialog({ row, locale, onClose }: { row: Commission; locale: s
   const titleId = useId();
   const [reference, setReference] = useState(""); const [note, setNote] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
   async function submit(event: React.FormEvent) { event.preventDefault(); setBusy(true); setError(""); try { await markPaid({ dealId: row.dealId, paymentReference: reference || undefined, paymentNote: note || undefined }); onClose(); } catch { setError(t("commissions.actionError")); } finally { setBusy(false); } }
-  return <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-6" role="presentation"><section aria-labelledby={titleId} aria-modal="true" className="max-h-[92dvh] w-full max-w-xl overflow-y-auto rounded-t-[24px] bg-white p-5 sm:rounded-[24px]" role="dialog"><div className="flex items-start justify-between gap-3"><div><p className="text-sm text-[#626970]">{money(row.commissionAmountMad, locale)}</p><h2 className="text-xl font-semibold" id={titleId}>{row.projectTitle}</h2></div><button aria-label={t("commissions.close")} className={`size-11 rounded-full bg-[#f4f6f8] ${ADMIN_PRESS}`} onClick={onClose} type="button">×</button></div>{row.commissionStatus === "due" ? <form className="mt-5" onSubmit={submit}><label className="block text-sm font-semibold">{t("commissions.reference")}<input className="mt-2 min-h-11 w-full rounded-[12px] border px-3 font-normal" maxLength={120} onChange={(event) => setReference(event.target.value)} value={reference} /></label><label className="mt-4 block text-sm font-semibold">{t("commissions.note")}<textarea className="mt-2 min-h-24 w-full rounded-[12px] border p-3 font-normal" maxLength={1000} onChange={(event) => setNote(event.target.value)} value={note} /></label>{error ? <p className="mt-3 rounded-[12px] bg-red-50 p-3 text-sm text-red-800" role="alert">{error}</p> : null}<button className={`mt-5 min-h-11 rounded-full bg-[#2f6bff] px-5 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`} disabled={busy} type="submit">{busy ? t("saving") : t("commissions.markPaid")}</button></form> : <dl className="mt-5 grid gap-4 sm:grid-cols-2"><Field label={t("commissions.reference")} value={row.paymentReference ?? "—"} /><Field label={t("commissions.note")} value={row.paymentNote ?? "—"} /><Field label={t("commissions.paidAt")} value={row.paidAt ? date(row.paidAt, locale) : "—"} /></dl>}</section></div>;
+  return <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-6" role="presentation"><section aria-labelledby={titleId} aria-modal="true" className="max-h-[92dvh] w-full max-w-xl overflow-y-auto rounded-t-[24px] bg-white p-5 sm:rounded-[24px]" role="dialog"><div className="flex items-start justify-between gap-3"><div><p className="text-sm text-[#626970]">{money(row.commissionAmountMad, locale)}</p><h2 className="text-xl font-semibold" id={titleId}>{row.projectTitle}</h2></div><button aria-label={t("commissions.close")} className={`size-11 rounded-sm bg-[#f4f6f8] ${ADMIN_PRESS}`} onClick={onClose} type="button">×</button></div>{row.commissionStatus === "due" ? <form className="mt-5" onSubmit={submit}><label className="block text-sm font-semibold">{t("commissions.reference")}<input className="mt-2 min-h-11 w-full rounded-sm border px-3 font-normal" maxLength={120} onChange={(event) => setReference(event.target.value)} value={reference} /></label><label className="mt-4 block text-sm font-semibold">{t("commissions.note")}<textarea className="mt-2 min-h-24 w-full rounded-sm border p-3 font-normal" maxLength={1000} onChange={(event) => setNote(event.target.value)} value={note} /></label>{error ? <p className="mt-3 rounded-sm bg-red-50 p-3 text-sm text-red-800" role="alert">{error}</p> : null}<button className={`mt-5 min-h-11 rounded-sm bg-[#2f6bff] px-5 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`} disabled={busy} type="submit">{busy ? t("saving") : t("commissions.markPaid")}</button></form> : <dl className="mt-5 grid gap-4 sm:grid-cols-2"><Field label={t("commissions.reference")} value={row.paymentReference ?? "—"} /><Field label={t("commissions.note")} value={row.paymentNote ?? "—"} /><Field label={t("commissions.paidAt")} value={row.paidAt ? date(row.paidAt, locale) : "—"} /></dl>}</section></div>;
 }
 
 function Reviews({ companyId }: { companyId: Id<"companies"> }) {
@@ -433,14 +433,14 @@ function ReviewRow({ review, locale }: { review: Review; locale: string }) {
   const [busy, setBusy] = useState(false); const [error, setError] = useState("");
   const next = review.moderationStatus === "visible" ? "hidden" : "visible";
   async function update() { setBusy(true); setError(""); try { await setVisibility({ reviewId: review.reviewId, status: next }); } catch { setError(t("reviews.actionError")); } finally { setBusy(false); } }
-  return <article className="rounded-[14px] bg-[#f8fafb] p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><h3 className="font-semibold">{review.projectTitle}</h3><p className="mt-1 text-sm text-[#626970]">{review.reviewerName} · {date(review.createdAt, locale)} · {review.rating}/5</p></div><button className={`min-h-10 rounded-full border bg-white px-4 text-sm font-semibold disabled:opacity-50 ${ADMIN_PRESS}`} disabled={busy} onClick={() => void update()} type="button">{t(`reviews.${next === "hidden" ? "hide" : "restore"}`)}</button></div><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#30343a]">{review.comment}</p>{error ? <p className="mt-3 text-sm text-red-700" role="alert">{error}</p> : null}</article>;
+  return <article className="rounded-[14px] bg-[#f8fafb] p-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><h3 className="font-semibold">{review.projectTitle}</h3><p className="mt-1 text-sm text-[#626970]">{review.reviewerName} · {date(review.createdAt, locale)} · {review.rating}/5</p></div><button className={`min-h-10 rounded-sm border bg-white px-4 text-sm font-semibold disabled:opacity-50 ${ADMIN_PRESS}`} disabled={busy} onClick={() => void update()} type="button">{t(`reviews.${next === "hidden" ? "hide" : "restore"}`)}</button></div><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#30343a]">{review.comment}</p>{error ? <p className="mt-3 text-sm text-red-700" role="alert">{error}</p> : null}</article>;
 }
 
 function DataSection({ title, children }: { title: string; children: React.ReactNode }) { return <section className="rounded-[14px] border border-[#e7eaee] bg-white p-4 sm:p-5"><h2 className="font-semibold">{title}</h2><div className="mt-4">{children}</div></section>; }
-function PaginatedState({ children, empty, loading, canLoadMore, loadingMore, loadMore }: { children: React.ReactNode[]; empty: string; loading: boolean; canLoadMore: boolean; loadingMore: boolean; loadMore: () => void }) { const t = useTranslations("adminCompanies"); if (loading) return <Loading />; if (children.length === 0) return <Empty text={empty} />; return <div className="grid gap-3">{children}{canLoadMore || loadingMore ? <button className={`min-h-11 rounded-full border px-4 text-sm font-semibold disabled:opacity-50 ${ADMIN_PRESS}`} disabled={loadingMore} onClick={loadMore} type="button">{loadingMore ? t("loadingMore") : t("loadMore")}</button> : null}</div>; }
-function Loading() { const t = useTranslations("adminCompanies"); return <div aria-busy="true" className="space-y-3" role="status"><span className="sr-only">{t("loading")}</span>{Array.from({ length: 3 }).map((_, index) => <div className="h-20 animate-pulse rounded-[12px] bg-[#f4f6f8]" key={index} />)}</div>; }
-function Empty({ text }: { text: string }) { return <p className="rounded-[12px] bg-[#f8fafb] px-4 py-10 text-center text-sm text-[#8b919a]">{text}</p>; }
+function PaginatedState({ children, empty, loading, canLoadMore, loadingMore, loadMore }: { children: React.ReactNode[]; empty: string; loading: boolean; canLoadMore: boolean; loadingMore: boolean; loadMore: () => void }) { const t = useTranslations("adminCompanies"); if (loading) return <Loading />; if (children.length === 0) return <Empty text={empty} />; return <div className="grid gap-3">{children}{canLoadMore || loadingMore ? <button className={`min-h-11 rounded-sm border px-4 text-sm font-semibold disabled:opacity-50 ${ADMIN_PRESS}`} disabled={loadingMore} onClick={loadMore} type="button">{loadingMore ? t("loadingMore") : t("loadMore")}</button> : null}</div>; }
+function Loading() { const t = useTranslations("adminCompanies"); return <div aria-busy="true" className="space-y-3" role="status"><span className="sr-only">{t("loading")}</span>{Array.from({ length: 3 }).map((_, index) => <div className="h-20 animate-pulse rounded-sm bg-[#f4f6f8]" key={index} />)}</div>; }
+function Empty({ text }: { text: string }) { return <p className="rounded-sm bg-[#f8fafb] px-4 py-10 text-center text-sm text-[#8b919a]">{text}</p>; }
 function Field({ label, value }: { label: string; value: string }) { return <div><dt className="text-xs font-semibold text-[#8b919a]">{label}</dt><dd className="mt-1 text-sm font-medium text-[#30343a]">{value}</dd></div>; }
-function Pill({ text, tone }: { text: string; tone: "green" | "red" | "amber" | "slate" }) { const style = tone === "green" ? "bg-emerald-100 text-emerald-800" : tone === "red" ? "bg-red-100 text-red-800" : tone === "amber" ? "bg-amber-100 text-amber-800" : "bg-slate-200 text-slate-700"; return <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${style}`}>{text}</span>; }
+function Pill({ text, tone }: { text: string; tone: "green" | "red" | "amber" | "slate" }) { const style = tone === "green" ? "bg-emerald-100 text-emerald-800" : tone === "red" ? "bg-red-100 text-red-800" : tone === "amber" ? "bg-amber-100 text-amber-800" : "bg-slate-200 text-slate-700"; return <span className={`rounded-sm px-2.5 py-1 text-xs font-semibold ${style}`}>{text}</span>; }
 function money(value: number, locale: string) { return new Intl.NumberFormat(locale, { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(value); }
 function date(value: number, locale: string) { return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Casablanca" }).format(value); }

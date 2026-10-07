@@ -83,7 +83,7 @@ export function ProfileMenu({
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={t("openMenu")}
-        className="relative flex size-11 items-center justify-center overflow-hidden rounded-full border border-brand-border bg-brand-soft text-sm font-semibold text-brand-dark outline outline-1 -outline-offset-1 outline-black/10 transition-[transform,box-shadow] duration-150 active:scale-[0.96] hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+        className="relative flex size-11 items-center justify-center overflow-hidden rounded-sm border border-brand-border bg-brand-soft text-sm font-semibold text-brand-dark outline outline-1 -outline-offset-1 outline-black/10 transition-[transform,box-shadow] duration-150 active:scale-[0.96] hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
         onClick={() => setOpen((value) => !value)}
         ref={triggerRef}
         type="button"
@@ -97,14 +97,14 @@ export function ProfileMenu({
       <div
         className={
           open
-            ? "absolute top-[calc(100%+10px)] right-0 z-50 w-[min(92vw,280px)] rounded-2xl border border-brand-border bg-white p-2 text-ink shadow-[0_18px_50px_rgb(23_61_99_/_0.14)]"
+            ? "absolute top-[calc(100%+10px)] right-0 z-50 w-[min(92vw,280px)] rounded-sm border border-brand-border bg-white p-2 text-ink shadow-[0_18px_50px_rgb(23_61_99_/_0.14)]"
             : "hidden"
         }
         id={menuId}
         role="menu"
       >
         <div className="flex items-center gap-3 border-b border-brand-border px-3 py-3">
-          <span aria-hidden className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-soft text-sm font-semibold text-brand-dark outline outline-1 -outline-offset-1 outline-black/10">
+          <span aria-hidden className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-brand-soft text-sm font-semibold text-brand-dark outline outline-1 -outline-offset-1 outline-black/10">
             {role === "company" ? <ApprovedCompanyLogo alt="" className="object-cover" fill sizes="40px" url={profileImageUrl} /> : profileImageUrl ? <Image alt="" className="object-cover" fill sizes="40px" src={profileImageUrl} /> : initials}
           </span>
           <div className="min-w-0">
@@ -112,14 +112,14 @@ export function ProfileMenu({
             <p className="m-0 text-xs text-muted">{roleLabel}</p>
           </div>
         </div>
-        <ul className="m-0 list-none p-1" role="none">
+        <ul className="m-0 list-none p-1 " role="none">
           {sections.map((section, sectionIndex) => (
             <Fragment key={sectionIndex}>
               {sectionIndex > 0 ? <li aria-hidden className="mx-2 my-1 h-px bg-brand-border" role="separator" /> : null}
               {section.map((item, index) => (
                 <li key={item.label} role="none">
                   <Link
-                    className="flex min-h-11 items-center justify-between gap-3 rounded-xl px-3 text-sm font-medium text-ink transition-colors hover:bg-brand-soft/70 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    className=" flex min-h-11 items-center justify-between gap-3 rounded-sm px-3 text-sm font-medium text-ink transition-colors hover:bg-brand-soft/70 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                     href={item.href}
                     onClick={() => setOpen(false)}
                     ref={sectionIndex === 0 && index === 0 ? firstItemRef : undefined}
@@ -135,7 +135,7 @@ export function ProfileMenu({
           <li aria-hidden className="mx-2 my-1 h-px bg-brand-border" role="separator" />
           <li role="none">
             <button
-              className="flex min-h-11 w-full cursor-pointer items-center rounded-xl border-0 bg-transparent px-3 text-start text-sm font-medium text-ink transition-colors hover:bg-brand-soft/70 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="flex min-h-11 w-full cursor-pointer items-center rounded-sm border-0 bg-transparent px-3 text-start text-sm font-medium text-ink transition-colors hover:bg-brand-soft/70 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               onClick={() => {
                 setOpen(false);
                 void signOut().then((signedOut) => {

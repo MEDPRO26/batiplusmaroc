@@ -11,7 +11,7 @@ import { routes } from "@/lib/routes";
 import { ADMIN_PRESS } from "./admin-shell";
 
 type Row = FunctionReturnType<typeof api.legacyMediaIngestion.retirement.listRetirements>["page"][number];
-const BUTTON = `min-h-11 rounded-full border border-[#d9e1ef] px-4 text-sm font-semibold disabled:opacity-50 ${ADMIN_PRESS}`;
+const BUTTON = `min-h-11 rounded-sm border border-[#d9e1ef] px-4 text-sm font-semibold disabled:opacity-50 ${ADMIN_PRESS}`;
 
 /** Mounted only inside the existing Admin/account-keyed ingestion boundary. */
 export function AdminLegacyMediaRetirement() {
@@ -89,7 +89,7 @@ function RetirementRow({ row }: { row: Row }) {
           <p className="mt-3 break-words text-sm font-semibold">{row.companyName || media("companyFallback")} · {media(`types.${row.mediaType}`)} · {media(`providers.${row.provider}`)}{row.projectTitle ? ` · ${row.projectTitle}` : ""}</p>
           {urls.map(url => <p className="mt-2 break-all text-xs" key={url}>{url}</p>)}
           <label className="mt-4 block text-sm font-semibold" htmlFor={inputId}>{t("typeIntent", { word: t("confirmationWord") })}</label>
-          <input className="mt-2 min-h-11 w-full rounded-lg border border-[#d9e1ef] px-3" autoComplete="off" id={inputId} disabled={busy} value={typed} onChange={event => setTyped(event.target.value)} />
+          <input className="mt-2 min-h-11 w-full rounded-sm border border-[#d9e1ef] px-3" autoComplete="off" id={inputId} disabled={busy} value={typed} onChange={event => setTyped(event.target.value)} />
           <div className="mt-5 flex flex-wrap justify-end gap-2"><Dialog.Close asChild><button className={BUTTON} disabled={busy} type="button">{t("cancel")}</button></Dialog.Close>
             <button className={`${BUTTON} border-red-700 text-red-800`} disabled={busy || typed !== t("confirmationWord")} onClick={() => void run()} type="button">{busy ? t("retiring") : t("confirmRetire")}</button></div>
         </Dialog.Content>

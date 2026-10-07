@@ -184,7 +184,7 @@ function ProjectFeed({
   return (
     <section aria-label={t("feed.resultsLabel")} className="min-w-0 ">
       {noticeOpen ? (
-        <div className="mb-4 flex items-center justify-center gap-3 rounded-lg bg-[#dff6df] px-4 py-3 text-sm leading-6 text-[#135c2b]">
+        <div className="mb-4 flex items-center justify-center gap-3 rounded-sm bg-[#dff6df] px-4 py-3 text-sm leading-6 text-[#135c2b]">
           <p className="m-0 min-w-0 flex-1">
             {verification === "verified" ? t("feed.promoVerifiedLead") : t("feed.promoLead")}
             {verification !== "verified" ? (
@@ -212,7 +212,7 @@ function ProjectFeed({
           <span className="sr-only">{tProjects("searchLabel")}</span>
           <SearchIcon />
           <input
-            className="min-h-11 w-full rounded-full border border-[#d5ddd8] bg-white pr-4 pl-11 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted/80 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
+            className="min-h-11 w-full rounded-sm border border-[#d5ddd8] bg-white pr-4 pl-11 text-sm text-ink outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted/80 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]"
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={t("feed.searchPlaceholder")}
             type="search"
@@ -221,7 +221,7 @@ function ProjectFeed({
         </label>
         <button
           aria-expanded={filtersOpen}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#cfd8d2] bg-white px-4 text-sm font-semibold text-ink transition-transform duration-150 active:scale-[0.96]"
+          className="inline-flex min-h-11 items-center gap-2 rounded-sm border border-[#cfd8d2] bg-white px-4 text-sm font-semibold text-ink transition-transform duration-150 active:scale-[0.96]"
           onClick={onToggleFilters}
           type="button"
         >
@@ -269,7 +269,7 @@ function ProjectFeed({
         {status === "CanLoadMore" ? (
           <div className="flex justify-center py-6">
             <button
-              className="min-h-11 rounded-full border border-brand bg-white px-5 text-sm font-semibold text-brand transition-[background-color,color,transform] duration-150 hover:bg-[#B9563B] hover:text-white active:scale-[0.96]"
+              className="min-h-11 rounded-sm border border-brand bg-white px-5 text-sm font-semibold text-brand transition-[background-color,color,transform] duration-150 hover:bg-[#B9563B] hover:text-white active:scale-[0.96]"
               onClick={onLoadMore}
               type="button"
             >
@@ -349,7 +349,7 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
 }
 
 function Tag({ children }: { children: ReactNode }) {
-  return <span className="rounded-full bg-[#efefef] px-3 py-1 text-[13px] text-[#5e5e5e]">{children}</span>;
+  return <span className="rounded-sm bg-[#efefef] px-3 py-1 text-[13px] text-[#5e5e5e]">{children}</span>;
 }
 
 function CompanySidebar({ profile, verification }: { profile: Profile; verification: VerificationStatus }) {
@@ -369,7 +369,7 @@ function CompanySidebar({ profile, verification }: { profile: Profile; verificat
     <aside className="grid gap-4 lg:sticky lg:top-24">
       <section className="rounded-2xl border border-brand-border bg-white px-5 py-5">
         <div className="flex items-center gap-3">
-          <span className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-soft text-brand outline outline-black/10"><ApprovedCompanyLogo alt="" className="object-cover" fill sizes="56px" url={profile.logoUrl} /></span>
+          <span className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-sm bg-brand-soft text-brand outline outline-black/10"><ApprovedCompanyLogo alt="" className="object-cover" fill sizes="56px" url={profile.logoUrl} /></span>
           <div className="min-w-0">
             <h2 className="m-0 truncate text-base font-semibold text-ink">{profile.name}</h2>
             <p className="mt-0.5 mb-0 truncate text-sm text-muted">{serviceLine || profile.city}</p>
@@ -395,8 +395,8 @@ function CompanySidebar({ profile, verification }: { profile: Profile; verificat
             <p className="m-0 text-ink">{t("sidebar.completeProfile")}</p>
             <p className="m-0 font-semibold text-brand">{t("sidebar.progress", { value: completion })}</p>
           </div>
-          <div aria-hidden className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#e6eee8]">
-            <div className="h-full rounded-full bg-brand" style={{ width: `${completion}%` }} />
+          <div aria-hidden className="mt-3 h-1.5 overflow-hidden rounded-sm bg-[#e6eee8]">
+            <div className="h-full rounded-sm bg-brand" style={{ width: `${completion}%` }} />
           </div>
         </div>
       </section>
@@ -517,7 +517,7 @@ function FilterSelect({
     <label className="grid gap-1.5 text-xs font-semibold text-muted" htmlFor={id}>
       {label}
       <select
-        className="min-h-11 rounded-lg border border-[#d5ddd8] bg-white px-3 text-sm font-normal text-ink outline-none focus:border-brand"
+        className="min-h-11 rounded-sm border border-[#d5ddd8] bg-white px-3 text-sm font-normal text-ink outline-none focus:border-brand"
         id={id}
         onChange={(event) => onChange(event.target.value)}
         value={value}

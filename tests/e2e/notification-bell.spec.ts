@@ -1,9 +1,29 @@
-import { build } from "esbuild";
+import { build, type Plugin } from "esbuild";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import en from "../../messages/en.json";
+import fr from "../../messages/fr.json";
+import { CLIENT_SUPPORT_NOTIFICATION_TYPES } from "../../convex/notifications/constants";
 
 let harnessBundle = "";
 let integratedBellBundle = "";
+
+// Standalone bundles do not run Next's framework transforms/router. Preserve the
+// real bell while adapting its string-href footer link to a normal anchor.
+const nextLinkMock: Plugin = {
+  name: "notification-bell-next-link",
+  setup(builder) {
+    builder.onResolve({ filter: /^next\/link$/ }, () => ({ path: "link", namespace: "notification-link" }));
+    builder.onLoad({ filter: /.*/, namespace: "notification-link" }, () => ({
+      loader: "js",
+      resolveDir: process.cwd(),
+      contents: `import { createElement } from "react";
+        export default function Link({ href, children, ...props }) {
+          return createElement("a", { ...props, href }, children);
+        }`,
+    }));
+  },
+};
 
 test.beforeAll(async () => {
   const result = await build({
@@ -12,6 +32,7 @@ test.beforeAll(async () => {
     format: "iife",
     jsx: "automatic",
     platform: "browser",
+    plugins: [nextLinkMock],
     stdin: {
       contents: `
         import React, { useState } from "react";
@@ -65,17 +86,29 @@ test.beforeAll(async () => {
     format: "iife",
     jsx: "automatic",
     platform: "browser",
-    plugins: [{
+    plugins: [nextLinkMock, {
       name: "notification-bell-test-dependencies",
       setup(builder) {
         builder.onResolve({ filter: /^convex\/react$/ }, () => ({ path: "convex-react", namespace: "notification-test" }));
         builder.onResolve({ filter: /^@\/i18n\/navigation$/ }, () => ({ path: "navigation", namespace: "notification-test" }));
         builder.onLoad({ filter: /.*/, namespace: "notification-test" }, ({ path }) => ({
           loader: "js",
+          resolveDir: process.cwd(),
           contents: path === "convex-react" ? `
+            import { useState } from "react";
+            import { getFunctionName } from "convex/server";
             export function useQuery() { return window.__notificationTest.unreadCount; }
-            export function usePaginatedQuery() { return { results: [window.__notificationTest.notification], status: "Exhausted" }; }
-            export function useMutation() { return async (args) => {
+            export function usePaginatedQuery() {
+              const [loaded, setLoaded] = useState(0);
+              const state = window.__notificationTest;
+              return {
+                results: loaded < state.filteredPages ? [] : [state.notification],
+                status: loaded < state.filteredPages ? "CanLoadMore" : "Exhausted",
+                loadMore() { state.loadMoreCalls += 1; setLoaded((current) => current + 1); },
+              };
+            }
+            export function useMutation(reference) { return async (args) => {
+              window.__notificationTest.mutations.push({ name: getFunctionName(reference), args });
               if (args.notificationId) {
                 window.__notificationTest.markCalls += 1;
                 if (window.__notificationTest.failRead) throw new Error("mark failed");
@@ -103,6 +136,12 @@ test.beforeAll(async () => {
               if (destination.pathname === "/admin/companies/[companyId]") {
                 const companies = state.locale === "en" ? "companies" : "entreprises";
                 return "/" + state.locale + "/admin/" + companies + "/" + encodeURIComponent(destination.params.companyId) + "?tab=messages";
+              }
+              if (destination.pathname === "/admin/support") {
+                return "/" + state.locale + "/admin/" + (state.locale === "fr" ? "assistance" : "support") + "?projectId=" + encodeURIComponent(destination.query.projectId);
+              }
+              if (destination.pathname === "/espace-client/projets/[projectId]/batiplus") {
+                return "/" + state.locale + (state.locale === "en" ? "/client/projects/" : "/espace-client/projets/") + encodeURIComponent(destination.params.projectId) + "/batiplus";
               }
               const area = destination.pathname === "/espace-client/projets/[projectId]"
                 ? state.locale === "en" ? "client" : "espace-client"
@@ -165,6 +204,7 @@ async function mountIntegratedBell(
     accountType?: "client" | "company" | "admin";
     notification?: Partial<IntegratedNotification>;
     failRead?: boolean;
+    filteredPages?: number;
   } = {},
 ) {
   const locale = options.locale ?? "en";
@@ -177,6 +217,9 @@ async function mountIntegratedBell(
     accountType: options.accountType ?? "client",
     unreadCount: options.notification?.readAt === undefined || options.notification.readAt === null ? 1 : 0,
     markCalls: 0,
+    mutations: [],
+    filteredPages: options.filteredPages ?? 0,
+    loadMoreCalls: 0,
     pushCalls: [],
     failRead: options.failRead ?? false,
     notification: {
@@ -335,4 +378,51 @@ test("operational notifications render safe previews and open role-localized des
   await page.getByRole("button", { name: /Non lue.*accès.*rétabli/ }).click();
   await expect(page).toHaveURL(/\/fr\/espace-entreprise$/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+});
+
+for (const locale of ["en", "fr"] as const) {
+  for (const type of CLIENT_SUPPORT_NOTIFICATION_TYPES) {
+    test(`${locale} ${type} opens support directly with generic copy and independent notification reads`, async ({ page }) => {
+      await page.setViewportSize(locale === "fr" ? { width: 390, height: 844 } : { width: 1440, height: 900 });
+      const isReply = type === "client_support_admin_reply_received";
+      await mountIntegratedBell(page, {
+        locale, accountType: isReply ? "client" : "admin",
+        notification: { type, entity: { type: "client_support_entry", id: "support-entry" }, payload: {}, readAt: isReply ? Date.now() : null },
+      });
+      await page.getByRole("button", { name: locale === "en" ? /Open notifications/ : /Ouvrir les notifications/ }).click();
+      const label = (locale === "en" ? en : fr).notifications.events[type];
+      const row = page.getByRole("button", { name: label, exact: isReply });
+      await expect(page.getByText(label, { exact: true })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+      await row.press("Enter");
+      const target = isReply
+        ? `/${locale}/${locale === "en" ? "client/projects" : "espace-client/projets"}/project-1/batiplus`
+        : `/${locale}/admin/${locale === "fr" ? "assistance" : "support"}?projectId=project-1`;
+      await expect(page).toHaveURL(new URL(target, test.info().project.use.baseURL).href);
+      const mutations = await page.evaluate(() => (window as Window & { __notificationTest?: { mutations: { name: string; args: unknown }[] } }).__notificationTest!.mutations);
+      expect(mutations).toEqual([{ name: "notifications/index:markNotificationRead", args: { notificationId: "notification-1" } }]);
+    });
+  }
+
+  test(`${locale} already-read revoked support alert stays in the bell on failed access recheck`, async ({ page }) => {
+    await mountIntegratedBell(page, { locale, failRead: true, notification: {
+      type: "client_support_admin_reply_received", entity: { type: "client_support_entry", id: "support-entry" }, payload: {}, readAt: Date.now(),
+    } });
+    await page.getByRole("button", { name: locale === "en" ? /Open notifications/ : /Ouvrir les notifications/ }).click();
+    await page.getByRole("button", { name: (locale === "en" ? en : fr).notifications.events.client_support_admin_reply_received, exact: true }).click();
+    await expect(page).toHaveURL(new URL(`/${locale}`, test.info().project.use.baseURL).href);
+    await expect(page.getByRole("alert")).toBeVisible();
+    expect(await page.evaluate(() => (window as Window & { __notificationTest?: { pushCalls: unknown[] } }).__notificationTest!.pushCalls)).toEqual([]);
+  });
+}
+
+test("bell advances filtered empty pages without announcing an empty inbox or acknowledging reads", async ({ page }) => {
+  await mountIntegratedBell(page, { filteredPages: 2, accountType: "admin", notification: {
+    type: "client_support_free_help_requested", entity: { type: "client_support_entry", id: "support-entry" }, payload: {},
+  } });
+  await page.getByRole("button", { name: /Open notifications/ }).click();
+  await expect(page.getByText(en.notifications.events.client_support_free_help_requested, { exact: true })).toBeVisible();
+  const state = await page.evaluate(() => (window as Window & { __notificationTest?: { loadMoreCalls: number; mutations: unknown[] } }).__notificationTest!);
+  expect(state.loadMoreCalls).toBe(2);
+  expect(state.mutations).toEqual([]);
 });

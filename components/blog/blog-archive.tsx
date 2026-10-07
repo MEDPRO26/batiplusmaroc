@@ -13,8 +13,8 @@ export async function BlogArchive({ category }: { category: "general" | "structu
   return (
     <>
       <section className="relative overflow-hidden bg-[#0b223a] px-[18px] py-20 text-white sm:px-6 sm:py-24 lg:px-8 lg:py-28">
-        <div className="pointer-events-none absolute top-0 right-0 size-[480px] -translate-y-1/2 translate-x-1/3 rounded-full border border-white/8" aria-hidden="true" />
-        <div className="pointer-events-none absolute top-0 right-0 size-[320px] -translate-y-1/2 translate-x-1/3 rounded-full border border-white/8" aria-hidden="true" />
+        <div className="pointer-events-none absolute top-0 right-0 size-[480px] -translate-y-1/2 translate-x-1/3 rounded-sm border border-white/8" aria-hidden="true" />
+        <div className="pointer-events-none absolute top-0 right-0 size-[320px] -translate-y-1/2 translate-x-1/3 rounded-sm border border-white/8" aria-hidden="true" />
         <div className="relative mx-auto max-w-[1280px]">
           <p className="mb-7 text-[0.7rem] font-bold tracking-[0.2em] text-[#80c9ef] uppercase">{t("eyebrow")}</p>
           <div className="grid items-end gap-10 lg:grid-cols-[1fr_auto]">
@@ -22,8 +22,8 @@ export async function BlogArchive({ category }: { category: "general" | "structu
             <p className="max-w-sm text-base leading-7 text-white/65">{t("description")}</p>
           </div>
           <nav className="mt-14 flex flex-wrap gap-2" aria-label={t("categories")}>
-            <Link className={`rounded-full border px-5 py-2.5 text-sm font-semibold transition ${activeCategory === routes.categoryGeneral ? "border-white bg-white text-[#0b223a]!" : "border-white/20 text-white! hover:border-white/55"}`} href={routes.categoryGeneral}>{t("general")}</Link>
-            <Link className={`rounded-full border px-5 py-2.5 text-sm font-semibold transition ${activeCategory === routes.categoryStructuralWork ? "border-white bg-white text-[#0b223a]!" : "border-white/20 text-white! hover:border-white/55"}`} href={routes.categoryStructuralWork}>{t("structural")}</Link>
+            <Link className={`rounded-sm border px-5 py-2.5 text-sm font-semibold transition ${activeCategory === routes.categoryGeneral ? "border-white bg-white text-[#0b223a]!" : "border-white/20 text-white! hover:border-white/55"}`} href={routes.categoryGeneral}>{t("general")}</Link>
+            <Link className={`rounded-sm border px-5 py-2.5 text-sm font-semibold transition ${activeCategory === routes.categoryStructuralWork ? "border-white bg-white text-[#0b223a]!" : "border-white/20 text-white! hover:border-white/55"}`} href={routes.categoryStructuralWork}>{t("structural")}</Link>
           </nav>
         </div>
       </section>

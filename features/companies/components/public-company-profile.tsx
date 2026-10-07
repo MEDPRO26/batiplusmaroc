@@ -41,7 +41,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
             <div className="flex flex-col py-5  gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex min-w-0 flex-1 gap-4 sm:gap-5 ">
                 <div className="-mt-10 shrink-0 sm:-mt-12 ">
-                  <div className="relative grid size-[88px] place-items-center overflow-hidden rounded-full border-[3px] border-white bg-brand-soft text-2xl font-semibold text-brand shadow-[0_2px_8px_rgb(10_25_38/0.12)] sm:size-[112px]">
+                  <div className="relative grid size-[88px] place-items-center overflow-hidden rounded-sm border-[3px] border-white bg-brand-soft text-2xl font-semibold text-brand shadow-[0_2px_8px_rgb(10_25_38/0.12)] sm:size-[112px]">
                     <ApprovedCompanyLogo alt={t("logoAlt", { name: company.name })} className="object-cover" fill priority={!company.coverImageUrl} sizes="112px" url={company.logoUrl} />
                   </div>
                 </div>
@@ -64,9 +64,9 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
               </div>
 
               <div className="flex flex-col gap-2 sm:min-w-[220px]">
-                <InviteCompanyButton companyEligible={company.invitationEligible} companyId={company.id} className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white" />
+                <InviteCompanyButton companyEligible={company.invitationEligible} companyId={company.id} className="inline-flex min-h-11 w-full items-center justify-center rounded-sm bg-brand px-5 text-sm font-semibold text-white" />
                 <button
-                  className="inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center rounded-full border border-[#c5c8cb] bg-white px-5 text-sm font-semibold text-ink opacity-70"
+                  className="inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center rounded-sm border border-[#c5c8cb] bg-white px-5 text-sm font-semibold text-ink opacity-70"
                   disabled
                   type="button"
                 >
@@ -143,7 +143,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                   <div className="flex flex-wrap gap-1.5">
                     {company.serviceAreas.map((area) => (
                       <span
-                        className="rounded-full bg-[#f7f9fb] px-2.5 py-1 text-xs font-medium text-ink"
+                        className="rounded-sm bg-[#f7f9fb] px-2.5 py-1 text-xs font-medium text-ink"
                         key={area}
                       >
                         {t(`serviceArea.${area}`)}
@@ -168,7 +168,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                   <div className="flex flex-wrap gap-2">
                     {company.services.map((service) => (
                       <span
-                        className="rounded-full bg-[#eef1f4] px-3 py-1.5 text-sm font-medium text-ink"
+                        className="rounded-sm bg-[#eef1f4] px-3 py-1.5 text-sm font-medium text-ink"
                         key={service}
                       >
                         {serviceName(service, company.serviceNames, locale, key => tDirectory(`service.options.${key}`))}
@@ -188,7 +188,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                 }
               >
                 {company.portfolio.length === 0 ? (
-                  <div className="rounded-[12px] border border-dashed border-brand-border bg-[#fafbfc] px-4 py-10 text-center text-sm text-muted">
+                  <div className="rounded-sm border border-dashed border-brand-border bg-[#fafbfc] px-4 py-10 text-center text-sm text-muted">
                     {t("portfolioEmpty")}
                   </div>
                 ) : (
@@ -196,7 +196,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                     {company.portfolio.map((project) => (
                       <li key={project.id}>
                         <article className="group">
-                          <div className="relative aspect-[4/3] overflow-hidden rounded-[12px] bg-[#e8eef3] ring-1 ring-brand-border">
+                          <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-[#e8eef3] ring-1 ring-brand-border">
                             <ApprovedPortfolioImage
                               alt={t("projectImageAlt", { title: project.title })}
                               className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
@@ -226,7 +226,7 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                 {company.reviews.length === 0 ? <p className="m-0 text-sm text-muted">{t("reviewsEmpty")}</p> : (
                   <ul className="m-0 grid list-none gap-4 p-0">
                     {company.reviews.map((review, index) => (
-                      <li className="rounded-[12px] border border-brand-border p-4" key={`${review.createdAt}-${index}`}>
+                      <li className="rounded-sm border border-brand-border p-4" key={`${review.createdAt}-${index}`}>
                         <div className="flex flex-wrap items-center justify-between gap-2"><span aria-label={t("ratingOutOfFive", { rating: review.rating })} className="font-semibold text-amber-600">{"★".repeat(review.rating)}<span className="text-slate-300">{"★".repeat(5 - review.rating)}</span></span><time className="text-xs text-muted" dateTime={new Date(review.createdAt).toISOString()}>{format.dateTime(review.createdAt, { dateStyle: "medium", timeZone: "Africa/Casablanca" })}</time></div>
                         <p className="mt-3 mb-0 whitespace-pre-wrap text-sm leading-6 text-ink/90">{review.comment}</p>
                         <p className="mt-3 mb-0 text-xs font-medium text-muted">{t("reviewBy", { name: [review.reviewerFirstName, review.reviewerLastInitial ? `${review.reviewerLastInitial}.` : null].filter(Boolean).join(" ") || t("reviewerAnonymous") })}{review.projectTitle ? ` · ${review.projectTitle}` : ""}</p>

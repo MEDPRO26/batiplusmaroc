@@ -1,5 +1,18 @@
 import { v } from "convex/values";
 
+export const CLIENT_SUPPORT_NOTIFICATION_TYPES = [
+  "client_support_free_help_requested",
+  "client_support_coordination_requested",
+  "client_support_client_message_received",
+  "client_support_admin_reply_received",
+] as const;
+
+export type ClientSupportNotificationType = (typeof CLIENT_SUPPORT_NOTIFICATION_TYPES)[number];
+
+export function isClientSupportNotificationType(type: string): type is ClientSupportNotificationType {
+  return (CLIENT_SUPPORT_NOTIFICATION_TYPES as readonly string[]).includes(type);
+}
+
 export const NOTIFICATION_TYPES = [
   "proposal_received",
   "proposal_accepted",
@@ -24,12 +37,13 @@ export const NOTIFICATION_TYPES = [
   "company_admin_message_received",
   "company_suspended",
   "company_reactivated",
+  ...CLIENT_SUPPORT_NOTIFICATION_TYPES,
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
-/** Currently wired marketplace events. `deal_created` remains reserved. */
-export const ACTIVE_NOTIFICATION_TYPES = [
+/** Existing marketplace/OC2 events eligible for the push delivery pipeline. */
+export const PUSH_NOTIFICATION_TYPES = [
   "proposal_received",
   "proposal_accepted",
   "invitation_received",
@@ -53,6 +67,14 @@ export const ACTIVE_NOTIFICATION_TYPES = [
   "company_suspended",
   "company_reactivated",
 ] as const satisfies readonly NotificationType[];
+
+export type PushNotificationType = (typeof PUSH_NOTIFICATION_TYPES)[number];
+
+/** Active in-app events; activity does not imply push eligibility. */
+export const ACTIVE_NOTIFICATION_TYPES = [
+  ...PUSH_NOTIFICATION_TYPES,
+  ...CLIENT_SUPPORT_NOTIFICATION_TYPES,
+] as const;
 
 export type ActiveNotificationType = (typeof ACTIVE_NOTIFICATION_TYPES)[number];
 
@@ -80,6 +102,10 @@ export const notificationTypeValidator = v.union(
   v.literal("company_admin_message_received"),
   v.literal("company_suspended"),
   v.literal("company_reactivated"),
+  v.literal("client_support_free_help_requested"),
+  v.literal("client_support_coordination_requested"),
+  v.literal("client_support_client_message_received"),
+  v.literal("client_support_admin_reply_received"),
 );
 
 /**
@@ -98,6 +124,7 @@ export const notificationEntityValidator = v.union(
   v.object({ type: v.literal("company_verification"), id: v.id("companyVerifications") }),
   v.object({ type: v.literal("admin_company_message"), id: v.id("adminCompanyMessages") }),
   v.object({ type: v.literal("company_operational_status"), id: v.id("companyOperationalStatusHistory") }),
+  v.object({ type: v.literal("client_support_entry"), id: v.id("clientSupportMessages") }),
 );
 
 /**

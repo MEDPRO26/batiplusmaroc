@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { NotificationBellView } from "@/features/notifications/components/notification-bell-view";
 import {
@@ -23,7 +23,7 @@ export function NotificationBell({
 }) {
   const router = useRouter();
   const unreadCount = useQuery(api.notifications.index.getMyUnreadCount);
-  const { results, status } = usePaginatedQuery(
+  const { results, status, loadMore } = usePaginatedQuery(
     api.notifications.index.listMyNotifications,
     {},
     { initialNumItems: 8 },
@@ -34,6 +34,9 @@ export function NotificationBell({
   const [error, setError] = useState(false);
   const [open, setOpen] = useState(false);
   const openingRef = useRef(false);
+  useEffect(() => {
+    if (results.length === 0 && status === "CanLoadMore") loadMore(8);
+  }, [results.length, status, loadMore]);
 
   async function openNotification(notification: NotificationRecord) {
     if (openingRef.current) return;
@@ -76,7 +79,7 @@ export function NotificationBell({
   return (
     <NotificationBellView
       error={error}
-      loading={status === "LoadingFirstPage"}
+      loading={status === "LoadingFirstPage" || (results.length === 0 && status !== "Exhausted")}
       notifications={results}
       onMarkAll={() => void markEverythingRead()}
       onOpen={(notification) => void openNotification(notification)}

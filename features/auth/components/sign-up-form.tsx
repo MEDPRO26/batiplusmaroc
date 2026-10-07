@@ -93,7 +93,7 @@ export function SignUpForm({ role }: { role: SignUpRole }) {
   }
 
   const fieldClass =
-    "mt-1.5 w-full rounded-lg border border-brand-border bg-white px-3.5 py-3 text-[0.95rem] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-muted/70 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]";
+    "mt-1.5 w-full rounded-sm border border-brand-border bg-white px-3.5 py-3 text-[0.95rem] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-muted/70 focus:border-brand focus:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]";
 
   const busy = submitting || googlePending;
 
@@ -230,7 +230,7 @@ export function SignUpForm({ role }: { role: SignUpRole }) {
           {error ? <FriendlyAlert>{error}</FriendlyAlert> : null}
 
           <button
-            className="mt-2 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-brand px-5 text-[0.95rem] font-semibold text-white transition-[background-color,transform] hover:-translate-y-0.5 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 inline-flex min-h-12 w-full items-center justify-center rounded-sm bg-brand px-5 text-[0.95rem] font-semibold text-white transition-[background-color,transform] hover:-translate-y-0.5 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
             disabled={busy}
             type="submit"
           >

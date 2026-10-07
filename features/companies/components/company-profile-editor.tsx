@@ -149,7 +149,7 @@ function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVer
       <div className="flex flex-col gap-5 border-b border-brand-border px-5 pb-6 sm:flex-row sm:items-end sm:justify-between sm:px-7">
         <div className="flex min-w-0 gap-4 sm:gap-5">
           <div className="relative -mt-11 shrink-0 sm:-mt-14">
-            <div className="relative grid size-[92px] place-items-center overflow-hidden rounded-full border-4 border-white bg-brand-soft text-2xl font-semibold text-brand shadow-[0_2px_10px_rgb(10_25_38/0.14)] sm:size-[120px]">
+            <div className="relative grid size-[92px] place-items-center overflow-hidden rounded-sm border-4 border-white bg-brand-soft text-2xl font-semibold text-brand shadow-[0_2px_10px_rgb(10_25_38/0.14)] sm:size-[120px]">
               <ApprovedCompanyLogo alt={t("branding.logoAlt")} className="object-cover" fill sizes="120px" url={logoUrl} />
             </div>
           </div>
@@ -192,7 +192,7 @@ function PortfolioShowcase() {
   return (
     <MainSection
       action={
-        <Link aria-label={tPortfolio("add")} className="grid size-9 place-items-center rounded-full border border-brand-border bg-white text-brand transition-colors hover:border-brand/50 hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={routes.companyPortfolio} title={tPortfolio("add")}>
+        <Link aria-label={tPortfolio("add")} className="grid size-9 place-items-center rounded-sm border border-brand-border bg-white text-brand transition-colors hover:border-brand/50 hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={routes.companyPortfolio} title={tPortfolio("add")}>
           <Plus aria-hidden className="size-4" />
         </Link>
       }
@@ -208,9 +208,9 @@ function PortfolioShowcase() {
         value={tab}
       />
       {data === undefined ? (
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((item) => <div className="skeleton-block aspect-[4/3] rounded-[12px]" key={item} />)}</div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((item) => <div className="skeleton-block aspect-[4/3] rounded-sm" key={item} />)}</div>
       ) : visible.length === 0 ? (
-        <div className="mt-5 rounded-[12px] border border-dashed border-brand-border bg-[#f7f9fb] px-5 py-10 text-center">
+        <div className="mt-5 rounded-sm border border-dashed border-brand-border bg-[#f7f9fb] px-5 py-10 text-center">
           <p className="m-0 text-sm text-muted">{tab === "published" ? t("profileView.portfolioEmpty") : t("profileView.draftsEmpty")}</p>
           <Link className={`${workspaceButton.secondary} mt-4`} href={routes.companyPortfolio}>{t("portfolio.manage")}</Link>
         </div>
@@ -220,7 +220,7 @@ function PortfolioShowcase() {
             {visible.map((project) => (
               <li key={project.id}>
                 <article className="group">
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-[12px] bg-brand-soft ring-1 ring-brand-border">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-brand-soft ring-1 ring-brand-border">
                     <ApprovedPortfolioImage alt={tPortfolio("imageAlt", { title: project.title })} className="object-cover transition-transform duration-300 group-hover:scale-[1.03]" fill sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 280px" url={project.coverImageUrl} />
                   </div>
                   <h3 className="mt-2.5 mb-0 line-clamp-1 text-[0.95rem] font-semibold tracking-[-0.01em] text-ink">{project.title}</h3>
@@ -296,7 +296,7 @@ function ChipList({ items, empty, compact = false }: { items: string[]; empty: s
   return (
     <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
       {items.map((item) => (
-        <li className={`rounded-full bg-[#eef2f5] font-medium text-ink ${compact ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm"}`} key={item}>{item}</li>
+        <li className={`rounded-sm bg-[#eef2f5] font-medium text-ink ${compact ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm"}`} key={item}>{item}</li>
       ))}
     </ul>
   );

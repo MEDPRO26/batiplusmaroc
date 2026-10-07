@@ -52,7 +52,7 @@ export function HowItWorks() {
 
           <div
             aria-label={t("audienceLabel")}
-            className="how-it-works-audience flex w-full max-w-full shrink-0 rounded-full border border-brand-border bg-white p-1 sm:w-fit"
+            className="how-it-works-audience flex w-full max-w-full shrink-0 rounded-sm border border-brand-border bg-white p-1 sm:w-fit"
             role="radiogroup"
           >
             {(["hiring", "findingWork"] as const).map((value) => {
@@ -62,7 +62,7 @@ export function HowItWorks() {
                 <button
                   aria-checked={selected}
                   className={joinClassNames(
-                    "min-h-11 flex-1 cursor-pointer appearance-none rounded-full px-4 py-2 text-[0.88rem] font-medium tracking-[-0.015em] transition-[background-color,color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] sm:min-h-12 sm:flex-none sm:px-5",
+                    "min-h-11 flex-1 cursor-pointer appearance-none rounded-sm px-4 py-2 text-[0.88rem] font-medium tracking-[-0.015em] transition-[background-color,color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] sm:min-h-12 sm:flex-none sm:px-5",
                     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96]",
                   )}
                   key={value}
@@ -101,7 +101,7 @@ export function HowItWorks() {
                       {t(`${namespace}.${card.key}.body`)}
                     </p>
                     <Link
-                      className="how-it-works-cta inline-flex min-h-12 w-full items-center justify-center rounded-full bg-brand px-5 text-[0.9rem] font-semibold transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                      className="how-it-works-cta inline-flex min-h-12 w-full items-center justify-center rounded-sm bg-brand px-5 text-[0.9rem] font-semibold transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                       href={card.href}
                     >
                       {t(`${namespace}.${card.key}.cta`)}

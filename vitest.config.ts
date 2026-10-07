@@ -9,7 +9,8 @@ export default defineConfig({
   },
   test: {
     environment: "edge-runtime",
-    exclude: [...configDefaults.exclude, "tests/e2e/**"],
+    // Archived browser scripts are evidence, not executable unit-test inputs.
+    exclude: [...configDefaults.exclude, "tests/e2e/**", "design-qa-artifacts/**"],
     server: {
       deps: {
         inline: ["convex-test"],

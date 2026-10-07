@@ -72,6 +72,16 @@
     "myWorkspace": "Mon espace",
     "portfolio": "Portfolio",
     "clientMain": "Navigation client",
+    "client": {
+      "projects": "Projets",
+      "manageHeading": "Gérer les projets et propositions",
+      "companies": "Trouver des entreprises",
+      "browseCompanies": "Parcourir les entreprises",
+      "manageWork": "Gérer les travaux",
+      "workHeading": "Travaux en cours et passés",
+      "contracts": "Vos contrats",
+      "allProjects": "Projets et propositions"
+    },
     "companyMain": "Navigation entreprise",
     "companySuspended": {
       "message": "Votre accès à la marketplace est temporairement suspendu. Vous pouvez toujours gérer votre profil, vos documents, vos messages et vos obligations en cours.",
@@ -2050,6 +2060,8 @@
     "autosaveHint": "Enregistré après chaque étape",
     "back": "Retour",
     "continue": "Continuer",
+    "nextStep": "Suivant : {step}",
+    "editField": "Modifier {field}",
     "reviewProject": "Vérifier le projet",
     "saveAndExit": "Enregistrer et quitter",
     "publishing": "Publication…",
@@ -2105,6 +2117,10 @@
       "neighborhood": "Quartier ou secteur",
       "title": "Titre du projet",
       "titlePlaceholder": "Par exemple : Rénover un appartement de 120 m²",
+      "titleExamplesTitle": "Exemples de titres",
+      "titleExample1": "Rénover un appartement de 120 m² à Casablanca",
+      "titleExample2": "Construire une villa à deux niveaux avec piscine",
+      "titleExample3": "Étanchéifier et repeindre la façade d’un immeuble",
       "propertyType": "Type de bien",
       "propertyTypePlaceholder": "Choisissez un type de bien",
       "surface": "Surface en m²",
@@ -2360,6 +2376,48 @@
     "postCard": {
       "title": "Publier un projet",
       "description": "Décrivez votre besoin et trouvez des entreprises de construction qualifiées."
+    },
+    "stats": {
+      "label": "Résumé des projets",
+      "drafts": "Brouillons",
+      "review": "En vérification",
+      "active": "Actifs",
+      "completed": "Terminés"
+    }
+  },
+  "clientWork": {
+    "metaTitle": "Gérer les travaux",
+    "metaDescription": "Vos projets et contrats Batiplus au même endroit.",
+    "label": "Gérer les travaux",
+    "tabsLabel": "Vues des travaux",
+    "tabs": {
+      "projects": "Tous les projets",
+      "contracts": "Tous les contrats"
+    },
+    "postProject": "Publier un nouveau projet",
+    "searchProjects": "Rechercher un projet",
+    "searchContracts": "Rechercher par nom de projet",
+    "loading": "Chargement de vos travaux",
+    "projectCount": "{count, plural, one {# projet} other {# projets}}",
+    "created": "Créé le {date}",
+    "noResults": "Aucun résultat ne correspond à votre recherche.",
+    "noProjectsTitle": "Vous n’avez pas encore de projet.",
+    "noProjectsLead": "Publiez un projet pour recevoir des propositions d’entreprises vérifiées.",
+    "noContractsTitle": "Vous n’avez pas encore de contrat.",
+    "noContractsLead": "Vos contrats en cours et passés apparaissent ici dès que vous sélectionnez une entreprise pour un projet.",
+    "reviewProjects": "Consulter vos projets",
+    "contract": {
+      "loading": "Chargement du contrat…",
+      "company": "Entreprise",
+      "amount": "Montant convenu",
+      "started": "Démarré le {date}",
+      "completed": "Terminé le {date}",
+      "viewProject": "Voir le projet",
+      "status": {
+        "active": "En cours",
+        "completed": "Terminé",
+        "cancelled": "Annulé"
+      }
     }
   },
   "clientProfileManager": {
@@ -2609,6 +2667,10 @@
       "company_admin_message_received": "{companyName} a envoyé un nouveau message opérationnel à Batiplus.",
       "company_suspended": "L’accès de {companyName} à la marketplace a été suspendu. Consultez l’assistance Batiplus pour connaître les prochaines étapes.",
       "company_reactivated": "L’accès de {companyName} à la marketplace a été rétabli.",
+      "client_support_free_help_requested": "Un client a demandé l’aide gratuite de Batiplus.",
+      "client_support_coordination_requested": "Un client souhaite discuter de la coordination de chantier.",
+      "client_support_client_message_received": "Un client a envoyé un nouveau message d’assistance.",
+      "client_support_admin_reply_received": "L’équipe Batiplus a répondu dans votre conversation d’assistance.",
       "fallback": "Mise à jour de la marketplace"
     }
   },
@@ -2774,18 +2836,41 @@
     "title": "Transactions et commissions",
     "lead": "Suivez les commissions dues à Batiplus par les entreprises sélectionnées. L’enregistrement du paiement est uniquement une confirmation administrative.",
     "filtersLabel": "Statut de la commission",
-    "status": { "all": "Toutes", "due": "Due", "paid": "Payée" },
+    "status": {
+      "all": "Toutes",
+      "due": "Due",
+      "paid": "Payée"
+    },
     "searchLabel": "Rechercher des transactions",
     "searchPlaceholder": "Rechercher un projet ou une entreprise",
     "loading": "Chargement des obligations de commission…",
     "empty": "Aucune obligation de commission ne correspond à ces filtres.",
     "loadMore": "Charger plus",
     "loadingMore": "Chargement…",
-    "columns": { "project": "Projet", "company": "Entreprise", "dealAmount": "Montant du contrat", "commission": "Commission due", "statusLabel": "Statut", "created": "Créée le", "action": "Action" },
+    "columns": {
+      "project": "Projet",
+      "company": "Entreprise",
+      "dealAmount": "Montant du contrat",
+      "commission": "Commission due",
+      "statusLabel": "Statut",
+      "created": "Créée le",
+      "action": "Action"
+    },
     "view": "Voir les détails",
     "commissionOf": "{rate} de {amount}",
     "close": "Fermer",
-    "fields": { "dealAmount": "Montant convenu", "commission": "Commission due", "rate": "Taux enregistré", "configVersion": "Version de configuration", "status": "Statut du paiement", "created": "Transaction créée le", "paidAt": "Payée le", "paidBy": "Enregistrée par", "reference": "Référence de paiement", "note": "Note interne" },
+    "fields": {
+      "dealAmount": "Montant convenu",
+      "commission": "Commission due",
+      "rate": "Taux enregistré",
+      "configVersion": "Version de configuration",
+      "status": "Statut du paiement",
+      "created": "Transaction créée le",
+      "paidAt": "Payée le",
+      "paidBy": "Enregistrée par",
+      "reference": "Référence de paiement",
+      "note": "Note interne"
+    },
     "markPaidTitle": "Marquer la commission comme payée",
     "markPaidHelp": "Confirmez que Batiplus a reçu cette commission de l’entreprise. Cette action ne traite aucun paiement.",
     "referenceLabel": "Référence de paiement (facultative)",
@@ -2794,7 +2879,11 @@
     "confirmPaid": "Confirmer le paiement",
     "saving": "Enregistrement…",
     "paidSuccess": "Commission marquée comme payée.",
-    "errors": { "alreadyPaid": "Cette commission est déjà marquée comme payée.", "invalidInput": "Vérifiez la référence ou la note de paiement.", "generic": "Le statut de la commission n’a pas pu être mis à jour. Réessayez." }
+    "errors": {
+      "alreadyPaid": "Cette commission est déjà marquée comme payée.",
+      "invalidInput": "Vérifiez la référence ou la note de paiement.",
+      "generic": "Le statut de la commission n’a pas pu être mis à jour. Réessayez."
+    }
   },
   "adminReviews": {
     "metaTitle": "Modération des avis | Batiplus",
@@ -2802,7 +2891,11 @@
     "title": "Avis",
     "lead": "Consultez les retours clients et contrôlez leur visibilité publique. Le contenu des avis est immuable et ne peut pas être modifié ici.",
     "filtersLabel": "Visibilité des avis",
-    "status": { "all": "Tous", "visible": "Visibles", "hidden": "Masqués" },
+    "status": {
+      "all": "Tous",
+      "visible": "Visibles",
+      "hidden": "Masqués"
+    },
     "searchLabel": "Rechercher des avis",
     "searchPlaceholder": "Entreprise, projet, client ou commentaire",
     "loading": "Chargement des avis…",
@@ -3289,7 +3382,11 @@
       "declined": "Refusée",
       "cancelled": "Annulée"
     },
-    "actor": { "client": "Client", "company": "Entreprise", "admin": "Administrateur" },
+    "actor": {
+      "client": "Client",
+      "company": "Entreprise",
+      "admin": "Administrateur"
+    },
     "risk": {
       "scheduling_pending": "Planification en attente",
       "visit_follow_up_needed": "Suivi de visite requis"
@@ -3328,7 +3425,10 @@
       "declined": "Refusé",
       "withdrawn": "Retiré"
     },
-    "conversationStatus": { "active": "Active", "closed": "Fermée" },
+    "conversationStatus": {
+      "active": "Active",
+      "closed": "Fermée"
+    },
     "sections": {
       "project": "Projet",
       "client": "Client",
@@ -3450,7 +3550,10 @@
       "paid": "Total des commissions payées",
       "count": "Obligations dues"
     },
-    "status": { "due": "Due", "paid": "Payée" },
+    "status": {
+      "due": "Due",
+      "paid": "Payée"
+    },
     "columns": {
       "project": "Projet",
       "dealAmount": "Montant du contrat",
@@ -3792,8 +3895,16 @@
         "allLocales": "Toutes les langues",
         "allStatuses": "Tous les statuts"
       },
-      "locales": { "fr": "Français", "en": "Anglais" },
-      "statuses": { "draft": "Brouillon", "review": "En relecture", "published": "Publié", "archived": "Archivé" },
+      "locales": {
+        "fr": "Français",
+        "en": "Anglais"
+      },
+      "statuses": {
+        "draft": "Brouillon",
+        "review": "En relecture",
+        "published": "Publié",
+        "archived": "Archivé"
+      },
       "columns": {
         "title": "Titre",
         "locale": "Langue",
@@ -3870,7 +3981,10 @@
         "metaDescription": "{count}/180 caractères",
         "canonical": "Facultatif. Utilisez https://batiplusmaroc.com ou www.batiplusmaroc.com."
       },
-      "locales": { "fr": "Français", "en": "Anglais" },
+      "locales": {
+        "fr": "Français",
+        "en": "Anglais"
+      },
       "intents": {
         "informational": "Informationnelle",
         "commercial": "Commerciale",
@@ -3878,7 +3992,9 @@
         "navigational": "Navigationnelle",
         "local": "Locale"
       },
-      "options": { "none": "Aucun" },
+      "options": {
+        "none": "Aucun"
+      },
       "media": {
         "selectFeatured": "Choisir l’image à la une",
         "selectOg": "Choisir l’image Open Graph",
@@ -3952,25 +4068,69 @@
         "allLocales": "Toutes les langues",
         "missingOnly": "Métadonnées manquantes uniquement"
       },
-      "locales": { "fr": "Français", "en": "Anglais" },
-      "columns": { "page": "Page", "locale": "Langue", "metadata": "Métadonnées", "canonical": "Canonique", "robots": "Robots", "updated": "Mise à jour", "actions": "Actions" },
+      "locales": {
+        "fr": "Français",
+        "en": "Anglais"
+      },
+      "columns": {
+        "page": "Page",
+        "locale": "Langue",
+        "metadata": "Métadonnées",
+        "canonical": "Canonique",
+        "robots": "Robots",
+        "updated": "Mise à jour",
+        "actions": "Actions"
+      },
       "ready": "Prêtes",
       "missing": "Manquantes",
       "neverUpdated": "Non configurée",
       "editNamed": "Modifier les métadonnées {locale} de {page}",
       "editTitle": "Modifier {page}",
       "close": "Fermer l’éditeur de métadonnées",
-      "fields": { "seoTitle": "Titre SEO", "metaDescription": "Méta-description", "canonicalUrl": "URL canonique", "robots": "Directive robots", "ogTitle": "Titre Open Graph", "ogDescription": "Description Open Graph", "ogImage": "Image Open Graph" },
-      "hints": { "seoTitle": "{count}/70 caractères", "metaDescription": "{count}/180 caractères", "canonical": "Facultatif. Utilisez un domaine HTTPS Batiplus approuvé, sans paramètres ni fragment." },
+      "fields": {
+        "seoTitle": "Titre SEO",
+        "metaDescription": "Méta-description",
+        "canonicalUrl": "URL canonique",
+        "robots": "Directive robots",
+        "ogTitle": "Titre Open Graph",
+        "ogDescription": "Description Open Graph",
+        "ogImage": "Image Open Graph"
+      },
+      "hints": {
+        "seoTitle": "{count}/70 caractères",
+        "metaDescription": "{count}/180 caractères",
+        "canonical": "Facultatif. Utilisez un domaine HTTPS Batiplus approuvé, sans paramètres ni fragment."
+      },
       "chooseImage": "Choisir l’image Open Graph",
       "removeImage": "Retirer l’image Open Graph",
-      "critical": { "title": "Protection d’une page critique", "description": "Je comprends que noindex retire la page d’accueil des résultats de recherche et je confirme explicitement ce changement." },
+      "critical": {
+        "title": "Protection d’une page critique",
+        "description": "Je comprends que noindex retire la page d’accueil des résultats de recherche et je confirme explicitement ce changement."
+      },
       "cancel": "Annuler",
       "save": "Enregistrer les métadonnées",
       "saving": "Enregistrement…",
-      "success": { "saved": "Métadonnées de la page enregistrées." },
-      "errors": { "canonicalConflict": "Cette URL canonique est déjà attribuée à une autre donnée SEO.", "invalidCanonical": "Utilisez une URL HTTPS Batiplus valide, sans paramètres ni fragment.", "confirmNoindex": "Confirmez explicitement noindex pour cette page critique.", "invalidMedia": "Choisissez une image active de la médiathèque.", "generic": "Impossible d’enregistrer les métadonnées de la page." },
-      "pageNames": { "homepage": "Page d’accueil", "companiesDirectory": "Annuaire des entreprises", "projectsDirectory": "Annuaire des projets", "realisationsIndex": "Réalisations", "servicesIndex": "Services", "structuralWork": "Gros œuvre", "finishingWork": "Second œuvre", "about": "À propos de Batiplus", "contact": "Contact" }
+      "success": {
+        "saved": "Métadonnées de la page enregistrées."
+      },
+      "errors": {
+        "canonicalConflict": "Cette URL canonique est déjà attribuée à une autre donnée SEO.",
+        "invalidCanonical": "Utilisez une URL HTTPS Batiplus valide, sans paramètres ni fragment.",
+        "confirmNoindex": "Confirmez explicitement noindex pour cette page critique.",
+        "invalidMedia": "Choisissez une image active de la médiathèque.",
+        "generic": "Impossible d’enregistrer les métadonnées de la page."
+      },
+      "pageNames": {
+        "homepage": "Page d’accueil",
+        "companiesDirectory": "Annuaire des entreprises",
+        "projectsDirectory": "Annuaire des projets",
+        "realisationsIndex": "Réalisations",
+        "servicesIndex": "Services",
+        "structuralWork": "Gros œuvre",
+        "finishingWork": "Second œuvre",
+        "about": "À propos de Batiplus",
+        "contact": "Contact"
+      }
     },
     "media": {
       "metaTitle": "Médiathèque SEO",
@@ -3983,7 +4143,10 @@
       "searchLabel": "Rechercher un média",
       "searchPlaceholder": "Rechercher par nom de fichier",
       "statusLabel": "Filtrer le statut des médias",
-      "statuses": { "active": "Images actives", "archived": "Images archivées" },
+      "statuses": {
+        "active": "Images actives",
+        "archived": "Images archivées"
+      },
       "gridLabel": "Ressources média",
       "loading": "Chargement des médias…",
       "emptyTitle": "Aucune image trouvée",
@@ -3997,7 +4160,11 @@
       "notFound": "Cette ressource média n’est plus disponible.",
       "close": "Fermer les détails du média",
       "tabsLabel": "Sections des détails du média",
-      "tabs": { "general": "Général", "fr": "Français", "en": "English" },
+      "tabs": {
+        "general": "Général",
+        "fr": "Français",
+        "en": "English"
+      },
       "fields": {
         "fileName": "Nom du fichier",
         "type": "Type de fichier",
@@ -4151,10 +4318,16 @@
         "title": "Historique des propositions ({count})",
         "item": "Proposition {sequence} : {date} à {time}"
       },
-      "cancel": { "reason": "Motif d’annulation (facultatif)" },
+      "cancel": {
+        "reason": "Motif d’annulation (facultatif)"
+      },
       "adminReadOnly": "Vue de suivi administrateur — aucune action de modification."
     },
-    "actions": { "back": "Retour", "cancel": "Annuler l’évaluation", "complete": "Marquer comme terminée" }
+    "actions": {
+      "back": "Retour",
+      "cancel": "Annuler l’évaluation",
+      "complete": "Marquer comme terminée"
+    }
   },
   "finalQuote": {
     "title": "Devis final",
@@ -4198,7 +4371,14 @@
     "reasonPlaceholder": "Décrivez les modifications nécessaires…",
     "sendChanges": "Envoyer la demande",
     "confirmDecline": "Refuser le devis final",
-    "status": { "draft": "Devis final demandé", "submitted": "Devis final envoyé", "changes_requested": "Modifications demandées", "accepted": "Devis final accepté", "declined": "Devis final refusé", "withdrawn": "Devis final retiré" },
+    "status": {
+      "draft": "Devis final demandé",
+      "submitted": "Devis final envoyé",
+      "changes_requested": "Modifications demandées",
+      "accepted": "Devis final accepté",
+      "declined": "Devis final refusé",
+      "withdrawn": "Devis final retiré"
+    },
     "requestedLead": "L’entreprise peut maintenant préparer son offre finale ferme.",
     "submittedLead": "Examinez l’offre finale ferme de l’entreprise.",
     "acceptedLead": "Cette entreprise a été sélectionnée pour le projet.",
@@ -4293,16 +4473,29 @@
       "clientRequired": "Seul un compte client finalisé peut envoyer des invitations.",
       "clientWorkspace": "Espace client",
       "unavailable": "Cette entreprise ne peut pas recevoir d’invitations pour le moment.",
-      "status": { "pending": "Invitation envoyée", "accepted": "Invitation acceptée", "declined": "Invitation refusée" }
+      "status": {
+        "pending": "Invitation envoyée",
+        "accepted": "Invitation acceptée",
+        "declined": "Invitation refusée"
+      }
     },
     "company": {
       "eyebrow": "Espace entreprise",
       "title": "Invitations aux projets",
       "lead": "Consultez les invitations directes des clients. La messagerie et le parcours de proposition s’ouvrent uniquement après acceptation.",
       "filterLabel": "Filtrer les invitations",
-      "filter": { "all": "Toutes", "pending": "En attente", "accepted": "Acceptées", "declined": "Refusées" },
+      "filter": {
+        "all": "Toutes",
+        "pending": "En attente",
+        "accepted": "Acceptées",
+        "declined": "Refusées"
+      },
       "suspended": "L’accès à la marketplace est temporairement suspendu. Contactez le support Batiplus.",
-      "status": { "pending": "En attente", "accepted": "Acceptée", "declined": "Refusée" },
+      "status": {
+        "pending": "En attente",
+        "accepted": "Acceptée",
+        "declined": "Refusée"
+      },
       "emptyTitle": "Aucune invitation à afficher",
       "emptyLead": "Les invitations directes aux projets apparaîtront ici.",
       "invitedAt": "Invitation reçue le {date}",
@@ -4319,7 +4512,11 @@
     "project": {
       "title": "Entreprises invitées",
       "loading": "Chargement des invitations…",
-      "status": { "pending": "En attente", "accepted": "Acceptée", "declined": "Refusée" }
+      "status": {
+        "pending": "En attente",
+        "accepted": "Acceptée",
+        "declined": "Refusée"
+      }
     }
   },
   "ux": {
@@ -4537,7 +4734,29 @@
         "INVALID_COMMISSION_PAYMENT_REFERENCE": "La référence de paiement est trop longue.",
         "INVALID_COMMISSION_PAYMENT_NOTE": "La note interne de paiement est trop longue.",
         "NETWORK": "Problème de connexion. Nous allons réessayer.",
-        "UNKNOWN": "Une erreur est survenue. Veuillez réessayer."
+        "UNKNOWN": "Une erreur est survenue. Veuillez réessayer.",
+        "CLIENT_SUPPORT_CONVERSATION_NOT_FOUND": "Cette conversation d’assistance Batiplus est indisponible.",
+        "CLIENT_SUPPORT_MESSAGE_NOT_FOUND": "Cette entrée d’assistance n’est plus disponible.",
+        "INVALID_CLIENT_SUPPORT_MESSAGE_BODY": "Rédigez un message de 1 à 5 000 caractères.",
+        "INVALID_CLIENT_SUPPORT_PAGE_SIZE": "Cette liste n’a pas pu être chargée. Veuillez réessayer.",
+        "INVALID_CLIENT_SUPPORT_READ_POSITION": "La conversation n’a pas pu être marquée comme lue.",
+        "INVALID_IDEMPOTENCY_KEY": "Le message n’a pas pu être envoyé. Veuillez réessayer.",
+        "IDEMPOTENCY_KEY_CONFLICT": "Ce message entre en conflit avec une tentative précédente. Modifiez-le puis renvoyez-le.",
+        "COORDINATION_AGREEMENT_NOT_FOUND": "Cet accord de coordination n’est pas accessible.",
+        "COORDINATION_VERSION_NOT_FOUND": "Cette version de l’accord n’est pas accessible.",
+        "COORDINATION_DRAFT_CONFLICT": "Le brouillon enregistré a changé. Vos saisies sont conservées ; rechargez et consultez le brouillon.",
+        "COORDINATION_VERSION_CONFLICT": "La version de l’accord a changé. Actualisez et consultez la version actuelle avant de poursuivre.",
+        "COORDINATION_READINESS_CONFLICT": "La préférence de devis a changé. Actualisez et vérifiez-la ; les modalités en attente peuvent nécessiter une nouvelle publication.",
+        "COORDINATION_READINESS_NOT_ELIGIBLE": "Le devis préféré n’est plus éligible. Vérifiez-le dans votre projet avant de demander un nouveau résumé.",
+        "COORDINATION_PROJECT_NOT_ELIGIBLE": "Le statut actuel de ce projet empêche une nouvelle publication ou confirmation.",
+        "COORDINATION_NOT_STARTED_DECLARATION_REQUIRED": "Le premier accord exige votre déclaration explicite que la coordination payante n’a pas commencé.",
+        "COORDINATION_START_DATE_PASSED": "La date de début est passée. Un nouveau résumé complet doit être publié.",
+        "INVALID_COORDINATION_TERMS": "Renseignez toutes les modalités négociées dans les limites de texte indiquées.",
+        "INVALID_COORDINATION_DATE": "Saisissez une date de début valide.",
+        "INVALID_COORDINATION_AMOUNT": "Saisissez un montant positif en MAD avec au maximum deux décimales et sans séparateur de milliers.",
+        "INVALID_COORDINATION_PERCENTAGE": "Saisissez un pourcentage décimal positif de 64 caractères au maximum.",
+        "INVALID_COORDINATION_REVISION": "La révision du brouillon est invalide. Rechargez et vérifiez avant d’enregistrer.",
+        "INVALID_COORDINATION_TIME": "Actualisez le résumé pour vérifier à nouveau son éligibilité."
       }
     },
     "empty": {
@@ -4919,6 +5138,124 @@
       "title": "Conversation Batiplus indisponible",
       "lead": "Vous n’avez plus accès à cette conversation opérationnelle.",
       "retry": "Réessayer"
+    }
+  },
+  "clientSupport": {
+    "metaTitle": "Assistance Batiplus",
+    "metaDescription": "Conversation privée avec l’équipe Batiplus au sujet de votre projet.",
+    "events": {
+      "freeHelpRequested": "Aide gratuite Batiplus demandée",
+      "coordinationDiscussionRequested": "Discussion sur la coordination de chantier demandée",
+      "unknown": "Demande d’assistance enregistrée"
+    },
+    "kinds": {
+      "free_help": "Aide gratuite",
+      "coordination_discussion": "Coordination de chantier"
+    },
+    "actions": {
+      "title": "Assistance Batiplus",
+      "note": "Les deux services sont facultatifs. Demander une coordination ne vous engage pas à payer.",
+      "freeHelp": {
+        "title": "Aide gratuite Batiplus",
+        "description": "Une aide pour vos documents et vos échéances de paiement. Demandez à organiser un appel téléphonique.",
+        "action": "Obtenir l’aide gratuite de Batiplus"
+      },
+      "coordination": {
+        "title": "Coordination de chantier par Batiplus",
+        "description": "Discutez des visites de chantier, des tâches et du prix avec l’équipe Batiplus.",
+        "action": "Discuter de la coordination de chantier"
+      },
+      "requested": "Demandé",
+      "submitting": "Envoi de votre demande…",
+      "openConversation": "Ouvrir la conversation Batiplus",
+      "unread": "{count, plural, one {# message non lu} other {# messages non lus}}",
+      "loading": "Chargement de l’assistance Batiplus",
+      "unavailable": "L’assistance Batiplus n’a pas pu être chargée.",
+      "retry": "Réessayer",
+      "requestFailed": "Votre demande n’a pas pu être envoyée. Rien n’a été demandé — veuillez réessayer."
+    },
+    "page": {
+      "label": "Conversation d’assistance Batiplus",
+      "eyebrow": "Assistance Batiplus",
+      "lead": "Une conversation privée entre vous et l’équipe Batiplus. Les entreprises ne peuvent pas la voir.",
+      "backToProject": "Retour au projet",
+      "backToProjects": "Retour à mes projets",
+      "untitledProject": "Projet en brouillon sans titre",
+      "contextTitle": "Projet",
+      "contextCity": "Ville",
+      "contextStatus": "Statut",
+      "contextRequested": "Services demandés",
+      "notProvided": "Pas encore renseigné",
+      "noThreadTitle": "Vous n’avez pas encore demandé l’aide de Batiplus pour ce projet",
+      "noThreadLead": "Choisissez un service pour ouvrir une conversation privée avec l’équipe Batiplus. Rien n’est envoyé tant que vous n’avez pas choisi.",
+      "servicesTitle": "Services Batiplus",
+      "loading": "Chargement de l’assistance Batiplus",
+      "notFoundTitle": "Projet introuvable",
+      "notFoundLead": "Ce projet n’existe pas ou vous n’y avez pas accès.",
+      "deniedTitle": "Assistance Batiplus indisponible",
+      "deniedLead": "Vous n’avez plus accès à cette conversation, ou elle n’a pas pu être chargée.",
+      "retry": "Réessayer"
+    },
+    "thread": {
+      "title": "Conversation avec Batiplus",
+      "messageList": "Historique de l’assistance Batiplus",
+      "loading": "Chargement de la conversation",
+      "loadOlder": "Charger les messages précédents",
+      "loadingOlder": "Chargement des messages précédents",
+      "composerLabel": "Message",
+      "composerPlaceholderClient": "Écrivez à l’équipe Batiplus…",
+      "composerPlaceholderAdmin": "Répondez au client…",
+      "composerHint": "Texte uniquement. Entrée pour envoyer, Maj+Entrée pour aller à la ligne.",
+      "send": "Envoyer",
+      "sending": "Envoi…",
+      "retry": "Réessayer",
+      "sendFailed": "Le message n’a pas pu être envoyé. Votre texte est conservé — réessayez.",
+      "readFailed": "La conversation n’a pas pu être marquée comme lue.",
+      "characterCount": "{count} caractères sur {maximum}",
+      "senderAdmin": "Équipe Batiplus",
+      "senderClient": "Client",
+      "yourMessage": "Votre message",
+      "requestMeta": "{name} · {date}",
+      "unreadBadge": "{count, plural, one {# message non lu} other {# messages non lus}}"
+    },
+    "admin": {
+      "metaTitle": "Assistance clients — Administration",
+      "metaDescription": "Demandes privées d’aide et de coordination des clients pour l’équipe Batiplus.",
+      "title": "Assistance clients",
+      "lead": "Demandes privées d’aide et de coordination des clients. Les entreprises ne voient jamais ces conversations.",
+      "inboxLabel": "Demandes d’assistance",
+      "inboxTitle": "Demandes",
+      "emptyTitle": "Aucune demande d’assistance pour le moment",
+      "emptyLead": "Les demandes apparaissent ici lorsqu’un client demande l’aide gratuite ou souhaite discuter de la coordination de chantier.",
+      "loading": "Chargement des demandes d’assistance",
+      "loadingLead": "Recherche des demandes d’aide et de coordination des clients.",
+      "conversationLabel": "Conversation d’assistance",
+      "loadMore": "Charger plus de demandes",
+      "loadingMore": "Chargement d’autres demandes…",
+      "selectTitle": "Sélectionnez une demande",
+      "selectLead": "Choisissez une demande pour lire la conversation et répondre au client.",
+      "backToRequests": "Retour aux demandes",
+      "untitledProject": "Projet en brouillon sans titre",
+      "clientFallback": "Client",
+      "lastEntryClient": "Client : {preview}",
+      "lastEntryTeam": "Batiplus : {preview}",
+      "unread": "{count, plural, one {# entrée non lue} other {# entrées non lues}}",
+      "contextLabel": "Contexte de la demande",
+      "contextClient": "Client",
+      "contextCity": "Ville",
+      "contextStatus": "Statut du projet",
+      "contextRequested": "Demandé",
+      "notProvided": "Non renseigné",
+      "noThreadTitle": "Aucune conversation d’assistance pour ce projet",
+      "noThreadLead": "Le client n’a pas demandé l’aide de Batiplus pour ce projet. Une conversation ne s’ouvre que lorsqu’il le fait.",
+      "deniedTitle": "Conversation indisponible",
+      "deniedLead": "Cette conversation n’existe plus ou vous n’y avez plus accès.",
+      "inboxDeniedTitle": "Demandes d’assistance indisponibles",
+      "inboxDeniedLead": "La boîte de réception n’a pas pu être chargée, ou votre accès administrateur a changé.",
+      "retry": "Réessayer",
+      "openSupport": "Ouvrir l’assistance client",
+      "errorTitle": "L’assistance clients n’a pas pu être chargée",
+      "errorDescription": "Une erreur s’est produite lors du chargement de cet espace. Réessayez."
     }
   },
   "adminNotes": {
@@ -5352,5 +5689,136 @@
       "source_invalid": "L’identité ou les métadonnées de la source d’origine ne peuvent pas être vérifiées.",
       "upload_grant_active": "Une autorisation de téléversement historique peut encore recréer ce fichier. Attendez son expiration vérifiée."
     }
+  },
+  "coordinationAgreement": {
+    "title": "Résumé de coordination",
+    "lead": "Consultez les modalités de coordination discutées avec Batiplus. Les deux services restent facultatifs.",
+    "loading": "Chargement du résumé de coordination…",
+    "denied": "Ce résumé de coordination n’est plus accessible.",
+    "reload": "Recharger",
+    "readiness": "Devis préféré",
+    "readinessSaved": "Une préférence de devis est enregistrée et actuellement éligible. Enregistrée le :",
+    "readinessUnavailable": "La préférence enregistrée n’est plus éligible. Enregistrée le :",
+    "readinessAbsent": "Aucune préférence de devis éligible n’est encore enregistrée.",
+    "readinessChangeNote": "Modifier ou effacer la préférence invalide la confirmation en attente. L’historique confirmé reste accessible.",
+    "chooseQuote": "Choisir ou modifier un devis dans votre projet",
+    "clearReadiness": "Effacer la préférence de devis",
+    "readinessCleared": "Préférence de devis effacée.",
+    "current": "Résumé confirmé en vigueur",
+    "confirmedStatus": "Modalités de coordination confirmées",
+    "confirmedMeta": "Version {number} · Confirmée le",
+    "adminStatus": {
+      "label": "État de la coordination",
+      "terms": "Modalités",
+      "clientReview": "Validation du client",
+      "quote": "Devis de référence",
+      "draft": "Brouillon privé",
+      "nothingPending": "Rien en attente du client",
+      "quoteReady": "Devis prêt",
+      "quoteNotEligible": "Devis plus éligible",
+      "quoteMissing": "Aucune préférence de devis",
+      "recordedOn": "Enregistré le",
+      "draftSaved": "Dernier enregistrement",
+      "draftBy": "par {name}",
+      "draftNone": "Aucun brouillon enregistré",
+      "draftUnsaved": "Modifications non enregistrées"
+    },
+    "adminSections": {
+      "scope": "Périmètre",
+      "scopeHint": "Ce que Batiplus prendra en charge, et ce qui est exclu.",
+      "site": "Coordination de chantier",
+      "siteHint": "Les visites convenues et les disponibilités de l’équipe.",
+      "schedule": "Calendrier et honoraires",
+      "scheduleHint": "La date de début proposée et les honoraires tels que négociés.",
+      "payment": "Paiement"
+    },
+    "clientWillReceive": "Voici ce que le client recevra.",
+    "showConfirmed": "Voir les modalités confirmées",
+    "pending": "En attente de votre confirmation",
+    "pendingBlocked": "Ce résumé ne peut pas être confirmé",
+    "confirmationStatus": {
+      "readiness_changed": "Votre préférence de devis a changé depuis l’envoi de ce résumé. Demandez un résumé à jour à Batiplus. Cette version et l’historique confirmé restent consultables.",
+      "source_unavailable": "Le devis associé à ce résumé n’est plus admissible. Vérifiez votre préférence de devis et échangez avec Batiplus pour mettre le résumé à jour. L’historique confirmé reste accessible.",
+      "project_blocked": "Le statut actuel du projet ne permet pas de nouvelle confirmation. Le résumé et l’historique confirmé restent consultables.",
+      "start_date_passed": "La date de début proposée est passée. Demandez à Batiplus une nouvelle version avec une date future convenue ensemble. L’historique confirmé reste accessible.",
+      "declaration_missing": "La déclaration requise de Batiplus manque dans ce résumé. Demandez un résumé à jour avant de le confirmer.",
+      "unavailable": "La confirmation est indisponible. Actualisez le résumé avant de poursuivre. Cette version et l’historique confirmé restent consultables."
+    },
+    "previousConfirmed": "Version précédemment confirmée",
+    "superseded": "Remplacée avant confirmation",
+    "noCurrent": "Aucun résumé de coordination n’a été confirmé.",
+    "noPending": "Aucun résumé n’attend votre confirmation.",
+    "replacementNote": "Cette proposition de remplacement n’est pas en vigueur. La version confirmée reste en vigueur jusqu’à votre confirmation du remplacement.",
+    "pendingNote": "Consultez la version complète avant de la confirmer.",
+    "version": "Version {number}",
+    "reviewVersion": "Consulter la version {number}",
+    "reviewTitle": "Consulter ce résumé précis",
+    "confirmationMeaning": "La confirmation du Client enregistre son accord sur cette version. Elle ne vaut ni consentement d’un autre payeur, ni signature électronique certifiée, ni paiement, ni démarrage automatique des prestations.",
+    "notStartedClient": "Je déclare que la coordination payante n’a pas commencé pour ce premier accord.",
+    "notStartedAdmin": "Je déclare que la coordination payante n’a pas commencé pour ce premier accord.",
+    "staleReview": "L’accord ou la préférence de devis a changé. Fermez cette consultation et vérifiez la situation actuelle avant de poursuivre.",
+    "startPassed": "La date de début proposée est passée. Batiplus doit publier une nouvelle version complète ; la date ne peut pas être modifiée automatiquement.",
+    "gatesRequired": "L’envoi ou la confirmation exige une préférence éligible, un statut de projet autorisé et une date de début valide. Batiplus vérifie à nouveau le devis et la version lors de la validation.",
+    "confirm": "Confirmer ce résumé",
+    "confirming": "Confirmation…",
+    "retryConfirmation": "Réessayer cette confirmation précise",
+    "confirmationSaved": "Ce résumé a été confirmé.",
+    "closeReview": "Fermer la consultation",
+    "askChanges": "Demander des modifications",
+    "history": "Historique des versions publiées",
+    "noHistory": "Aucune version publiée pour le moment.",
+    "loadMore": "Charger d’autres versions",
+    "publishedBy": "Publié par {name} le",
+    "confirmedBy": "Confirmé par {name} le",
+    "effectiveFrom": "Applicable aux prestations futures à partir du",
+    "adminDeclared": "Déclaration de non-démarrage de l’admin enregistrée le :",
+    "clientDeclared": "Déclaration de non-démarrage du Client enregistrée le :",
+    "quoteReadinessTitle": "Devis préféré pour la coordination Batiplus",
+    "quoteChoiceNote": "Utilisez cette révision comme devis préféré pour discuter de la coordination. Cela n’accepte pas le devis du marché et ne recrute pas l’entreprise.",
+    "supportRequired": "Ouvrez explicitement une conversation d’assistance Batiplus avant d’enregistrer une préférence de devis. Une demande d’aide gratuite suffit.",
+    "useQuote": "Utiliser la révision {number} pour la coordination",
+    "quoteUnavailable": "Seule une révision actuelle soumise et non expirée, ou une révision acceptée correspondante, peut être utilisée.",
+    "readinessSelected": "Préférence de devis enregistrée. Batiplus peut maintenant vérifier son éligibilité.",
+    "backSupport": "Retour à l’assistance Batiplus",
+    "adminLead": "Préparez l’ensemble des modalités discutées avec le Client. L’enregistrement garde le brouillon privé ; l’envoi publie une version à consulter par le Client.",
+    "adminSourcePrivacy": "Seules l’éligibilité et la date de déclaration sont partagées ici. Les devis privés et l’identité des entreprises restent dans le marché.",
+    "prepareRevision": "Préparer un résumé révisé",
+    "privateDraft": "Brouillon privé",
+    "privateDraftNote": "Seuls les admins Batiplus autorisés voient ce brouillon. Il peut être préparé avant l’éligibilité et sur les projets clôturés.",
+    "staleDraft": "Le brouillon enregistré a changé. Vos saisies sont conservées. Rechargez le brouillon enregistré avant de sauvegarder à nouveau.",
+    "reloadDraft": "Remplacer la saisie par le brouillon enregistré",
+    "chooseFee": "Choisir le type d’honoraires négocié",
+    "fixedFee": "Montant fixe en MAD",
+    "percentageFee": "Pourcentage avec base explicite",
+    "centimeHint": "Utilisez un point ou une virgule et au maximum deux décimales. N’utilisez pas de séparateur de milliers.",
+    "percentageHint": "Utilisez un point ou une virgule comme séparateur décimal. Tous les chiffres et zéros finaux sont conservés ; aucun montant n’est calculé.",
+    "payerNote": "Indiquez explicitement le payeur convenu et les conditions de paiement. Le Client ne peut pas consentir au nom d’un autre payeur.",
+    "saveDraft": "Enregistrer le brouillon",
+    "saving": "Enregistrement…",
+    "draftSaved": "Brouillon privé enregistré.",
+    "reviewSaved": "Consulter les modalités enregistrées avant l’envoi",
+    "publicationReview": "Consulter le résumé enregistré avant publication",
+    "sendSummary": "Envoyer le résumé",
+    "sending": "Envoi…",
+    "retryPublication": "Réessayer cette publication précise",
+    "published": "Résumé publié pour consultation par le Client.",
+    "workspaceTabs": "Vues de l’assistance",
+    "messagesTab": "Messages",
+    "fields": {
+      "tasks": "Tâches convenues",
+      "exclusions": "Limites et exclusions",
+      "visits": "Visites convenues",
+      "availability": "Disponibilité et conditions des visites",
+      "startDate": "Date de début proposée",
+      "fee": "Honoraires négociés",
+      "amountMad": "Honoraires fixes (MAD)",
+      "rate": "Taux en pourcentage (%)",
+      "basis": "Base de calcul explicite",
+      "basisAmountMad": "Montant explicite de la base (MAD, facultatif)",
+      "payer": "Payeur convenu",
+      "paymentTerms": "Dates et conditions de paiement"
+    },
+    "pendingAdmin": "En attente de confirmation du Client",
+    "replacementAdminNote": "Cette proposition de remplacement n’est pas en vigueur. La version confirmée reste en vigueur jusqu’à la confirmation du remplacement par le Client."
   }
 }

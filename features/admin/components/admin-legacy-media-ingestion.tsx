@@ -14,7 +14,7 @@ import { AdminLegacyMediaRetirement } from "./admin-legacy-media-retirement";
 type Candidate = FunctionReturnType<typeof api.legacyMediaIngestion.index.listCandidates>["page"][number];
 type MediaType = Candidate["mediaType"];
 const TYPES: MediaType[] = ["companyLogo", "companyCover", "portfolioCover", "portfolioGallery"];
-const BUTTON = `min-h-11 rounded-full border border-[#d9e1ef] px-4 text-sm font-semibold disabled:opacity-50 ${ADMIN_PRESS}`;
+const BUTTON = `min-h-11 rounded-sm border border-[#d9e1ef] px-4 text-sm font-semibold disabled:opacity-50 ${ADMIN_PRESS}`;
 
 class IngestionBoundary extends Component<{ children: ReactNode; error: string; retry: string }, { failed: boolean }> {
   state = { failed: false };
@@ -41,7 +41,7 @@ function IngestionTypes() {
   const [mediaType, setMediaType] = useState<MediaType>("companyLogo");
   return <>
     <label className="mt-4 flex flex-col gap-2 text-sm font-semibold">{t("mediaType")}
-      <select className="min-h-11 max-w-full rounded-lg border border-[#d9e1ef] bg-white px-3 font-normal" value={mediaType} onChange={event => setMediaType(event.target.value as MediaType)}>
+      <select className="min-h-11 max-w-full rounded-sm border border-[#d9e1ef] bg-white px-3 font-normal" value={mediaType} onChange={event => setMediaType(event.target.value as MediaType)}>
         {TYPES.map(type => <option value={type} key={type}>{t(`types.${type}`)}</option>)}
       </select>
     </label>

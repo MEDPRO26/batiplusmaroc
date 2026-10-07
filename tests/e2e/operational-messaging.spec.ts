@@ -310,6 +310,7 @@ test("suspended Company sees only the safe restriction state and can still use B
     messages: [operationalMessage(1, "Support remains available", "admin", false)],
   });
   const queries = state.__queries as Record<string, unknown>;
+  queries["companyVerification.index.getVerificationStatus"] = { status: "verified", canManageDocuments: true };
   queries["companies.index.getOnboardingProfile"] = {
     accountRestricted: true,
     name: "Atlas Build",

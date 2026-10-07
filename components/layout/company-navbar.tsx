@@ -131,7 +131,7 @@ export function CompanyNavbarUtilities() {
   }
 
   const iconButton =
-    "relative grid size-11 shrink-0 place-items-center rounded-full border-0 bg-transparent text-ink transition-[background-color,color,scale] duration-150 active:scale-[0.96] hover:bg-brand-soft hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand";
+    "relative grid size-11 shrink-0 place-items-center rounded-sm border-0 bg-transparent text-ink transition-[background-color,color,scale] duration-150 active:scale-[0.96] hover:bg-brand-soft hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand";
 
   return (
     <div className="flex items-center gap-1 sm:gap-1.5">
@@ -143,7 +143,7 @@ export function CompanyNavbarUtilities() {
         <label className="sr-only" htmlFor="company-navbar-search">
           {t("companySearchLabel")}
         </label>
-        <div className="flex min-h-11 items-center overflow-hidden rounded-full border border-brand-border bg-white transition-[border-color,box-shadow] duration-150 focus-within:border-brand focus-within:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]">
+        <div className="flex min-h-11 items-center overflow-hidden rounded-sm border border-brand-border bg-white transition-[border-color,box-shadow] duration-150 focus-within:border-brand focus-within:shadow-[0_0_0_3px_rgb(5_79_132/0.12)]">
           <SearchIcon className="ml-3.5 size-[18px] shrink-0 text-muted" />
           <input
             className="min-w-0 flex-1 border-0 bg-transparent px-2.5 py-2.5 text-sm text-ink outline-none placeholder:text-muted/75 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
@@ -158,7 +158,7 @@ export function CompanyNavbarUtilities() {
           {query ? (
             <button
               aria-label={t("clearSearch")}
-              className="grid size-8 shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-brand-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="grid size-8 shrink-0 place-items-center rounded-sm text-muted transition-colors hover:bg-brand-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               onClick={() => {
                 setQuery("");
                 searchInput.current?.focus();

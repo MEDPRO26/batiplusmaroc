@@ -146,7 +146,7 @@ function OwnerPortfolioManager() {
               onClick={() => setEditing("new")}
               type="button"
             >
-              <span className="grid size-12 place-items-center rounded-full bg-brand-soft text-brand transition-transform group-hover:scale-105">
+              <span className="grid size-12 place-items-center rounded-sm bg-brand-soft text-brand transition-transform group-hover:scale-105">
                 <PlusIcon className="size-5" />
               </span>
               <span className="text-[0.95rem] font-semibold text-ink">{data.projects.length === 0 ? t("empty") : t("add")}</span>
@@ -194,7 +194,7 @@ function PortfolioCard({
           <StatusBadge tone={STATUS_TONE[project.status]}>{t(`status.${project.status}`)}</StatusBadge>
         </div>
         {project.media.length > 0 ? (
-          <span className="absolute right-3 bottom-3 rounded-full bg-[#0f1f2e]/70 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+          <span className="absolute right-3 bottom-3 rounded-sm bg-[#0f1f2e]/70 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
             {t("photoCount", { count: project.media.length + 1 })}
           </span>
         ) : null}
@@ -210,7 +210,7 @@ function PortfolioCard({
           <DropdownMenu.Root modal={false}>
             <DropdownMenu.Trigger
               aria-label={t("moreActions", { title: project.title })}
-              className="grid size-10 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-muted transition-colors hover:bg-brand-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50"
+              className="grid size-10 cursor-pointer place-items-center rounded-sm border-0 bg-transparent text-muted transition-colors hover:bg-brand-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50"
               disabled={busy}
             >
               <MoreIcon />
@@ -218,7 +218,7 @@ function PortfolioCard({
             <DropdownMenu.Portal>
               <DropdownMenu.Content
                 align="end"
-                className="z-[60] min-w-44 rounded-[12px] border border-brand-border bg-white p-1.5 shadow-[0_14px_40px_rgb(23_61_99_/_0.14)]"
+                className="z-[60] min-w-44 rounded-sm border border-brand-border bg-white p-1.5 shadow-[0_14px_40px_rgb(23_61_99_/_0.14)]"
                 sideOffset={6}
               >
                 {project.status !== "published" ? (
@@ -316,7 +316,7 @@ function PortfolioForm({
           </h2>
           <p className="mt-1 mb-0 text-sm leading-6 text-muted">{t("formLead")}</p>
         </div>
-        <button aria-label={t("cancel")} className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-muted hover:bg-brand-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={onClose} type="button">
+        <button aria-label={t("cancel")} className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-sm border-0 bg-transparent text-muted hover:bg-brand-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" onClick={onClose} type="button">
           <svg aria-hidden className="size-4" fill="none" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" /></svg>
         </button>
       </div>

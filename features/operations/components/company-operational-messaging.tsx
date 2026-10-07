@@ -63,8 +63,8 @@ function CompanyOperationalMessagingSkeleton() {
   return (
     <main aria-busy="true" aria-label={t("loading")} className="min-h-[calc(100dvh-4.5rem)] bg-[#f7f9fb] py-10" role="status">
       <div className="mx-auto w-[calc(100%-32px)] max-w-[1240px]">
-        <div className="skeleton-block h-9 w-64 rounded-lg" />
-        <div className="skeleton-block mt-3 h-5 w-full max-w-xl rounded-lg" />
+        <div className="skeleton-block h-9 w-64 rounded-sm" />
+        <div className="skeleton-block mt-3 h-5 w-full max-w-xl rounded-sm" />
         <div className="skeleton-block mt-7 h-[30rem] rounded-2xl" />
       </div>
     </main>

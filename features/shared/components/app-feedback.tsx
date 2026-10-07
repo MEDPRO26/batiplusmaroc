@@ -47,7 +47,7 @@ export function AppFeedback({ children }: { children: ReactNode }) {
         {toasts.map((toast) => (
           <p
             className={joinClassNames(
-              "pointer-events-auto mb-0 max-w-md rounded-lg px-4 py-3 text-sm shadow-[0_10px_30px_rgb(23_61_99/0.12)]",
+              "pointer-events-auto mb-0 max-w-md rounded-sm px-4 py-3 text-sm shadow-[0_10px_30px_rgb(23_61_99/0.12)]",
               toast.tone === "success"
                 ? "bg-emerald-50 text-emerald-800"
                 : toast.tone === "error"

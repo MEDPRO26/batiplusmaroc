@@ -3,10 +3,13 @@ import type { Id } from "../_generated/dataModel";
 import { internal } from "../_generated/api";
 import type { MutationCtx } from "../_generated/server";
 import {
+  isClientSupportNotificationType,
   notificationEntityValidator,
   notificationPayloadValidator,
   notificationTypeValidator,
 } from "./constants";
+import { clientSupportNotificationProject } from "./clientSupportAccess";
+import { getNotificationDeliveryPolicy } from "./deliveryPolicy";
 
 type NotificationType = Infer<typeof notificationTypeValidator>;
 type NotificationEntity = Infer<typeof notificationEntityValidator>;
@@ -40,6 +43,10 @@ const ENTITY_TYPE_BY_NOTIFICATION_TYPE: Record<NotificationType, NotificationEnt
   company_admin_message_received: "admin_company_message",
   company_suspended: "company_operational_status",
   company_reactivated: "company_operational_status",
+  client_support_free_help_requested: "client_support_entry",
+  client_support_coordination_requested: "client_support_entry",
+  client_support_client_message_received: "client_support_entry",
+  client_support_admin_reply_received: "client_support_entry",
 };
 
 export type CreateNotificationArgs = {
@@ -89,6 +96,11 @@ export async function createNotification(ctx: MutationCtx, args: CreateNotificat
     throw new ConvexError("INVALID_NOTIFICATION_ENTITY");
   }
   validatePayload(args.payload);
+  if (isClientSupportNotificationType(args.type)) {
+    if (Object.keys(args.payload).length !== 0) throw new ConvexError("INVALID_NOTIFICATION_PAYLOAD");
+    // Authorization must precede recipient-scoped deduplication, even on retries.
+    if (!await clientSupportNotificationProject(ctx, args)) throw new ConvexError("INVALID_NOTIFICATION_ENTITY");
+  }
 
   const dedupeKey = args.dedupeKey?.trim();
   if (args.dedupeKey !== undefined && (!dedupeKey || dedupeKey.length > MAX_DEDUPE_KEY_LENGTH)) {
@@ -119,11 +131,16 @@ export async function createNotification(ctx: MutationCtx, args: CreateNotificat
     createdAt: now,
   });
 
-  await ctx.scheduler.runAfter(
-    0,
-    internal.notifications.pushDelivery.deliverMarketplacePush,
-    { notificationId },
-  );
+  const delivery = getNotificationDeliveryPolicy(args.type);
+  // Keep the reserved event's legacy scheduling behavior; active in-app-only
+  // events never enter the push pipeline.
+  if (delivery.pushEligible || !delivery.active) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.notifications.pushDelivery.deliverMarketplacePush,
+      { notificationId },
+    );
+  }
 
   if (state) {
     await ctx.db.patch(state._id, { unreadCount: state.unreadCount + 1, updatedAt: now });

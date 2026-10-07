@@ -90,7 +90,7 @@ export function SeoWorkspaceShell({
           <NavbarLogo homeAria={tBrand("homeAria")} name={tBrand("name")} />
           <button
             aria-label={t("closeSidebar")}
-            className={`inline-flex size-11 items-center justify-center rounded-full text-[#626970] lg:hidden ${SEO_PRESS}`}
+            className={`inline-flex size-11 items-center justify-center rounded-sm text-[#626970] lg:hidden ${SEO_PRESS}`}
             onClick={() => setSidebarOpen(false)}
             type="button"
           >
@@ -129,7 +129,7 @@ export function SeoWorkspaceShell({
 
         <div className="mt-4 rounded-[16px] border border-[#eceef2] p-2">
           <div className="flex items-center gap-3 px-1 py-1">
-            <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-[#2f6bff] text-sm font-semibold text-white">
+            <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-sm bg-[#2f6bff] text-sm font-semibold text-white">
               {displayName.slice(0, 1).toLocaleUpperCase()}
             </span>
             <span className="min-w-0 flex-1">
@@ -138,7 +138,7 @@ export function SeoWorkspaceShell({
             </span>
           </div>
           <button
-            className={`mt-2 flex min-h-11 w-full items-center gap-3 rounded-[12px] px-3 text-sm font-semibold text-[#626970] hover:bg-[#f4f6f8] hover:text-[#17191d] ${SEO_PRESS}`}
+            className={`mt-2 flex min-h-11 w-full items-center gap-3 rounded-sm px-3 text-sm font-semibold text-[#626970] hover:bg-[#f4f6f8] hover:text-[#17191d] ${SEO_PRESS}`}
             onClick={() => void logOut()}
             type="button"
           >
@@ -152,7 +152,7 @@ export function SeoWorkspaceShell({
         <header className="flex min-h-[76px] items-center gap-3 border-b border-[#e7eaee]/80 bg-[#f4f6f8]/95 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
           <button
             aria-label={t("openSidebar")}
-            className={`inline-flex size-11 items-center justify-center rounded-full border border-[#e6e9ee] bg-white text-[#17191d] lg:hidden ${SEO_PRESS}`}
+            className={`inline-flex size-11 items-center justify-center rounded-sm border border-[#e6e9ee] bg-white text-[#17191d] lg:hidden ${SEO_PRESS}`}
             onClick={() => setSidebarOpen(true)}
             type="button"
           >

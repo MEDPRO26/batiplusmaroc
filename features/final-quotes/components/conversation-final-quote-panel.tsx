@@ -12,6 +12,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { mapAppError } from "@/lib/errors/map-app-error";
 import { parseMadInput } from "@/lib/money/mad";
+import { ClientQuoteReadiness } from "@/features/coordination-agreements/components/client-quote-readiness";
 
 type ConversationFinalQuoteResult = FunctionReturnType<
   typeof api.finalQuotes.index.getForConversation
@@ -93,7 +94,7 @@ export function ConversationFinalQuotePanel({ conversationId }: { conversationId
             {t("title")}
           </h3>
           {quote ? (
-            <span className="rounded-full bg-brand-soft px-2 py-1 text-xs font-semibold text-brand-dark">
+            <span className="rounded-sm bg-brand-soft px-2 py-1 text-xs font-semibold text-brand-dark">
               {t(`status.${quote.status}` as "status.submitted")}
             </span>
           ) : null}
@@ -105,7 +106,7 @@ export function ConversationFinalQuotePanel({ conversationId }: { conversationId
       </div>
       {primaryLabel && (canClientRequest || canClientReview || canCompanyAct) ? (
         <button
-          className="min-h-11 shrink-0 rounded-full bg-brand px-5 text-sm font-semibold text-white disabled:opacity-55"
+          className="min-h-11 shrink-0 rounded-sm bg-brand px-5 text-sm font-semibold text-white disabled:opacity-55"
           disabled={busy}
           onClick={() => {
             if (!quote) void (data.viewerType === "client" ? request() : prepare());
@@ -117,7 +118,7 @@ export function ConversationFinalQuotePanel({ conversationId }: { conversationId
         </button>
       ) : secondaryLabel ? (
         <button
-          className="min-h-11 shrink-0 rounded-full border border-brand-border px-5 text-sm font-semibold text-brand"
+          className="min-h-11 shrink-0 rounded-sm border border-brand-border px-5 text-sm font-semibold text-brand"
           onClick={() => setOpen(true)}
           type="button"
         >
@@ -216,7 +217,7 @@ export function FinalQuoteSheet({
           </div>
           <button
             aria-label={t("close")}
-            className="grid size-11 place-items-center rounded-full border border-brand-border text-xl"
+            className="grid size-11 place-items-center rounded-sm border border-brand-border text-xl"
             onClick={onClose}
             ref={closeRef}
             type="button"
@@ -271,6 +272,7 @@ export function FinalQuoteSheet({
                 ) : null}
                 {latest.hasPdf ? <PdfLink revisionId={latest.id} /> : null}
               </div>
+              {viewerType === "client" ? <ClientQuoteReadiness key={quote.projectId} quote={quote} /> : null}
               {quote.revisions.length > 1 ? (
                 <details className="mt-6 rounded-xl border border-brand-border p-4">
                   <summary className="cursor-pointer font-semibold text-ink">
@@ -291,12 +293,12 @@ export function FinalQuoteSheet({
                 </details>
               ) : null}
               {viewerType === "client" && quote.canReview && mode !== "details" ? (
-                  <div className="mt-5 rounded-lg bg-[#f7f8f9] p-4">
+                  <div className="mt-5 rounded-sm bg-[#f7f8f9] p-4">
                     <label className="text-[13px] font-medium text-ink" htmlFor="final-quote-reason">
                       {t("reason")}
                     </label>
                     <textarea
-                      className="mt-2 min-h-24 w-full rounded-lg border border-[#d7dde3] bg-white px-3 py-2 text-[14px]"
+                      className="mt-2 min-h-24 w-full rounded-sm border border-[#d7dde3] bg-white px-3 py-2 text-[14px]"
                       id="final-quote-reason"
                       onChange={(event) => setReason(event.target.value)}
                       placeholder={t("reasonPlaceholder")}
@@ -312,7 +314,7 @@ export function FinalQuoteSheet({
                         {t("close")}
                       </button>
                       <button
-                        className="min-h-10 rounded-full bg-brand px-5 text-[14px] font-medium text-white disabled:opacity-50"
+                        className="min-h-10 rounded-sm bg-brand px-5 text-[14px] font-medium text-white disabled:opacity-50"
                         disabled={busy || (mode === "changes" && reason.trim().length < 3)}
                         onClick={() => void act(mode === "changes" ? "request_changes" : "decline")}
                         type="button"
@@ -346,7 +348,7 @@ export function FinalQuoteSheet({
         {viewerType === "client" && quote.canReview && mode === "details" ? (
           <div className="flex flex-col gap-2 border-t border-[#e6eaee] bg-white px-5 py-3 sm:flex-row sm:items-center sm:px-6">
             <button
-              className="inline-flex min-h-10 w-full items-center justify-center rounded-full bg-brand px-4 text-[14px] font-medium text-white sm:w-auto"
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-sm bg-brand px-4 text-[14px] font-medium text-white sm:w-auto"
               disabled={busy}
               onClick={() => setConfirmAccept(true)}
               type="button"
@@ -354,7 +356,7 @@ export function FinalQuoteSheet({
               {t("accept")}
             </button>
             <button
-              className="inline-flex min-h-10 w-full items-center justify-center rounded-full border border-[#d7dde3] px-4 text-[14px] font-medium text-ink sm:w-auto"
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-sm border border-[#d7dde3] px-4 text-[14px] font-medium text-ink sm:w-auto"
               onClick={() => setMode("changes")}
               type="button"
             >
@@ -424,7 +426,7 @@ function AcceptFinalQuoteDialog({
         </p>
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
-            className="inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold text-muted transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-55"
+            className="inline-flex min-h-11 items-center justify-center rounded-sm px-5 text-sm font-semibold text-muted transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-55"
             disabled={busy}
             onClick={onCancel}
             type="button"
@@ -432,7 +434,7 @@ function AcceptFinalQuoteDialog({
             {t("acceptConfirmCancel")}
           </button>
           <button
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-5 text-sm font-semibold text-white transition-[transform,background-color] duration-150 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96] disabled:opacity-55"
+            className="inline-flex min-h-11 items-center justify-center rounded-sm bg-brand px-5 text-sm font-semibold text-white transition-[transform,background-color] duration-150 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96] disabled:opacity-55"
             disabled={busy}
             onClick={onConfirm}
             ref={confirmRef}
@@ -487,7 +489,7 @@ function CompanyQuoteForm({
       if (price === null) throw new Error("INVALID_FINAL_QUOTE_PRICE");
       await submitRevision({ conversationId, price, duration: Number(data.get("duration")), plannedStartDate: String(data.get("plannedStartDate")), validUntil: String(data.get("validUntil")), scope: String(data.get("scope")), inclusions: String(data.get("inclusions")), exclusions: String(data.get("exclusions")), paymentTerms: String(data.get("paymentTerms")), companyNote: String(data.get("companyNote") || "") || undefined, pdf }); onSubmitted();
     } catch (cause) { onError(mapAppError(cause, (key) => tUx(key))); } finally { setBusy(false); } }
-  return <form className="grid gap-4" onSubmit={submit}><div className="grid gap-4 sm:grid-cols-2"><Input autoComplete="off" defaultValue={latest?.price} inputMode="decimal" label={t("price")} name="price" placeholder="300000" required type="text" /><Input defaultValue={latest?.duration} label={t("duration")} min="1" name="duration" required type="number" /><Input defaultValue={latest?.plannedStartDate} label={t("plannedStartDate")} name="plannedStartDate" required type="date" /><Input defaultValue={latest?.validUntil} label={t("validUntil")} name="validUntil" required type="date" /></div><Area defaultValue={latest?.scope} label={t("scope")} name="scope" /><Area defaultValue={latest?.inclusions} label={t("inclusions")} name="inclusions" /><Area defaultValue={latest?.exclusions} label={t("exclusions")} name="exclusions" /><Area defaultValue={latest?.paymentTerms} label={t("paymentTerms")} name="paymentTerms" /><Area defaultValue={latest?.companyNote ?? ""} label={t("companyNote")} name="companyNote" required={false} /><label className="grid gap-1.5 text-sm font-semibold text-ink">{t("pdf")}<input accept="application/pdf" className="min-h-11 rounded-xl border border-brand-border px-3 py-2 font-normal" onChange={(event) => setFile(event.target.files?.[0] ?? null)} type="file" /></label><button className="mt-2 min-h-12 rounded-full bg-brand px-5 text-sm font-semibold text-white disabled:opacity-55" disabled={busy} type="submit">{busy ? t("submitting") : latest ? t("submitRevision") : t("submit")}</button></form>;
+  return <form className="grid gap-4" onSubmit={submit}><div className="grid gap-4 sm:grid-cols-2"><Input autoComplete="off" defaultValue={latest?.price} inputMode="decimal" label={t("price")} name="price" placeholder="300000" required type="text" /><Input defaultValue={latest?.duration} label={t("duration")} min="1" name="duration" required type="number" /><Input defaultValue={latest?.plannedStartDate} label={t("plannedStartDate")} name="plannedStartDate" required type="date" /><Input defaultValue={latest?.validUntil} label={t("validUntil")} name="validUntil" required type="date" /></div><Area defaultValue={latest?.scope} label={t("scope")} name="scope" /><Area defaultValue={latest?.inclusions} label={t("inclusions")} name="inclusions" /><Area defaultValue={latest?.exclusions} label={t("exclusions")} name="exclusions" /><Area defaultValue={latest?.paymentTerms} label={t("paymentTerms")} name="paymentTerms" /><Area defaultValue={latest?.companyNote ?? ""} label={t("companyNote")} name="companyNote" required={false} /><label className="grid gap-1.5 text-sm font-semibold text-ink">{t("pdf")}<input accept="application/pdf" className="min-h-11 rounded-xl border border-brand-border px-3 py-2 font-normal" onChange={(event) => setFile(event.target.files?.[0] ?? null)} type="file" /></label><button className="mt-2 min-h-12 rounded-sm bg-brand px-5 text-sm font-semibold text-white disabled:opacity-55" disabled={busy} type="submit">{busy ? t("submitting") : latest ? t("submitRevision") : t("submit")}</button></form>;
 }
 
 function PdfLink({ revisionId }: { revisionId: Id<"finalQuoteRevisions"> }) {

@@ -1,11 +1,14 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { paginationOptsValidator, paginationResultValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { mutation, query } from "../_generated/server";
 import { notificationIdentityForRecipient } from "./companyIdentity";
+import { clientSupportNotificationProject } from "./clientSupportAccess";
 import {
+  CLIENT_SUPPORT_NOTIFICATION_TYPES,
+  isClientSupportNotificationType,
   notificationEntityValidator,
   notificationPayloadValidator,
   notificationTypeValidator,
@@ -38,6 +41,25 @@ async function recipientState(ctx: QueryCtx | MutationCtx, userId: Id<"users">) 
     .unique();
 }
 
+/** Preserve the existing aggregate; subtract only currently inaccessible support alerts. */
+async function visibleUnreadCount(
+  ctx: QueryCtx | MutationCtx,
+  userId: Id<"users">,
+  state: Doc<"notificationRecipientStates"> | null,
+) {
+  if (!state?.unreadCount) return 0;
+  let inaccessible = 0;
+  for (const type of CLIENT_SUPPORT_NOTIFICATION_TYPES) {
+    for await (const notification of ctx.db.query("notifications")
+      .withIndex("by_recipientUserId_and_type_and_readAt_and_createdAt", (q) =>
+        q.eq("recipientUserId", userId).eq("type", type).eq("readAt", undefined)
+          .gt("createdAt", state.readThroughAt ?? 0))) {
+      if (!await clientSupportNotificationProject(ctx, notification)) inaccessible += 1;
+    }
+  }
+  return Math.max(0, state.unreadCount - inaccessible);
+}
+
 export const listMyNotifications = query({
   args: { paginationOpts: paginationOptsValidator },
   returns: paginationResultValidator(notificationValidator),
@@ -54,29 +76,37 @@ export const listMyNotifications = query({
         .order("desc")
         .paginate(args.paginationOpts),
     ]);
-    return {
-      ...page,
-      page: await Promise.all(page.page.map(async (notification) => {
-        const [proposal, identity] = await Promise.all([
-          notification.entity.type === "proposal" ? ctx.db.get(notification.entity.id) : null,
-          notificationIdentityForRecipient(ctx, notification),
-        ]);
+    const notifications = await Promise.all(page.page.map(async (notification) => {
+      const readAt = notification.readAt ?? (
+        state?.readThroughAt !== undefined && notification.createdAt <= state.readThroughAt
+          ? state.readThroughAt : null
+      );
+      if (isClientSupportNotificationType(notification.type)) {
+        const projectId = await clientSupportNotificationProject(ctx, notification);
+        if (!projectId) return null;
+        const payload: Doc<"notifications">["payload"] = {};
         return {
-          id: notification._id,
-          type: notification.type,
-          entity: notification.entity,
-          projectId: proposal?.projectId ?? null,
-          payload: identity.payload,
-          actorUserId: notification.actorUserId ?? null,
-          createdAt: notification.createdAt,
-          readAt: notification.readAt ?? (
-            state?.readThroughAt !== undefined && notification.createdAt <= state.readThroughAt
-              ? state.readThroughAt
-              : null
-          ),
+          id: notification._id, type: notification.type, entity: notification.entity,
+          projectId, payload, actorUserId: null, createdAt: notification.createdAt, readAt,
         };
-      })),
-    };
+      }
+      const [proposal, identity] = await Promise.all([
+        notification.entity.type === "proposal" ? ctx.db.get(notification.entity.id) : null,
+        notificationIdentityForRecipient(ctx, notification),
+      ]);
+      return {
+        id: notification._id,
+        type: notification.type,
+        entity: notification.entity,
+        projectId: proposal?.projectId ?? null,
+        payload: identity.payload,
+        actorUserId: notification.actorUserId ?? null,
+        createdAt: notification.createdAt,
+        readAt,
+      };
+    }));
+    // Preserve the native cursor even when an entire page becomes inaccessible.
+    return { ...page, page: notifications.filter((notification) => notification !== null) };
   },
 });
 
@@ -85,7 +115,7 @@ export const getMyUnreadCount = query({
   returns: v.number(),
   handler: async (ctx) => {
     const userId = await requireUserId(ctx);
-    return (await recipientState(ctx, userId))?.unreadCount ?? 0;
+    return await visibleUnreadCount(ctx, userId, await recipientState(ctx, userId));
   },
 });
 
@@ -96,6 +126,9 @@ export const markNotificationRead = mutation({
     const userId = await requireUserId(ctx);
     const notification = await ctx.db.get(args.notificationId);
     if (!notification || notification.recipientUserId !== userId) {
+      throw new ConvexError("NOTIFICATION_NOT_FOUND");
+    }
+    if (isClientSupportNotificationType(notification.type) && !await clientSupportNotificationProject(ctx, notification)) {
       throw new ConvexError("NOTIFICATION_NOT_FOUND");
     }
     const state = await recipientState(ctx, userId);
@@ -124,6 +157,7 @@ export const markAllNotificationsRead = mutation({
   handler: async (ctx) => {
     const userId = await requireUserId(ctx);
     const state = await recipientState(ctx, userId);
+    const markedCount = await visibleUnreadCount(ctx, userId, state);
     const now = Math.max(Date.now(), (state?.readThroughAt ?? 0) + 1);
     if (state) {
       await ctx.db.patch(state._id, { readThroughAt: now, unreadCount: 0, updatedAt: now });
@@ -135,6 +169,6 @@ export const markAllNotificationsRead = mutation({
         updatedAt: now,
       });
     }
-    return { markedCount: state?.unreadCount ?? 0, readAt: now };
+    return { markedCount, readAt: now };
   },
 });

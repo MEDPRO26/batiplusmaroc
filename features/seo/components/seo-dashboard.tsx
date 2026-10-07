@@ -32,7 +32,7 @@ export function SeoDashboard() {
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#626970]">{t("description")}</p>
         </div>
         <Link
-          className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#2f6bff] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,107,255,0.24)] ${SEO_PRESS}`}
+          className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm bg-[#2f6bff] px-5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,107,255,0.24)] ${SEO_PRESS}`}
           href={routes.seoArticleNew}
         >
           <Plus aria-hidden className="size-4" />
@@ -50,7 +50,7 @@ export function SeoDashboard() {
               <div>
                 <p className="text-sm font-medium text-[#626970]">{t(`metrics.${id}`)}</p>
                 {overview === undefined ? (
-                  <div aria-hidden className="mt-3 h-9 w-16 animate-pulse rounded-lg bg-[#eef0f3]" />
+                  <div aria-hidden className="mt-3 h-9 w-16 animate-pulse rounded-sm bg-[#eef0f3]" />
                 ) : (
                   <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] tabular-nums text-[#17191d]">
                     {overview[id].toLocaleString()}
@@ -72,7 +72,7 @@ export function SeoDashboard() {
             <p className="mt-1 text-sm leading-6 text-[#626970]">{t("articlesDescription")}</p>
           </div>
           <Link
-            className={`inline-flex min-h-11 items-center justify-center rounded-full border border-[#e6e9ee] bg-white px-4 text-sm font-semibold text-[#17191d] ${SEO_PRESS}`}
+            className={`inline-flex min-h-11 items-center justify-center rounded-sm border border-[#e6e9ee] bg-white px-4 text-sm font-semibold text-[#17191d] ${SEO_PRESS}`}
             href={routes.seoArticles}
           >
             {t("manageArticles")}

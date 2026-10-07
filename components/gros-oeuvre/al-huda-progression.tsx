@@ -9,7 +9,7 @@ const stages = [
 export function AlHudaProgression() {
   return (
     <section className="relative overflow-hidden bg-[#091a2e] py-20 text-white sm:py-28 lg:py-36" aria-labelledby="al-huda-title">
-      <div className="pointer-events-none absolute -top-52 right-[-10%] h-[560px] w-[560px] rounded-full border border-white/8" aria-hidden="true" />
+      <div className="pointer-events-none absolute -top-52 right-[-10%] h-[560px] w-[560px] rounded-sm border border-white/8" aria-hidden="true" />
       <div className="relative mx-auto max-w-[1400px] px-[18px] sm:px-6 lg:px-8">
         <div className="mx-auto mb-12 grid max-w-[1280px] gap-7 lg:mb-18 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
           <div>
@@ -28,7 +28,7 @@ export function AlHudaProgression() {
           {stages.map((stage) => (
             <li key={stage.number} className="relative">
               <div className="mb-5 flex items-center gap-4">
-                <span className="relative z-10 grid size-12 shrink-0 place-items-center rounded-full border border-[#e6b94c]/65 bg-[#091a2e] text-[0.67rem] font-bold tracking-[0.12em] text-[#e6b94c]">{stage.number}</span>
+                <span className="relative z-10 grid size-12 shrink-0 place-items-center rounded-sm border border-[#e6b94c]/65 bg-[#091a2e] text-[0.67rem] font-bold tracking-[0.12em] text-[#e6b94c]">{stage.number}</span>
                 <span className="h-px flex-1 bg-white/12 md:hidden" aria-hidden="true" />
               </div>
               <figure className="m-0">

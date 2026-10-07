@@ -7,11 +7,11 @@ import type { ReactNode } from "react";
 
 export const workspaceButton = {
   primary:
-    "inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-white! transition-[background-color,scale] duration-150 hover:bg-brand-hover active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60",
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-sm bg-brand px-5 text-sm font-semibold text-white! transition-[background-color,scale] duration-150 hover:bg-brand-hover active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60",
   secondary:
-    "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-brand-border bg-white px-5 text-sm font-semibold text-ink transition-[background-color,border-color,scale] duration-150 hover:border-brand/40 hover:bg-brand-soft/60 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60",
+    "inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-brand-border bg-white px-5 text-sm font-semibold text-ink transition-[background-color,border-color,scale] duration-150 hover:border-brand/40 hover:bg-brand-soft/60 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60",
   ghost:
-    "inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-3 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+    "inline-flex min-h-10 items-center justify-center gap-2 rounded-sm px-3 text-sm font-semibold text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
 } as const;
 
 export function WorkspacePage({
@@ -82,7 +82,7 @@ export function WorkspaceTabs<T extends string>({
           >
             {tab.label}
             {tab.count !== undefined ? (
-              <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-semibold tabular-nums text-muted">
+              <span className="rounded-sm bg-surface-muted px-2 py-0.5 text-xs font-semibold tabular-nums text-muted">
                 {tab.count}
               </span>
             ) : null}
@@ -105,7 +105,7 @@ const badgeTones: Record<BadgeTone, string> = {
 
 export function StatusBadge({ tone, children }: { tone: BadgeTone; children: ReactNode }) {
   return (
-    <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap ${badgeTones[tone]}`}>
+    <span className={`inline-flex shrink-0 items-center rounded-sm px-2.5 py-1 text-xs font-semibold whitespace-nowrap ${badgeTones[tone]}`}>
       {children}
     </span>
   );

@@ -227,7 +227,7 @@ export function ClientProfileEditor() {
             title={t("account.title")}
           >
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              <div className="relative flex size-[72px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-brand-border bg-brand-soft text-xl font-semibold text-brand-dark">
+              <div className="relative flex size-[72px] shrink-0 items-center justify-center overflow-hidden rounded-sm border border-brand-border bg-brand-soft text-xl font-semibold text-brand-dark">
                 {showInitials ? (
                   <span aria-hidden>{profile.initials}</span>
                 ) : (
@@ -461,7 +461,7 @@ function EditButton({
     <button
       aria-label={label}
       aria-pressed={pressed}
-      className="grid size-9 place-items-center rounded-full border-0 bg-transparent text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      className="grid size-9 place-items-center rounded-sm border-0 bg-transparent text-brand transition-colors hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       onClick={onClick}
       type="button"
     >

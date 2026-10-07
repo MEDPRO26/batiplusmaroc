@@ -127,7 +127,7 @@ export function SiteAssessmentPanel({
             <p className="m-0 text-[11px] font-medium tracking-[0.08em] text-[#6b7785] uppercase">{t("eyebrow")}</p>
             <h3 className="mt-1 mb-0 text-base font-semibold text-ink" id="site-assessment-title">{t("title")}</h3>
           </div>
-          {badgeStatus ? <span className="rounded-full bg-[#f3f5f7] px-2 py-0.5 text-[12px] font-medium text-[#3d4a59]">{t(`status.${badgeStatus}`)}</span> : null}
+          {badgeStatus ? <span className="rounded-sm bg-[#f3f5f7] px-2 py-0.5 text-[12px] font-medium text-[#3d4a59]">{t(`status.${badgeStatus}`)}</span> : null}
         </div>
         )}
 
@@ -219,7 +219,7 @@ export function SiteAssessmentPanel({
             ) : null}
 
             {assessment.status === "accepted" && result.viewerType === "company" && !conversationId ? (
-              <Link className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full border border-brand-border bg-white px-5 text-sm font-semibold text-ink transition-transform duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96]" href={{ pathname: routes.messagesConversation, params: { conversationId: assessment.conversationId } }}>{t("visit.openConversation")}</Link>
+              <Link className="mt-4 inline-flex min-h-11 items-center justify-center rounded-sm border border-brand-border bg-white px-5 text-sm font-semibold text-ink transition-transform duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96]" href={{ pathname: routes.messagesConversation, params: { conversationId: assessment.conversationId } }}>{t("visit.openConversation")}</Link>
             ) : null}
           </div>
         )}
@@ -263,7 +263,7 @@ function VisitSummary({ format, result, t, visit }: { format: ReturnType<typeof 
         <div className="flex items-start gap-3">
           <span
             aria-hidden
-            className={`mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full ${
+            className={`mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-sm ${
               visit.status === "confirmed" ? "bg-white text-brand" : "bg-white text-ink"
             }`}
           >
@@ -346,7 +346,7 @@ function VisitHistory({
       </summary>
       <ol className="mt-2 space-y-2">
         {visit.proposals.map((proposal) => (
-          <li className="rounded-lg bg-white/80 px-3 py-2 text-xs text-muted" key={proposal.id}>
+          <li className="rounded-sm bg-white/80 px-3 py-2 text-xs text-muted" key={proposal.id}>
             {t("visit.history.item", {
               sequence: proposal.sequence,
               date: proposal.proposedDate,
@@ -375,12 +375,12 @@ function ProposalForm({ busy, date, note, onAddress, onCancel, onDate, onNote, o
 }
 
 function ActionButton({ busy = false, className = "", type = "button", onClick, children }: { busy?: boolean; className?: string; type?: "button" | "submit"; onClick?: () => void; children: React.ReactNode }) {
-  return <button className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-semibold text-white transition-[transform,background-color] duration-150 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96] disabled:opacity-55 ${className}`} disabled={busy} onClick={onClick} type={type}>{children}</button>;
+  return <button className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm bg-brand px-5 text-sm font-semibold text-white transition-[transform,background-color] duration-150 hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96] disabled:opacity-55 ${className}`} disabled={busy} onClick={onClick} type={type}>{children}</button>;
 }
 function SecondaryButton({ busy = false, onClick, children }: { busy?: boolean; onClick: () => void; children: React.ReactNode }) {
-  return <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-brand-border bg-white px-5 text-sm font-semibold text-ink transition-[transform,background-color] duration-150 hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96] disabled:opacity-55" disabled={busy} onClick={onClick} type="button">{children}</button>;
+  return <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-brand-border bg-white px-5 text-sm font-semibold text-ink transition-[transform,background-color] duration-150 hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.96] disabled:opacity-55" disabled={busy} onClick={onClick} type="button">{children}</button>;
 }
 function DangerButton({ busy = false, onClick, children }: { busy?: boolean; onClick: () => void; children: React.ReactNode }) {
-  return <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#efc7c3] bg-white px-5 text-sm font-semibold text-[#a33a32] transition-[transform,background-color] duration-150 hover:bg-[#fff4f2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a33a32] active:scale-[0.96] disabled:opacity-55" disabled={busy} onClick={onClick} type="button">{children}</button>;
+  return <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-[#efc7c3] bg-white px-5 text-sm font-semibold text-[#a33a32] transition-[transform,background-color] duration-150 hover:bg-[#fff4f2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#a33a32] active:scale-[0.96] disabled:opacity-55" disabled={busy} onClick={onClick} type="button">{children}</button>;
 }
 function AssessmentSkeleton() { return <div aria-busy="true" className="border-b border-brand-border bg-[#f6fafc] px-4 py-4" role="status"><div className="mx-auto h-28 max-w-[760px] animate-pulse rounded-2xl bg-surface-muted" /></div>; }

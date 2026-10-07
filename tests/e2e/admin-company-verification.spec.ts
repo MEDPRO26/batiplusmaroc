@@ -75,18 +75,20 @@ test("missing required certificate blocks approval and failed decisions remain r
   await page.keyboard.press("Escape"); await expect(page.getByRole("button", { name: "Approve", exact: true })).toBeFocused();
 });
 
-test("Admin document review fetches directly from Convex with a bearer header and no token in the URL", async ({ page }) => {
+test("Admin document review fetches directly from Convex with a bearer header and no token in the URL", async ({ page, baseURL }) => {
+  const allowedOrigin = new URL(baseURL!).origin;
   let requestUrl = ""; let authorization: string | undefined;
   await page.route(downloadUrl, async route => {
     requestUrl = route.request().url(); authorization = route.request().headers().authorization;
-    await route.fulfill({ status: 200, contentType: "application/pdf", body: "%PDF-1.7 private certificate", headers: { "Access-Control-Allow-Origin": "http://localhost:3000", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
+    expect(route.request().headers().origin).toBe(allowedOrigin);
+    await route.fulfill({ status: 200, contentType: "application/pdf", body: "%PDF-1.7 private certificate", headers: { "Access-Control-Allow-Origin": allowedOrigin, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
   });
   await mountHarness(page, bundle, state());
   const download = page.waitForEvent("download"); await page.getByRole("button", { name: "View document" }).click();
   expect((await download).suggestedFilename()).toBe("tax-certificate.pdf");
   expect(requestUrl).toBe(downloadUrl); expect(authorization).toBe("Bearer private-admin-session"); expect(new URL(requestUrl).search).toBe("");
   await page.unroute(downloadUrl);
-  await page.route(downloadUrl, route => route.fulfill({ status: 404, body: "Not found", headers: { "Access-Control-Allow-Origin": "http://localhost:3000" } }));
+  await page.route(downloadUrl, route => route.fulfill({ status: 404, body: "Not found", headers: { "Access-Control-Allow-Origin": allowedOrigin } }));
   await page.getByRole("button", { name: "View document" }).click(); await expect(page.getByRole("alert").filter({ hasText: /\S/ })).toBeVisible();
 });
 

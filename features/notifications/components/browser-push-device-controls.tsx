@@ -209,9 +209,9 @@ export function BrowserPushDeviceView({
 
   return (
     <div className="border-b border-brand-border px-5 py-4 sm:px-6" data-testid="browser-push-device">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between ">
         <div className="flex min-w-0 gap-3">
-          <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
+          <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-sm bg-brand-soft text-brand">
             {icon}
           </span>
           <div className="min-w-0">
@@ -236,7 +236,7 @@ export function BrowserPushDeviceView({
         </div>
 
         {(actionable || enabled) ? (
-          <div className="flex flex-wrap gap-2 sm:justify-end">
+          <div className="flex flex-wrap gap-2 sm:justify-end ">
             {actionable ? (
               <DeviceButton disabled={busy} onClick={onEnable} primary>
                 {busy ? t("working") : t("enable")}
@@ -273,7 +273,7 @@ function DeviceButton({
 }) {
   return (
     <button
-      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-3.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-sm px-3.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 ${
         primary
           ? "bg-brand text-white hover:bg-brand-dark"
           : "border border-brand-border bg-white text-ink hover:bg-slate-50"

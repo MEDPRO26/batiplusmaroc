@@ -14,7 +14,7 @@ export function CompanyIntro() {
             sizes="(max-width: 1023px) calc(100vw - 36px), 48vw"
             className="object-cover"
           />
-          <div className="absolute top-5 left-5 rounded-full bg-white/94 px-4 py-2 text-[0.65rem] font-bold tracking-[0.14em] text-brand uppercase shadow-sm backdrop-blur-sm sm:top-7 sm:left-7">
+          <div className="absolute top-5 left-5 rounded-sm bg-white/94 px-4 py-2 text-[0.65rem] font-bold tracking-[0.14em] text-brand uppercase shadow-sm backdrop-blur-sm sm:top-7 sm:left-7">
             Bâtir avec méthode
           </div>
         </div>

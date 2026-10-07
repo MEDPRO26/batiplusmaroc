@@ -164,7 +164,7 @@ function ImageCard({ image, kind, purpose, publicUrls, sessionToken }: { image: 
   // Only a URL returned by the approved-only backend DTO may use public delivery.
   const publicUrl = image && kind === "approved" ? publicUrls.find(url => isApprovedPortfolioImageUrl(url) && new URL(url).pathname === `/portfolio-images/public/${image.imageId}`) : undefined;
   const title = t(kind === "approved" ? "approvedTitle" : "submittedTitle");
-  return <section aria-label={title} className="min-w-0 rounded-lg bg-brand-soft/40 p-3">
+  return <section aria-label={title} className="min-w-0 rounded-sm bg-brand-soft/40 p-3">
     <h4 className="mt-0 mb-3 text-xs font-semibold text-ink">{title}</h4>
     {image && !publicUrl ? <PrivatePortfolioImagePreview imageId={image.imageId} sessionToken={sessionToken} alt={title} /> : <div className="size-20 overflow-hidden rounded-xl"><ApprovedPortfolioImage url={publicUrl} alt={title} width={80} height={80} className="size-20 object-contain" /></div>}
     <p className="mt-3 mb-1 text-sm font-semibold text-brand">{image ? t(`status.${image.moderationStatus}`) : t(kind === "approved" ? "noApproved" : "noSubmission")}</p>

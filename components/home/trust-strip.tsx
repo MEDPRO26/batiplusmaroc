@@ -71,7 +71,7 @@ export async function TrustStrip() {
 
         <div className="mt-12 flex justify-center sm:mt-14">
           <Link
-            className="inline-flex min-h-12 items-center justify-center rounded-full bg-brand px-6 text-[0.92rem] font-semibold text-white! transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover hover:text-white! active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            className="inline-flex min-h-12 items-center justify-center rounded-sm bg-brand px-6 text-[0.92rem] font-semibold text-white! transition-[background-color,transform] duration-150 ease-[cubic-bezier(0.2,0,0,1)] hover:bg-brand-hover hover:text-white! active:scale-[0.96] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             href={routes.postProject}
           >
             {t("cta")}

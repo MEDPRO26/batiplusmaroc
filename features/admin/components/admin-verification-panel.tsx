@@ -66,7 +66,7 @@ export function AdminVerificationPanel() {
               (status) => (
                 <button
                   aria-selected={tab === status}
-                  className={`min-h-11 rounded-full px-4 text-sm font-semibold ${ADMIN_PRESS} ${
+                  className={`min-h-11 rounded-sm px-4 text-sm font-semibold ${ADMIN_PRESS} ${
                     tab === status
                       ? "bg-[#2f6bff] text-white"
                       : "bg-[#f4f6f8] text-[#626970]"
@@ -86,7 +86,7 @@ export function AdminVerificationPanel() {
             )}
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <label className="flex min-h-11 flex-1 items-center gap-2 rounded-full bg-[#f4f6f8] px-3 text-sm text-[#8b919a]">
+            <label className="flex min-h-11 flex-1 items-center gap-2 rounded-sm bg-[#f4f6f8] px-3 text-sm text-[#8b919a]">
               <span className="sr-only">{t("searchLabel")}</span>
               <input
                 className="h-11 w-full bg-transparent text-[#17191d] outline-none placeholder:text-[#8b919a]"
@@ -95,7 +95,7 @@ export function AdminVerificationPanel() {
                 value={search}
               />
             </label>
-            <label className="flex min-h-11 items-center gap-2 rounded-full bg-[#f4f6f8] px-3 text-sm text-[#8b919a] sm:w-44">
+            <label className="flex min-h-11 items-center gap-2 rounded-sm bg-[#f4f6f8] px-3 text-sm text-[#8b919a] sm:w-44">
               <span className="sr-only">{t("cityLabel")}</span>
               <input
                 className="h-11 w-full bg-transparent text-[#17191d] outline-none placeholder:text-[#8b919a]"
@@ -198,7 +198,7 @@ export function AdminVerificationPanel() {
                     </td>
                     <td className="rounded-r-[14px] px-3 py-3">
                       <button
-                        className={`inline-flex min-h-10 items-center rounded-full border border-[#e6e9ee] bg-white px-3 text-sm font-semibold text-[#17191d] ${ADMIN_PRESS}`}
+                        className={`inline-flex min-h-10 items-center rounded-sm border border-[#e6e9ee] bg-white px-3 text-sm font-semibold text-[#17191d] ${ADMIN_PRESS}`}
                         onClick={() => {
                           setSelectedId(row.companyId);
                           setError("");
@@ -244,7 +244,7 @@ function StatusPill({ status }: { status: HistoryStatus }) {
           : "bg-[#eef1f5] text-[#626970]";
   return (
     <span
-      className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-semibold ${styles}`}
+      className={`inline-flex min-h-7 items-center rounded-sm px-2.5 text-xs font-semibold ${styles}`}
     >
       {t(`status.${status}`)}
     </span>
@@ -339,7 +339,7 @@ function ReviewDrawer({
           </div>
           <button
             aria-label={t("close")}
-            className={`inline-flex size-11 items-center justify-center rounded-full ${ADMIN_PRESS}`}
+            className={`inline-flex size-11 items-center justify-center rounded-sm ${ADMIN_PRESS}`}
             onClick={onClose}
             type="button"
           >
@@ -407,7 +407,7 @@ function ReviewDrawer({
                   <ul className="space-y-2">
                     {review.documents.map((document: ReviewDocument) => (
                       <li
-                        className="flex items-center justify-between gap-3 rounded-[12px] border border-[#eef1f4] px-3 py-2"
+                        className="flex items-center justify-between gap-3 rounded-sm border border-[#eef1f4] px-3 py-2"
                         key={document.documentId}
                       >
                         <span className="min-w-0">
@@ -420,7 +420,7 @@ function ReviewDrawer({
                         </span>
                         {document.downloadUrl ? (
                           <VerificationDocumentDownload
-                            className={`inline-flex min-h-10 items-center rounded-full border border-[#e6e9ee] px-3 text-sm font-semibold ${ADMIN_PRESS}`}
+                            className={`inline-flex min-h-10 items-center rounded-sm border border-[#e6e9ee] px-3 text-sm font-semibold ${ADMIN_PRESS}`}
                             url={document.downloadUrl}
                             fileName={document.fileName}
                             label={t("openDocument")}
@@ -451,7 +451,7 @@ function ReviewDrawer({
                   <ul className="space-y-3">
                     {review.history.map((item: HistoryItem) => (
                       <li
-                        className="rounded-[12px] border border-[#eef1f4] px-3 py-3 text-sm"
+                        className="rounded-sm border border-[#eef1f4] px-3 py-3 text-sm"
                         key={item.historyId}
                       >
                         <p className="font-semibold text-[#17191d]">
@@ -493,7 +493,7 @@ function ReviewDrawer({
                       />
                       <div className="flex flex-wrap gap-2">
                         <button
-                          className={`min-h-11 rounded-full bg-[#b42318] px-4 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`}
+                          className={`min-h-11 rounded-sm bg-[#b42318] px-4 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`}
                           disabled={busy}
                           onClick={() => void runReject()}
                           type="button"
@@ -501,7 +501,7 @@ function ReviewDrawer({
                           {t("confirmReject")}
                         </button>
                         <button
-                          className={`min-h-11 rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold ${ADMIN_PRESS}`}
+                          className={`min-h-11 rounded-sm border border-[#e6e9ee] px-4 text-sm font-semibold ${ADMIN_PRESS}`}
                           disabled={busy}
                           onClick={() => setConfirm(null)}
                           type="button"
@@ -517,7 +517,7 @@ function ReviewDrawer({
                       </p>
                       <div className="flex flex-wrap gap-2">
                         <button
-                          className={`min-h-11 rounded-full bg-[#157a3e] px-4 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`}
+                          className={`min-h-11 rounded-sm bg-[#157a3e] px-4 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`}
                           disabled={busy}
                           onClick={() => void runApprove()}
                           type="button"
@@ -525,7 +525,7 @@ function ReviewDrawer({
                           {t("confirmApprove")}
                         </button>
                         <button
-                          className={`min-h-11 rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold ${ADMIN_PRESS}`}
+                          className={`min-h-11 rounded-sm border border-[#e6e9ee] px-4 text-sm font-semibold ${ADMIN_PRESS}`}
                           disabled={busy}
                           onClick={() => setConfirm(null)}
                           type="button"
@@ -537,14 +537,14 @@ function ReviewDrawer({
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       <button
-                        className={`min-h-11 rounded-full bg-[#2f6bff] px-4 text-sm font-semibold text-white ${ADMIN_PRESS}`}
+                        className={`min-h-11 rounded-sm bg-[#2f6bff] px-4 text-sm font-semibold text-white ${ADMIN_PRESS}`}
                         onClick={() => setConfirm("approve")}
                         type="button"
                       >
                         {t("approve")}
                       </button>
                       <button
-                        className={`min-h-11 rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold text-[#b42318] ${ADMIN_PRESS}`}
+                        className={`min-h-11 rounded-sm border border-[#e6e9ee] px-4 text-sm font-semibold text-[#b42318] ${ADMIN_PRESS}`}
                         onClick={() => setConfirm("reject")}
                         type="button"
                       >

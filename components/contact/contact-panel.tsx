@@ -28,11 +28,11 @@ export async function ContactPanel() {
 
         <aside className="relative overflow-hidden bg-[#0b223a] p-7 text-white sm:p-10 lg:p-12">
           <div
-            className="pointer-events-none absolute -right-40 -bottom-32 size-[430px] rounded-full border border-white/8"
+            className="pointer-events-none absolute -right-40 -bottom-32 size-[430px] rounded-sm border border-white/8"
             aria-hidden="true"
           />
           <div
-            className="pointer-events-none absolute -right-24 -bottom-16 size-[270px] rounded-full border border-white/8"
+            className="pointer-events-none absolute -right-24 -bottom-16 size-[270px] rounded-sm border border-white/8"
             aria-hidden="true"
           />
           <div className="relative flex h-full flex-col">

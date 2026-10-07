@@ -6,7 +6,7 @@ import en from "../messages/en.json";
 import fr from "../messages/fr.json";
 import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { ACTIVE_NOTIFICATION_TYPES } from "./notifications/constants";
+import { PUSH_NOTIFICATION_TYPES } from "./notifications/constants";
 import { DEFAULT_NOTIFICATION_PREFERENCES } from "./notifications/deliveryPolicy";
 import { createNotification } from "./notifications/model";
 import {
@@ -542,7 +542,7 @@ describe("marketplace push delivery", () => {
 
 describe("marketplace push presentation", () => {
   test("keeps every active event body aligned with the existing EN/FR notification copy", () => {
-    for (const type of ACTIVE_NOTIFICATION_TYPES) {
+    for (const type of PUSH_NOTIFICATION_TYPES) {
       expect(MARKETPLACE_PUSH_BODY_TEMPLATES.en[type]).toBe(en.notifications.events[type]);
       expect(MARKETPLACE_PUSH_BODY_TEMPLATES.fr[type]).toBe(fr.notifications.events[type]);
     }

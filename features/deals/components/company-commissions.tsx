@@ -130,7 +130,7 @@ function CommissionDetails({ item, locale }: { item: Obligation; locale: string 
 function StatusBadge({ status }: { status: "due" | "paid" }) {
   const t = useTranslations("companyCommissions");
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${status === "paid" ? "bg-[#dff6df] text-[#135c2b]" : "bg-[#fff2cc] text-[#7a5200]"}`}>
+    <span className={`inline-flex rounded-sm px-2.5 py-1 text-xs font-semibold ${status === "paid" ? "bg-[#dff6df] text-[#135c2b]" : "bg-[#fff2cc] text-[#7a5200]"}`}>
       {t(`status.${status}`)}
     </span>
   );
@@ -145,7 +145,7 @@ function CommissionsSkeleton() {
   return (
     <main aria-busy="true" aria-label={t("loading")} className="min-h-[calc(100dvh-4.5rem)] bg-[#f7f9fb] py-10">
       <div className="mx-auto w-[calc(100%-36px)] max-w-[1120px]">
-        <div className="skeleton-block h-10 w-64 rounded-lg" />
+        <div className="skeleton-block h-10 w-64 rounded-sm" />
         <div className="mt-7 grid gap-3 sm:grid-cols-3">{[0, 1, 2].map((item) => <div className="skeleton-block h-28 rounded-2xl" key={item} />)}</div>
         <div className="skeleton-block mt-6 h-72 rounded-2xl" />
       </div>

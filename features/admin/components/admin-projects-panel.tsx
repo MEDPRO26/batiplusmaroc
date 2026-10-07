@@ -11,8 +11,10 @@ import {
   ADMIN_PRESS,
 } from "@/features/admin/components/admin-shell";
 import { ProjectSiteAssessment } from "@/features/site-assessments/components/site-assessment-panel";
+import { Link } from "@/i18n/navigation";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { findKnownCodeInText } from "@/lib/errors/codes";
+import { routes } from "@/lib/routes";
 
 type ListRow = FunctionReturnType<
   typeof api.admin.projects.listProjects
@@ -97,7 +99,7 @@ export function AdminProjectsPanel() {
             {TABS.map((item) => (
               <button
                 aria-selected={status === item}
-                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${ADMIN_PRESS} ${
+                className={`min-h-11 rounded-sm px-4 text-sm font-semibold ${ADMIN_PRESS} ${
                   status === item
                     ? "bg-[#2f6bff] text-white"
                     : "bg-[#f4f6f8] text-[#626970]"
@@ -116,7 +118,7 @@ export function AdminProjectsPanel() {
             ))}
           </div>
           <div className="grid gap-2 sm:grid-cols-[minmax(220px,1fr)_180px_190px]">
-            <label className="flex min-h-11 items-center rounded-full bg-[#f4f6f8] px-3 text-sm">
+            <label className="flex min-h-11 items-center rounded-sm bg-[#f4f6f8] px-3 text-sm">
               <span className="sr-only">{t("searchLabel")}</span>
               <input
                 className="h-11 w-full bg-transparent text-[#17191d] outline-none placeholder:text-[#8b919a]"
@@ -125,7 +127,7 @@ export function AdminProjectsPanel() {
                 value={search}
               />
             </label>
-            <label className="flex min-h-11 items-center rounded-full bg-[#f4f6f8] px-3 text-sm">
+            <label className="flex min-h-11 items-center rounded-sm bg-[#f4f6f8] px-3 text-sm">
               <span className="sr-only">{t("cityLabel")}</span>
               <select
                 className="h-11 w-full bg-transparent text-[#626970] outline-none"
@@ -142,7 +144,7 @@ export function AdminProjectsPanel() {
                 ))}
               </select>
             </label>
-            <label className="flex min-h-11 items-center rounded-full bg-[#f4f6f8] px-3 text-sm">
+            <label className="flex min-h-11 items-center rounded-sm bg-[#f4f6f8] px-3 text-sm">
               <span className="sr-only">{t("statusFilterLabel")}</span>
               <select
                 className="h-11 w-full bg-transparent text-[#626970] outline-none"
@@ -217,7 +219,7 @@ export function AdminProjectsPanel() {
                     />
                   </dl>
                   <button
-                    className={`mt-4 inline-flex min-h-10 items-center rounded-full border border-[#e6e9ee] bg-white px-3 text-sm font-semibold ${ADMIN_PRESS}`}
+                    className={`mt-4 inline-flex min-h-10 items-center rounded-sm border border-[#e6e9ee] bg-white px-3 text-sm font-semibold ${ADMIN_PRESS}`}
                     onClick={() => setSelectedId(row.projectId)}
                     type="button"
                   >
@@ -280,7 +282,7 @@ export function AdminProjectsPanel() {
                       </td>
                       <td className="rounded-r-[14px] px-3 py-3">
                         <button
-                          className={`inline-flex min-h-10 items-center rounded-full border border-[#e6e9ee] bg-white px-3 text-sm font-semibold ${ADMIN_PRESS}`}
+                          className={`inline-flex min-h-10 items-center rounded-sm border border-[#e6e9ee] bg-white px-3 text-sm font-semibold ${ADMIN_PRESS}`}
                           onClick={() => setSelectedId(row.projectId)}
                           type="button"
                         >
@@ -325,6 +327,7 @@ export function ProjectReviewDrawer({
   const t = useTranslations("adminProjects");
   const tUx = useTranslations("ux");
   const tWizard = useTranslations("projectWizard");
+  const tSupport = useTranslations("clientSupport.admin");
   const locale = useLocale();
   const titleId = useId();
   const review = useQuery(api.admin.projects.getProjectReview, { projectId });
@@ -400,7 +403,7 @@ export function ProjectReviewDrawer({
           </div>
           <button
             aria-label={t("close")}
-            className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full ${ADMIN_PRESS}`}
+            className={`inline-flex size-11 shrink-0 items-center justify-center rounded-sm ${ADMIN_PRESS}`}
             onClick={onClose}
             type="button"
           >
@@ -427,6 +430,12 @@ export function ProjectReviewDrawer({
                     })}
                   </span>
                 ) : null}
+                <Link
+                  className={`ml-auto inline-flex min-h-10 items-center rounded-sm border border-[#e6e9ee] bg-white px-4 text-sm font-semibold text-[#17191d] hover:bg-[#f7f9fc] ${ADMIN_PRESS}`}
+                  href={{ pathname: routes.adminSupport, query: { projectId } }}
+                >
+                  {tSupport("openSupport")}
+                </Link>
               </div>
               <Section title={t("sections.project")}>
                 <Field label={t("fields.title")} value={review.title} />
@@ -498,7 +507,7 @@ export function ProjectReviewDrawer({
                   <ul className="space-y-3">
                     {review.history.map((item: HistoryItem) => (
                       <li
-                        className="rounded-[12px] border border-[#eef1f4] px-3 py-3 text-sm"
+                        className="rounded-sm border border-[#eef1f4] px-3 py-3 text-sm"
                         key={item.historyId}
                       >
                         <p className="font-semibold text-[#17191d]">
@@ -523,7 +532,7 @@ export function ProjectReviewDrawer({
                     <span className="sr-only">{t("activity.loading")}</span>
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div
-                        className="h-16 animate-pulse rounded-[12px] bg-[#f4f6f8]"
+                        className="h-16 animate-pulse rounded-sm bg-[#f4f6f8]"
                         key={index}
                       />
                     ))}
@@ -539,7 +548,7 @@ export function ProjectReviewDrawer({
                         className="relative grid grid-cols-[16px_1fr] gap-3 pb-5 last:pb-0"
                         key={item.activityId}
                       >
-                        <span className="relative z-10 mt-1.5 size-[15px] rounded-full border-[4px] border-white bg-[#2f6bff] shadow-[0_0_0_1px_#cfd7e2]" />
+                        <span className="relative z-10 mt-1.5 size-[15px] rounded-sm border-[4px] border-white bg-[#2f6bff] shadow-[0_0_0_1px_#cfd7e2]" />
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-[#17191d]">
                             {t(
@@ -629,14 +638,14 @@ export function ProjectReviewDrawer({
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       <button
-                        className={`min-h-11 rounded-full bg-[#2f6bff] px-4 text-sm font-semibold text-white ${ADMIN_PRESS}`}
+                        className={`min-h-11 rounded-sm bg-[#2f6bff] px-4 text-sm font-semibold text-white ${ADMIN_PRESS}`}
                         onClick={() => setConfirm("approve")}
                         type="button"
                       >
                         {t("approve")}
                       </button>
                       <button
-                        className={`min-h-11 rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold text-[#9a6700] ${ADMIN_PRESS}`}
+                        className={`min-h-11 rounded-sm border border-[#e6e9ee] px-4 text-sm font-semibold text-[#9a6700] ${ADMIN_PRESS}`}
                         onClick={() => {
                           setReason("");
                           setConfirm("changes");
@@ -646,7 +655,7 @@ export function ProjectReviewDrawer({
                         {t("requestChanges")}
                       </button>
                       <button
-                        className={`min-h-11 rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold text-[#b42318] ${ADMIN_PRESS}`}
+                        className={`min-h-11 rounded-sm border border-[#e6e9ee] px-4 text-sm font-semibold text-[#b42318] ${ADMIN_PRESS}`}
                         onClick={() => {
                           setReason("");
                           setConfirm("cancel");
@@ -682,7 +691,7 @@ function ConfirmApprove({
       <p className="text-sm text-[#626970]">{t("confirmApproveLead")}</p>
       <div className="flex flex-wrap gap-2">
         <button
-          className={`min-h-11 rounded-full bg-[#157a3e] px-4 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`}
+          className={`min-h-11 rounded-sm bg-[#157a3e] px-4 text-sm font-semibold text-white disabled:opacity-50 ${ADMIN_PRESS}`}
           disabled={busy}
           onClick={onConfirm}
           type="button"
@@ -690,7 +699,7 @@ function ConfirmApprove({
           {t("confirmApprove")}
         </button>
         <button
-          className={`min-h-11 rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold ${ADMIN_PRESS}`}
+          className={`min-h-11 rounded-sm border border-[#e6e9ee] px-4 text-sm font-semibold ${ADMIN_PRESS}`}
           disabled={busy}
           onClick={onCancel}
           type="button"
@@ -732,7 +741,7 @@ function ReasonAction({
       />
       <div className="flex flex-wrap gap-2">
         <button
-          className={`min-h-11 rounded-full px-4 text-sm font-semibold text-white disabled:opacity-50 ${action === "changes" ? "bg-[#9a6700]" : "bg-[#b42318]"} ${ADMIN_PRESS}`}
+          className={`min-h-11 rounded-sm px-4 text-sm font-semibold text-white disabled:opacity-50 ${action === "changes" ? "bg-[#9a6700]" : "bg-[#b42318]"} ${ADMIN_PRESS}`}
           disabled={busy}
           onClick={onConfirm}
           type="button"
@@ -740,7 +749,7 @@ function ReasonAction({
           {t(action === "changes" ? "confirmChanges" : "confirmCancelProject")}
         </button>
         <button
-          className={`min-h-11 rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold ${ADMIN_PRESS}`}
+          className={`min-h-11 rounded-sm border border-[#e6e9ee] px-4 text-sm font-semibold ${ADMIN_PRESS}`}
           disabled={busy}
           onClick={onCancel}
           type="button"
@@ -814,7 +823,7 @@ function StatusPill({ status }: { status: ProjectStatus }) {
             : "bg-[#eef1f4] text-[#626970]";
   return (
     <span
-      className={`inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-semibold ${style}`}
+      className={`inline-flex min-h-7 items-center rounded-sm px-2.5 text-xs font-semibold ${style}`}
     >
       {statusLabel(t, status)}
     </span>

@@ -236,7 +236,7 @@ export function AdminDashboard() {
             <div className="relative">
               <button
                 aria-expanded={filtersOpen}
-                className={`inline-flex min-h-11 items-center gap-2 rounded-full border border-[#e6e9ee] bg-white px-4 text-sm font-semibold ${PRESS}`}
+                className={`inline-flex min-h-11 items-center gap-2 rounded-sm border border-[#e6e9ee] bg-white px-4 text-sm font-semibold ${PRESS}`}
                 onClick={() => setFiltersOpen((open) => !open)}
                 type="button"
               >
@@ -254,7 +254,7 @@ export function AdminDashboard() {
               ) : null}
             </div>
             <button
-              className={`inline-flex min-h-11 items-center gap-2 rounded-full bg-[#2f6bff] px-4 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,107,255,0.28)] ${PRESS}`}
+              className={`inline-flex min-h-11 items-center gap-2 rounded-sm bg-[#2f6bff] px-4 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(47,107,255,0.28)] ${PRESS}`}
               onClick={() => setCampaignOpen(true)}
               type="button"
             >
@@ -351,7 +351,7 @@ export function AdminDashboard() {
                   (id) => (
                     <button
                       aria-selected={panel === id}
-                      className={`min-h-11 rounded-full px-3 text-sm font-semibold ${PRESS} ${
+                      className={`min-h-11 rounded-sm px-3 text-sm font-semibold ${PRESS} ${
                         panel === id
                           ? "bg-[#f3f5f7] text-[#17191d]"
                           : "text-[#8b919a]"
@@ -496,7 +496,7 @@ function KpiCard({
   return (
     <article className="rounded-[20px] border border-[#e7eaee] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
       <div className="flex items-center gap-3">
-        <span className="grid size-9 place-items-center rounded-[12px] bg-[#f4f6f8] text-[#626970]">
+        <span className="grid size-9 place-items-center rounded-sm bg-[#f4f6f8] text-[#626970]">
           {icon}
         </span>
         <h2 className="text-sm font-medium text-[#8b919a]">{label}</h2>
@@ -554,7 +554,7 @@ function Delta({ value }: { value: number }) {
   const amount = `${Math.abs(value).toLocaleString(locale)}%`;
   return (
     <span
-      className={`inline-flex min-h-6 items-center gap-1 rounded-full px-2 text-xs font-semibold tabular-nums ${
+      className={`inline-flex min-h-6 items-center gap-1 rounded-sm px-2 text-xs font-semibold tabular-nums ${
         up ? "bg-[#e7f8ee] text-[#157a3e]" : "bg-[#fdecec] text-[#b42318]"
       }`}
     >
@@ -582,7 +582,7 @@ function RangeSelect({
     <label className="relative inline-flex min-h-11 items-center">
       <span className="sr-only">{t("rangeLabel")}</span>
       <select
-        className={`h-11 appearance-none rounded-full bg-[#f4f6f8] pr-8 pl-3 text-xs font-semibold text-[#626970] ${PRESS}`}
+        className={`h-11 appearance-none rounded-sm bg-[#f4f6f8] pr-8 pl-3 text-xs font-semibold text-[#626970] ${PRESS}`}
         onChange={(event) => setRange(event.target.value as RangeId)}
         value={range}
       >
@@ -606,7 +606,7 @@ function Funnel({ stages }: { stages: [number, number, number, number] }) {
         const share = Math.round((value / stages[0]) * 100);
         return (
           <div
-            className="flex h-14 min-w-11 items-center justify-center rounded-full text-xs font-semibold tabular-nums"
+            className="flex h-14 min-w-11 items-center justify-center rounded-sm text-xs font-semibold tabular-nums"
             key={labels[index]}
             style={{
               flexGrow: weights[index],
@@ -713,7 +713,7 @@ function SpendPeriodMenu({
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-label={t("rangeLabel")}
-        className={`inline-flex min-h-11 items-center gap-2 rounded-full border border-[#e6e9ee] bg-white px-3 text-xs font-semibold text-[#626970] ${PRESS}`}
+        className={`inline-flex min-h-11 items-center gap-2 rounded-sm border border-[#e6e9ee] bg-white px-3 text-xs font-semibold text-[#626970] ${PRESS}`}
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
@@ -990,9 +990,9 @@ function SessionList({
             </span>
             <span className="tabular-nums text-[#626970]">{row.sessions}%</span>
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-[#f0f2f5]">
+          <div className="h-1.5 overflow-hidden rounded-sm bg-[#f0f2f5]">
             <div
-              className="h-full rounded-full bg-[#d7dee8]"
+              className="h-full rounded-sm bg-[#d7dee8]"
               style={{ width: `${Math.min(row.sessions, 100)}%` }}
             />
           </div>
@@ -1162,7 +1162,7 @@ function Legend({
           <span className="flex items-center gap-2 text-[#8b919a]">
             <span
               aria-hidden
-              className="size-2 rounded-full"
+              className="size-2 rounded-sm"
               style={{ background: item.color }}
             />
             {item.label}
@@ -1187,7 +1187,7 @@ function FooterStats({
         <li className="flex items-center gap-2" key={item.label}>
           <span
             aria-hidden
-            className="size-2.5 rounded-full"
+            className="size-2.5 rounded-sm"
             style={{ background: item.swatch }}
           />
           <span className="text-[#8b919a]">{item.label}</span>
@@ -1226,7 +1226,7 @@ function FilterPanel({
       <ul className="mt-3 space-y-1">
         {CHANNELS.map((id) => (
           <li key={id}>
-            <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[12px] px-2 text-sm hover:bg-[#f4f6f8]">
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-sm px-2 text-sm hover:bg-[#f4f6f8]">
               <input
                 checked={visible[id]}
                 className="size-4 accent-[#2f6bff]"
@@ -1277,7 +1277,7 @@ function CampaignDialog({
           </h2>
           <button
             aria-label={t("close")}
-            className={`inline-flex size-11 items-center justify-center rounded-full ${PRESS}`}
+            className={`inline-flex size-11 items-center justify-center rounded-sm ${PRESS}`}
             onClick={onClose}
             type="button"
           >
@@ -1306,7 +1306,7 @@ function CampaignDialog({
           <input
             aria-describedby={error ? errorId : undefined}
             aria-invalid={error ? true : undefined}
-            className="h-11 w-full rounded-[12px] border border-[#e6e9ee] px-3 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6bff]"
+            className="h-11 w-full rounded-sm border border-[#e6e9ee] px-3 text-base outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f6bff]"
             id={`${titleId}-name`}
             onChange={(event) => setName(event.target.value)}
             ref={inputRef}
@@ -1324,7 +1324,7 @@ function CampaignDialog({
             {t("campaignChannel")}
           </label>
           <select
-            className="h-11 w-full rounded-[12px] border border-[#e6e9ee] px-3 text-base"
+            className="h-11 w-full rounded-sm border border-[#e6e9ee] px-3 text-base"
             id={`${titleId}-channel`}
             onChange={(event) => setChannel(event.target.value as ChannelId)}
             value={channel}
@@ -1337,14 +1337,14 @@ function CampaignDialog({
           </select>
           <div className="flex justify-end gap-2 pt-2">
             <button
-              className={`min-h-11 rounded-full border border-[#e6e9ee] px-4 text-sm font-semibold ${PRESS}`}
+              className={`min-h-11 rounded-sm border border-[#e6e9ee] px-4 text-sm font-semibold ${PRESS}`}
               onClick={onClose}
               type="button"
             >
               {t("cancel")}
             </button>
             <button
-              className={`min-h-11 rounded-full bg-[#2f6bff] px-4 text-sm font-semibold text-white ${PRESS}`}
+              className={`min-h-11 rounded-sm bg-[#2f6bff] px-4 text-sm font-semibold text-white ${PRESS}`}
               type="submit"
             >
               {t("createCampaign")}

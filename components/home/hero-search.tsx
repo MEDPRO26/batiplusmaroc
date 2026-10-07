@@ -30,7 +30,7 @@ export function HeroSearch() {
 
       <div
         aria-label={t("roleGroup")}
-        className="mt-7 flex w-full min-w-0 flex-col rounded-[1.75rem] bg-white/10 p-1 ring-1 ring-white/15 md:mt-9 md:flex-row md:rounded-full"
+        className="mt-7 flex w-full min-w-0 flex-col rounded-[1.75rem] bg-white/10 p-1 ring-1 ring-white/15 md:mt-9 md:flex-row md:rounded-sm"
         role="radiogroup"
       >
         {(["client", "company"] as const).map((item) => {
@@ -38,7 +38,7 @@ export function HeroSearch() {
           return (
             <button
               aria-checked={selected}
-              className={`flex min-h-12 w-full min-w-0 cursor-pointer items-center justify-center rounded-full px-4 text-center text-[0.84rem] leading-tight font-semibold wrap-break-word transition-[background-color,color,box-shadow,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[0.97] md:flex-1 md:text-[0.95rem] ${
+              className={`flex min-h-12 w-full min-w-0 cursor-pointer items-center justify-center rounded-sm px-4 text-center text-[0.84rem] leading-tight font-semibold wrap-break-word transition-[background-color,color,box-shadow,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[0.97] md:flex-1 md:text-[0.95rem] ${
                 selected ? "bg-white text-brand shadow-[0_8px_20px_rgb(0_0_0_/_0.16)]" : "text-white/80 hover:bg-white/8 hover:text-white"
               }`}
               key={item}
@@ -84,7 +84,7 @@ function ClientPanel({
         <label className="sr-only" htmlFor={searchId}>
           {t("searchLabel")}
         </label>
-        <div className="flex w-full min-w-0 items-center gap-1 rounded-full bg-white p-1 pl-4 shadow-[0_12px_32px_rgb(0_0_0_/_0.18)]">
+        <div className="flex w-full min-w-0 items-center gap-1 rounded-sm bg-white p-1 pl-4 shadow-[0_12px_32px_rgb(0_0_0_/_0.18)]">
           <input
             autoComplete="off"
             className="h-11 min-w-0 flex-1 border-0 bg-transparent text-[0.95rem] text-ink outline-none placeholder:text-muted md:h-12 md:text-[1.02rem]"
@@ -95,7 +95,7 @@ function ClientPanel({
             value={query}
           />
           <button
-            className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-brand px-4 text-[0.8rem] font-semibold text-white! transition-colors duration-150 hover:bg-brand-hover hover:text-white! focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.97] md:h-12 md:px-5 md:text-sm"
+            className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-sm bg-brand px-4 text-[0.8rem] font-semibold text-white! transition-colors duration-150 hover:bg-brand-hover hover:text-white! focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand active:scale-[0.97] md:h-12 md:px-5 md:text-sm"
             type="submit"
           >
             <SearchIcon />
@@ -116,7 +116,7 @@ function CompanyPanel() {
     <div className="hero-panel-in w-full min-w-0">
       <p className="text-[1.05rem] leading-snug font-semibold tracking-[-0.02em] text-white md:text-[1.25rem]">{t("companyHeadline")}</p>
       <Link
-        className="mt-4 inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full bg-brand px-6 text-[0.92rem] font-semibold text-white! shadow-[0_10px_24px_rgb(5_79_132_/_0.35)] transition-[background-color,transform] duration-150 hover:bg-brand-hover hover:text-white! focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[0.97] md:min-h-13 md:px-7 md:text-[0.98rem]"
+        className="mt-4 inline-flex min-h-12 cursor-pointer items-center justify-center rounded-sm bg-brand px-6 text-[0.92rem] font-semibold text-white! shadow-[0_10px_24px_rgb(5_79_132_/_0.35)] transition-[background-color,transform] duration-150 hover:bg-brand-hover hover:text-white! focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[0.97] md:min-h-13 md:px-7 md:text-[0.98rem]"
         href={routes.browseProjects}
       >
         {t("exploreProjects")}
@@ -140,7 +140,7 @@ function ChipRow({
       <div className="flex w-max gap-2">
         {chips.map((key) => (
           <button
-            className="inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-white/30 bg-white/8 px-3.5 text-[0.8rem] font-medium whitespace-nowrap text-white transition-colors duration-150 hover:bg-white/16 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-sm border border-white/30 bg-white/8 px-3.5 text-[0.8rem] font-medium whitespace-nowrap text-white transition-colors duration-150 hover:bg-white/16 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             key={key}
             onClick={() => onSelect?.(t(key))}
             type="button"

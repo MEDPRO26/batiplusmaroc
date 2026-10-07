@@ -196,6 +196,14 @@ describe("notification presentation", () => {
     expect(html).toContain("bg-brand-soft/50");
   });
 
+  test.each(["CanLoadMore", "LoadingMore"])("treats an empty filtered %s page as loading rather than an empty inbox", (status) => {
+    state.results = [];
+    state.status = status;
+    const html = renderPage();
+    expect(html).toContain('aria-busy="true"');
+    expect(html).not.toContain("You’re all caught up.");
+  });
+
   test("resolves representative event families to existing role-safe routes", () => {
     expect(notificationDestination(notification("proposal_received", { type: "proposal", id: "proposal-1" as Id<"projectQuotes"> }), "client")).toBe(routes.clientDashboard);
     expect(notificationDestination(notification("proposal_accepted", { type: "proposal", id: "proposal-1" as Id<"projectQuotes"> }), "company")).toBe(routes.companyProjects);

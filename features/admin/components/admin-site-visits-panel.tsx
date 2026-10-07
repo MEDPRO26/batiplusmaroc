@@ -49,14 +49,14 @@ const CITIES = [
 ] as const;
 const PAGE_SIZE = 15;
 
-const SECONDARY = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-[#e6e9ee] bg-white px-4 text-sm font-semibold text-[#17191d] hover:bg-[#f7f9fc] ${ADMIN_PRESS}`;
-const ICON_BUTTON = `inline-flex size-10 shrink-0 items-center justify-center rounded-full text-[#626970] hover:bg-[#f2f4f7] hover:text-[#17191d] ${ADMIN_PRESS}`;
+const SECONDARY = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-sm border border-[#e6e9ee] bg-white px-4 text-sm font-semibold text-[#17191d] hover:bg-[#f7f9fc] ${ADMIN_PRESS}`;
+const ICON_BUTTON = `inline-flex size-10 shrink-0 items-center justify-center rounded-sm text-[#626970] hover:bg-[#f2f4f7] hover:text-[#17191d] ${ADMIN_PRESS}`;
 const FILTER_SHELL =
-  "flex min-h-11 min-w-0 items-center gap-2 rounded-full border border-[#e7eaee] bg-white px-4 text-sm transition-[border-color,box-shadow] duration-150 focus-within:border-[#2f6bff] focus-within:ring-3 focus-within:ring-[#2f6bff]/15";
+  "flex min-h-11 min-w-0 items-center gap-2 rounded-sm border border-[#e7eaee] bg-white px-4 text-sm transition-[border-color,box-shadow] duration-150 focus-within:border-[#2f6bff] focus-within:ring-3 focus-within:ring-[#2f6bff]/15";
 const UNDERLINE_TAB = `-mb-px inline-flex min-h-12 items-center gap-2 border-0 border-b-2 border-transparent bg-transparent px-0.5 text-sm font-semibold whitespace-nowrap text-[#626970] hover:text-[#17191d] aria-pressed:border-[#2f6bff] aria-pressed:text-[#17191d] ${ADMIN_PRESS} active:scale-100`;
 const DRAWER_TAB = `-mb-px inline-flex min-h-12 items-center gap-2 border-0 border-b-2 border-transparent bg-transparent px-0.5 text-sm font-semibold whitespace-nowrap text-[#626970] hover:text-[#17191d] data-[state=active]:border-[#2f6bff] data-[state=active]:text-[#17191d] ${ADMIN_PRESS} active:scale-100`;
 const PILL =
-  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap";
+  "inline-flex items-center gap-1.5 rounded-sm px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap";
 
 type Tab = (typeof TABS)[number];
 type City = (typeof CITIES)[number];
@@ -258,7 +258,7 @@ export function AdminSiteVisitsPanel() {
               </p>
               {hasFilters ? (
                 <button
-                  className={`inline-flex min-h-10 items-center gap-1 rounded-full px-2 text-sm font-semibold text-[#2f6bff] hover:text-[#2456c7] ${ADMIN_PRESS}`}
+                  className={`inline-flex min-h-10 items-center gap-1 rounded-sm px-2 text-sm font-semibold text-[#2f6bff] hover:text-[#2456c7] ${ADMIN_PRESS}`}
                   onClick={clearFilters}
                   type="button"
                 >
@@ -541,7 +541,7 @@ function StatusPill({ status }: { status: Status }) {
   const tone = statusTone(status);
   return (
     <span className={`${PILL} ${TONE_PILL[tone]}`}>
-      <span aria-hidden className={`size-1.5 rounded-full ${TONE_DOT[tone]}`} />
+      <span aria-hidden className={`size-1.5 rounded-sm ${TONE_DOT[tone]}`} />
       {t(`status.${status}`)}
     </span>
   );
@@ -552,7 +552,7 @@ function DotText({ tone, children }: { tone: Tone; children: ReactNode }) {
     <span className="flex min-w-0 items-center gap-2 text-[#626970]">
       <span
         aria-hidden
-        className={`size-1.5 shrink-0 rounded-full ${TONE_DOT[tone]}`}
+        className={`size-1.5 shrink-0 rounded-sm ${TONE_DOT[tone]}`}
       />
       <span className="truncate">{children}</span>
     </span>
@@ -683,9 +683,9 @@ function SiteVisitDrawerBody({
           role="status"
         >
           <span className="sr-only">{tUx("loading.dashboard")}</span>
-          <div className="h-20 animate-pulse rounded-[12px] bg-[#f4f6f8]" />
-          <div className="h-10 animate-pulse rounded-[12px] bg-[#f4f6f8]" />
-          <div className="h-56 animate-pulse rounded-[12px] bg-[#f4f6f8]" />
+          <div className="h-20 animate-pulse rounded-sm bg-[#f4f6f8]" />
+          <div className="h-10 animate-pulse rounded-sm bg-[#f4f6f8]" />
+          <div className="h-56 animate-pulse rounded-sm bg-[#f4f6f8]" />
         </div>
       ) : detail === null ? (
         <p className="px-5 py-10 text-center text-sm text-[#626970] sm:px-6">
@@ -748,7 +748,7 @@ function SiteVisitDetail({ detail, locale }: { detail: Detail; locale: string })
         </Tabs.Trigger>
         <Tabs.Trigger className={DRAWER_TAB} value="timeline">
           {t("sections.timeline")}
-          <span className="rounded-full bg-[#f2f4f7] px-2 py-0.5 text-xs font-semibold text-[#626970] tabular-nums">
+          <span className="rounded-sm bg-[#f2f4f7] px-2 py-0.5 text-xs font-semibold text-[#626970] tabular-nums">
             {detail.activity.length}
           </span>
         </Tabs.Trigger>
@@ -1042,8 +1042,8 @@ function PartyCard({
   children: ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-[12px] bg-[#f7f9fc] p-4">
-      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-[#626970] shadow-[0_0_0_1px_rgba(16,24,40,0.06),0_1px_2px_rgba(16,24,40,0.06)]">
+    <div className="flex items-start gap-3 rounded-sm bg-[#f7f9fc] p-4">
+      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-sm bg-white text-[#626970] shadow-[0_0_0_1px_rgba(16,24,40,0.06),0_1px_2px_rgba(16,24,40,0.06)]">
         {icon}
       </span>
       <div className="flex min-w-0 flex-col items-start gap-0.5">
@@ -1083,7 +1083,7 @@ function ActivityTimeline({
           ) : null}
           <span
             aria-hidden
-            className={`relative mt-1.5 size-2.5 shrink-0 rounded-full ring-4 ring-white ${TONE_DOT[eventTone(item.eventType)]}`}
+            className={`relative mt-1.5 size-2.5 shrink-0 rounded-sm ring-4 ring-white ${TONE_DOT[eventTone(item.eventType)]}`}
           />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">

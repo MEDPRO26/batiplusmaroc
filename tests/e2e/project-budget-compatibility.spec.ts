@@ -49,8 +49,9 @@ test.beforeAll(async () => {
                 resolveDir: process.cwd(),
                 contents: `
                   import React from "react";
-                  export function OnboardingChrome({ progressLabel, progressValue }) {
-                    return <div aria-label={progressLabel} aria-valuenow={progressValue} role="progressbar" />;
+                  export function OnboardingChrome({ progressLabel, progressValue, showProgress = true }) {
+                    // The wizard draws its own progress bar in its footer and hides this one.
+                    return showProgress ? <div aria-label={progressLabel} aria-valuenow={progressValue} role="progressbar" /> : null;
                   }
                 `,
               }
@@ -260,20 +261,28 @@ test("the five-step Client wizard supports Next and Back with no budget question
   await expect(page.getByRole("progressbar", { name: "Step 1 of 5" })).toHaveAttribute("aria-valuenow", "20");
   await expect(page.getByText("Budget", { exact: true })).toHaveCount(0);
 
-  await page.getByRole("radio", { name: "Renovation" }).check();
+  // The wizard opens on the project details, then location, then project type.
+  const fillDetails = async () => {
+    await page.getByLabel("Project title").fill("Apartment renovation");
+    await page.getByLabel("Property type").selectOption("apartment");
+    await page.getByRole("checkbox", { name: "I don’t know the surface yet" }).check();
+    await page.getByLabel("Description").fill("Complete apartment renovation with electrical and plumbing work.");
+  };
+  await expect(page.getByRole("heading", { name: "Tell us about your project" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Back" })).toBeDisabled();
+  await fillDetails();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByRole("heading", { name: "Where is your project?" })).toBeVisible();
   await page.getByRole("button", { name: "Back" }).click();
-  await expect(page.getByRole("heading", { name: "What do you need done?" })).toBeVisible();
-  await page.getByRole("radio", { name: "Renovation" }).check();
+  await expect(page.getByRole("heading", { name: "Tell us about your project" })).toBeVisible();
+  await fillDetails();
   await page.getByRole("button", { name: "Continue" }).click();
 
   await page.getByLabel("City").selectOption("rabat");
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByLabel("Project title").fill("Apartment renovation");
-  await page.getByLabel("Property type").selectOption("apartment");
-  await page.getByRole("checkbox", { name: "I don’t know the surface yet" }).check();
-  await page.getByLabel("Description").fill("Complete apartment renovation with electrical and plumbing work.");
+  await expect(page.getByRole("heading", { name: "What do you need done?" })).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "Step 3 of 5" })).toHaveAttribute("aria-valuenow", "60");
+  await page.getByRole("radio", { name: "Renovation" }).check();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByRole("heading", { name: "When would you like to start?" })).toBeVisible();
   await page.getByRole("radio", { name: "Flexible" }).check();
@@ -288,6 +297,6 @@ test("the five-step Client wizard supports Next and Back with no budget question
 test("the five-step wizard copy is budget-free in French", async ({ page }) => {
   await mountWizard(page, "fr");
   await expect(page.getByRole("progressbar", { name: "Étape 1 sur 5" })).toHaveAttribute("aria-valuenow", "20");
-  await expect(page.getByRole("heading", { name: "Quel type de projet souhaitez-vous réaliser ?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Parlez-nous de votre projet" })).toBeVisible();
   await expect(page.getByText("Budget", { exact: true })).toHaveCount(0);
 });
