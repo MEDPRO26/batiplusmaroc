@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "@/convex/_generated/api";
+import { buildClientNav } from "@/components/layout/client-nav";
 import { NavbarLogo } from "@/components/layout/navbar-logo";
 import { ProfileMenu } from "@/components/layout/profile-menu";
 import { SignedInNavbarChrome } from "@/components/layout/signed-in-navbar-chrome";
@@ -32,12 +33,7 @@ export function ClientNavbar({ user }: { user: ClientUser }) {
   const profileHref =
     user.onboardingStatus === "completed" ? routes.clientProfile : routes.clientOnboarding;
 
-  // Travaux / Manage-work nav is a separate feature; keep the OC3 navbar on existing routes.
-  const links = [
-    { href: projectsHref, label: t("myProjects") },
-    { href: routes.companies, label: t("findCompanies") },
-    { href: routes.messages, label: t("messages") },
-  ];
+  const links = buildClientNav(t, user.onboardingStatus === "completed");
 
   const accountLinks = [
     { href: profileHref, label: tMenu("client.myProfile") },
@@ -69,6 +65,7 @@ export function ClientNavbar({ user }: { user: ClientUser }) {
             roleLabel={tMenu("client.role")}
           />
         }
+        menuScope="client"
         utilities={<ClientNavbarUtilities />}
       />
     </div>

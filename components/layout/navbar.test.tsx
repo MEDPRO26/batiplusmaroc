@@ -4,8 +4,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 import { resolveNavbarRole, userInitials } from "./navbar-role";
+import { buildClientNav } from "./client-nav";
 import { buildCompanyNav } from "./company-nav";
 import { isGroupActive, isLinkActive } from "./signed-in-navbar-chrome";
+import { routing } from "@/i18n/routing";
 import { routes } from "@/lib/routes";
 
 beforeEach(() => vi.stubEnv("NEXT_PUBLIC_CONVEX_SITE_URL", "https://example.convex.site"));
@@ -159,7 +161,9 @@ describe("role navbar content", () => {
     );
     expect(html).toContain('data-navbar="client"');
     expect(html).toContain(routes.clientDashboard);
-    expect(html).toContain(routes.companies);
+    // Projects and companies are grouped menus; their links render when a menu opens.
+    expect(html).toContain("nav.client.projects");
+    expect(html).toContain("nav.client.manageWork");
     expect(html).toContain(routes.messages);
     expect(html).toContain(routes.clientProfile);
     expect(html).toContain("nav.searchLabel");
@@ -170,6 +174,46 @@ describe("role navbar content", () => {
     expect(html).not.toContain(routes.browseProjects);
     expect(html).not.toContain(routes.companyPortfolio);
     expect(html).not.toContain(routes.companyDashboard);
+  });
+
+  test("client navigation groups only existing routes and funnels to onboarding until it completes", () => {
+    const t = ((key: string) => key) as Parameters<typeof buildClientNav>[0];
+    const hrefs = (onboarded: boolean) =>
+      buildClientNav(t, onboarded).flatMap((item) =>
+        "kind" in item ? item.sections.flatMap((section) => section.items.map((link) => link.href)) : [item.href],
+      );
+    expect(hrefs(true)).toEqual([routes.clientDashboard, routes.clientWork, routes.postProjectWizard, routes.companies, routes.clientWork, routes.messages]);
+    expect(hrefs(false)).toEqual([routes.clientOnboarding, routes.clientOnboarding, routes.clientOnboarding, routes.companies, routes.clientOnboarding, routes.messages]);
+    expect(hrefs(true)).not.toContain(routes.companyDashboard);
+    expect(hrefs(true)).not.toContain(routes.browseProjects);
+  });
+
+  test("Your contracts opens the contracts tab of the localized work page", () => {
+    const t = ((key: string) => key) as Parameters<typeof buildClientNav>[0];
+    const work = buildClientNav(t, true).find((item) => "kind" in item && item.id === "manage-work");
+    expect(work && "kind" in work ? work.sections[0].items : []).toEqual([
+      { href: routes.clientWork, label: "client.contracts", query: { tab: "contracts" }, match: [routes.clientWork] },
+    ]);
+    expect(routing.pathnames[routes.clientWork]).toEqual({ fr: "/espace-client/travaux", en: "/client/work" });
+  });
+
+  test("client navigation marks the group that owns the current page", () => {
+    const t = ((key: string) => key) as Parameters<typeof buildClientNav>[0];
+    const nav = buildClientNav(t, true);
+    const activeIds = (pathname: string) =>
+      nav
+        .filter((item) => ("kind" in item ? isGroupActive(pathname, item) : isLinkActive(pathname, item)))
+        .map((item) => ("kind" in item ? item.id : item.href));
+    expect(activeIds(routes.clientDashboard)).toEqual(["projects"]);
+    expect(activeIds(routes.clientProject)).toEqual(["projects"]);
+    expect(activeIds(routes.clientProjectSupport)).toEqual(["projects"]);
+    expect(activeIds(routes.postProjectWizard)).toEqual(["projects"]);
+    expect(activeIds(routes.companies)).toEqual(["projects"]);
+    expect(activeIds(routes.companyProfile)).toEqual(["projects"]);
+    // The work page is shared by two menu entries; only Manage work lights up.
+    expect(activeIds(routes.clientWork)).toEqual(["manage-work"]);
+    expect(activeIds(routes.messages)).toEqual([routes.messages]);
+    expect(activeIds(routes.clientProfile)).toEqual([]);
   });
 
   test("ClientNavbar renders the stored client avatar when available", () => {

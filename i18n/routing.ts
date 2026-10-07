@@ -108,6 +108,10 @@ export const routing = defineRouting({
       fr: "/espace-client/tableau-de-bord",
       en: "/client/dashboard",
     },
+    "/espace-client/travaux": {
+      fr: "/espace-client/travaux",
+      en: "/client/work",
+    },
     "/espace-client/projets/nouveau": {
       fr: "/espace-client/projets/nouveau",
       en: "/client/projects/new",

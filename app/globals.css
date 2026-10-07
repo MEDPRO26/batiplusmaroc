@@ -67,6 +67,8 @@ img { max-width: 100%; }
 /* Layered so Tailwind text/font utilities on buttons win over the inherited default. */
 @layer base { button, summary { font: inherit; } }
 a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 4px; }
+/* Client nav menus focus the hovered item; that global outline reads as a hover border. */
+[data-navbar-menu="client"] a:focus-visible { outline: none; }
 a.bg-brand,
 button.bg-brand {
   color: #fff !important;
