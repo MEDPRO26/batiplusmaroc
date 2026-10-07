@@ -67,6 +67,7 @@ export function SignedInNavbarChrome({
   utilities,
   profile,
   ariaLabel,
+  menuScope,
 }: {
   logo: ReactNode;
   links: NavbarItem[];
@@ -75,6 +76,8 @@ export function SignedInNavbarChrome({
   utilities?: ReactNode;
   profile: ReactNode;
   ariaLabel: string;
+  /** Marks portaled menus so client items can skip the global focus outline. */
+  menuScope?: "client";
 }) {
   const pathname = usePathname();
   return (
@@ -84,7 +87,7 @@ export function SignedInNavbarChrome({
         <nav aria-label={ariaLabel} className="ml-2 hidden items-center gap-0.5 lg:flex xl:ml-5">
           {links.map((item) =>
             isGroup(item) ? (
-              <NavGroupMenu group={item} key={item.id} pathname={pathname} />
+              <NavGroupMenu group={item} key={item.id} menuScope={menuScope} pathname={pathname} />
             ) : (
               <Link
                 aria-current={isLinkActive(pathname, item) ? "page" : undefined}
@@ -125,7 +128,7 @@ export function SignedInNavbarChrome({
   );
 }
 
-function NavGroupMenu({ group, pathname }: { group: NavbarGroup; pathname: string }) {
+function NavGroupMenu({ group, pathname, menuScope }: { group: NavbarGroup; pathname: string; menuScope?: "client" }) {
   const active = isGroupActive(pathname, group);
   return (
     // Non-modal: opening a menu must not lock page scroll or shift the layout.
@@ -149,6 +152,7 @@ function NavGroupMenu({ group, pathname }: { group: NavbarGroup; pathname: strin
         <DropdownMenu.Content
           align="start"
           className="z-[60] min-w-60 rounded-[14px] border border-brand-border bg-white p-1.5 text-ink shadow-[0_14px_40px_rgb(23_61_99_/_0.14)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98] data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
+          data-navbar-menu={menuScope}
           sideOffset={10}
         >
           {group.sections.map((section, index) => (

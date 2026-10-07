@@ -26,6 +26,7 @@ export const routes = {
   clientRoot: "/espace-client",
   clientDashboard: "/espace-client/tableau-de-bord",
   clientProfile: "/espace-client/profil",
+  clientWork: "/espace-client/travaux",
   postProjectWizard: "/espace-client/projets/nouveau",
   clientProject: "/espace-client/projets/[projectId]",
   clientProjectSupport: "/espace-client/projets/[projectId]/batiplus",
