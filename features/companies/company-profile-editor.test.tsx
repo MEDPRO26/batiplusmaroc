@@ -47,6 +47,7 @@ describe("company profile management UX contract", () => {
       if (name === "companyVerification/index:getVerificationStatus") return { status: "pending", canManageDocuments: true };
       if (name === "companyLogos/index:getMyLogos") return { submitted: null, approved: null };
       if (name === "companies/index:getProfileManager") return { ...profileFixture, name: "S2MBOU SARL", legal: { ...profileFixture.legal, legalName: "S2MBOU SARL" } };
+      if (name === "companies/index:getMyGeographicCoverage") return [];
       return undefined;
     }) as never);
     const ownProfile = renderToStaticMarkup(<CompanyProfileEditor />);
@@ -91,6 +92,9 @@ describe("company profile management UX contract", () => {
     expect(html).toContain("profileView.about");
     expect(html).toContain("serviceOptions.structural");
     expect(html).toContain("serviceAreaOptions.sale");
+    expect(html).toContain("coverage.legacyTitle");
+    expect(html).toContain("Taroudannt");
+    expect(html).toContain('aria-label="coverage.edit"');
     for (const label of ["dialogs.editAbout", "dialogs.editServices", "dialogs.editAreas", "dialogs.editLanguages", "dialogs.editInfo", "dialogs.editIdentity", "dialogs.editContact"]) {
       expect(html).toContain(`aria-label="${label}"`);
     }
@@ -125,6 +129,7 @@ function mockQueries() {
     if (name === "companyVerification/index:getVerificationStatus") return { status: "pending", canManageDocuments: true };
     if (name === "companyLogos/index:getMyLogos") return { submitted: null, approved: null };
     if (name === "companies/index:getProfileManager") return profileFixture;
+    if (name === "companies/index:getMyGeographicCoverage") return ["R:09", "P:09.541"];
     return undefined;
   }) as never);
 }

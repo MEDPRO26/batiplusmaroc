@@ -28,9 +28,9 @@ import {
   ContactEditor,
   IdentityEditor,
   LanguagesEditor,
-  ServiceAreasEditor,
   ServicesEditor,
 } from "./profile/profile-editors";
+import { CompanyServiceAreas } from "./profile/geographic-coverage-editor";
 
 /**
  * The company's own profile: it reads like the public profile, and each section
@@ -106,9 +106,7 @@ export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
                 </Link>
               </SidebarSection>
 
-              <SidebarSection action={<ServiceAreasEditor profile={profile} />} title={t("serviceAreas.title")}>
-                <ChipList compact empty={t("profileView.notSpecified")} items={profile.serviceAreas.map((area) => t(`serviceAreaOptions.${area}`))} />
-              </SidebarSection>
+              <CompanyServiceAreas frame="sidebar" profile={profile} />
 
               <SidebarSection action={<LanguagesEditor profile={profile} />} title={t("fields.languages")}>
                 {profile.languages.length > 0 ? (
