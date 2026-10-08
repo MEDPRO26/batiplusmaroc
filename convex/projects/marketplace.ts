@@ -1,8 +1,10 @@
 import {
   paginationOptsValidator,
   paginationResultValidator,
+  type PaginationResult,
 } from "convex/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+import { getProvince, isValidRegion, isProvinceInRegion } from "../../lib/geography/morocco";
 import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
@@ -87,6 +89,8 @@ const marketplaceDetailsValidator = marketplaceCardValidator.omit("client", "loc
 type MarketplaceSort = (typeof projectMarketplaceSortOptions)[number];
 
 type MarketplaceFilters = {
+  regionCode?: string;
+  provinceCode?: string;
   city?: Doc<"projects">["city"];
   category?: Doc<"projects">["primaryCategory"];
   timeline?: Doc<"projects">["timeline"];
@@ -111,8 +115,26 @@ function singleOrUndefined<T>(values: T[] | undefined) {
   return values?.length === 1 ? values[0] : undefined;
 }
 
-function isMulti(selection: unknown[] | undefined) {
-  return selection !== undefined && selection.length !== 1;
+function validateGeographicFilters(args: {
+  regionCode?: string;
+  provinceCode?: string;
+  city?: Doc<"projects">["city"];
+  cities?: NonNullable<Doc<"projects">["city"]>[];
+}) {
+  if ((args.regionCode !== undefined || args.provinceCode !== undefined) &&
+    (args.city !== undefined || args.cities !== undefined)) {
+    throw new ConvexError("AMBIGUOUS_PROJECT_LOCATION_FILTER");
+  }
+  if (args.regionCode !== undefined && !isValidRegion(args.regionCode)) {
+    throw new ConvexError("INVALID_PROJECT_REGION");
+  }
+  if (args.provinceCode !== undefined) {
+    if (!getProvince(args.provinceCode)) throw new ConvexError("INVALID_PROJECT_PROVINCE");
+    if (args.regionCode === undefined) throw new ConvexError("PROJECT_REGION_REQUIRED");
+    if (!isProvinceInRegion(args.provinceCode, args.regionCode)) {
+      throw new ConvexError("PROJECT_PROVINCE_REGION_MISMATCH");
+    }
+  }
 }
 
 function postedSinceMs(windows: (typeof projectPostedWindows)[number][] | undefined) {
@@ -120,7 +142,7 @@ function postedSinceMs(windows: (typeof projectPostedWindows)[number][] | undefi
   return Math.max(...windows.map((window) => postedWindowMs[window]));
 }
 
-function emptyPage(cursor: string | null) {
+function emptyPage(cursor: string | null): PaginationResult<never> {
   return { page: [] as never[], isDone: true, continueCursor: cursor ?? "" };
 }
 
@@ -236,9 +258,21 @@ function publishedOrder(sortBy: MarketplaceSort) {
   return sortBy === "oldest" ? ("asc" as const) : ("desc" as const);
 }
 
-function newestQuery(ctx: QueryCtx, filters: MarketplaceFilters, sortBy: MarketplaceSort) {
+function newestQuery(ctx: QueryCtx, filters: MarketplaceFilters, sortBy: MarketplaceSort, publishedAfter?: number) {
   const base = ctx.db.query("projects");
   const order = publishedOrder(sortBy);
+  if (filters.provinceCode) {
+    return base.withIndex("by_status_visibility_province_publishedAt", (q) => {
+      const scoped = q.eq("status", "published").eq("visibility", "marketplace").eq("provinceCode", filters.provinceCode!);
+      return publishedAfter === undefined ? scoped : scoped.gte("publishedAt", publishedAfter);
+    }).order(order);
+  }
+  if (filters.regionCode) {
+    return base.withIndex("by_status_visibility_region_publishedAt", (q) => {
+      const scoped = q.eq("status", "published").eq("visibility", "marketplace").eq("regionCode", filters.regionCode!);
+      return publishedAfter === undefined ? scoped : scoped.gte("publishedAt", publishedAfter);
+    }).order(order);
+  }
   if (filters.city && filters.category) {
     return base
       .withIndex("by_status_visibility_city_category_publishedAt", (q) =>
@@ -300,6 +334,7 @@ function applyMarketplaceFilters(
   q: any,
   selections: MarketplaceSelections,
   publishedAfter: number | undefined,
+  geography: Pick<MarketplaceFilters, "regionCode" | "provinceCode">,
 ) {
   const orField = (
     values: string[] | undefined,
@@ -340,6 +375,12 @@ function applyMarketplaceFilters(
           );
 
   return q.and(
+    geography.regionCode === undefined ? true : q.eq(q.field("regionCode"), geography.regionCode),
+    geography.provinceCode === undefined ? true : q.eq(q.field("provinceCode"), geography.provinceCode),
+    // Apply card eligibility before pagination so incomplete historical rows cannot consume a page.
+    q.neq(q.field("title"), undefined), q.neq(q.field("title"), ""),
+    q.neq(q.field("description"), undefined), q.neq(q.field("description"), ""),
+    q.neq(q.field("primaryCategory"), undefined), q.neq(q.field("timeline"), undefined),
     orField(selections.cities, "city"),
     orField(selections.categories, "primaryCategory"),
     orField(selections.timelines, "timeline"),
@@ -352,33 +393,13 @@ function applyMarketplaceFilters(
 function filteredSearchQuery(
   ctx: QueryCtx,
   search: string,
+  filters: MarketplaceFilters,
   selections: MarketplaceSelections,
   publishedAfter: number | undefined,
 ) {
-  return ctx.db
-    .query("projects")
-    .withSearchIndex("search_marketplace", (q) =>
-      q
-        .search("marketplaceSearchText", search)
-        .eq("status", "published")
-        .eq("visibility", "marketplace"),
-    )
-    .filter((q) => applyMarketplaceFilters(q, selections, publishedAfter));
-}
-
-function filteredOrderedQuery(
-  ctx: QueryCtx,
-  selections: MarketplaceSelections,
-  sortBy: MarketplaceSort,
-  publishedAfter: number | undefined,
-) {
-  const ordered = ctx.db
-    .query("projects")
-    .withIndex("by_status_visibility_publishedAt", (q) =>
-      q.eq("status", "published").eq("visibility", "marketplace"),
-    )
-    .order(publishedOrder(sortBy));
-  return ordered.filter((q) => applyMarketplaceFilters(q, selections, publishedAfter));
+  // Geography is a residual filter: the enabled search index has no geographic filter fields.
+  return searchQuery(ctx, search, filters)
+    .filter((q) => applyMarketplaceFilters(q, selections, publishedAfter, filters));
 }
 
 /** Authenticated company feed. The DTO intentionally excludes all private client fields and files. */
@@ -386,6 +407,8 @@ export const listCompanyMarketplaceProjects = query({
   args: {
     paginationOpts: paginationOptsValidator,
     search: v.optional(v.string()),
+    regionCode: v.optional(v.string()),
+    provinceCode: v.optional(v.string()),
     city: v.optional(projectCityValidator),
     category: v.optional(projectCategoryValidator),
     timeline: v.optional(projectTimelineValidator),
@@ -403,6 +426,7 @@ export const listCompanyMarketplaceProjects = query({
   returns: paginationResultValidator(marketplaceCardValidator),
   handler: async (ctx, args) => {
     await requireCompanyUser(ctx);
+    validateGeographicFilters(args);
     const selections: MarketplaceSelections = {
       cities: normalizeSelection(args.cities, args.city, projectCities.length),
       categories: normalizeSelection(args.categories, args.category, projectCategories.length),
@@ -416,6 +440,8 @@ export const listCompanyMarketplaceProjects = query({
       postedWindows: normalizeSelection(args.postedWindows, undefined, projectPostedWindows.length),
     };
     const filters: MarketplaceFilters = {
+      regionCode: args.regionCode,
+      provinceCode: args.provinceCode,
       city: singleOrUndefined(selections.cities),
       category: singleOrUndefined(selections.categories),
       timeline: singleOrUndefined(selections.timelines),
@@ -442,38 +468,22 @@ export const listCompanyMarketplaceProjects = query({
     }
 
     const search = normalizeProjectSearch(args.search);
-    const hasExtraFilters =
-      selections.surfaceRanges !== undefined ||
-      selections.postedWindows !== undefined ||
-      isMulti(selections.cities) ||
-      isMulti(selections.categories) ||
-      isMulti(selections.timelines) ||
-      isMulti(selections.propertyTypes);
-    // Indexed equality path only when every active dimension is a single value and sort is by date.
-    const canUseIndexedPath =
-      !hasExtraFilters &&
-      !(
-        selections.timelines !== undefined &&
-        (selections.cities !== undefined ||
-          selections.categories !== undefined ||
-          selections.propertyTypes !== undefined)
-      ) &&
-      !(
-        selections.propertyTypes !== undefined &&
-        (selections.cities !== undefined ||
-          selections.categories !== undefined ||
-          selections.timelines !== undefined)
-      );
-
-    const page = search
-      ? await (canUseIndexedPath
-          ? searchQuery(ctx, search, filters)
-          : filteredSearchQuery(ctx, search, selections, publishedAfter)
-        ).paginate(args.paginationOpts)
-      : await (canUseIndexedPath
-          ? newestQuery(ctx, filters, sortBy)
-          : filteredOrderedQuery(ctx, selections, sortBy, publishedAfter)
-        ).paginate(args.paginationOpts);
+    let ordered = newestQuery(ctx, filters, sortBy, publishedAfter)
+      .filter((q) => applyMarketplaceFilters(q, selections, publishedAfter, filters));
+    if (search) {
+      // Search relevance cannot be used as date ordering. Read matching IDs through the
+      // existing search index, then intersect BEFORE one native ordered pagination call.
+      // No candidate cap or record rewrite. This costs extra search reads and O(M) ID
+      // memory per page; large combinations can hit Convex limits. GEO6.2 must review
+      // staged geographic search filters and the chronological-search read strategy.
+      const matchingIds: Id<"projects">[] = [];
+      for await (const project of filteredSearchQuery(ctx, search, filters, selections, publishedAfter)) {
+        matchingIds.push(project._id);
+      }
+      ordered = ordered.filter((q) => matchingIds.length === 0 ? false :
+        q.or(...matchingIds.map((id) => q.eq(q.field("_id"), id))));
+    }
+    const page = await ordered.paginate(args.paginationOpts);
 
     const publicPage = (
       await Promise.all(page.page.map((project) => toMarketplaceCard(ctx, project)))
