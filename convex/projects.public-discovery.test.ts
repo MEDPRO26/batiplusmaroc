@@ -31,7 +31,7 @@ async function project(state: State, overrides: Partial<Input> = {}) {
     primaryCategory: "renovation", propertyType: "house", surfaceUnknown: true, timeline: "flexible",
     status: "published", visibility: "marketplace", lastCompletedStep: 5, publishedAt: 100, createdAt: 1, updatedAt: 1, ...overrides };
   return await state.t.run((ctx) => ctx.db.insert("projects", { ...input,
-    marketplaceSearchText: Object.hasOwn(overrides, "marketplaceSearchText")
+    marketplaceSearchText: Object.prototype.hasOwnProperty.call(overrides, "marketplaceSearchText")
       ? overrides.marketplaceSearchText : buildProjectMarketplaceSearchText(input) }));
 }
 async function allPages(state: State, filters: Filters = {}, numItems = 7, maximumRowsRead?: number) {
