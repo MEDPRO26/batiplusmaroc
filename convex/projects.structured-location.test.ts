@@ -523,7 +523,7 @@ describe("GEO4.1 legacy behavior and bounded effects", () => {
       provinceCode: "01.511",
     });
   });
-  test("structured-only saving leaves the current city-based wizard resume and publication gates intact", async () => {
+  test("structured-only saving preserves city-based wizard resume while GEO4.2 permits submission", async () => {
     const state = await setup({
       primaryCategory: "renovation",
       title: "Safe rural renovation",
@@ -547,8 +547,8 @@ describe("GEO4.1 legacy behavior and bounded effects", () => {
       state.owner.mutation(api.projects.index.publishProject, {
         projectId: state.projectId,
       }),
-    ).rejects.toThrow("PROJECT_INCOMPLETE");
-    expect((await savedProject(state)).status).toBe("draft");
+    ).resolves.toEqual({ status: "pending_review", alreadySubmitted: false });
+    expect((await savedProject(state)).status).toBe("pending_review");
   });
   test("repeated snapshots preserve the same Project and create no history, notifications or extra activity", async () => {
     const state = await setup({

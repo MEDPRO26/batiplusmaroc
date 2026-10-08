@@ -19,6 +19,7 @@ import { assertProjectTransition } from "../projects/state";
 import { buildProjectMarketplaceSearchText } from "../projects/marketplaceSearch";
 import { requireAdminUser } from "./access";
 import { detailedProjectLocationValidator, toDetailedProjectLocation } from "../projects/location";
+import { assertProjectLocationReady } from "../projects/locationValidation";
 
 const nullableString = v.union(v.string(), v.null());
 const nullableNumber = v.union(v.number(), v.null());
@@ -304,6 +305,7 @@ export const approveProject = mutation({
     if (!project) throw new ConvexError("PROJECT_NOT_FOUND");
     if (project.status !== "pending_review") throw new ConvexError("PROJECT_NOT_PENDING_REVIEW");
     assertProjectTransition(project.status, "published");
+    assertProjectLocationReady(project);
 
     const now = Date.now();
     await ctx.db.patch(project._id, {

@@ -35,7 +35,10 @@ import {
   toDetailedProjectLocation,
   toGeneralProjectLocation,
 } from "./location";
-import { normalizeStructuredProjectLocation } from "./locationValidation";
+import {
+  assertProjectLocationReady,
+  normalizeStructuredProjectLocation,
+} from "./locationValidation";
 
 const draftValidator = v.object({
   location: detailedProjectLocationValidator,
@@ -689,13 +692,13 @@ export const publishProject = mutation({
     assertProjectTransition(p.status, "pending_review");
     if (
       !p.primaryCategory ||
-      !p.city ||
       !p.title ||
       !p.description ||
       !p.timeline ||
       (p.primaryCategory === "other" && !p.customCategoryText)
     )
       throw new ConvexError("PROJECT_INCOMPLETE");
+    assertProjectLocationReady(p);
     const now = Date.now();
     await ctx.db.patch(p._id, {
       status: "pending_review",

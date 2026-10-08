@@ -1,4 +1,5 @@
 import { ConvexError } from "convex/values";
+import type { Doc } from "../_generated/dataModel";
 import {
   isValidRegion,
   validateAdministrativePair,
@@ -66,4 +67,41 @@ export function normalizeStructuredProjectLocation(
       "INVALID_PROJECT_LOCALITY",
     ),
   };
+}
+
+/** Validate submission/approval without rewriting recorded location fields. */
+export function assertProjectLocationReady(
+  project: Pick<
+    Doc<"projects">,
+    | "countryCode"
+    | "city"
+    | "regionCode"
+    | "provinceCode"
+    | "communeName"
+    | "localityName"
+  >,
+) {
+  if (project.countryCode !== "MA")
+    throw new ConvexError("PROJECT_INCOMPLETE");
+
+  const hasStructuredLocation =
+    project.regionCode !== undefined ||
+    project.provinceCode !== undefined ||
+    project.communeName !== undefined ||
+    project.localityName !== undefined;
+  if (!hasStructuredLocation) {
+    // Without a version marker, a fully cleared snapshot plus an old city is
+    // indistinguishable from a legacy-only record. Keep legacy compatibility.
+    if (!project.city) throw new ConvexError("PROJECT_INCOMPLETE");
+    return;
+  }
+
+  const location = normalizeStructuredProjectLocation({
+    regionCode: project.regionCode ?? null,
+    provinceCode: project.provinceCode ?? null,
+    communeName: project.communeName ?? null,
+    localityName: project.localityName ?? null,
+  });
+  if (!location.regionCode || !location.provinceCode || !location.localityName)
+    throw new ConvexError("PROJECT_INCOMPLETE");
 }
