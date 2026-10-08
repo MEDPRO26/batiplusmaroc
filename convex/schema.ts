@@ -906,6 +906,8 @@ export default defineSchema({
     companySize: v.optional(companySize),
     languages: v.optional(v.array(companyLanguage)),
     serviceAreas: v.optional(v.array(companyServiceArea)),
+    /** Explicit MA/full-region/province declarations; headquarters and legacy cities never infer coverage. */
+    coverageScopeKeys: v.optional(v.array(v.string())),
     website: v.optional(v.string()),
     logoStorageId: v.optional(v.id("_storage")),
     logoMediaId: v.optional(v.id("publicMedia")),
@@ -964,6 +966,14 @@ export default defineSchema({
         "directoryListed",
       ],
     }),
+
+  /** Derived explicit selections only; synchronized with the Company in one mutation. */
+  companyCoverageIndex: defineTable({
+    companyId: v.id("companies"),
+    areaKey: v.string(),
+  })
+    .index("by_companyId_and_areaKey", ["companyId", "areaKey"])
+    .index("by_areaKey_and_companyId", ["areaKey", "companyId"]),
 
   companyMembers: defineTable({
     companyId: v.id("companies"),

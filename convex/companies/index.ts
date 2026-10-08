@@ -9,6 +9,7 @@ import { buildCompanyDirectorySearchText } from "./directory";
 import { getCompanyOperationalStatus } from "./operationalStatus";
 import { existingServiceIds, listCatalog, validateNewServiceIds } from "../serviceCatalog";
 import { defaultServiceCatalog } from "../../lib/service-catalog-defaults";
+import { MAX_COMPANY_COVERAGE_SCOPES, validateCompanyCoverageScopes } from "../../lib/geography/company-coverage";
 
 // Keep the original translation keys for browser sessions opened before rollout.
 // New clients use catalogServices; remove this compatibility field only later.
@@ -419,6 +420,54 @@ export const getProfileManager = query({
         documents: documents.map(({ documentType, fileName }) => ({ documentType, fileName })),
       },
     };
+  },
+});
+
+/** Private owner profile context, with the same onboarding rules as getProfileManager. */
+export const getMyGeographicCoverage = query({
+  args: {},
+  returns: v.array(v.string()),
+  handler: async (ctx) => {
+    const { company } = await requireOwnerCompany(ctx);
+    if (company.onboardingStatus !== "completed") throw new ConvexError("COMPANY_ONBOARDING_REQUIRED");
+    const selected = validateCompanyCoverageScopes(company.coverageScopeKeys ?? []);
+    if (!selected.valid) throw new ConvexError("INVALID_COMPANY_COVERAGE_STATE");
+    return selected.coverageScopeKeys;
+  },
+});
+
+/** Explicit profile maintenance, independent of marketplace verification/suspension gates. */
+export const updateMyGeographicCoverage = mutation({
+  args: { coverageScopeKeys: v.array(v.string()) },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const { company } = await requireOwnerCompany(ctx);
+    if (company.onboardingStatus !== "completed") throw new ConvexError("COMPANY_ONBOARDING_REQUIRED");
+    const selected = validateCompanyCoverageScopes(args.coverageScopeKeys);
+    if (!selected.valid) throw new ConvexError(selected.error);
+
+    // The extra row detects corruption rather than silently reconciling a capped prefix.
+    const rows = await ctx.db.query("companyCoverageIndex")
+      .withIndex("by_companyId_and_areaKey", (q) => q.eq("companyId", company._id))
+      .take(MAX_COMPANY_COVERAGE_SCOPES + 1);
+    if (rows.length > MAX_COMPANY_COVERAGE_SCOPES) throw new ConvexError("COMPANY_COVERAGE_INDEX_CORRUPTED");
+
+    const requested = new Set<string>(selected.coverageScopeKeys);
+    const retained = new Set<string>();
+    for (const row of rows) {
+      if (!requested.has(row.areaKey) || retained.has(row.areaKey)) {
+        await ctx.db.delete(row._id);
+      } else retained.add(row.areaKey);
+    }
+    for (const areaKey of requested) {
+      if (!retained.has(areaKey)) await ctx.db.insert("companyCoverageIndex", { companyId: company._id, areaKey });
+    }
+    const unchanged = company.coverageScopeKeys?.length === selected.coverageScopeKeys.length &&
+      company.coverageScopeKeys.every((key, index) => key === selected.coverageScopeKeys[index]);
+    if (!unchanged) {
+      await ctx.db.patch(company._id, { coverageScopeKeys: selected.coverageScopeKeys, updatedAt: Date.now() });
+    }
+    return null;
   },
 });
 
