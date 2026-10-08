@@ -900,6 +900,10 @@ export default defineSchema({
     slug: v.optional(v.string()),
     phone: v.optional(v.string()),
     city: v.optional(v.string()),
+    /** Structured headquarters in Morocco; independent of explicit service coverage. */
+    headquartersRegionCode: v.optional(v.string()),
+    headquartersProvinceCode: v.optional(v.string()),
+    headquartersCommune: v.optional(v.string()),
     description: v.optional(v.string()),
     yearsExperience: v.optional(v.number()),
     foundedYear: v.optional(v.number()),

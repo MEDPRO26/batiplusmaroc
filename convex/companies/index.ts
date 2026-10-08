@@ -10,6 +10,7 @@ import { getCompanyOperationalStatus } from "./operationalStatus";
 import { existingServiceIds, listCatalog, validateNewServiceIds } from "../serviceCatalog";
 import { defaultServiceCatalog } from "../../lib/service-catalog-defaults";
 import { MAX_COMPANY_COVERAGE_SCOPES, validateCompanyCoverageScopes } from "../../lib/geography/company-coverage";
+import { companyHeadquartersSnapshot, normalizeCompanyHeadquarters, type CompanyHeadquartersInput } from "../../lib/geography/company-headquarters";
 
 // Keep the original translation keys for browser sessions opened before rollout.
 // New clients use catalogServices; remove this compatibility field only later.
@@ -75,6 +76,12 @@ const verificationDocumentTypeValidator = v.union(
 type CompanyServiceArea = (typeof companyServiceAreas)[number];
 type CompanyLanguage = (typeof companyLanguages)[number];
 
+const headquartersSnapshotValidator = v.object({
+  regionCode: v.union(v.string(), v.null()),
+  provinceCode: v.union(v.string(), v.null()),
+  communeName: v.union(v.string(), v.null()),
+});
+
 const onboardingProfileValidator = v.union(
   v.null(),
   v.object({
@@ -84,6 +91,7 @@ const onboardingProfileValidator = v.union(
     legalName: v.string(),
     phone: v.string(),
     city: v.string(),
+    headquarters: headquartersSnapshotValidator,
     description: v.string(),
     yearsExperience: v.union(v.number(), v.null()),
     website: v.string(),
@@ -111,6 +119,7 @@ const profileManagerValidator = v.object({
   name: v.string(),
   description: v.string(),
   city: v.string(),
+  headquarters: headquartersSnapshotValidator,
   phone: v.string(),
   website: v.string(),
   yearsExperience: v.union(v.number(), v.null()),
@@ -161,6 +170,12 @@ function normalizeCity(value: string) {
     throw new ConvexError("INVALID_CITY");
   }
   return normalized;
+}
+
+function validatedHeadquartersFields(input: CompanyHeadquartersInput | undefined) {
+  const headquarters = normalizeCompanyHeadquarters(input);
+  if (!headquarters.ok) throw new ConvexError(headquarters.error);
+  return headquarters.fields;
 }
 
 function normalizeMoroccanPhone(value: string) {
@@ -333,6 +348,7 @@ export const getOnboardingProfile = query({
       legalName: company.legalName ?? "",
       phone: company.phone ?? user.phone ?? "",
       city: company.city ?? "",
+      headquarters: companyHeadquartersSnapshot(company),
       description: company.description ?? "",
       yearsExperience: company.yearsExperience ?? null,
       website: company.website ?? "",
@@ -393,6 +409,7 @@ export const getProfileManager = query({
       name: company.name ?? "",
       description: company.description ?? "",
       city: company.city ?? "",
+      headquarters: companyHeadquartersSnapshot(company),
       phone: company.phone ?? "",
       website: company.website ?? "",
       yearsExperience: company.yearsExperience ?? null,
@@ -476,6 +493,7 @@ export const updatePublicProfile = mutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     city: v.optional(v.string()),
+    headquarters: v.optional(headquartersSnapshotValidator),
     phone: v.optional(v.string()),
     website: v.optional(v.string()),
     yearsExperience: v.optional(v.union(v.number(), v.null())),
@@ -504,6 +522,7 @@ export const updatePublicProfile = mutation({
       ? company.description
       : normalizeText(args.description, 20, 1000, "INVALID_DESCRIPTION");
     const city = args.city === undefined ? company.city : normalizeCity(args.city);
+    const headquarters = validatedHeadquartersFields(args.headquarters);
     const phone = args.phone === undefined ? company.phone : normalizeMoroccanPhone(args.phone);
     const website = args.website === undefined ? company.website : normalizeWebsite(args.website);
     const yearsExperience = args.yearsExperience === undefined
@@ -556,6 +575,7 @@ export const updatePublicProfile = mutation({
 
     const patch: Partial<Omit<Doc<"companies">, "_id" | "_creationTime">> = {
       updatedAt: now,
+      ...headquarters,
       ...(company.slug ? {} : { slug }),
       ...(args.name === undefined ? {} : { name }),
       ...(args.description === undefined ? {} : { description }),
@@ -594,6 +614,7 @@ export const completeOnboarding = mutation({
     legalName: v.string(),
     phone: v.string(),
     city: v.string(),
+    headquarters: v.optional(headquartersSnapshotValidator),
     description: v.string(),
     services: v.optional(v.array(companyServiceValidator)),
     serviceIds: v.optional(v.array(v.id("serviceCatalog"))),
@@ -609,6 +630,7 @@ export const completeOnboarding = mutation({
     const legalName = normalizeOptionalText(args.legalName, 2, 160, "INVALID_LEGAL_NAME");
     const phone = normalizeMoroccanPhone(args.phone);
     const city = normalizeCity(args.city);
+    const headquarters = validatedHeadquartersFields(args.headquarters);
     const description = normalizeText(args.description, 20, 1000, "INVALID_DESCRIPTION");
     const yearsExperience = validateYearsExperience(args.yearsExperience);
     const website = normalizeWebsite(args.website);
@@ -682,6 +704,7 @@ export const completeOnboarding = mutation({
       legalName,
       phone,
       city,
+      ...headquarters,
       description,
       yearsExperience,
       website,
