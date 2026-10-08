@@ -77,7 +77,7 @@ const conversationId = "conversation-1" as Id<"conversations">;
 const company: FunctionReturnType<typeof api.companies.directory.listPublicCompanies>["page"][number] = {
   id: companyId, slug: "s2mbou", name: SAFE_NAME, description: `Work by ${SAFE_NAME}.`, city: "Rabat", isVerified: true,
   yearsExperience: 10, services: ["renovation"], serviceNames: [{ slug: "renovation", nameFr: "Rénovation", nameEn: "Renovation" }],
-  serviceAreas: ["rabat"], logoUrl: "https://media.example.test/logo.webp", coverImageUrl: "https://media.example.test/cover.webp", portfolio: [], rating: null, reviewCount: 0,
+  serviceAreas: ["rabat"], coverageScopeKeys: [], logoUrl: "https://media.example.test/logo.webp", coverImageUrl: "https://media.example.test/cover.webp", portfolio: [], rating: null, reviewCount: 0,
 };
 const quote: ReceivedQuoteDetail = {
   id: "quote-1" as Id<"projectQuotes">, projectId, companyId, message: `Offer by ${SAFE_NAME}.`, scope: "All materials and labour.",

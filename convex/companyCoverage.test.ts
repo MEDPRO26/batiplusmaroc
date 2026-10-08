@@ -473,12 +473,12 @@ describe("GEO7 compatibility and single-scope index foundation", () => {
       paginationOpts: { numItems: 10, cursor: null }, verifiedOnly: false, sort: "newest",
     });
     expect(page.page.map((row) => row.id)).toEqual(suspended ? [] : [company.companyId]);
+    expect(page.page.map((row) => row.coverageScopeKeys)).toEqual(suspended ? [] : [["MA", "P:09.541"]]);
     const publicAfter = await t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "operational-construction" });
     expect(publicAfter).toEqual(publicBefore);
     expect(publicAfter?.marketplaceAvailable).toBe(!suspended);
-    for (const dto of [publicAfter, page]) {
-      expect(JSON.stringify(dto)).not.toMatch(/coverageScopeKeys|PRIVATE-LEGAL-NAME|PRIVATE-RC|PRIVATE-ADDRESS|PRIVATE-REPRESENTATIVE/);
-    }
+    expect(JSON.stringify(publicAfter)).not.toMatch(/coverageScopeKeys|PRIVATE-LEGAL-NAME|PRIVATE-RC|PRIVATE-ADDRESS|PRIVATE-REPRESENTATIVE/);
+    expect(JSON.stringify(page)).not.toMatch(/PRIVATE-LEGAL-NAME|PRIVATE-RC|PRIVATE-ADDRESS|PRIVATE-REPRESENTATIVE/);
     const projectId = await seedRuralProject(t);
     const submit = owner.mutation(api.quotes.index.submitInitialQuote, { projectId, ...quoteInput });
     if (suspended) await expect(submit).rejects.toThrow("COMPANY_MARKETPLACE_SUSPENDED");

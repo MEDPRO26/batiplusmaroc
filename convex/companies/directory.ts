@@ -11,6 +11,12 @@ import type { DataModel, Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { internalMutation, query } from "../_generated/server";
 import { resolvedServiceNames } from "../serviceCatalog";
+import {
+  directoryCoverageFingerprint,
+  explicitCoverageMatches,
+  publicCoverageScopeKeys,
+  resolveDirectoryCoverageQuery,
+} from "../../lib/geography/directory-coverage";
 import { getCompanyOperationalStatus } from "./operationalStatus";
 import { maskCompanyName, maskPublicCompanyText } from "../lib/companyName";
 
@@ -73,6 +79,7 @@ const publicCompanyResultValidator = v.object({
   services: v.array(companyServiceValidator),
   serviceNames: v.array(v.object({ slug: v.string(), nameFr: v.string(), nameEn: v.string() })),
   serviceAreas: v.array(companyServiceAreaValidator),
+  coverageScopeKeys: v.array(v.string()),
   logoUrl: v.union(v.string(), v.null()),
   coverImageUrl: v.union(v.string(), v.null()),
   portfolio: v.array(portfolioPreviewValidator),
@@ -112,26 +119,40 @@ type ServiceFilter = { slug: string; id?: Id<"serviceCatalog"> };
 
 type DirectoryCursorMode = "legacy" | "exact" | "previous";
 const DIRECTORY_CURSOR_PREFIX = "directory-v2:";
+const MAX_DIRECTORY_CURSOR_LENGTH = 8_192;
 
-function decodeDirectoryCursor(cursor: string | null): {
+type DecodedDirectoryCursor = {
   mode: DirectoryCursorMode | null;
   nativeCursor: string | null;
   wrapped: boolean;
-} {
-  if (cursor === null) return { mode: null, nativeCursor: null, wrapped: false };
+  coverage: string | null;
+};
+
+function isDirectoryCursorMode(mode: unknown): mode is DirectoryCursorMode {
+  return mode === "legacy" || mode === "exact" || mode === "previous";
+}
+
+function decodeDirectoryCursor(cursor: string | null): DecodedDirectoryCursor {
+  if (cursor !== null && cursor.length > MAX_DIRECTORY_CURSOR_LENGTH) {
+    throw new ConvexError("INVALID_COMPANY_DIRECTORY_CURSOR");
+  }
+  if (cursor === null) return { mode: null, nativeCursor: null, wrapped: false, coverage: null };
   if (!cursor.startsWith(DIRECTORY_CURSOR_PREFIX)) {
-    return { mode: "previous", nativeCursor: cursor, wrapped: false };
+    return { mode: "previous", nativeCursor: cursor, wrapped: false, coverage: null };
   }
   try {
     const parsed = JSON.parse(cursor.slice(DIRECTORY_CURSOR_PREFIX.length)) as {
-      mode?: DirectoryCursorMode;
+      mode?: unknown;
       cursor?: unknown;
+      coverage?: unknown;
     };
+    const coverage = parsed.coverage === undefined ? null : parsed.coverage;
     if (
-      (parsed.mode === "legacy" || parsed.mode === "exact" || parsed.mode === "previous")
+      isDirectoryCursorMode(parsed.mode)
       && typeof parsed.cursor === "string"
+      && (coverage === null || typeof coverage === "string")
     ) {
-      return { mode: parsed.mode, nativeCursor: parsed.cursor, wrapped: true };
+      return { mode: parsed.mode, nativeCursor: parsed.cursor, wrapped: true, coverage };
     }
   } catch {
     // Keep the public error independent of Convex's opaque cursor format.
@@ -139,8 +160,10 @@ function decodeDirectoryCursor(cursor: string | null): {
   throw new ConvexError("INVALID_COMPANY_DIRECTORY_CURSOR");
 }
 
-function encodeDirectoryCursor(mode: DirectoryCursorMode, nativeCursor: string) {
-  return `${DIRECTORY_CURSOR_PREFIX}${JSON.stringify({ mode, cursor: nativeCursor })}`;
+function encodeDirectoryCursor(mode: DirectoryCursorMode, nativeCursor: string, coverage?: string) {
+  return `${DIRECTORY_CURSOR_PREFIX}${JSON.stringify(
+    coverage === undefined ? { mode, cursor: nativeCursor } : { mode, cursor: nativeCursor, coverage },
+  )}`;
 }
 
 function matchesPublicDirectoryEligibility(q: FilterBuilder<DataModel["companies"]>) {
@@ -213,6 +236,7 @@ async function toPublicCompanyResult(ctx: QueryCtx, company: Doc<"companies">, s
     services: serviceRows.map((row) => row.service),
     serviceNames,
     serviceAreas: company.serviceAreas ?? [],
+    coverageScopeKeys: publicCoverageScopeKeys(company.coverageScopeKeys),
     logoUrl,
     coverImageUrl: companyCoverUrl,
     portfolio,
@@ -231,6 +255,8 @@ export const listPublicCompanies = query({
     service: v.optional(companyServiceValidator),
     verifiedOnly: v.boolean(),
     sort: v.union(v.literal("relevance"), v.literal("newest"), v.literal("oldest")),
+    regionCode: v.optional(v.string()),
+    provinceCode: v.optional(v.string()),
   },
   returns: paginationResultValidator(publicCompanyResultValidator),
   handler: async (ctx, args) => {
@@ -253,6 +279,30 @@ export const listPublicCompanies = query({
         : decodedCursor.nativeCursor !== null || (decodedEndCursor !== null && decodedEndCursor.nativeCursor !== null)
           ? "previous"
           : null;
+    const serviceSlug = args.service || undefined;
+    const serviceFilter = serviceSlug === undefined ? undefined : {
+      slug: serviceSlug,
+      id: (await ctx.db.query("serviceCatalog").withIndex("by_slug", q => q.eq("slug", serviceSlug)).unique())?._id,
+    };
+    const terms = [
+      normalizedSearch(args.search),
+      normalizedSearch(args.city),
+      serviceFilterSearchTerm(serviceSlug),
+    ].filter(Boolean);
+    const coverage = resolveDirectoryCoverageQuery(args.regionCode, args.provinceCode);
+    if (!coverage.ok) throw new ConvexError(coverage.code);
+    const fingerprint = coverage.active
+      ? directoryCoverageFingerprint({
+          regionCode: args.regionCode ?? "",
+          provinceCode: args.provinceCode ?? "",
+          search: normalizedSearch(args.search),
+          city: normalizedSearch(args.city),
+          service: serviceFilterSearchTerm(serviceSlug),
+          verifiedOnly: args.verifiedOnly,
+          sort: args.sort,
+        })
+      : undefined;
+    assertDirectoryCoverageCursor(decodedCursor, decodedEndCursor, fingerprint);
     // Legacy Companies can have no materialized eligibility. Keep them in the
     // ordered source until the operational-status backfill has covered all rows.
     if (mode === null) {
@@ -269,16 +319,6 @@ export const listPublicCompanies = query({
           cursor: decodedCursor.nativeCursor,
           endCursor: decodedEndCursor.nativeCursor!,
         };
-    const serviceSlug = args.service || undefined;
-    const serviceFilter = serviceSlug === undefined ? undefined : {
-      slug: serviceSlug,
-      id: (await ctx.db.query("serviceCatalog").withIndex("by_slug", q => q.eq("slug", serviceSlug)).unique())?._id,
-    };
-    const terms = [
-      normalizedSearch(args.search),
-      normalizedSearch(args.city),
-      serviceFilterSearchTerm(serviceSlug),
-    ].filter(Boolean);
 
     const page = terms.length > 0
       ? mode === "previous"
@@ -330,20 +370,50 @@ export const listPublicCompanies = query({
               .order(args.sort === "oldest" ? "asc" : "desc")
               .paginate(paginationOpts);
 
+    // Geographic membership is applied to the directory page, which is already
+    // ordered by Company `_creationTime` and `_id`. The coverage index is ordered
+    // by Company id and cannot provide that order. A short or empty page only
+    // means this slice had no match; `isDone` still comes from the native cursor.
+    const scopeSet = coverage.active ? new Set(coverage.scopes) : null;
+    const candidates = scopeSet === null
+      ? page.page
+      : page.page.filter((company) => explicitCoverageMatches(company.coverageScopeKeys, scopeSet));
     const publicPage = (
-      await Promise.all(page.page.map((company) => toPublicCompanyResult(ctx, company, serviceFilter)))
+      await Promise.all(candidates.map((company) => toPublicCompanyResult(ctx, company, serviceFilter)))
     ).filter((company): company is NonNullable<typeof company> => company !== null);
 
     return {
       ...page,
       page: publicPage,
-      continueCursor: encodeDirectoryCursor(mode, page.continueCursor),
+      continueCursor: encodeDirectoryCursor(mode, page.continueCursor, fingerprint),
       splitCursor: page.splitCursor === null || page.splitCursor === undefined
         ? page.splitCursor
-        : encodeDirectoryCursor(mode, page.splitCursor),
+        : encodeDirectoryCursor(mode, page.splitCursor, fingerprint),
     };
   },
 });
+
+function assertDirectoryCoverageCursor(
+  decodedCursor: DecodedDirectoryCursor,
+  decodedEndCursor: DecodedDirectoryCursor | null,
+  fingerprint: string | undefined,
+) {
+  if (fingerprint === undefined) {
+    if (decodedCursor.coverage !== null || (decodedEndCursor?.coverage ?? null) !== null) {
+      throw new ConvexError("INVALID_COMPANY_DIRECTORY_CURSOR");
+    }
+    return;
+  }
+  if (decodedCursor.coverage !== null && decodedCursor.coverage !== fingerprint) {
+    throw new ConvexError("INVALID_COMPANY_DIRECTORY_CURSOR");
+  }
+  if (decodedEndCursor?.coverage !== null && decodedEndCursor?.coverage !== undefined && decodedEndCursor.coverage !== fingerprint) {
+    throw new ConvexError("INVALID_COMPANY_DIRECTORY_CURSOR");
+  }
+  const hasBoundary = decodedCursor.nativeCursor !== null || (decodedEndCursor?.nativeCursor ?? null) !== null;
+  const boundaryMatches = decodedCursor.coverage === fingerprint || decodedEndCursor?.coverage === fingerprint;
+  if (hasBoundary && !boundaryMatches) throw new ConvexError("INVALID_COMPANY_DIRECTORY_CURSOR");
+}
 
 /**
  * One-time, deployment-scoped migration for companies completed before the
