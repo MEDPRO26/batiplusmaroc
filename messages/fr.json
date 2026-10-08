@@ -1586,9 +1586,32 @@
     "closeFilters": "Fermer les filtres",
     "clear": "Effacer les filtres",
     "city": {
-      "label": "Ville",
-      "placeholder": "ex. Casablanca"
+      "label": "Ville du siège",
+      "placeholder": "ex. Casablanca",
+      "hint": "Lieu du siège de l’entreprise, distinct des zones où elle intervient."
     },
+    "geography": {
+      "legend": "Couverture d’intervention",
+      "regionLabel": "Région",
+      "provinceLabel": "Province ou préfecture",
+      "allMorocco": "Tout le Maroc",
+      "allProvinces": "Toutes les provinces et préfectures",
+      "provinceDisabled": "Choisissez une région pour afficher ses provinces et préfectures."
+    },
+    "coverage": {
+      "label": "Couverture",
+      "notDeclared": "Couverture non déclarée",
+      "national": "Tout le Maroc",
+      "region": "Région {name} entière",
+      "province": "Province de {name}",
+      "provinceElided": "Province d’{name}",
+      "prefecture": "Préfecture de {name}",
+      "prefectureElided": "Préfecture d’{name}",
+      "more": "{count, plural, one {# zone de plus} other {# zones de plus}}",
+      "details": "Toutes les zones déclarées"
+    },
+    "searchingMore": "Recherche d’autres entreprises…",
+    "loadError": "Les entreprises n’ont pas pu être chargées. Vos filtres restent appliqués.",
     "service": {
       "label": "Service",
       "all": "Tous les services",

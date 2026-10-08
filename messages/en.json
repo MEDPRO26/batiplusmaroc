@@ -1586,9 +1586,32 @@
     "closeFilters": "Close filters",
     "clear": "Clear filters",
     "city": {
-      "label": "City",
-      "placeholder": "e.g. Casablanca"
+      "label": "Headquarters city",
+      "placeholder": "e.g. Casablanca",
+      "hint": "Where the company is based. This is separate from the areas it serves."
     },
+    "geography": {
+      "legend": "Service coverage",
+      "regionLabel": "Region",
+      "provinceLabel": "Province or prefecture",
+      "allMorocco": "All Morocco",
+      "allProvinces": "All provinces and prefectures",
+      "provinceDisabled": "Choose a region to see its provinces and prefectures."
+    },
+    "coverage": {
+      "label": "Coverage",
+      "notDeclared": "Coverage not declared",
+      "national": "All Morocco",
+      "region": "Entire {name} region",
+      "province": "{name} Province",
+      "provinceElided": "{name} Province",
+      "prefecture": "{name} Prefecture",
+      "prefectureElided": "{name} Prefecture",
+      "more": "{count, plural, one {# more area} other {# more areas}}",
+      "details": "All declared coverage areas"
+    },
+    "searchingMore": "Looking for more companies…",
+    "loadError": "Companies could not be loaded. Your filters are still applied.",
     "service": {
       "label": "Service",
       "all": "All services",
