@@ -120,7 +120,7 @@ export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: strin
           <label className="flex items-center gap-2 text-sm font-medium text-ink" htmlFor="company-sort">
             <span>{t("sort.label")}</span>
             <select
-              className="min-h-11 rounded-xl border border-brand-border bg-white px-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+              className="min-h-11 rounded-sm border border-brand-border bg-white px-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
               disabled={isSearchMode}
               id="company-sort"
               onChange={(event) => setSort(event.target.value as Sort)}
