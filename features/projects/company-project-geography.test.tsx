@@ -12,6 +12,7 @@ type Control = { onChange?: (event: { target: { value: string } }) => void; onCl
 const state = vi.hoisted(() => ({
   geography: { regionCode: "", provinceCode: "" } as Selection,
   categories: ["renovation"], search: "atlas", category: "renovation", open: false,
+  surface: "marketplace" as "marketplace" | "dashboard", sortBy: "newest" as "newest" | "oldest",
   arrays: 0, strings: 0, booleans: 0, queryIndex: 0,
   args: [] as Record<string, unknown>[], sizes: [] as number[], controls: new Map<string, Control>(),
   results: [] as unknown[], status: "Exhausted",
@@ -24,10 +25,15 @@ vi.mock("react", async (importActual) => {
   const react = await importActual<typeof import("react")>();
   return { ...react, useState: (initial: unknown) => {
     const [value] = react.useState(initial);
-    let field: "geography" | "categories" | "search" | "category" | "open" | null = null;
+    let field: "geography" | "categories" | "search" | "category" | "open" | "sortBy" | null = null;
     if (initial && typeof initial === "object" && "regionCode" in initial && "provinceCode" in initial) field = "geography";
     else if (Array.isArray(initial) && state.arrays++ === 0) field = "categories";
-    else if (initial === "") field = state.strings++ === 0 ? "search" : "category";
+    else if (initial === "newest") field = "sortBy";
+    else if (typeof initial === "string") {
+      const index = state.strings++;
+      if (index === 0) field = "search";
+      else if (index === 1 && state.surface === "dashboard") field = "category";
+    }
     else if (initial === false && state.booleans++ === 0) field = "open";
     return field ? [state[field], (next: unknown) => {
       const updated = typeof next === "function" ? next(state[field!]) : next;
@@ -41,8 +47,9 @@ vi.mock("react/jsx-runtime", async (importActual) => {
   const capture = (factory: Factory): Factory => (...args) => {
     const [type, props] = args;
     if (props && typeof props === "object") {
-      const control = props as Control & { id?: string };
+      const control = props as Control & { id?: string; type?: string };
       if (type === "select" && control.id) state.controls.set(control.id, control);
+      if (type === "input" && control.type === "search") state.controls.set("search", control);
       if (type === "button" && typeof control.children === "string") state.controls.set(control.children, control);
     }
     return factory(...args);
@@ -55,8 +62,9 @@ vi.mock("react/jsx-dev-runtime", async (importActual) => {
   return { ...runtime, jsxDEV: (...args: unknown[]) => {
     const [type, props] = args;
     if (props && typeof props === "object") {
-      const control = props as Control & { id?: string };
+      const control = props as Control & { id?: string; type?: string };
       if (type === "select" && control.id) state.controls.set(control.id, control);
+      if (type === "input" && control.type === "search") state.controls.set("search", control);
       if (type === "button" && typeof control.children === "string") state.controls.set(control.children, control);
     }
     return runtime.jsxDEV(...args);
@@ -101,6 +109,7 @@ function change(id: string, value: string) {
 beforeEach(() => {
   state.geography = { regionCode: "", provinceCode: "" };
   state.categories = ["renovation"]; state.category = "renovation"; state.search = "atlas";
+  state.surface = "marketplace"; state.sortBy = "newest";
   state.args = []; state.sizes = []; state.results = []; state.status = "Exhausted"; state.open = false;
 });
 
@@ -147,7 +156,10 @@ describe.each(["fr", "en"] as const)("GEO6.1 %s administrative controls", (local
 });
 
 describe.each(["marketplace", "dashboard"] as const)("GEO6.1 %s filter/query integration", (surface) => {
-  const view = () => surface === "marketplace" ? <CompanyProjectMarketplace initialSearch="atlas" /> : <CompanyDashboard />;
+  const view = () => {
+    state.surface = surface;
+    return surface === "marketplace" ? <CompanyProjectMarketplace initialSearch="atlas" /> : <CompanyDashboard />;
+  };
   const prefix = surface === "marketplace" ? "desktop" : "company-feed";
 
   test("geography changes replace pagination arguments and preserve category/search; clear returns to All Morocco", () => {
@@ -197,6 +209,43 @@ describe.each(["marketplace", "dashboard"] as const)("GEO6.1 %s filter/query int
     expect(html).toContain((locale === "fr" ? fr : en).projectLocation.unspecified);
     expect(html).not.toContain("Agadir");
   });
+
+  test.each(["fr", "en"] as const)("GEO6.2A %s search uses relevance; clearing search restores browsing and retains other filters", (locale) => {
+    const messages = locale === "fr" ? fr : en;
+    state.open = true;
+    state.geography = { regionCode: "09", provinceCode: "09.541" };
+    state.sortBy = "oldest";
+    let html = render(locale, view());
+    const searched = state.args.at(-1)!;
+    expect(html).toContain(messages.companyProjects.sort.relevance);
+    expect(html).toContain('aria-live="polite"');
+    if (surface === "marketplace") {
+      expect(html).not.toContain(`aria-label="${messages.companyProjects.sort.triggerAria.replace("{option}", messages.companyProjects.sort.options.oldest)}"`);
+      expect(html).not.toContain(messages.companyProjects.sort.options.oldest);
+      expect(searched.sortBy).toBe("oldest");
+    } else expect(html).not.toContain(messages.auth.companyDashboard.feed.tabRecent);
+    expect(searched).toMatchObject({ search: "atlas", regionCode: "09", provinceCode: "09.541" });
+    change("search", "");
+    html = render(locale, view()); // a fresh SSR render represents the settled debounce
+    const cleared = state.args.at(-1)!;
+    expect(cleared.search).toBeUndefined();
+    expect(html).not.toContain(messages.companyProjects.sort.relevance);
+    if (surface === "marketplace") {
+      expect(cleared.sortBy).toBe("oldest");
+      expect(html).toContain(messages.companyProjects.sort.options.oldest);
+      expect(html).toContain(`aria-label="${messages.companyProjects.sort.triggerAria.replace("{option}", messages.companyProjects.sort.options.oldest)}"`);
+    } else expect(html).toContain(messages.auth.companyDashboard.feed.tabRecent);
+    expect(cleared).toMatchObject({ regionCode: "09", provinceCode: "09.541", ...(surface === "marketplace" ?
+      { categories: ["renovation"] } : { category: "renovation" }) });
+    expect(JSON.stringify(cleared)).not.toBe(JSON.stringify(searched));
+    change("search", "   ");
+    expect(render(locale, view())).not.toContain(messages.companyProjects.sort.relevance);
+    expect(state.args.at(-1)!.search).toBeUndefined();
+    change("search", "villa");
+    expect(render(locale, view())).toContain(messages.companyProjects.sort.relevance);
+    expect(state.args.at(-1)!).toMatchObject({ search: "villa", regionCode: "09", provinceCode: "09.541" });
+    for (const args of state.args) expect(args).not.toHaveProperty("paginationOpts");
+  });
 });
 
 test("mobile marketplace uses separate labeled controls and retains pagination/loading/empty states", () => {
@@ -223,6 +272,7 @@ test("mobile marketplace uses separate labeled controls and retains pagination/l
 
 test("geographic translations and the typed mixed-filter error stay aligned in FR/EN", () => {
   expect(Object.keys(fr.companyProjects.filters).sort()).toEqual(Object.keys(en.companyProjects.filters).sort());
+  expect(Object.keys(fr.companyProjects.sort).sort()).toEqual(Object.keys(en.companyProjects.sort).sort());
   expect(Object.keys(fr.ux.error.codes).sort()).toEqual(Object.keys(en.ux.error.codes).sort());
   expect(describeAppError({ data: "AMBIGUOUS_PROJECT_LOCATION_FILTER" }).messageKey).toBe("error.codes.AMBIGUOUS_PROJECT_LOCATION_FILTER");
   const initial = Object.freeze({ regionCode: "09", provinceCode: "09.541" });

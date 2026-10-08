@@ -397,7 +397,8 @@ function filteredSearchQuery(
   selections: MarketplaceSelections,
   publishedAfter: number | undefined,
 ) {
-  // Geography is a residual filter: the enabled search index has no geographic filter fields.
+  // Keep using the compatibility index until search_marketplace_geography is
+  // backfilled and enabled. Geographic residuals still cost candidate reads.
   return searchQuery(ctx, search, filters)
     .filter((q) => applyMarketplaceFilters(q, selections, publishedAfter, filters));
 }
@@ -419,6 +420,7 @@ export const listCompanyMarketplaceProjects = query({
     propertyTypes: v.optional(v.array(projectPropertyTypeValidator)),
     surfaceRanges: v.optional(v.array(projectSurfaceRangeValidator)),
     postedWindows: v.optional(v.array(projectPostedWindowValidator)),
+    /** Chronological browse order; nonblank text search always uses native relevance. */
     sortBy: v.optional(projectMarketplaceSortValidator),
     /** Client clock used only for posted-date windows (queries must not call Date.now()). */
     now: v.optional(v.number()),
@@ -468,22 +470,13 @@ export const listCompanyMarketplaceProjects = query({
     }
 
     const search = normalizeProjectSearch(args.search);
-    let ordered = newestQuery(ctx, filters, sortBy, publishedAfter)
-      .filter((q) => applyMarketplaceFilters(q, selections, publishedAfter, filters));
-    if (search) {
-      // Search relevance cannot be used as date ordering. Read matching IDs through the
-      // existing search index, then intersect BEFORE one native ordered pagination call.
-      // No candidate cap or record rewrite. This costs extra search reads and O(M) ID
-      // memory per page; large combinations can hit Convex limits. GEO6.2 must review
-      // staged geographic search filters and the chronological-search read strategy.
-      const matchingIds: Id<"projects">[] = [];
-      for await (const project of filteredSearchQuery(ctx, search, filters, selections, publishedAfter)) {
-        matchingIds.push(project._id);
-      }
-      ordered = ordered.filter((q) => matchingIds.length === 0 ? false :
-        q.or(...matchingIds.map((id) => q.eq(q.field("_id"), id))));
-    }
-    const page = await ordered.paginate(args.paginationOpts);
+    // Product HQ: relevance takes precedence over sortBy during text search.
+    // Paginate the search itself; never materialize all matches or re-sort a page.
+    const selectedQuery = search
+      ? filteredSearchQuery(ctx, search, filters, selections, publishedAfter)
+      : newestQuery(ctx, filters, sortBy, publishedAfter)
+        .filter((q) => applyMarketplaceFilters(q, selections, publishedAfter, filters));
+    const page = await selectedQuery.paginate(args.paginationOpts);
 
     const publicPage = (
       await Promise.all(page.page.map((project) => toMarketplaceCard(ctx, project)))

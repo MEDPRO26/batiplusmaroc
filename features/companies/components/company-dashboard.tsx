@@ -140,6 +140,7 @@ export function CompanyDashboard() {
           onToggleFilters={() => setFiltersOpen((open) => !open)}
           projects={projects}
           search={search}
+          searchActive={Boolean(debouncedSearch.trim())}
           status={status}
           verification={verification}
           onLoadMore={() => loadMore(PAGE_SIZE)}
@@ -152,6 +153,7 @@ export function CompanyDashboard() {
 
 function ProjectFeed({
   search,
+  searchActive,
   onSearchChange,
   filtersOpen,
   onToggleFilters,
@@ -166,6 +168,7 @@ function ProjectFeed({
   verification,
 }: {
   search: string;
+  searchActive: boolean;
   onSearchChange: (value: string) => void;
   filtersOpen: boolean;
   onToggleFilters: () => void;
@@ -246,8 +249,8 @@ function ProjectFeed({
       ) : null}
 
       <div className="mt-5 border-b border-brand-border">
-        <p className="m-0 inline-flex border-b-2 border-[#B9563B] pb-3 text-sm font-semibold text-ink">
-          {t("feed.tabRecent")}
+        <p aria-live="polite" className="m-0 inline-flex border-b-2 border-[#B9563B] pb-3 text-sm font-semibold text-ink">
+          {searchActive ? tProjects("sort.relevance") : t("feed.tabRecent")}
         </p>
       </div>
 

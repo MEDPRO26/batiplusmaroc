@@ -282,6 +282,13 @@ export default defineSchema({
       // Phase 1 keeps the enabled origin/main definition unchanged. Removing
       // budgetRange is deferred until the staged-index rollout is promoted.
       filterFields: ["status", "visibility", "city", "primaryCategory", "budgetRange", "timeline", "propertyType"],
+    })
+    .searchIndex("search_marketplace_geography", {
+      searchField: "marketplaceSearchText",
+      filterFields: ["status", "visibility", "regionCode", "provinceCode", "city", "primaryCategory", "timeline", "propertyType"],
+      // Additive preparation only. Backfill and enable in an authorized rollout
+      // before changing the Company query to use geographic search equalities.
+      staged: true,
     }),
 
   projectStatusHistory: defineTable({

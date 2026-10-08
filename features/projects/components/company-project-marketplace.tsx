@@ -181,7 +181,7 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
             </button>
             {status !== "LoadingFirstPage" ? <p aria-live="polite" className="m-0 text-sm text-muted">{t("loadedCount", { count: projects.length })}</p> : null}
           </div>
-          <SortDropdown onChange={setSortBy} value={sortBy} />
+          <SortDropdown onChange={setSortBy} searchActive={Boolean(debouncedSearch.trim())} value={sortBy} />
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-7">
@@ -601,9 +601,21 @@ function sortOptionLabelKey(option: SortOption) {
   return "sort.options.newest" as const;
 }
 
-function SortDropdown({ value, onChange }: { value: SortOption; onChange: (value: SortOption) => void }) {
+function SortDropdown({ value, onChange, searchActive }: {
+  value: SortOption;
+  onChange: (value: SortOption) => void;
+  searchActive: boolean;
+}) {
   const t = useTranslations("companyProjects");
   const selectedLabel = t(sortOptionLabelKey(value));
+
+  if (searchActive) {
+    return (
+      <p aria-live="polite" className="m-0 inline-flex min-h-10 items-center rounded-sm border border-[#c5c8cb] bg-white px-3.5 text-sm text-ink">
+        <span><span className="text-muted">{t("sort.label")}: </span><span className="font-semibold">{t("sort.relevance")}</span></span>
+      </p>
+    );
+  }
 
   return (
     <DropdownMenu>

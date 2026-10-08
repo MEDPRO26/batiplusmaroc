@@ -3651,6 +3651,7 @@
     "sort": {
       "label": "Trier par",
       "triggerAria": "Trier par : {option}",
+      "relevance": "Plus pertinents",
       "options": {
         "newest": "Plus récents",
         "oldest": "Plus anciens"

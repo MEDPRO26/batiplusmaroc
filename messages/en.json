@@ -3651,6 +3651,7 @@
     "sort": {
       "label": "Sort by",
       "triggerAria": "Sort by: {option}",
+      "relevance": "Most relevant",
       "options": {
         "newest": "Most recent",
         "oldest": "Oldest"
