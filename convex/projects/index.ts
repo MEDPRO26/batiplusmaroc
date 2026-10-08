@@ -9,13 +9,16 @@ import { getPublicMediaUrl } from "../storage/publicUrl";
 import { getProjectViewer, requireClientUser, requireOwnedEditableProject, requireOwnedProject } from "./access";
 import { PROJECT_MAX_DOCUMENTS, PROJECT_MAX_IMAGES, projectCategories, projectCategoryValidator, projectCities, projectCityValidator, projectPropertyTypes, projectPropertyTypeValidator, projectStatusValidator, projectTimelines, projectTimelineValidator } from "./constants";
 import { assertProjectTransition, isProjectEditable } from "./state";
+import { detailedProjectLocationValidator, generalProjectLocationValidator, toDetailedProjectLocation, toGeneralProjectLocation } from "./location";
 
 const draftValidator = v.object({
+  location: detailedProjectLocationValidator,
   id: v.id("projects"), primaryCategory: v.union(projectCategoryValidator, v.null()), customCategoryText: v.union(v.string(), v.null()), city: v.union(projectCityValidator, v.null()), neighborhood: v.union(v.string(), v.null()), title: v.union(v.string(), v.null()), propertyType: v.union(projectPropertyTypeValidator, v.null()), surface: v.union(v.number(), v.null()), surfaceUnknown: v.boolean(), description: v.union(v.string(), v.null()), timeline: v.union(projectTimelineValidator, v.null()), resumeStep: v.union(v.literal(1), v.literal(2), v.literal(3), v.literal(4), v.literal(5)), images: v.array(v.object({ id: v.id("projectMedia"), url: v.union(v.string(), v.null()), mimeType: v.string(), size: v.number() })), attachments: v.array(v.object({ id: v.id("projectAttachments"), fileName: v.string(), size: v.number() })), updatedAt: v.number(),
 });
 const wizardValidator = v.object({ draft: v.union(draftValidator, v.null()), categoryOptions: v.array(projectCategoryValidator), cityOptions: v.array(projectCityValidator), propertyTypeOptions: v.array(projectPropertyTypeValidator), timelineOptions: v.array(projectTimelineValidator), limits: v.object({ maxImages: v.number(), maxDocuments: v.number() }) });
 const nullableString = v.union(v.string(), v.null());
 const projectListItemValidator = v.object({
+  location: detailedProjectLocationValidator,
   id: v.id("projects"), title: nullableString, primaryCategory: v.union(projectCategoryValidator, v.null()),
   city: v.union(projectCityValidator, v.null()),
   timeline: v.union(projectTimelineValidator, v.null()), status: projectStatusValidator,
@@ -35,7 +38,8 @@ const projectDetailsValidator = v.object({
   history: v.array(historyItemValidator), viewerRole: v.union(v.literal("owner"), v.literal("admin")),
 });
 const publicProjectValidator = v.object({
-  id: v.id("projects"), title: v.string(), description: v.string(), city: projectCityValidator,
+  id: v.id("projects"), title: v.string(), description: v.string(), city: v.union(projectCityValidator, v.null()),
+  location: generalProjectLocationValidator,
   primaryCategory: projectCategoryValidator,
   timeline: v.union(projectTimelineValidator, v.null()), publishedAt: v.union(v.number(), v.null()), thumbnailUrl: nullableString,
 });
@@ -71,6 +75,7 @@ export const getMyProjects = query({
       title: project.title ?? null,
       primaryCategory: project.primaryCategory ?? null,
       city: project.city ?? null,
+      location: toDetailedProjectLocation(project),
       timeline: project.timeline ?? null,
       status: project.status,
       createdAt: project.createdAt,
@@ -103,6 +108,7 @@ export const getMyProject = query({
       customCategoryText: project.customCategoryText ?? null,
       city: project.city ?? null,
       neighborhood: project.neighborhood ?? null,
+      location: toDetailedProjectLocation(project),
       description: project.description ?? null,
       propertyType: project.propertyType ?? null,
       surface: project.surface ?? null,
@@ -128,11 +134,12 @@ export const listPublicProjects = query({
   returns: v.array(publicProjectValidator),
   handler: async (ctx) => {
     const projects = await ctx.db.query("projects").withIndex("by_status_and_visibility", (q) => q.eq("status", "published").eq("visibility", "marketplace")).order("desc").take(24);
-    return await Promise.all(projects.flatMap((project) => project.title && project.description && project.city && project.primaryCategory ? [project] : []).map(async (project) => ({
+    return await Promise.all(projects.flatMap((project) => project.title && project.description && project.primaryCategory ? [project] : []).map(async (project) => ({
       id: project._id,
       title: project.title!,
       description: project.description!,
-      city: project.city!,
+      city: project.city ?? null,
+      location: toGeneralProjectLocation(project),
       primaryCategory: project.primaryCategory!,
       timeline: project.timeline ?? null,
       publishedAt: project.publishedAt ?? null,
@@ -151,7 +158,7 @@ export const getWizard = query({ args: { projectId: v.optional(v.id("projects"))
     : await draftFor(ctx, userId);
   if (!draft) return { draft: null, ...options() };
   const [images, attachments] = await Promise.all([ctx.db.query("projectMedia").withIndex("by_projectId", (q) => q.eq("projectId", draft._id)).take(PROJECT_MAX_IMAGES), ctx.db.query("projectAttachments").withIndex("by_projectId", (q) => q.eq("projectId", draft._id)).take(PROJECT_MAX_DOCUMENTS)]);
-  return { draft: { id: draft._id, primaryCategory: draft.primaryCategory ?? null, customCategoryText: draft.customCategoryText ?? null, city: draft.city ?? null, neighborhood: draft.neighborhood ?? null, title: draft.title ?? null, propertyType: draft.propertyType ?? null, surface: draft.surface ?? null, surfaceUnknown: draft.surfaceUnknown, description: draft.description ?? null, timeline: draft.timeline ?? null, resumeStep: projectWizardResumeStep(draft), images: images.map((item) => ({ id: item._id, url: getPublicMediaUrl(item.objectKey), mimeType: item.mimeType, size: item.size })), attachments: attachments.map((item) => ({ id: item._id, fileName: item.fileName, size: item.size })), updatedAt: draft.updatedAt }, ...options() };
+  return { draft: { id: draft._id, location: toDetailedProjectLocation(draft), primaryCategory: draft.primaryCategory ?? null, customCategoryText: draft.customCategoryText ?? null, city: draft.city ?? null, neighborhood: draft.neighborhood ?? null, title: draft.title ?? null, propertyType: draft.propertyType ?? null, surface: draft.surface ?? null, surfaceUnknown: draft.surfaceUnknown, description: draft.description ?? null, timeline: draft.timeline ?? null, resumeStep: projectWizardResumeStep(draft), images: images.map((item) => ({ id: item._id, url: getPublicMediaUrl(item.objectKey), mimeType: item.mimeType, size: item.size })), attachments: attachments.map((item) => ({ id: item._id, fileName: item.fileName, size: item.size })), updatedAt: draft.updatedAt }, ...options() };
 } });
 
 export const initializeDraft = mutation({ args: {}, returns: v.object({ projectId: v.id("projects"), resumed: v.boolean() }), handler: async (ctx) => { const { userId } = await requireClientUser(ctx); const existing = await draftFor(ctx, userId); if (existing) return { projectId: existing._id, resumed: true }; const now = Date.now(); const projectId = await ctx.db.insert("projects", { clientId: userId, countryCode: "MA", surfaceUnknown: false, visibility: "marketplace", status: "draft", lastCompletedStep: 0, createdAt: now, updatedAt: now }); await appendMarketplaceActivity(ctx, { projectId, eventType: "project_created", actorUserId: userId, actorType: "client", newStatus: "draft", createdAt: now }); return { projectId, resumed: false }; } });
@@ -193,4 +200,18 @@ export const getAttachmentDownloadUrl = query({
     return `${env.CONVEX_SITE_URL.replace(/\/$/, "")}/projects/attachments/${attachment._id}`;
   },
 });
-export const getPublicProject = query({ args: { projectId: v.id("projects") }, returns: v.union(v.null(), v.object({ title: v.string(), description: v.string(), city: projectCityValidator, primaryCategory: projectCategoryValidator })), handler: async (ctx, args) => { const p = await ctx.db.get(args.projectId); if (!p || p.status !== "published" || p.visibility !== "marketplace" || !p.title || !p.description || !p.city || !p.primaryCategory) return null; return { title: p.title, description: p.description, city: p.city, primaryCategory: p.primaryCategory }; } });
+export const getPublicProject = query({
+  args: { projectId: v.id("projects") },
+  returns: v.union(v.null(), v.object({
+    title: v.string(), description: v.string(), city: v.union(projectCityValidator, v.null()),
+    primaryCategory: projectCategoryValidator, location: generalProjectLocationValidator,
+  })),
+  handler: async (ctx, args) => {
+    const project = await ctx.db.get(args.projectId);
+    if (!project || project.status !== "published" || project.visibility !== "marketplace" || !project.title || !project.description || !project.primaryCategory) return null;
+    return {
+      title: project.title, description: project.description, city: project.city ?? null,
+      primaryCategory: project.primaryCategory, location: toGeneralProjectLocation(project),
+    };
+  },
+});

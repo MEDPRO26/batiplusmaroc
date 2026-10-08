@@ -251,7 +251,7 @@ describe("GEO2 geographic index foundation", () => {
   });
 });
 
-test("GEO2 storage does not add fields to existing public or Company DTOs or broaden invite-only access", async () => {
+test("geographic storage and current projections preserve general location, privacy and invite-only access", async () => {
   const t = convexTest(schema, modules);
   const clientId = await insertUser(t);
   const companyUserId = await insertUser(t, "company");
@@ -273,16 +273,20 @@ test("GEO2 storage does not add fields to existing public or Company DTOs or bro
   const companyList = await caller.query(api.projects.marketplace.listCompanyMarketplaceProjects, args);
   const companyDetail = await caller.query(api.projects.marketplace.getCompanyMarketplaceProject, { projectId: mixed });
 
-  expect(publicList.map((project) => project.id)).toEqual([mixed, legacy]);
+  expect(publicList.map((project) => project.id)).toEqual([noCity, mixed, legacy]);
   expect(companyList.page.map((project) => project.id)).toEqual([mixed, legacy]);
   expect(publicDetail).toMatchObject({ city: "rabat" });
-  expect(companyDetail).toMatchObject({ city: "rabat", neighborhood: "Ancien quartier" });
+  expect(companyDetail).toMatchObject({ city: "rabat", location: {
+    regionCode: geography.regionCode, provinceCode: geography.provinceCode, communeName: geography.communeName, legacyCity: "rabat",
+  } });
   for (const dto of [...publicList, publicDetail, ...companyList.page, companyDetail]) {
-    for (const field of geographicFields) expect(dto).not.toHaveProperty(field);
+    for (const field of ["localityName", "neighborhood"]) {
+      expect(dto).not.toHaveProperty(field);
+      expect(dto?.location).not.toHaveProperty(field);
+    }
   }
   expect(await t.query(api.projects.index.getPublicProject, { projectId: privateId })).toBeNull();
-  // Storage support alone deliberately does not activate no-city discovery.
-  expect(await t.query(api.projects.index.getPublicProject, { projectId: noCity })).toBeNull();
+  expect(await t.query(api.projects.index.getPublicProject, { projectId: noCity })).toMatchObject({ city: null });
   await expect(t.query(api.projects.marketplace.listCompanyMarketplaceProjects, args)).rejects.toThrow("NOT_AUTHENTICATED");
   await expect(asUser(t, clientId).query(api.projects.marketplace.listCompanyMarketplaceProjects, args)).rejects.toThrow("COMPANY_ACCOUNT_REQUIRED");
   const stored = await t.run((ctx) => ctx.db.get("projects", mixed));

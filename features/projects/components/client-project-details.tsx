@@ -1,5 +1,7 @@
 "use client";
 
+import { useProjectLocationLabel } from "../hooks/use-project-location-label";
+
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { ArrowLeft, CalendarClock, ChevronDown, Clock3, FileText, FolderOpen, House, MapPin, Ruler } from "lucide-react";
@@ -50,12 +52,13 @@ export function ClientProjectDetails({ projectId }: { projectId: string }) {
 const DESCRIPTION_PREVIEW_CHARS = 600;
 
 export function ClientProjectDetailsView({ project, quotesSlot, supportSlot }: { project: ProjectDetails; quotesSlot?: React.ReactNode; supportSlot?: React.ReactNode }) {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("clientProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
   const locale = useLocale();
   const category = project.primaryCategory ? `${tWizard(`categoryOptions.${project.primaryCategory}`)}${project.primaryCategory === "other" && project.customCategoryText ? ` · ${project.customCategoryText}` : ""}` : null;
-  const location = [project.city ? tWizard(`cityOptions.${project.city}`) : null, project.neighborhood].filter(Boolean).join(" · ") || null;
+  const location = locationLabel(project);
   const surface = project.surfaceUnknown ? t("surfaceUnknown") : project.surface ? `${format.number(project.surface)} m²` : null;
   // The project read model has no publishedAt; the immutable status history is the source of truth.
   const publishedAt = project.history.findLast((item) => item.newStatus === "published")?.changedAt ?? null;

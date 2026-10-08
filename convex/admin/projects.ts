@@ -18,12 +18,14 @@ import {
 import { assertProjectTransition } from "../projects/state";
 import { buildProjectMarketplaceSearchText } from "../projects/marketplaceSearch";
 import { requireAdminUser } from "./access";
+import { detailedProjectLocationValidator, toDetailedProjectLocation } from "../projects/location";
 
 const nullableString = v.union(v.string(), v.null());
 const nullableNumber = v.union(v.number(), v.null());
 const listStatusValidator = v.union(v.literal("all"), projectStatusValidator);
 
 const listItemValidator = v.object({
+  location: detailedProjectLocationValidator,
   projectId: v.id("projects"),
   title: v.string(),
   clientName: v.string(),
@@ -82,6 +84,7 @@ const activityItemValidator = v.object({
 });
 
 const reviewValidator = v.object({
+  location: detailedProjectLocationValidator,
   projectId: v.id("projects"),
   title: v.string(),
   client: v.object({ displayName: v.string() }),
@@ -171,6 +174,7 @@ export const listProjects = query({
         title: title || "—",
         clientName: displayName(client),
         city: project.city ?? null,
+        location: toDetailedProjectLocation(project),
         category: project.primaryCategory ?? null,
         customCategoryText: project.customCategoryText ?? null,
         submittedAt: project.submittedAt ?? null,
@@ -222,6 +226,7 @@ export const getProjectReview = query({
       customCategoryText: project.customCategoryText ?? null,
       city: project.city ?? null,
       neighborhood: project.neighborhood ?? null,
+      location: toDetailedProjectLocation(project),
       propertyType: project.propertyType ?? null,
       surface: project.surface ?? null,
       surfaceUnknown: project.surfaceUnknown,

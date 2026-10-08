@@ -2049,6 +2049,9 @@
       "extra": "Extra photos — optional"
     }
   },
+  "projectLocation": {
+    "unspecified": "Location not specified"
+  },
   "projectWizard": {
     "loading": "Loading your project draft…",
     "progress": "Step {current} of {total}",

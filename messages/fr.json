@@ -2049,6 +2049,9 @@
       "extra": "Photos supplémentaires — facultatif"
     }
   },
+  "projectLocation": {
+    "unspecified": "Localisation non précisée"
+  },
   "projectWizard": {
     "loading": "Chargement de votre brouillon…",
     "progress": "Étape {current} sur {total}",

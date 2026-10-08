@@ -33,6 +33,13 @@ import {
   buildProjectMarketplaceSearchText,
   normalizeProjectSearch,
 } from "./marketplaceSearch";
+import {
+  canAccessDetailedProjectLocation,
+  companyProjectLocationValidator,
+  generalProjectLocationValidator,
+  toDetailedProjectLocation,
+  toGeneralProjectLocation,
+} from "./location";
 
 const MARKETPLACE_BACKFILL_BATCH_SIZE = 50;
 const nullableString = v.union(v.string(), v.null());
@@ -56,7 +63,8 @@ const safeClientDetailValidator = v.object({
 const marketplaceCardValidator = v.object({
   id: v.id("projects"),
   title: v.string(),
-  city: projectCityValidator,
+  city: v.union(projectCityValidator, v.null()),
+  location: generalProjectLocationValidator,
   primaryCategory: projectCategoryValidator,
   customCategoryText: nullableString,
   timeline: projectTimelineValidator,
@@ -68,8 +76,9 @@ const marketplaceCardValidator = v.object({
   client: v.union(safeClientSummaryValidator, v.null()),
 });
 
-const marketplaceDetailsValidator = marketplaceCardValidator.omit("client").extend({
-  neighborhood: nullableString,
+const marketplaceDetailsValidator = marketplaceCardValidator.omit("client", "location").extend({
+  location: companyProjectLocationValidator,
+  neighborhood: v.optional(nullableString),
   canSubmitQuote: v.boolean(),
   myQuoteId: v.union(v.id("projectQuotes"), v.null()),
   client: v.union(safeClientDetailValidator, v.null()),
@@ -184,7 +193,6 @@ function isCompleteMarketplaceProject(project: Doc<"projects">) {
   return Boolean(
     project.title &&
       project.description &&
-      project.city &&
       project.primaryCategory &&
       project.timeline,
   );
@@ -196,7 +204,8 @@ async function toMarketplaceCard(ctx: QueryCtx, project: Doc<"projects">) {
   return {
     id: project._id,
     title: project.title!,
-    city: project.city!,
+    city: project.city ?? null,
+    location: toGeneralProjectLocation(project),
     primaryCategory: project.primaryCategory!,
     customCategoryText: project.customCategoryText ?? null,
     timeline: project.timeline!,
@@ -485,7 +494,7 @@ export const getCompanyMarketplaceProject = query({
     const project = await ctx.db.get(projectId);
     if (!project || !isCompleteMarketplaceProject(project)) return null;
     const invitation = await invitationForPair(ctx, projectId, company._id);
-    const directInvitation = invitation?.status === "accepted" ? invitation : null;
+    const directInvitation = invitation?.status === "accepted" && invitation.clientUserId === project.clientId ? invitation : null;
     const canUseMarketplacePath =
       invitation === null &&
       project.status === "published" &&
@@ -505,15 +514,17 @@ export const getCompanyMarketplaceProject = query({
       .order("desc")
       .take(20);
     const activeQuote = recentQuotes.find((quote) => isActiveQuoteStatus(quote.status)) ?? null;
+    const canReadDetailedLocation = await canAccessDetailedProjectLocation(ctx, project, company._id);
     return {
       ...card,
       client,
-      neighborhood: project.neighborhood ?? null,
+      location: canReadDetailedLocation ? toDetailedProjectLocation(project) : toGeneralProjectLocation(project),
+      ...(canReadDetailedLocation ? { neighborhood: project.neighborhood ?? null } : {}),
       canSubmitQuote:
         company.verificationStatus === "verified"
         && isCompanyMarketplaceWriteAllowed(company)
         && activeQuote === null,
-      myQuoteId: recentQuotes[0]?._id ?? null,
+      myQuoteId: recentQuotes.at(0)?._id ?? null,
     };
   },
 });

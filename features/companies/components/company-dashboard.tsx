@@ -1,5 +1,7 @@
 "use client";
 
+import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
+
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
 
 import { usePaginatedQuery, useQuery } from "convex/react";
@@ -283,6 +285,7 @@ function ProjectFeed({
 }
 
 function ProjectRow({ project, now }: { project: Project; now: Date }) {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("auth.companyDashboard");
   const tProjects = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
@@ -321,7 +324,7 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
       <p className="mt-1 mb-0 text-sm text-ink/80">
         {tWizard(`timelineOptions.${project.timeline}`)}
         <span aria-hidden> · </span>
-        {tWizard(`cityOptions.${project.city}`)}
+        {locationLabel(project)}
       </p>
       <p className="mt-3 mb-0 line-clamp-3 text-sm leading-6 text-[#3d3d3d]">
         {project.description}{" "}
@@ -342,7 +345,7 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
             })
           : tProjects("card.clientPrivate")}
         <span aria-hidden> · </span>
-        {tWizard(`cityOptions.${project.city}`)}
+        {locationLabel(project)}
       </p>
     </article>
   );

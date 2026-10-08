@@ -1,5 +1,7 @@
 "use client";
 
+import { useProjectLocationLabel } from "../hooks/use-project-location-label";
+
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { MapPin, Search, SlidersHorizontal, X } from "lucide-react";
@@ -18,6 +20,7 @@ type Category = (typeof projectCategories)[number];
 type City = (typeof projectCities)[number];
 
 export function PublicProjectBrowse({ initialSearch = "" }: { initialSearch?: string }) {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("browseProjectsPage");
   const tWizard = useTranslations("projectWizard");
   const projects = useQuery(api.projects.index.listPublicProjects);
@@ -39,13 +42,13 @@ export function PublicProjectBrowse({ initialSearch = "" }: { initialSearch?: st
         [
           project.title,
           project.description,
-          tWizard(`cityOptions.${project.city}`),
+          locationLabel(project),
           tWizard(`categoryOptions.${project.primaryCategory}`),
         ].join(" "),
       );
       return haystack.includes(query);
     });
-  }, [category, city, projects, search, tWizard]);
+  }, [category, city, projects, search, tWizard, locationLabel]);
 
   const selected = filtered.find((project) => project.id === selectedId) ?? null;
   const activeFilterCount = (category !== "all" ? 1 : 0) + (city !== "all" ? 1 : 0);
@@ -257,6 +260,7 @@ function ProjectRow({
   const t = useTranslations("browseProjectsPage");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
+  const locationLabel = useProjectLocationLabel();
   const now = useNow({ updateInterval: 60_000 });
 
   return (
@@ -276,7 +280,7 @@ function ProjectRow({
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted">
           <span className="inline-flex items-center gap-1">
             <MapPin aria-hidden className="size-3.5" strokeWidth={1.8} />
-            {tWizard(`cityOptions.${project.city}`)}
+            {locationLabel(project)}
           </span>
           <span aria-hidden>·</span>
           <span>{tWizard(`categoryOptions.${project.primaryCategory}`)}</span>
@@ -421,6 +425,7 @@ function ProjectPreviewSheet({
   const t = useTranslations("browseProjectsPage");
   const tWizard = useTranslations("projectWizard");
   const locale = useLocale();
+  const locationLabel = useProjectLocationLabel();
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -465,7 +470,7 @@ function ProjectPreviewSheet({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-6">
           <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted">
-            <span>{tWizard(`cityOptions.${project.city}`)}</span>
+            <span>{locationLabel(project)}</span>
             <span aria-hidden>·</span>
             <span>{tWizard(`categoryOptions.${project.primaryCategory}`)}</span>
             {project.publishedAt ? (

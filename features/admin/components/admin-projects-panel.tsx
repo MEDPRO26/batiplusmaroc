@@ -15,6 +15,7 @@ import { Link } from "@/i18n/navigation";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { findKnownCodeInText } from "@/lib/errors/codes";
 import { routes } from "@/lib/routes";
+import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
 
 type ListRow = FunctionReturnType<
   typeof api.admin.projects.listProjects
@@ -64,6 +65,7 @@ const CITIES = [
 ] as const;
 
 export function AdminProjectsPanel() {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("adminProjects");
   const tUx = useTranslations("ux");
   const tWizard = useTranslations("projectWizard");
@@ -202,7 +204,7 @@ export function AdminProjectsPanel() {
                     <CompactField
                       label={t("columns.city")}
                       value={
-                        row.city ? tWizard(`cityOptions.${row.city}`) : "—"
+                        locationLabel(row)
                       }
                     />
                     <CompactField
@@ -265,7 +267,7 @@ export function AdminProjectsPanel() {
                         {row.clientName}
                       </td>
                       <td className="px-3 py-3 text-[#626970]">
-                        {row.city ? tWizard(`cityOptions.${row.city}`) : "—"}
+                        {locationLabel(row)}
                       </td>
                       <td className="hidden px-3 py-3 text-[#626970] lg:table-cell">
                         {categoryLabel(
@@ -328,6 +330,7 @@ export function ProjectReviewDrawer({
   const tUx = useTranslations("ux");
   const tWizard = useTranslations("projectWizard");
   const tSupport = useTranslations("clientSupport.admin");
+  const locationLabel = useProjectLocationLabel();
   const locale = useLocale();
   const titleId = useId();
   const review = useQuery(api.admin.projects.getProjectReview, { projectId });
@@ -453,16 +456,7 @@ export function ProjectReviewDrawer({
                 />
                 <Field
                   label={t("fields.location")}
-                  value={
-                    [
-                      review.city
-                        ? tWizard(`cityOptions.${review.city}`)
-                        : null,
-                      review.neighborhood,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || "—"
-                  }
+                  value={locationLabel(review)}
                 />
                 <Field
                   label={t("fields.propertyType")}

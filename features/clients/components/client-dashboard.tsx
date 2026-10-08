@@ -1,5 +1,7 @@
 "use client";
 
+import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
+
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
@@ -239,6 +241,7 @@ export function ClientProjectCard({
   project: Project;
   layout?: "grid" | "list";
 }) {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("clientProjects");
   const tWizard = useTranslations("projectWizard");
   const locale = useLocale();
@@ -251,7 +254,7 @@ export function ClientProjectCard({
   // Other statuses are already stated by the badge; only these add guidance.
   const hint = isDraft ? t("draftHint") : project.status === "pending_review" ? t("reviewHint") : null;
   const place = [
-    project.city ? tWizard(`cityOptions.${project.city}`) : null,
+    locationLabel(project),
     project.primaryCategory ? tWizard(`categoryOptions.${project.primaryCategory}`) : null,
   ].filter(Boolean).join(" · ");
   const created = t("createdOn", { date: formatMarketplaceDateTime(project.createdAt, locale, { dateStyle: "medium" }) });

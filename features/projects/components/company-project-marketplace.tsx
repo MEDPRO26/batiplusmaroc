@@ -1,5 +1,7 @@
 "use client";
 
+import { useProjectLocationLabel } from "../hooks/use-project-location-label";
+
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { ChevronDown, Check as CheckIcon, ExternalLink, Search as SearchIconLucide } from "lucide-react";
@@ -241,6 +243,7 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
 }
 
 function ProjectCard({ project, selected, onOpen }: { project: Project; selected: boolean; onOpen: () => void }) {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
@@ -262,7 +265,7 @@ function ProjectCard({ project, selected, onOpen }: { project: Project; selected
       />
       <div className="pointer-events-none relative z-0">
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted">
-          <span>{tWizard(`cityOptions.${project.city}`)}</span><span aria-hidden>·</span><span>{category}</span>
+          <span>{locationLabel(project)}</span><span aria-hidden>·</span><span>{category}</span>
           {project.publishedAt ? <><span aria-hidden>·</span><time dateTime={new Date(project.publishedAt).toISOString()}>{t("card.published", { date: formatMarketplaceDateTime(project.publishedAt, locale, { dateStyle: "medium" }) })}</time></> : null}
         </div>
         <h2 className="mt-2 mb-0 text-[1.18rem] leading-7 font-semibold tracking-[-0.025em] text-ink transition-colors duration-150 group-hover:text-brand">
@@ -398,6 +401,7 @@ export function ProjectDetailsSheet({ projectId, onClose }: { projectId: string 
 }
 
 function ProjectSheetContent({ project }: { project: Details }) {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
@@ -421,7 +425,7 @@ function ProjectSheetContent({ project }: { project: Details }) {
             {project.title}
           </h2>
           <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-            <span>{tWizard(`cityOptions.${project.city}`)}</span>
+            <span>{locationLabel(project)}</span>
             {project.publishedAt ? (
               <>
                 <span aria-hidden>·</span>
@@ -455,7 +459,7 @@ function ProjectSheetContent({ project }: { project: Details }) {
               />
               <SheetDetail label={t("detail.surface")} value={surfaceValue} />
               <SheetDetail label={t("detail.category")} value={category} />
-              <SheetDetail label={t("detail.city")} value={tWizard(`cityOptions.${project.city}`)} />
+              <SheetDetail label={t("detail.location")} value={locationLabel(project)} />
             </dl>
           </section>
         </article>
