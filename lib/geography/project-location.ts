@@ -1,6 +1,7 @@
 import { getProvince, getRegion } from "./morocco";
 
 export type RecordedProjectLocation = {
+  locationMode?: "structured" | null;
   regionCode?: string | null;
   provinceCode?: string | null;
   communeName?: string | null;
@@ -33,12 +34,19 @@ function recordedString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
+/** Intent is independent of completeness. Null DTO fields represent absent storage. */
+export function usesStructuredProjectLocation(project: RecordedProjectLocation): boolean {
+  return project.locationMode === "structured" ||
+    project.regionCode != null || project.provinceCode != null ||
+    project.communeName != null || project.localityName != null;
+}
+
 /** Allowlisted general geography; never copies private locality, neighborhood or addresses. */
 export function toGeneralProjectLocation(project: RecordedProjectLocation): GeneralProjectLocation {
   const region = getRegion(project.regionCode);
   const province = getProvince(project.provinceCode);
   const compatibleProvince = province && (!project.regionCode || province.regionCode === region?.code);
-  const city = recordedString(project.city);
+  const city = usesStructuredProjectLocation(project) ? null : recordedString(project.city);
   return {
     regionCode: region?.code ?? null,
     provinceCode: compatibleProvince ? province.code : null,
@@ -47,13 +55,13 @@ export function toGeneralProjectLocation(project: RecordedProjectLocation): Gene
   };
 }
 
-/** Raw recorded geography for authorized callers; no administrative inference or storage rewrite. */
+/** Authorized geography; inactive historical cities remain stored and available in owner/Admin context. */
 export function toDetailedProjectLocation(project: RecordedProjectLocation): DetailedProjectLocation {
   return {
     regionCode: recordedString(project.regionCode),
     provinceCode: recordedString(project.provinceCode),
     communeName: recordedString(project.communeName),
-    legacyCity: recordedString(project.city),
+    legacyCity: usesStructuredProjectLocation(project) ? null : recordedString(project.city),
     localityName: recordedString(project.localityName),
     neighborhood: recordedString(project.neighborhood),
   };

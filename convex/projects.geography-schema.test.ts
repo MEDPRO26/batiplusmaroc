@@ -277,7 +277,7 @@ test("geographic storage and current projections preserve general location, priv
   expect(companyList.page.map((project) => project.id)).toEqual([mixed, legacy]);
   expect(publicDetail).toMatchObject({ city: "rabat" });
   expect(companyDetail).toMatchObject({ city: "rabat", location: {
-    regionCode: geography.regionCode, provinceCode: geography.provinceCode, communeName: geography.communeName, legacyCity: "rabat",
+    regionCode: geography.regionCode, provinceCode: geography.provinceCode, communeName: geography.communeName, legacyCity: null,
   } });
   for (const dto of [...publicList, publicDetail, ...companyList.page, companyDetail]) {
     for (const field of ["localityName", "neighborhood"]) {

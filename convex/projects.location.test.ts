@@ -77,9 +77,9 @@ function noRestrictedDetails(dto: unknown) {
     expect(serialized).not.toContain(value);
   }
 }
-function detailedLocation(legacyCity: string | null = null) {
+function detailedLocation() {
   return { regionCode: recorded.regionCode, provinceCode: recorded.provinceCode, communeName: recorded.communeName,
-    legacyCity, localityName: recorded.localityName, neighborhood: recorded.neighborhood };
+    legacyCity: null, localityName: recorded.localityName, neighborhood: recorded.neighborhood };
 }
 
 describe("GEO3 audience-specific project location readers", () => {
@@ -93,7 +93,7 @@ describe("GEO3 audience-specific project location readers", () => {
       await asUser(t, member.userId).query(api.projects.marketplace.listCompanyMarketplaceProjects, firstPage),
     ];
     expect(responses[0]).toMatchObject({ city: city ?? null, location: {
-      regionCode: "05", provinceCode: "05.081", communeName: recorded.communeName, legacyCity: city ?? null,
+      regionCode: "05", provinceCode: "05.081", communeName: recorded.communeName, legacyCity: null,
     } });
     expect(responses[2]).toMatchObject({ id: projectId, city: city ?? null });
     expect((responses[1] as { id: Id<"projects"> }[]).map((item) => item.id)).toEqual([projectId]);
@@ -130,7 +130,7 @@ describe("GEO3 audience-specific project location readers", () => {
   test("owning Client and current Admin readers receive all recorded fields, including incomplete drafts", async () => {
     const state = await setup({ status: "draft", city: "rabat", regionCode: "historical-unknown", provinceCode: undefined });
     const { t, clientId, adminId, projectId } = state;
-    const expected = { ...detailedLocation("rabat"), regionCode: "historical-unknown", provinceCode: null };
+    const expected = { ...detailedLocation(), regionCode: "historical-unknown", provinceCode: null };
     const owner = asUser(t, clientId);
     const admin = asUser(t, adminId);
     const responses = [
@@ -142,7 +142,7 @@ describe("GEO3 audience-specific project location readers", () => {
       (await admin.query(api.admin.projects.listProjects, { status: "all" }))[0],
     ];
     for (const response of responses) expect(response).toMatchObject({ location: expected });
-    expect((await owner.query(api.projects.index.getWizard, { projectId })).draft?.resumeStep).toBe(5);
+    expect((await owner.query(api.projects.index.getWizard, { projectId })).draft?.resumeStep).toBe(2);
     const stored = await t.run((ctx) => ctx.db.get("projects", projectId));
     expect(stored).toMatchObject({ regionCode: "historical-unknown", communeName: recorded.communeName,
       localityName: recorded.localityName, neighborhood: recorded.neighborhood, city: "rabat", status: "draft" });
@@ -161,6 +161,29 @@ describe("GEO3 audience-specific project location readers", () => {
     await expect(asUser(state.t, state.adminId).query(api.admin.projects.getProjectReview, { projectId: state.projectId })).rejects.toThrow("ADMIN_REQUIRED");
     expect(await asUser(state.t, state.adminId).query(api.projects.index.getMyProject, { projectId: state.projectId })).toBeNull();
   });
+
+  test("a cleared marked record keeps historical fields private and inactive in public/Company projections", async () => {
+    // Historical published records must remain readable, even if geography is now incomplete.
+    const state = await setup({ locationMode: "structured", city: "agadir", regionCode: undefined, provinceCode: undefined,
+      communeName: undefined, localityName: undefined });
+    const { t, projectId, member, clientId, adminId } = state;
+    const before = await t.run((ctx) => ctx.db.get(projectId));
+    const general = { regionCode: null, provinceCode: null, communeName: null, legacyCity: null };
+    const publicDetail = await t.query(api.projects.index.getPublicProject, { projectId });
+    const publicList = await t.query(api.projects.index.listPublicProjects, {});
+    const companyPage = await asUser(t, member.userId).query(api.projects.marketplace.listCompanyMarketplaceProjects, firstPage);
+    for (const response of [publicDetail, publicList[0], await companyDetail(state), companyPage.page[0]]) {
+      expect(response).toMatchObject({ city: "agadir", location: general });
+      expect(JSON.stringify(response)).not.toContain('"locationMode"');
+      noRestrictedDetails(response);
+    }
+    for (const caller of [asUser(t, clientId), asUser(t, adminId)]) {
+      expect(await caller.query(api.projects.index.getMyProject, { projectId })).toMatchObject({
+        city: "agadir", neighborhood: recorded.neighborhood, location: { ...general, localityName: null, neighborhood: recorded.neighborhood },
+      });
+    }
+    expect(await t.run((ctx) => ctx.db.get(projectId))).toEqual(before);
+  });
 });
 
 describe("GEO3 mutual-interest location authorization", () => {
@@ -176,7 +199,7 @@ describe("GEO3 mutual-interest location authorization", () => {
   });
 
   test("Client-opened discussion grants that Company details but keeps public and feed cards general", async () => {
-    const state = await setup();
+    const state = await setup({ locationMode: "structured" });
     await openDiscussion(state);
     expect(await companyDetail(state)).toMatchObject({ city: null, location: detailedLocation(), neighborhood: recorded.neighborhood });
     noRestrictedDetails(await companyDetail(state, state.other.userId));

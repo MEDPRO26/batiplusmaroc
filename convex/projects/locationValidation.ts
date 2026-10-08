@@ -1,5 +1,7 @@
 import { ConvexError } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
+import { normalizeLocationText } from "../../lib/geography/location-text";
+import { usesStructuredProjectLocation } from "../../lib/geography/project-location";
 import {
   isValidRegion,
   validateAdministrativePair,
@@ -12,19 +14,12 @@ export type StructuredProjectLocationInput = {
   localityName: string | null;
 };
 
-// Match the existing project neighborhood bound, measured in normalized UTF-16 code units.
-export const PROJECT_LOCATION_TEXT_MAX_LENGTH = 100;
-const unsafeControls = /[\p{Cc}\u202a-\u202e\u2066-\u2069]/u;
+export { PROJECT_LOCATION_TEXT_MAX_LENGTH } from "../../lib/geography/location-text";
 
 function optionalLocationText(value: string | null, errorCode: string) {
-  if (value === null) return undefined;
-  // Allow pasted whitespace, but reject other C0/C1 and bidi embedding/override/isolate controls.
-  const whitespace = value.replace(/[\t\n\r]/g, " ");
-  if (unsafeControls.test(whitespace)) throw new ConvexError(errorCode);
-  const normalized = whitespace.trim().replace(/\s+/g, " ");
-  if (normalized.length > PROJECT_LOCATION_TEXT_MAX_LENGTH)
-    throw new ConvexError(errorCode);
-  return normalized || undefined;
+  const normalized = normalizeLocationText(value);
+  if (!normalized.ok) throw new ConvexError(errorCode);
+  return normalized.value;
 }
 
 /**
@@ -75,6 +70,7 @@ export function assertProjectLocationReady(
     Doc<"projects">,
     | "countryCode"
     | "city"
+    | "locationMode"
     | "regionCode"
     | "provinceCode"
     | "communeName"
@@ -84,14 +80,7 @@ export function assertProjectLocationReady(
   if (project.countryCode !== "MA")
     throw new ConvexError("PROJECT_INCOMPLETE");
 
-  const hasStructuredLocation =
-    project.regionCode !== undefined ||
-    project.provinceCode !== undefined ||
-    project.communeName !== undefined ||
-    project.localityName !== undefined;
-  if (!hasStructuredLocation) {
-    // Without a version marker, a fully cleared snapshot plus an old city is
-    // indistinguishable from a legacy-only record. Keep legacy compatibility.
+  if (!usesStructuredProjectLocation(project)) {
     if (!project.city) throw new ConvexError("PROJECT_INCOMPLETE");
     return;
   }

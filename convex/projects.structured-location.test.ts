@@ -479,19 +479,19 @@ describe("GEO4.1 legacy behavior and bounded effects", () => {
       expect(await savedProject(state)).toEqual({
         ...before,
         ...location,
+        locationMode: "structured",
         updatedAt: expect.any(Number),
       });
     },
   );
-  test("legacy saveLocation still updates its own fields/progression without changing structured geography", async () => {
-    const state = await setup({ ...location, lastCompletedStep: 1 });
+  test("legacy saveLocation updates genuine legacy drafts before structured conversion", async () => {
+    const state = await setup({ lastCompletedStep: 1 });
     await state.owner.mutation(api.projects.index.saveLocation, {
       projectId: state.projectId,
       city: "rabat",
       neighborhood: "  Agdal\n Centre  ",
     });
     expect(await savedProject(state)).toMatchObject({
-      ...location,
       city: "rabat",
       neighborhood: "Agdal Centre",
       lastCompletedStep: 2,
@@ -501,7 +501,6 @@ describe("GEO4.1 legacy behavior and bounded effects", () => {
       city: "agadir",
     });
     expect(await savedProject(state)).toMatchObject({
-      ...location,
       city: "agadir",
       lastCompletedStep: 2,
     });
@@ -515,15 +514,17 @@ describe("GEO4.1 legacy behavior and bounded effects", () => {
       }),
     ).rejects.toThrow("INVALID_PROJECT_NEIGHBORHOOD");
     expect(await savedProject(state)).toEqual(before);
+    expect(await savedProject(state)).not.toHaveProperty("locationMode");
     await save(state, { ...empty, regionCode: "01", provinceCode: "01.511" });
     expect(await savedProject(state)).toMatchObject({
       city: "agadir",
       lastCompletedStep: 2,
       regionCode: "01",
       provinceCode: "01.511",
+      locationMode: "structured",
     });
   });
-  test("structured-only saving preserves city-based wizard resume while GEO4.2 permits submission", async () => {
+  test("complete structured location resumes past location without requiring a legacy city", async () => {
     const state = await setup({
       primaryCategory: "renovation",
       title: "Safe rural renovation",
@@ -540,7 +541,7 @@ describe("GEO4.1 legacy behavior and bounded effects", () => {
     expect(wizard.draft).toMatchObject({
       city: null,
       location: { ...location, legacyCity: null, neighborhood: null },
-      resumeStep: 2,
+      resumeStep: 5,
     });
     expect((await savedProject(state)).lastCompletedStep).toBe(6);
     await expect(
@@ -570,6 +571,7 @@ describe("GEO4.1 legacy behavior and bounded effects", () => {
     expect(after).toEqual({
       ...before,
       ...location,
+      locationMode: "structured",
       updatedAt: expect.any(Number),
     });
     const sideEffects = await state.t.run(async (ctx) => ({

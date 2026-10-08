@@ -244,6 +244,8 @@ export default defineSchema({
     provinceCode: v.optional(v.string()),
     communeName: v.optional(v.string()),
     localityName: v.optional(v.string()),
+    /** Structured-location intent persists even when all geographic fields are cleared. */
+    locationMode: v.optional(v.literal("structured")),
     title: v.optional(v.string()), propertyType: v.optional(projectPropertyType), surface: v.optional(v.number()),
     surfaceUnknown: v.boolean(), description: v.optional(v.string()),
     /** Deploy-1 compatibility fields. Current product code must not read or write them. */

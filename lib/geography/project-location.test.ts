@@ -4,7 +4,7 @@ import fr from "../../messages/fr.json";
 import { projectCities } from "../../convex/projects/constants";
 import {
   formatProjectLocation, LEGACY_CITY_CODES, toDetailedProjectLocation, toGeneralProjectLocation,
-  type LegacyCityCode, type RecordedProjectLocation,
+  usesStructuredProjectLocation, type LegacyCityCode, type RecordedProjectLocation,
 } from "./project-location";
 
 const rural = Object.freeze({
@@ -36,9 +36,9 @@ describe("pure project location projections", () => {
     }
   });
 
-  test("detailed projections preserve recorded spelling, codes and legacy values without addresses", () => {
+  test("detailed projections preserve recorded spelling/codes and avoid treating an inactive historical city as current", () => {
     expect(toDetailedProjectLocation({ ...rural, city: "rabat" })).toEqual({
-      regionCode: "05", provinceCode: "05.081", communeName: rural.communeName, legacyCity: "rabat",
+      regionCode: "05", provinceCode: "05.081", communeName: rural.communeName, legacyCity: null,
       localityName: rural.localityName, neighborhood: rural.neighborhood,
     });
     expect(rural.communeName).toBe(" Aït   Tamlil — آيت تامليل ");
@@ -58,6 +58,24 @@ describe("pure project location projections", () => {
     expect(toGeneralProjectLocation({ regionCode: "05", provinceCode: "01.511" })).toMatchObject({ regionCode: "05", provinceCode: null });
     expect(toGeneralProjectLocation({ provinceCode: "05.081" })).toMatchObject({ regionCode: null, provinceCode: "05.081" });
     expect(toDetailedProjectLocation({ regionCode: "05", provinceCode: "01.511" })).toMatchObject({ regionCode: "05", provinceCode: "01.511" });
+  });
+
+  test("structured intent remains active with no fields, including unmarked fields present as empty strings", () => {
+    expect(usesStructuredProjectLocation({ city: "agadir" })).toBe(false);
+    expect(usesStructuredProjectLocation({ city: "agadir", regionCode: null, provinceCode: null, communeName: null, localityName: null })).toBe(false);
+    expect(usesStructuredProjectLocation({ locationMode: "structured", city: "agadir" })).toBe(true);
+    for (const field of ["regionCode", "provinceCode", "communeName", "localityName"] as const) {
+      expect(usesStructuredProjectLocation({ city: "agadir", [field]: "" })).toBe(true);
+    }
+  });
+
+  test("a marked cleared record keeps historical storage while its current projections omit the old city and marker", () => {
+    const record = Object.freeze({ locationMode: "structured" as const, city: "agadir", neighborhood: rural.neighborhood, exactAddress: rural.exactAddress });
+    const general = toGeneralProjectLocation(record);
+    expect(general).toEqual({ regionCode: null, provinceCode: null, communeName: null, legacyCity: null });
+    expect(toDetailedProjectLocation(record)).toEqual({ ...general, localityName: null, neighborhood: rural.neighborhood });
+    expect(JSON.stringify(general)).not.toContain("PRIVATE_");
+    expect(record).toEqual({ locationMode: "structured", city: "agadir", neighborhood: rural.neighborhood, exactAddress: rural.exactAddress });
   });
 });
 
@@ -99,5 +117,14 @@ describe.each(["fr", "en"] as const)("%s location formatting", (locale) => {
       .toBe("Béni Mellal-Khénifra");
     expect(formatProjectLocation(toGeneralProjectLocation({ provinceCode: "05.081" }), locale, labels(locale))).toBe("Azilal");
     expect(formatProjectLocation(toGeneralProjectLocation({}), locale, labels(locale))).toBe(labels(locale).unspecified);
+  });
+
+  test("a marked empty location cannot fall back to a historical city in general or Client labels", () => {
+    const legacyCity = vi.fn(labels(locale).legacyCity);
+    const record = { locationMode: "structured" as const, city: "agadir" };
+    for (const location of [toGeneralProjectLocation(record), toDetailedProjectLocation(record)]) {
+      expect(formatProjectLocation(location, locale, { ...labels(locale), legacyCity })).toBe(labels(locale).unspecified);
+    }
+    expect(legacyCity).not.toHaveBeenCalled();
   });
 });

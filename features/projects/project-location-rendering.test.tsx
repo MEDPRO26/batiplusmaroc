@@ -85,4 +85,21 @@ describe.each(["fr", "en"] as const)("GEO3 %s minimal rendering compatibility", 
     expect(html).toContain((locale === "fr" ? fr : en).projectLocation.unspecified);
     expect(html).not.toContain("UNKNOWN_");
   });
+
+  test("cleared structured geography does not restore the old city in Client, public or Company views", () => {
+    const cleared = { locationMode: "structured" as const, city: "agadir", neighborhood: recorded.neighborhood };
+    const general = toGeneralProjectLocation(cleared);
+    const publicHtml = render(locale, <ProjectDiscoveryResults projects={[{ ...publicProject, city: "agadir", location: general }]} />);
+    const companyHtml = render(locale, <ProjectDetailsView project={{ ...companyProject, city: "agadir", location: general }} />);
+    const ownerHtml = render(locale, <ClientProjectDetailsView project={{ ...ownerProject, city: "agadir", location: toDetailedProjectLocation(cleared) }} />);
+    for (const html of [publicHtml, companyHtml, ownerHtml]) {
+      expect(html).not.toContain((locale === "fr" ? fr : en).projectWizard.cityOptions.agadir);
+      expect(html).not.toContain("cityOptions.");
+    }
+    for (const html of [publicHtml, companyHtml]) {
+      expect(html).toContain((locale === "fr" ? fr : en).projectLocation.unspecified);
+      expect(html).not.toContain("PRIVATE_");
+    }
+    expect(ownerHtml).toContain(recorded.neighborhood);
+  });
 });

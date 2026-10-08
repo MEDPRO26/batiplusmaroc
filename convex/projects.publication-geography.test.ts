@@ -133,8 +133,8 @@ async function rejectedWithoutEffects(state: State, operation: () => Promise<unk
   await expect(operation()).rejects.toThrow(error);
   expect(await effects(state)).toEqual(before);
 }
-function generalLocation(city: "rabat" | null = null, communeName = rural.communeName) {
-  return { regionCode: "05", provinceCode: "05.081", communeName, legacyCity: city };
+function generalLocation(communeName = rural.communeName) {
+  return { regionCode: "05", provinceCode: "05.081", communeName, legacyCity: null };
 }
 function noRestrictedDetails(dto: unknown) {
   const serialized = JSON.stringify(dto);
@@ -166,7 +166,7 @@ describe("GEO4.2 real submission and approval workflow", () => {
     expect(pending).toEqual({ ...before, status: "pending_review", submittedAt: expect.any(Number), updatedAt: expect.any(Number) });
     expect(await state.t.query(api.projects.index.getPublicProject, { projectId: state.projectId })).toBeNull();
     expect(await state.owner.query(api.projects.index.getMyProject, { projectId: state.projectId }))
-      .toMatchObject({ location: { ...generalLocation(null, communeName), localityName: rural.localityName } });
+      .toMatchObject({ location: { ...generalLocation(communeName), localityName: rural.localityName } });
 
     await expect(approve(state)).resolves.toEqual({ status: "published" });
     expect(await storedProject(state)).toEqual({
@@ -174,7 +174,7 @@ describe("GEO4.2 real submission and approval workflow", () => {
       marketplaceSearchText: buildProjectMarketplaceSearchText(pending),
     });
     const publicProject = await state.t.query(api.projects.index.getPublicProject, { projectId: state.projectId });
-    expect(publicProject).toMatchObject({ city: null, location: generalLocation(null, communeName) });
+    expect(publicProject).toMatchObject({ city: null, location: generalLocation(communeName) });
     noRestrictedDetails(publicProject);
     const all = await effects(state);
     expect(all.history.slice(-2)).toEqual([
@@ -227,7 +227,7 @@ describe("GEO4.2 real submission and approval workflow", () => {
     const member = await company(state.t);
     const caller = asUser(state.t, member.userId);
     const context = await caller.query(api.quotes.index.getSubmissionContext, { projectId: state.projectId });
-    expect(context?.project).toMatchObject({ city: "rabat", location: generalLocation("rabat") });
+    expect(context?.project).toMatchObject({ city: "rabat", location: generalLocation() });
     const result = await caller.mutation(api.quotes.index.submitInitialQuote, { projectId: state.projectId, ...quoteInput });
     const quote = await caller.query(api.quotes.index.getMyQuote, { quoteId: result.quoteId });
     expect(quote?.project).toEqual(context?.project);
@@ -235,16 +235,16 @@ describe("GEO4.2 real submission and approval workflow", () => {
     noRestrictedDetails(quote);
   });
 
-  test("documents that a fully cleared snapshot with an old city remains indistinguishable from legacy-only", async () => {
+  test("GEO5.1 persists structured mode after clearing and blocks the old city from restoring publication readiness", async () => {
     const state = await setup();
     await state.owner.mutation(api.projects.index.saveLocation, { projectId: state.projectId, city: "rabat", neighborhood });
     await saveRural(state);
     await state.owner.mutation(api.projects.index.saveStructuredLocation, { projectId: state.projectId, ...empty });
     const before = await storedProject(state);
     for (const field of Object.keys(empty)) expect(before).not.toHaveProperty(field);
-    await submit(state);
-    await approve(state);
-    expect(await storedProject(state)).toMatchObject({ city: "rabat", neighborhood, status: "published" });
+    expect(before).toMatchObject({ city: "rabat", neighborhood, locationMode: "structured" });
+    await rejectedWithoutEffects(state, () => submit(state), "PROJECT_INCOMPLETE");
+    expect((await storedProject(state)).status).toBe("draft");
   });
 
   test("duplicate pending-review submission preserves history/activity even if Admin must request geographic changes", async () => {

@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Pencil } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -15,6 +15,21 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { mapConvexFailure } from "@/lib/errors";
 import { createSubmitLock, focusFirstInvalidField } from "@/lib/forms/submit";
+import { getRegions } from "@/lib/geography/morocco";
+import {
+  applyProvinceChange,
+  applyRegionChange,
+  emptyLocationForm,
+  hasStructuredLocation,
+  isWizardLocationComplete,
+  locationFormFromDraft,
+  locationFormsMatch,
+  locationStepTransition,
+  prepareStructuredLocationSave,
+  provinceOptionsForRegion,
+  wizardReviewLocation,
+  type LocationFormState,
+} from "@/lib/geography/wizard-location";
 import { routes } from "@/lib/routes";
 
 /** Five wizard screens: 1–4 collect answers, 5 is review + publish. */
@@ -36,11 +51,14 @@ const stepBefore = (step: Step) => WIZARD_ORDER[Math.max(0, WIZARD_ORDER.indexOf
 
 /** First unanswered screen in display order; a complete draft opens on the review. */
 export function wizardResumeStep(
-  draft: Pick<Draft, "primaryCategory" | "customCategoryText" | "city" | "title" | "propertyType" | "surface" | "surfaceUnknown" | "description" | "timeline">,
+  draft: Pick<Draft, "primaryCategory" | "customCategoryText" | "city" | "title" | "propertyType" | "surface" | "surfaceUnknown" | "description" | "timeline"> & {
+    location?: Draft["location"] | null;
+    locationMode?: Draft["locationMode"];
+  },
 ): Step {
   const complete: Record<Exclude<Step, 5>, boolean> = {
     1: Boolean(draft.primaryCategory) && !(draft.primaryCategory === "other" && !draft.customCategoryText),
-    2: Boolean(draft.city),
+    2: isWizardLocationComplete(draft),
     3: Boolean(draft.title && draft.propertyType && draft.description) && (draft.surfaceUnknown || draft.surface !== null),
     4: Boolean(draft.timeline),
   };
@@ -75,7 +93,7 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
   );
   const initialize = useMutation(api.projects.index.initializeDraft);
   const saveCategory = useMutation(api.projects.index.saveCategory);
-  const saveLocation = useMutation(api.projects.index.saveLocation);
+  const saveStructuredLocation = useMutation(api.projects.index.saveStructuredLocation);
   const saveDetails = useMutation(api.projects.index.saveDetails);
   const saveTimeline = useMutation(api.projects.index.saveTimeline);
   const publish = useMutation(api.projects.index.publishProject);
@@ -92,6 +110,9 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
   const [fieldError, setFieldError] = useState<{ name: string; message: string } | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [returnToReview, setReturnToReview] = useState(false);
+  const [locationForm, setLocationForm] = useState<LocationFormState>(emptyLocationForm);
+  const [locationBaseline, setLocationBaseline] = useState<LocationFormState>(emptyLocationForm);
+  const locationDirty = !locationFormsMatch(locationForm, locationBaseline);
 
   useEffect(() => {
     if (user === null) router.replace(routes.signIn);
@@ -119,6 +140,9 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
   useEffect(() => {
     if (wizard?.draft && loadedDraft.current !== wizard.draft.id) {
       loadedDraft.current = wizard.draft.id;
+      const restored = locationFormFromDraft(wizard.draft);
+      setLocationForm(restored);
+      setLocationBaseline(restored);
       setStep(wizardResumeStep(wizard.draft));
     }
   }, [wizard?.draft]);
@@ -197,13 +221,12 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
           customCategoryText: category === "other" ? custom : undefined,
         });
       } else if (step === 2) {
-        const city = String(values.get("city") ?? "") as Wizard["cityOptions"][number];
-        if (!data.cityOptions.includes(city)) return fail(form, "city", t("validation.city"));
-        await saveLocation({
-          projectId: draft.id,
-          city,
-          neighborhood: String(values.get("neighborhood") ?? ""),
-        });
+        const mode = exit ? "draft" : "continue";
+        const prepared = prepareStructuredLocationSave(locationForm, mode);
+        if (!prepared.ok) return fail(form, prepared.field, t(prepared.messageKey));
+        await saveStructuredLocation({ projectId: draft.id, ...prepared.payload });
+        setLocationForm(prepared.form);
+        setLocationBaseline(prepared.form);
       } else if (step === 3) {
         const title = String(values.get("title") ?? "").trim();
         const description = String(values.get("description") ?? "").trim();
@@ -232,13 +255,18 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
         await saveTimeline({ projectId: draft.id, timeline });
       }
 
-      if (exit) {
+      const transition = locationStepTransition({
+        saveSucceeded: true,
+        mode: exit ? "draft" : "continue",
+        returnToReview,
+      });
+      if (transition === "exit") {
         showToast(t("draftSaved"));
         router.push(routes.clientDashboard);
-      } else if (returnToReview) {
+      } else if (transition === "review") {
         setReturnToReview(false);
         go(5);
-      } else {
+      } else if (transition === "next") {
         go(stepAfter(step));
       }
     } catch (caught) {
@@ -255,6 +283,10 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
   }
 
   async function submitProject() {
+    if (locationDirty) {
+      setError(t("validation.unsavedLocation"));
+      return;
+    }
     if (!lock.current.tryAcquire()) return;
     setSaving(true);
     setError(null);
@@ -323,7 +355,18 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
           >
             {intro}
             <div className="min-w-0">
-              <StepBody data={data} draft={draft} fieldError={fieldError} step={step as Exclude<Step, 5>} t={t} />
+              <StepBody
+                data={data}
+                draft={draft}
+                fieldError={fieldError}
+                locationForm={locationForm}
+                onCommuneChange={(communeName) => setLocationForm((form) => ({ ...form, communeName }))}
+                onLocalityChange={(localityName) => setLocationForm((form) => ({ ...form, localityName }))}
+                onProvinceChange={(provinceCode) => setLocationForm((form) => applyProvinceChange(form, provinceCode))}
+                onRegionChange={(regionCode) => setLocationForm((form) => applyRegionChange(form, regionCode))}
+                step={step as Exclude<Step, 5>}
+                t={t}
+              />
               {error ? (
                 <div className="mt-6">
                   <FriendlyAlert>{error}</FriendlyAlert>
@@ -338,6 +381,7 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
             <Review
               draft={draft}
               error={error}
+              locationDirty={locationDirty}
               t={t}
               onEdit={(editStep) => {
                 setReturnToReview(true);
@@ -355,18 +399,141 @@ export function ProjectWizard({ initialProjectId }: { initialProjectId?: Id<"pro
 /** Question on the left, answer on the right; stacked on small screens. */
 const WIZARD_GRID = "grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-20";
 
+export function ProjectLocationFields({
+  form,
+  t,
+  fieldError,
+  legacyCityName,
+  onRegionChange,
+  onProvinceChange,
+  onCommuneChange,
+  onLocalityChange,
+}: {
+  form: LocationFormState;
+  t: Translate;
+  fieldError: { name: string; message: string } | null;
+  legacyCityName: string | null;
+  onRegionChange: (regionCode: string) => void;
+  onProvinceChange: (provinceCode: string) => void;
+  onCommuneChange: (communeName: string) => void;
+  onLocalityChange: (localityName: string) => void;
+}) {
+  const locale = useLocale() === "fr" ? "fr" : "en";
+  const provinces = provinceOptionsForRegion(form.regionCode);
+  const provinceDisabled = form.regionCode === "";
+  const message = (name: string) => (fieldError?.name === name ? fieldError.message : undefined);
+  const errorId = (name: string) => `project-${name}-error`;
+  const describedBy = (name: string, extra?: string) =>
+    [extra, message(name) ? errorId(name) : null].filter(Boolean).join(" ") || undefined;
+
+  return (
+    <div className="grid min-w-0 gap-6">
+      <Field label={t("fields.country")}>
+        <p className={`${inputClass} flex items-center bg-[#f7fafb]`} id="project-country">
+          {t("fields.countryValue")}
+        </p>
+      </Field>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Field error={message("regionCode")} errorId={errorId("regionCode")} label={t("fields.region")}>
+          <select
+            aria-describedby={describedBy("regionCode")}
+            aria-invalid={Boolean(message("regionCode"))}
+            aria-required="true"
+            className={inputClass}
+            name="regionCode"
+            onChange={(event) => onRegionChange(event.target.value)}
+            value={form.regionCode}
+          >
+            <option value="">{t("fields.regionPlaceholder")}</option>
+            {getRegions().map((region) => (
+              <option key={region.code} value={region.code}>
+                {locale === "fr" ? region.nameFr : region.nameEn}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field error={message("provinceCode")} errorId={errorId("provinceCode")} label={t("fields.province")}>
+          <select
+            aria-describedby={describedBy("provinceCode", provinceDisabled ? "project-province-hint" : undefined)}
+            aria-invalid={Boolean(message("provinceCode"))}
+            aria-required="true"
+            className={inputClass}
+            disabled={provinceDisabled}
+            name="provinceCode"
+            onChange={(event) => onProvinceChange(event.target.value)}
+            value={form.provinceCode}
+          >
+            <option value="">{t("fields.provincePlaceholder")}</option>
+            {provinces.map((province) => (
+              <option key={province.code} value={province.code}>
+                {locale === "fr" ? province.nameFr : province.nameEn}
+              </option>
+            ))}
+          </select>
+          {provinceDisabled ? (
+            <span className="mt-2 block text-sm font-normal text-muted" id="project-province-hint">
+              {t("fields.provinceDisabled")}
+            </span>
+          ) : null}
+        </Field>
+      </div>
+      <Field error={message("communeName")} errorId={errorId("communeName")} label={t("fields.commune")} optional={t("optional")}>
+        <input
+          aria-describedby={describedBy("communeName")}
+          aria-invalid={Boolean(message("communeName"))}
+          autoComplete="off"
+          className={inputClass}
+          maxLength={100}
+          name="communeName"
+          onChange={(event) => onCommuneChange(event.target.value)}
+          placeholder={t("fields.communePlaceholder")}
+          value={form.communeName}
+        />
+      </Field>
+      <Field error={message("localityName")} errorId={errorId("localityName")} label={t("fields.locality")}>
+        <input
+          aria-describedby={describedBy("localityName")}
+          aria-invalid={Boolean(message("localityName"))}
+          aria-required="true"
+          autoComplete="off"
+          className={inputClass}
+          maxLength={100}
+          name="localityName"
+          onChange={(event) => onLocalityChange(event.target.value)}
+          placeholder={t("fields.localityPlaceholder")}
+          value={form.localityName}
+        />
+      </Field>
+      {legacyCityName ? (
+        <p className="m-0 text-sm leading-6 text-muted">{t("fields.legacyLocation", { city: legacyCityName })}</p>
+      ) : null}
+      <p className="m-0 text-sm leading-6 text-muted">{t("locationPrivacy")}</p>
+    </div>
+  );
+}
+
 function StepBody({
   step,
   draft,
   data,
   t,
   fieldError,
+  locationForm,
+  onRegionChange,
+  onProvinceChange,
+  onCommuneChange,
+  onLocalityChange,
 }: {
   step: Exclude<Step, 5>;
   draft: Draft;
   data: Wizard;
   t: Translate;
   fieldError: { name: string; message: string } | null;
+  locationForm: LocationFormState;
+  onRegionChange: (regionCode: string) => void;
+  onProvinceChange: (provinceCode: string) => void;
+  onCommuneChange: (communeName: string) => void;
+  onLocalityChange: (localityName: string) => void;
 }) {
   const message = (name: string) => (fieldError?.name === name ? fieldError.message : undefined);
   const errorId = (name: string) => `project-${name}-error`;
@@ -415,36 +582,18 @@ function StepBody({
   }
 
   if (step === 2) {
+    const legacyCity = !hasStructuredLocation(draft) && draft.city ? t(`cityOptions.${draft.city}`) : null;
     return (
-      <div className="grid gap-6">
-        <Field error={message("city")} errorId={errorId("city")} label={t("fields.city")}>
-          <select
-            aria-describedby={message("city") ? errorId("city") : undefined}
-            aria-invalid={Boolean(message("city"))}
-            className={inputClass}
-            defaultValue={draft.city ?? ""}
-            name="city"
-          >
-            <option disabled value="">
-              {t("fields.cityPlaceholder")}
-            </option>
-            {data.cityOptions.map((item) => (
-              <option key={item} value={item}>
-                {t(`cityOptions.${item}`)}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label={t("fields.neighborhood")} optional={t("optional")}>
-          <input
-            className={inputClass}
-            defaultValue={draft.neighborhood ?? ""}
-            maxLength={100}
-            name="neighborhood"
-          />
-        </Field>
-        <p className="m-0 text-sm leading-6 text-muted">{t("locationPrivacy")}</p>
-      </div>
+      <ProjectLocationFields
+        fieldError={fieldError}
+        form={locationForm}
+        legacyCityName={legacyCity}
+        onCommuneChange={onCommuneChange}
+        onLocalityChange={onLocalityChange}
+        onProvinceChange={onProvinceChange}
+        onRegionChange={onRegionChange}
+        t={t}
+      />
     );
   }
 
@@ -554,12 +703,15 @@ function Review({
   t,
   onEdit,
   error,
+  locationDirty,
 }: {
   draft: Draft;
   t: Translate;
   onEdit: (step: Exclude<Step, 5>) => void;
   error: string | null;
+  locationDirty: boolean;
 }) {
+  const locale = useLocale() === "fr" ? "fr" : "en";
   const category = draft.primaryCategory
     ? `${t(`categoryOptions.${draft.primaryCategory}`)}${
         draft.primaryCategory === "other" && draft.customCategoryText
@@ -596,10 +748,17 @@ function Review({
     {
       step: 2,
       label: t("review.location"),
-      value:
-        [draft.city ? t(`cityOptions.${draft.city}`) : null, draft.neighborhood]
-          .filter(Boolean)
-          .join(" · ") || t("notProvided"),
+      value: wizardReviewLocation(
+        draft,
+        locale,
+        {
+          unspecified: t("notProvided"),
+          incomplete: t("review.locationIncomplete"),
+          unsaved: t("review.locationUnsaved"),
+          legacyCity: (code) => t(`cityOptions.${code}`),
+        },
+        locationDirty,
+      ),
     },
     { step: 1, label: t("review.category"), value: category },
     {

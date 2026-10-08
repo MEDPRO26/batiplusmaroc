@@ -111,6 +111,8 @@ import type * as projects_attachments from "../projects/attachments.js";
 import type * as projects_constants from "../projects/constants.js";
 import type * as projects_download from "../projects/download.js";
 import type * as projects_index from "../projects/index.js";
+import type * as projects_location from "../projects/location.js";
+import type * as projects_locationValidation from "../projects/locationValidation.js";
 import type * as projects_marketplace from "../projects/marketplace.js";
 import type * as projects_marketplaceSearch from "../projects/marketplaceSearch.js";
 import type * as projects_media from "../projects/media.js";
@@ -258,6 +260,8 @@ declare const fullApi: ApiFromModules<{
   "projects/constants": typeof projects_constants;
   "projects/download": typeof projects_download;
   "projects/index": typeof projects_index;
+  "projects/location": typeof projects_location;
+  "projects/locationValidation": typeof projects_locationValidation;
   "projects/marketplace": typeof projects_marketplace;
   "projects/marketplaceSearch": typeof projects_marketplaceSearch;
   "projects/media": typeof projects_media;

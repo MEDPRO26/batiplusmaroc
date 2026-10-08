@@ -35,6 +35,8 @@ import {
   toDetailedProjectLocation,
   toGeneralProjectLocation,
 } from "./location";
+import { isWizardLocationComplete } from "../../lib/geography/wizard-location";
+import { usesStructuredProjectLocation } from "../../lib/geography/project-location";
 import {
   assertProjectLocationReady,
   normalizeStructuredProjectLocation,
@@ -42,6 +44,7 @@ import {
 
 const draftValidator = v.object({
   location: detailedProjectLocationValidator,
+  locationMode: v.union(v.literal("structured"), v.null()),
   id: v.id("projects"),
   primaryCategory: v.union(projectCategoryValidator, v.null()),
   customCategoryText: v.union(v.string(), v.null()),
@@ -181,6 +184,11 @@ export function projectWizardResumeStep(
     | "primaryCategory"
     | "customCategoryText"
     | "city"
+    | "locationMode"
+    | "regionCode"
+    | "provinceCode"
+    | "communeName"
+    | "localityName"
     | "title"
     | "propertyType"
     | "surface"
@@ -194,7 +202,7 @@ export function projectWizardResumeStep(
     (project.primaryCategory === "other" && !project.customCategoryText)
   )
     return 1 as const;
-  if (!project.city) return 2 as const;
+  if (!isWizardLocationComplete(project)) return 2 as const;
   if (
     !project.title ||
     !project.propertyType ||
@@ -381,6 +389,7 @@ export const getWizard = query({
       draft: {
         id: draft._id,
         location: toDetailedProjectLocation(draft),
+        locationMode: draft.locationMode ?? null,
         primaryCategory: draft.primaryCategory ?? null,
         customCategoryText: draft.customCategoryText ?? null,
         city: draft.city ?? null,
@@ -478,6 +487,8 @@ export const saveLocation = mutation({
   handler: async (ctx, args) => {
     const { userId } = await requireClientUser(ctx);
     const p = await requireOwnedEditableProject(ctx, userId, args.projectId);
+    if (usesStructuredProjectLocation(p))
+      throw new ConvexError("PROJECT_STRUCTURED_LOCATION_REQUIRED");
     await ctx.db.patch(p._id, {
       city: args.city,
       neighborhood: optionalText(
@@ -493,7 +504,7 @@ export const saveLocation = mutation({
   },
 });
 
-/** Save geography only; legacy location and wizard progression remain independently compatible. */
+/** Persist structured intent and geography atomically; retain historical city/neighborhood and progress. */
 export const saveStructuredLocation = mutation({
   args: {
     projectId: v.id("projects"),
@@ -513,6 +524,7 @@ export const saveStructuredLocation = mutation({
     const location = normalizeStructuredProjectLocation(args);
     await ctx.db.patch(project._id, {
       ...location,
+      locationMode: "structured",
       countryCode: "MA",
       updatedAt: Date.now(),
     });
