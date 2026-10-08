@@ -240,6 +240,10 @@ export default defineSchema({
   projects: defineTable({
     clientId: v.id("users"), primaryCategory: v.optional(projectCategory), customCategoryText: v.optional(v.string()),
     city: v.optional(companyServiceArea), neighborhood: v.optional(v.string()), countryCode: v.literal("MA"),
+    regionCode: v.optional(v.string()),
+    provinceCode: v.optional(v.string()),
+    communeName: v.optional(v.string()),
+    localityName: v.optional(v.string()),
     title: v.optional(v.string()), propertyType: v.optional(projectPropertyType), surface: v.optional(v.number()),
     surfaceUnknown: v.boolean(), description: v.optional(v.string()),
     /** Deploy-1 compatibility fields. Current product code must not read or write them. */
@@ -263,6 +267,8 @@ export default defineSchema({
     .index("by_status_and_visibility", ["status", "visibility"])
     .index("by_status_visibility_publishedAt", ["status", "visibility", "publishedAt"])
     .index("by_status_visibility_city_publishedAt", ["status", "visibility", "city", "publishedAt"])
+    .index("by_status_visibility_region_publishedAt", ["status", "visibility", "regionCode", "publishedAt"])
+    .index("by_status_visibility_province_publishedAt", ["status", "visibility", "provinceCode", "publishedAt"])
     .index("by_status_visibility_category_publishedAt", ["status", "visibility", "primaryCategory", "publishedAt"])
     .index("by_status_visibility_timeline_publishedAt", ["status", "visibility", "timeline", "publishedAt"])
     .index("by_status_visibility_propertyType_publishedAt", ["status", "visibility", "propertyType", "publishedAt"])
