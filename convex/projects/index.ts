@@ -1,6 +1,8 @@
 import { assertNotVerificationStorage } from "../storage/verificationPrivacy";
+import { paginationOptsValidator, paginationResultValidator, type OrderedQuery } from "convex/server";
 import { ConvexError, v } from "convex/values";
-import type { Doc } from "../_generated/dataModel";
+import { getProvince, isValidRegion, isProvinceInRegion } from "../../lib/geography/morocco";
+import type { DataModel, Doc } from "../_generated/dataModel";
 import { env, mutation, query } from "../_generated/server";
 import { requireOwnedAttachment } from "./download";
 import {
@@ -22,6 +24,7 @@ import {
   projectCategoryValidator,
   projectCities,
   projectCityValidator,
+  projectMarketplaceSortValidator,
   projectPropertyTypes,
   projectPropertyTypeValidator,
   projectStatusValidator,
@@ -37,6 +40,7 @@ import {
 } from "./location";
 import { isWizardLocationComplete } from "../../lib/geography/wizard-location";
 import { usesStructuredProjectLocation } from "../../lib/geography/project-location";
+import { normalizeProjectSearch } from "./marketplaceSearch";
 import {
   assertProjectLocationReady,
   normalizeStructuredProjectLocation,
@@ -358,6 +362,84 @@ export const listPublicProjects = query({
           thumbnailUrl: await thumbnailFor(ctx, project._id),
         })),
     );
+  },
+});
+
+/** Anonymous discovery through native cursors and explicit public DTOs. */
+export const listPublicProjectsPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    regionCode: v.optional(v.string()),
+    provinceCode: v.optional(v.string()),
+    category: v.optional(projectCategoryValidator),
+    search: v.optional(v.string()),
+    /** Nonblank text search takes native relevance precedence over chronological sort. */
+    sortBy: v.optional(projectMarketplaceSortValidator),
+  },
+  returns: paginationResultValidator(publicProjectValidator),
+  handler: async (ctx, args) => {
+    if (args.regionCode !== undefined && !isValidRegion(args.regionCode)) {
+      throw new ConvexError("INVALID_PROJECT_REGION");
+    }
+    if (args.provinceCode !== undefined) {
+      if (!getProvince(args.provinceCode)) throw new ConvexError("INVALID_PROJECT_PROVINCE");
+      if (args.regionCode === undefined) throw new ConvexError("PROJECT_REGION_REQUIRED");
+      if (!isProvinceInRegion(args.provinceCode, args.regionCode)) {
+        throw new ConvexError("PROJECT_PROVINCE_REGION_MISMATCH");
+      }
+    }
+
+    const search = normalizeProjectSearch(args.search);
+    const order = args.sortBy === "oldest" ? "asc" : "desc";
+    const base = ctx.db.query("projects");
+    let candidates: OrderedQuery<DataModel["projects"]>;
+    if (search) {
+      // The geographic search index remains staged. Area residuals still cost candidate reads.
+      candidates = base.withSearchIndex("search_marketplace", (q) => {
+        const scoped = q.search("marketplaceSearchText", search)
+          .eq("status", "published").eq("visibility", "marketplace");
+        return args.category === undefined ? scoped : scoped.eq("primaryCategory", args.category);
+      });
+    } else if (args.provinceCode !== undefined) {
+      candidates = base.withIndex("by_status_visibility_province_publishedAt", (q) =>
+        q.eq("status", "published").eq("visibility", "marketplace").eq("provinceCode", args.provinceCode),
+      ).order(order);
+    } else if (args.regionCode !== undefined) {
+      candidates = base.withIndex("by_status_visibility_region_publishedAt", (q) =>
+        q.eq("status", "published").eq("visibility", "marketplace").eq("regionCode", args.regionCode),
+      ).order(order);
+    } else if (args.category !== undefined) {
+      candidates = base.withIndex("by_status_visibility_category_publishedAt", (q) =>
+        q.eq("status", "published").eq("visibility", "marketplace").eq("primaryCategory", args.category),
+      ).order(order);
+    } else {
+      candidates = base.withIndex("by_status_visibility_publishedAt", (q) =>
+        q.eq("status", "published").eq("visibility", "marketplace"),
+      ).order(order);
+    }
+
+    // Match the existing public completeness policy, including nullable legacy timelines.
+    // Predicates precede pagination, so incomplete or sparse candidates cannot hide later matches.
+    const page = await candidates.filter((q) => q.and(
+      q.neq(q.field("title"), undefined), q.neq(q.field("title"), ""),
+      q.neq(q.field("description"), undefined), q.neq(q.field("description"), ""),
+      q.neq(q.field("primaryCategory"), undefined),
+      args.regionCode === undefined ? true : q.eq(q.field("regionCode"), args.regionCode),
+      args.provinceCode === undefined ? true : q.eq(q.field("provinceCode"), args.provinceCode),
+      args.category === undefined ? true : q.eq(q.field("primaryCategory"), args.category),
+    )).paginate(args.paginationOpts);
+
+    return { ...page, page: await Promise.all(page.page.map(async (project) => ({
+      id: project._id,
+      title: project.title!,
+      description: project.description!,
+      city: usesStructuredProjectLocation(project) ? null : project.city ?? null,
+      location: toGeneralProjectLocation(project),
+      primaryCategory: project.primaryCategory!,
+      timeline: project.timeline ?? null,
+      publishedAt: project.publishedAt ?? null,
+      thumbnailUrl: await thumbnailFor(ctx, project._id),
+    }))) };
   },
 });
 

@@ -2,60 +2,56 @@
 
 import { useProjectLocationLabel } from "../hooks/use-project-location-label";
 
-import { useQuery } from "convex/react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { MapPin, Search, SlidersHorizontal, X } from "lucide-react";
 import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { api } from "@/convex/_generated/api";
-import { projectCategories, projectCities } from "@/convex/projects/constants";
+import { projectCategories, type projectMarketplaceSortOptions } from "@/convex/projects/constants";
 import { Link } from "@/i18n/navigation";
 import { routes, type AppRoute } from "@/lib/routes";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { joinClassNames } from "@/lib/utils";
+import { ProjectGeographicFilters, type ProjectGeographicSelection } from "./project-geographic-filters";
 
-type PublicProject = FunctionReturnType<typeof api.projects.index.listPublicProjects>[number];
+type PublicProject = FunctionReturnType<typeof api.projects.index.listPublicProjectsPaginated>["page"][number];
 type Category = (typeof projectCategories)[number];
-type City = (typeof projectCities)[number];
+type SortBy = (typeof projectMarketplaceSortOptions)[number];
+const PAGE_SIZE = 12;
 
 export function PublicProjectBrowse({ initialSearch = "" }: { initialSearch?: string }) {
-  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("browseProjectsPage");
-  const tWizard = useTranslations("projectWizard");
-  const projects = useQuery(api.projects.index.listPublicProjects);
   const user = useQuery(api.users.currentUser);
   const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState<Category | "all">("all");
-  const [city, setCity] = useState<City | "all">("all");
+  const [geography, setGeography] = useState<ProjectGeographicSelection>({ regionCode: "", provinceCode: "" });
+  const [sortBy, setSortBy] = useState<SortBy>("newest");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const debouncedSearch = useDebouncedValue(search, 250);
+  const searchActive = Boolean(debouncedSearch.trim());
 
-  const filtered = useMemo(() => {
-    if (!projects) return [];
-    const query = normalize(search);
-    return projects.filter((project) => {
-      if (category !== "all" && project.primaryCategory !== category) return false;
-      if (city !== "all" && project.city !== city) return false;
-      if (!query) return true;
-      const haystack = normalize(
-        [
-          project.title,
-          project.description,
-          locationLabel(project),
-          tWizard(`categoryOptions.${project.primaryCategory}`),
-        ].join(" "),
-      );
-      return haystack.includes(query);
-    });
-  }, [category, city, projects, search, tWizard, locationLabel]);
+  const queryArgs = useMemo(() => ({
+    search: debouncedSearch.trim() || undefined,
+    category: category === "all" ? undefined : category,
+    regionCode: geography.regionCode || undefined,
+    provinceCode: geography.provinceCode || undefined,
+    sortBy,
+  }), [category, debouncedSearch, geography, sortBy]);
+  const { results: projects, status, loadMore } = usePaginatedQuery(
+    api.projects.index.listPublicProjectsPaginated, queryArgs, { initialNumItems: PAGE_SIZE },
+  );
 
-  const selected = filtered.find((project) => project.id === selectedId) ?? null;
-  const activeFilterCount = (category !== "all" ? 1 : 0) + (city !== "all" ? 1 : 0);
+  const selected = projects.find((project) => project.id === selectedId) ?? null;
+  const activeFilterCount = (category !== "all" ? 1 : 0) + (geography.regionCode ? 1 : 0) + (geography.provinceCode ? 1 : 0);
+  const closeFilters = useCallback(() => setFiltersOpen(false), []);
+  const closePreview = useCallback(() => setSelectedId(null), []);
 
   function clearFilters() {
     setCategory("all");
-    setCity("all");
+    setGeography({ regionCode: "", provinceCode: "" });
     setSearch("");
     setFiltersOpen(false);
   }
@@ -109,6 +105,8 @@ export function PublicProjectBrowse({ initialSearch = "" }: { initialSearch?: st
               ) : null}
             </div>
             <button
+              aria-controls="public-project-mobile-filters"
+              aria-expanded={filtersOpen}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand-border bg-white px-4 text-sm font-semibold text-ink active:scale-[0.96] lg:hidden"
               onClick={() => setFiltersOpen(true)}
               type="button"
@@ -150,21 +148,34 @@ export function PublicProjectBrowse({ initialSearch = "" }: { initialSearch?: st
           <aside className="hidden self-start lg:sticky lg:top-24 lg:block">
             <FilterPanel
               category={category}
-              city={city}
+              geography={geography}
+              idPrefix="browse-projects-desktop"
               onCategoryChange={setCategory}
-              onCityChange={setCity}
+              onGeographyChange={setGeography}
               onClear={clearFilters}
               showClear={activeFilterCount > 0 || search.length > 0}
             />
           </aside>
 
-          <section aria-busy={projects === undefined} aria-label={t("resultsLabel")}>
+          <section aria-busy={status === "LoadingFirstPage" || status === "LoadingMore"} aria-label={t("resultsLabel")}>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <p aria-live="polite" className="m-0 text-sm text-muted">
-                {projects === undefined
+                {status === "LoadingFirstPage"
                   ? t("loading")
-                  : t("resultsCount", { count: filtered.length })}
+                  : projects.length === 0 && status !== "Exhausted"
+                    ? t("scanning")
+                    : t("resultsCount", { count: projects.length })}
               </p>
+              {searchActive ? <p aria-live="polite" className="m-0 text-sm font-semibold text-ink">{t("relevance")}</p> : (
+                <label className="flex items-center gap-2 text-sm text-muted" htmlFor="browse-projects-sort">
+                  <span className="sr-only">{t("sortLabel")}</span>
+                  <select className="min-h-11 rounded-sm border border-brand-border bg-white px-3 text-sm text-ink focus-visible:ring-3 focus-visible:ring-brand/15"
+                    id="browse-projects-sort" name="sortBy" value={sortBy} onChange={(event) => setSortBy(event.target.value as SortBy)}>
+                    <option value="newest">{t("newest")}</option>
+                    <option value="oldest">{t("oldest")}</option>
+                  </select>
+                </label>
+              )}
               {activeFilterCount > 0 || search ? (
                 <button
                   className="text-sm font-semibold text-brand hover:underline"
@@ -176,9 +187,9 @@ export function PublicProjectBrowse({ initialSearch = "" }: { initialSearch?: st
               ) : null}
             </div>
 
-            {projects === undefined ? (
+            {status === "LoadingFirstPage" ? (
               <BrowseSkeleton label={t("loading")} />
-            ) : filtered.length === 0 ? (
+            ) : projects.length === 0 && status === "Exhausted" ? (
               <div className="rounded-2xl border border-dashed border-brand-border bg-white px-5 py-12 text-center">
                 <h2 className="m-0 text-lg font-semibold text-ink">{t("emptyTitle")}</h2>
                 <p className="mt-2 mb-0 text-sm leading-6 text-muted">{t("emptyLead")}</p>
@@ -192,9 +203,9 @@ export function PublicProjectBrowse({ initialSearch = "" }: { initialSearch?: st
                   </button>
                 ) : null}
               </div>
-            ) : (
+            ) : projects.length > 0 ? (
               <ul className="m-0 list-none divide-y divide-[#e4e8eb] overflow-hidden rounded-2xl border border-brand-border bg-white p-0">
-                {filtered.map((project) => (
+                {projects.map((project) => (
                   <li key={project.id}>
                     <ProjectRow
                       onOpen={() => setSelectedId(project.id)}
@@ -204,24 +215,33 @@ export function PublicProjectBrowse({ initialSearch = "" }: { initialSearch?: st
                   </li>
                 ))}
               </ul>
-            )}
+            ) : <p className="m-0 rounded-2xl border border-brand-border bg-white px-5 py-8 text-sm text-muted" role="status">{t("scanning")}</p>}
+            {status === "CanLoadMore" || status === "LoadingMore" ? (
+              <div className="mt-5 flex justify-center">
+                <button className="min-h-11 rounded-sm border border-brand bg-white px-5 text-sm font-semibold text-brand focus-visible:ring-3 focus-visible:ring-brand/15 disabled:cursor-wait disabled:opacity-60"
+                  disabled={status === "LoadingMore"} onClick={() => loadMore(PAGE_SIZE)} type="button">
+                  {status === "LoadingMore" ? t("loadingMore") : t("loadMore")}
+                </button>
+              </div>
+            ) : status === "Exhausted" && projects.length > 0 ? <p aria-live="polite" className="mt-5 mb-0 text-center text-sm text-muted">{t("exhausted")}</p> : null}
           </section>
         </div>
       </main>
 
-      <FilterSheet onClose={() => setFiltersOpen(false)} open={filtersOpen} title={t("filters")}>
+      <FilterSheet onClose={closeFilters} open={filtersOpen} title={t("filters")}>
         <FilterPanel
           category={category}
-          city={city}
+          geography={geography}
+          idPrefix="browse-projects-mobile"
           onCategoryChange={setCategory}
-          onCityChange={setCity}
+          onGeographyChange={setGeography}
           onClear={clearFilters}
           showClear={activeFilterCount > 0 || search.length > 0}
         />
       </FilterSheet>
 
       <ProjectPreviewSheet
-        onClose={() => setSelectedId(null)}
+        onClose={closePreview}
         project={selected}
         proposeHref={proposeHref}
         signedInCompany={user?.accountType === "company"}
@@ -314,16 +334,18 @@ function ProjectRow({
 
 function FilterPanel({
   category,
-  city,
+  geography,
+  idPrefix,
   onCategoryChange,
-  onCityChange,
+  onGeographyChange,
   onClear,
   showClear,
 }: {
   category: Category | "all";
-  city: City | "all";
+  geography: ProjectGeographicSelection;
+  idPrefix: string;
   onCategoryChange: (value: Category | "all") => void;
-  onCityChange: (value: City | "all") => void;
+  onGeographyChange: (value: ProjectGeographicSelection) => void;
   onClear: () => void;
   showClear: boolean;
 }) {
@@ -347,7 +369,7 @@ function FilterPanel({
           <FilterOption
             checked={category === "all"}
             label={t("allCategories")}
-            name="category"
+            name={`${idPrefix}-category`}
             onChange={() => onCategoryChange("all")}
           />
           {projectCategories.map((item) => (
@@ -355,33 +377,16 @@ function FilterPanel({
               checked={category === item}
               key={item}
               label={tWizard(`categoryOptions.${item}`)}
-              name="category"
+              name={`${idPrefix}-category`}
               onChange={() => onCategoryChange(item)}
             />
           ))}
         </div>
       </fieldset>
 
-      <fieldset className="mt-6 border-0 border-t border-[#e4e8eb] p-0 pt-6">
-        <legend className="text-xs font-semibold tracking-[0.04em] text-muted uppercase">{t("cityFilter")}</legend>
-        <div className="mt-3 grid max-h-64 gap-1.5 overflow-y-auto pr-1">
-          <FilterOption
-            checked={city === "all"}
-            label={t("allCities")}
-            name="city"
-            onChange={() => onCityChange("all")}
-          />
-          {projectCities.map((item) => (
-            <FilterOption
-              checked={city === item}
-              key={item}
-              label={tWizard(`cityOptions.${item}`)}
-              name="city"
-              onChange={() => onCityChange(item)}
-            />
-          ))}
-        </div>
-      </fieldset>
+      <div className="mt-6 border-t border-[#e4e8eb] pt-6">
+        <ProjectGeographicFilters className="grid gap-4" idPrefix={idPrefix} onChange={onGeographyChange} value={geography} />
+      </div>
     </div>
   );
 }
@@ -398,7 +403,7 @@ function FilterOption({
   onChange: () => void;
 }) {
   return (
-    <label className="flex min-h-9 cursor-pointer items-center gap-2.5 rounded-sm px-2 text-sm text-ink hover:bg-[#f7f9fb]">
+    <label className="flex min-h-9 cursor-pointer items-center gap-2.5 rounded-sm px-2 text-sm text-ink hover:bg-[#f7f9fb] focus-within:ring-3 focus-within:ring-brand/15">
       <input
         checked={checked}
         className="size-3.5 accent-brand"
@@ -537,25 +542,43 @@ function FilterSheet({
   children: ReactNode;
 }) {
   const t = useTranslations("browseProjectsPage");
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!open) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      if (event.key !== "Tab") return;
+      const focusable = panelRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), select:not([disabled]), input:not([disabled]), a[href]');
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = previous;
+      window.removeEventListener("keydown", onKeyDown);
+      previousFocus?.focus();
     };
-  }, [open]);
+  }, [onClose, open]);
   if (!open) return null;
   const sheet = (
-    <div className="fixed inset-0 z-[70] lg:hidden" role="presentation">
+    <div aria-label={title} aria-modal="true" className="fixed inset-0 z-[70] lg:hidden" id="public-project-mobile-filters" role="dialog">
       <button aria-label={t("closeFilters")} className="absolute inset-0 bg-ink/45" onClick={onClose} type="button" />
-      <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-[0_-12px_40px_rgb(23_61_99/0.18)]">
+      <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-2xl bg-white p-5 shadow-[0_-12px_40px_rgb(23_61_99/0.18)]" ref={panelRef}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="m-0 text-base font-semibold text-ink">{title}</h2>
           <button
             aria-label={t("closeFilters")}
             className="grid size-10 place-items-center rounded-sm hover:bg-brand-soft"
             onClick={onClose}
+            ref={closeRef}
             type="button"
           >
             <X aria-hidden className="size-5" />
@@ -585,6 +608,11 @@ function BrowseSkeleton({ label }: { label: string }) {
   );
 }
 
-function normalize(value: string) {
-  return value.trim().replace(/\s+/g, " ").normalize("NFKC").toLowerCase();
+function useDebouncedValue(value: string, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delay);
+    return () => window.clearTimeout(timer);
+  }, [delay, value]);
+  return debounced;
 }
