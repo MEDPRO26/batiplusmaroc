@@ -1,0 +1,601 @@
+{
+  "sourceUrl": "https://www.hcp.ma/Population-legale-du-Royaume-du-Maroc-repartie-par-regions-provinces-et-prefectures-et-communes-selon-les-resultats-du_a3974.html",
+  "workbookUrl": "https://www.hcp.ma/file/242341/",
+  "workbookSha256": "7e9d3d402cc2fd0d9c4fc941c4f23c6a5e5ddcbefbba80b7540267f8e2728dca",
+  "worksheet": "Population_légale",
+  "extraction": "Direct worksheet columns A (French label) and G (formatted geographic code); first administrative occurrence. Region parent read from the preceding region header. Excludes urban/rural repeats and subdivisions.",
+  "counts": {
+    "regions": 12,
+    "provinces": 62,
+    "prefectures": 13
+  },
+  "regions": [
+    {
+      "code": "01",
+      "label": "Région de Tanger-Tétouan-Al Hoceima",
+      "sourceRow": 9
+    },
+    {
+      "code": "02",
+      "label": "Région de l'Oriental",
+      "sourceRow": 10
+    },
+    {
+      "code": "03",
+      "label": "Région de Fès-Meknès",
+      "sourceRow": 11
+    },
+    {
+      "code": "04",
+      "label": "Région de Rabat-Salé-Kénitra",
+      "sourceRow": 12
+    },
+    {
+      "code": "05",
+      "label": "Région de Béni Mellal-Khénifra",
+      "sourceRow": 13
+    },
+    {
+      "code": "06",
+      "label": "Région de Casablanca-Settat",
+      "sourceRow": 14
+    },
+    {
+      "code": "07",
+      "label": "Région de Marrakech-Safi",
+      "sourceRow": 15
+    },
+    {
+      "code": "08",
+      "label": "Région de Drâa-Tafilalet",
+      "sourceRow": 16
+    },
+    {
+      "code": "09",
+      "label": "Région de Souss-Massa",
+      "sourceRow": 17
+    },
+    {
+      "code": "10",
+      "label": "Région de Guelmim-Oued Noun",
+      "sourceRow": 18
+    },
+    {
+      "code": "11",
+      "label": "Région de Laâyoune-Sakia El Hamra",
+      "sourceRow": 19
+    },
+    {
+      "code": "12",
+      "label": "Région de Dakhla-Oued Ed-Dahab",
+      "sourceRow": 20
+    }
+  ],
+  "provinces": [
+    {
+      "code": "01.511",
+      "regionCode": "01",
+      "kind": "prefecture",
+      "label": "Préfecture de Tanger-Assilah",
+      "sourceRow": 49
+    },
+    {
+      "code": "01.573",
+      "regionCode": "01",
+      "kind": "prefecture",
+      "label": "Préfecture de M'diq-Fnideq",
+      "sourceRow": 50
+    },
+    {
+      "code": "01.571",
+      "regionCode": "01",
+      "kind": "province",
+      "label": "Province de Tétouan",
+      "sourceRow": 51
+    },
+    {
+      "code": "01.227",
+      "regionCode": "01",
+      "kind": "province",
+      "label": "Province de Fahs-Anjra",
+      "sourceRow": 52
+    },
+    {
+      "code": "01.331",
+      "regionCode": "01",
+      "kind": "province",
+      "label": "Province de Larache",
+      "sourceRow": 53
+    },
+    {
+      "code": "01.051",
+      "regionCode": "01",
+      "kind": "province",
+      "label": "Province d'Al Hoceima",
+      "sourceRow": 54
+    },
+    {
+      "code": "01.151",
+      "regionCode": "01",
+      "kind": "province",
+      "label": "Province de Chefchaouen",
+      "sourceRow": 55
+    },
+    {
+      "code": "01.405",
+      "regionCode": "01",
+      "kind": "province",
+      "label": "Province d'Ouezzane",
+      "sourceRow": 56
+    },
+    {
+      "code": "02.411",
+      "regionCode": "02",
+      "kind": "prefecture",
+      "label": "Préfecture d'Oujda-Angad",
+      "sourceRow": 58
+    },
+    {
+      "code": "02.381",
+      "regionCode": "02",
+      "kind": "province",
+      "label": "Province de Nador",
+      "sourceRow": 59
+    },
+    {
+      "code": "02.167",
+      "regionCode": "02",
+      "kind": "province",
+      "label": "Province de Driouch",
+      "sourceRow": 60
+    },
+    {
+      "code": "02.275",
+      "regionCode": "02",
+      "kind": "province",
+      "label": "Province de Jerada",
+      "sourceRow": 61
+    },
+    {
+      "code": "02.113",
+      "regionCode": "02",
+      "kind": "province",
+      "label": "Province de Berkane",
+      "sourceRow": 62
+    },
+    {
+      "code": "02.533",
+      "regionCode": "02",
+      "kind": "province",
+      "label": "Province de Taourirt",
+      "sourceRow": 63
+    },
+    {
+      "code": "02.265",
+      "regionCode": "02",
+      "kind": "province",
+      "label": "Province de Guercif",
+      "sourceRow": 64
+    },
+    {
+      "code": "02.251",
+      "regionCode": "02",
+      "kind": "province",
+      "label": "Province de Figuig",
+      "sourceRow": 65
+    },
+    {
+      "code": "03.231",
+      "regionCode": "03",
+      "kind": "prefecture",
+      "label": "Préfecture de Fès",
+      "sourceRow": 67
+    },
+    {
+      "code": "03.061",
+      "regionCode": "03",
+      "kind": "prefecture",
+      "label": "Préfecture de Meknès",
+      "sourceRow": 68
+    },
+    {
+      "code": "03.171",
+      "regionCode": "03",
+      "kind": "province",
+      "label": "Province d'El Hajeb",
+      "sourceRow": 69
+    },
+    {
+      "code": "03.271",
+      "regionCode": "03",
+      "kind": "province",
+      "label": "Province d'Ifrane",
+      "sourceRow": 70
+    },
+    {
+      "code": "03.591",
+      "regionCode": "03",
+      "kind": "province",
+      "label": "Province de Moulay Yacoub",
+      "sourceRow": 71
+    },
+    {
+      "code": "03.451",
+      "regionCode": "03",
+      "kind": "province",
+      "label": "Province de Sefrou",
+      "sourceRow": 72
+    },
+    {
+      "code": "03.131",
+      "regionCode": "03",
+      "kind": "province",
+      "label": "Province de Boulemane",
+      "sourceRow": 73
+    },
+    {
+      "code": "03.531",
+      "regionCode": "03",
+      "kind": "province",
+      "label": "Province de Taounate",
+      "sourceRow": 74
+    },
+    {
+      "code": "03.561",
+      "regionCode": "03",
+      "kind": "province",
+      "label": "Province de Taza",
+      "sourceRow": 75
+    },
+    {
+      "code": "04.421",
+      "regionCode": "04",
+      "kind": "prefecture",
+      "label": "Préfecture de Rabat",
+      "sourceRow": 77
+    },
+    {
+      "code": "04.441",
+      "regionCode": "04",
+      "kind": "prefecture",
+      "label": "Préfecture de Salé",
+      "sourceRow": 78
+    },
+    {
+      "code": "04.501",
+      "regionCode": "04",
+      "kind": "prefecture",
+      "label": "Préfecture de Skhirate-Témara",
+      "sourceRow": 79
+    },
+    {
+      "code": "04.281",
+      "regionCode": "04",
+      "kind": "province",
+      "label": "Province de Kénitra",
+      "sourceRow": 80
+    },
+    {
+      "code": "04.291",
+      "regionCode": "04",
+      "kind": "province",
+      "label": "Province de Khémisset",
+      "sourceRow": 81
+    },
+    {
+      "code": "04.481",
+      "regionCode": "04",
+      "kind": "province",
+      "label": "Province de Sidi Kacem",
+      "sourceRow": 82
+    },
+    {
+      "code": "04.491",
+      "regionCode": "04",
+      "kind": "province",
+      "label": "Province de Sidi Slimane",
+      "sourceRow": 83
+    },
+    {
+      "code": "05.091",
+      "regionCode": "05",
+      "kind": "province",
+      "label": "Province de Béni Mellal",
+      "sourceRow": 85
+    },
+    {
+      "code": "05.081",
+      "regionCode": "05",
+      "kind": "province",
+      "label": "Province d'Azilal",
+      "sourceRow": 86
+    },
+    {
+      "code": "05.255",
+      "regionCode": "05",
+      "kind": "province",
+      "label": "Province de Fquih Ben Salah",
+      "sourceRow": 87
+    },
+    {
+      "code": "05.301",
+      "regionCode": "05",
+      "kind": "province",
+      "label": "Province de Khénifra",
+      "sourceRow": 88
+    },
+    {
+      "code": "05.311",
+      "regionCode": "05",
+      "kind": "province",
+      "label": "Province de Khouribga",
+      "sourceRow": 89
+    },
+    {
+      "code": "06.141",
+      "regionCode": "06",
+      "kind": "prefecture",
+      "label": "Préfecture de Casablanca",
+      "sourceRow": 91
+    },
+    {
+      "code": "06.371",
+      "regionCode": "06",
+      "kind": "prefecture",
+      "label": "Préfecture de Mohammadia",
+      "sourceRow": 92
+    },
+    {
+      "code": "06.181",
+      "regionCode": "06",
+      "kind": "province",
+      "label": "Province d'El Jadida",
+      "sourceRow": 93
+    },
+    {
+      "code": "06.385",
+      "regionCode": "06",
+      "kind": "province",
+      "label": "Province de Nouaceur",
+      "sourceRow": 94
+    },
+    {
+      "code": "06.355",
+      "regionCode": "06",
+      "kind": "province",
+      "label": "Province de Médiouna",
+      "sourceRow": 95
+    },
+    {
+      "code": "06.111",
+      "regionCode": "06",
+      "kind": "province",
+      "label": "Province de Benslimane",
+      "sourceRow": 96
+    },
+    {
+      "code": "06.117",
+      "regionCode": "06",
+      "kind": "province",
+      "label": "Province de Berrechid",
+      "sourceRow": 97
+    },
+    {
+      "code": "06.461",
+      "regionCode": "06",
+      "kind": "province",
+      "label": "Province de Settat",
+      "sourceRow": 98
+    },
+    {
+      "code": "06.467",
+      "regionCode": "06",
+      "kind": "province",
+      "label": "Province de Sidi Bennour",
+      "sourceRow": 99
+    },
+    {
+      "code": "07.351",
+      "regionCode": "07",
+      "kind": "prefecture",
+      "label": "Préfecture de Marrakech",
+      "sourceRow": 101
+    },
+    {
+      "code": "07.161",
+      "regionCode": "07",
+      "kind": "province",
+      "label": "Province de Chichaoua",
+      "sourceRow": 102
+    },
+    {
+      "code": "07.041",
+      "regionCode": "07",
+      "kind": "province",
+      "label": "Province d'Al Haouz",
+      "sourceRow": 103
+    },
+    {
+      "code": "07.191",
+      "regionCode": "07",
+      "kind": "province",
+      "label": "Province d'El Kelâa Des-Sraghna",
+      "sourceRow": 104
+    },
+    {
+      "code": "07.211",
+      "regionCode": "07",
+      "kind": "province",
+      "label": "Province d'Essaouira",
+      "sourceRow": 105
+    },
+    {
+      "code": "07.427",
+      "regionCode": "07",
+      "kind": "province",
+      "label": "Province de Rehamna",
+      "sourceRow": 106
+    },
+    {
+      "code": "07.431",
+      "regionCode": "07",
+      "kind": "province",
+      "label": "Province de Safi",
+      "sourceRow": 107
+    },
+    {
+      "code": "07.585",
+      "regionCode": "07",
+      "kind": "province",
+      "label": "Province de Youssoufia",
+      "sourceRow": 108
+    },
+    {
+      "code": "08.201",
+      "regionCode": "08",
+      "kind": "province",
+      "label": "Province d'Errachidia",
+      "sourceRow": 110
+    },
+    {
+      "code": "08.401",
+      "regionCode": "08",
+      "kind": "province",
+      "label": "Province d'Ouarzazate",
+      "sourceRow": 111
+    },
+    {
+      "code": "08.363",
+      "regionCode": "08",
+      "kind": "province",
+      "label": "Province de Midelt",
+      "sourceRow": 112
+    },
+    {
+      "code": "08.577",
+      "regionCode": "08",
+      "kind": "province",
+      "label": "Province de Tinghir",
+      "sourceRow": 113
+    },
+    {
+      "code": "08.587",
+      "regionCode": "08",
+      "kind": "province",
+      "label": "Province de Zagora",
+      "sourceRow": 114
+    },
+    {
+      "code": "09.001",
+      "regionCode": "09",
+      "kind": "prefecture",
+      "label": "Préfecture d'Agadir-Ida-Ou-Tanane",
+      "sourceRow": 116
+    },
+    {
+      "code": "09.273",
+      "regionCode": "09",
+      "kind": "prefecture",
+      "label": "Préfecture d'Inezgane-Aït Melloul",
+      "sourceRow": 117
+    },
+    {
+      "code": "09.163",
+      "regionCode": "09",
+      "kind": "province",
+      "label": "Province de Chtouka-Aït Baha",
+      "sourceRow": 118
+    },
+    {
+      "code": "09.541",
+      "regionCode": "09",
+      "kind": "province",
+      "label": "Province de Taroudannt",
+      "sourceRow": 119
+    },
+    {
+      "code": "09.581",
+      "regionCode": "09",
+      "kind": "province",
+      "label": "Province de Tiznit",
+      "sourceRow": 120
+    },
+    {
+      "code": "09.551",
+      "regionCode": "09",
+      "kind": "province",
+      "label": "Province de Tata",
+      "sourceRow": 121
+    },
+    {
+      "code": "10.261",
+      "regionCode": "10",
+      "kind": "province",
+      "label": "Province de Guelmim",
+      "sourceRow": 123
+    },
+    {
+      "code": "10.071",
+      "regionCode": "10",
+      "kind": "province",
+      "label": "Province d'Assa-Zag",
+      "sourceRow": 124
+    },
+    {
+      "code": "10.521",
+      "regionCode": "10",
+      "kind": "province",
+      "label": "Province de Tan-Tan",
+      "sourceRow": 125
+    },
+    {
+      "code": "10.473",
+      "regionCode": "10",
+      "kind": "province",
+      "label": "Province de Sidi Ifni",
+      "sourceRow": 126
+    },
+    {
+      "code": "11.321",
+      "regionCode": "11",
+      "kind": "province",
+      "label": "Province de Laâyoune",
+      "sourceRow": 128
+    },
+    {
+      "code": "11.121",
+      "regionCode": "11",
+      "kind": "province",
+      "label": "Province de Boujdour",
+      "sourceRow": 129
+    },
+    {
+      "code": "11.537",
+      "regionCode": "11",
+      "kind": "province",
+      "label": "Province de Tarfaya",
+      "sourceRow": 130
+    },
+    {
+      "code": "11.221",
+      "regionCode": "11",
+      "kind": "province",
+      "label": "Province d'Es-Semara",
+      "sourceRow": 131
+    },
+    {
+      "code": "12.391",
+      "regionCode": "12",
+      "kind": "province",
+      "label": "Province d'Oued Ed-Dahab",
+      "sourceRow": 133
+    },
+    {
+      "code": "12.066",
+      "regionCode": "12",
+      "kind": "province",
+      "label": "Province d'Aousserd",
+      "sourceRow": 134
+    }
+  ]
+}
