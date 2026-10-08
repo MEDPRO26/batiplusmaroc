@@ -87,3 +87,5 @@ docs/client-support-*.md
 docs/coordination-agreement-*.md
 docs/notification-bell-rendering-*.md
 docs/private-cover-browser-setup-*.md
+# Local feature specifications
+docs/features/nationwide-geography.md

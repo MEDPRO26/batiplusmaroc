@@ -504,6 +504,40 @@ Prefer the simplest production-ready solution.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
+
+
+
+
+## ACTIVE FEATURE — Nationwide Geography (GEO)
+
+Batiplus is expanding project intake and Company coverage
+to all Moroccan regions, provinces, cities, villages and douars.
+
+Feature specification:
+`docs/features/nationwide-geography.md`
+
+### Mandatory instructions for GEO tasks
+
+1. Read the full geography specification before starting.
+2. Read `convex/_generated/ai/guidelines.md` before Convex work.
+3. Verify latest `origin/main`, current branch and clean worktree.
+4. Work on `feature/nationwide-project-intake`.
+5. Implement ONLY the explicitly assigned GEO task.
+6. Follow the task dependencies and acceptance criteria.
+7. Never assume OPEN Product HQ decisions are approved.
+8. Preserve historical project and Company location data.
+9. Protect private locations and existing authorization rules.
+10. Preserve OC3, Deals, commissions, proposals and messaging.
+11. Maintain FR/EN, responsive UX and correct pagination.
+12. Run focused tests and report files changed, results and risks.
+13. Stop after the assigned task. Never auto-start the next task.
+
+No production deployment, data migration or destructive
+schema change without explicit authorization.
+
+The geography specification is the feature-level source
+of truth. Existing repository security rules still apply.
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
