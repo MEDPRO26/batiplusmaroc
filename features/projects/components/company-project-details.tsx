@@ -62,7 +62,7 @@ export function ProjectDetailsView({ project }: { project: Details }) {
                 {project.publishedAt ? (
                   <span className="inline-flex items-center gap-1.5"><Clock3 aria-hidden className="size-4" /><time dateTime={new Date(project.publishedAt).toISOString()}>{t("card.published", { date: formatMarketplaceDateTime(project.publishedAt, locale, { dateStyle: "medium" }) })}</time></span>
                 ) : null}
-                <span className="inline-flex items-center gap-1.5"><MapPin aria-hidden className="size-4" />{location}</span>
+                <span className="inline-flex min-w-0 max-w-full items-start gap-1.5"><MapPin aria-hidden className="mt-0.5 size-4 shrink-0" /><span className="min-w-0 [overflow-wrap:anywhere]">{location}</span></span>
               </div>
             </header>
 

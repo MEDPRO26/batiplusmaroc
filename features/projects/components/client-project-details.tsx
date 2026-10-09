@@ -78,7 +78,7 @@ export function ClientProjectDetailsView({ project, quotesSlot, supportSlot }: {
           <div className="pt-1.5 sm:pt-2.5"><StatusBadge status={project.status} /></div>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
-          {location ? <span className="inline-flex items-center gap-1.5"><MapPin aria-hidden className="size-4" />{location}</span> : null}
+          {location ? <span className="inline-flex min-w-0 max-w-full items-start gap-1.5"><MapPin aria-hidden className="mt-0.5 size-4 shrink-0" /><span className="min-w-0 [overflow-wrap:anywhere]">{location}</span></span> : null}
           {category ? <span className="inline-flex items-center gap-1.5"><FolderOpen aria-hidden className="size-4" />{category}</span> : null}
           {surface && !project.surfaceUnknown ? <span className="inline-flex items-center gap-1.5"><Ruler aria-hidden className="size-4" />{surface}</span> : null}
           <span className="inline-flex items-center gap-1.5"><Clock3 aria-hidden className="size-4" />{publishedAt ? t("publishedOn", { date: formatDate(publishedAt) }) : t("createdOn", { date: formatDate(project.createdAt) })}</span>

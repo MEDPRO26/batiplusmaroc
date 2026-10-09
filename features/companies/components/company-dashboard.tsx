@@ -325,7 +325,7 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
           {project.title}
         </Link>
       </h2>
-      <p className="mt-1 mb-0 text-sm text-ink/80">
+      <p className="mt-1 mb-0 text-sm text-ink/80 [overflow-wrap:anywhere]">
         {tWizard(`timelineOptions.${project.timeline}`)}
         <span aria-hidden> · </span>
         {locationLabel(project)}
@@ -341,7 +341,7 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
         {property ? <Tag>{property}</Tag> : null}
         {surface ? <Tag>{surface}</Tag> : null}
       </div>
-      <p className="mt-4 mb-0 text-[13px] text-muted">
+      <p className="mt-4 mb-0 text-[13px] text-muted [overflow-wrap:anywhere]">
         {project.client
           ? tProjects("card.client", {
               name: project.client.displayName,

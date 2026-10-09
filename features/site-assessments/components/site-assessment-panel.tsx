@@ -289,7 +289,7 @@ function VisitSummary({ format, result, t, visit }: { format: ReturnType<typeof 
 
         <div className="mt-4 flex items-start gap-2.5 border-t border-brand-border/70 pt-4">
           <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-brand" />
-          <p className="m-0 text-sm leading-6 text-ink">{visit.siteAddress}</p>
+          <p className="m-0 min-w-0 text-sm leading-6 text-ink [overflow-wrap:anywhere]">{visit.siteAddress}</p>
         </div>
 
         {visit.note ? (
@@ -317,7 +317,7 @@ function VisitSummary({ format, result, t, visit }: { format: ReturnType<typeof 
       <p className="m-0 text-sm font-semibold text-ink">{summaryLabel}</p>
       <div className="mt-3 flex items-start gap-2.5">
         <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-muted" />
-        <p className="m-0 text-sm leading-6 text-ink">{visit.siteAddress}</p>
+        <p className="m-0 min-w-0 text-sm leading-6 text-ink [overflow-wrap:anywhere]">{visit.siteAddress}</p>
       </div>
       {visit.cancellationReason ? (
         <p className="mt-3 mb-0 text-sm leading-6 text-muted">{visit.cancellationReason}</p>
