@@ -76,6 +76,7 @@ import type * as legacyMediaIngestion_retirementModel from "../legacyMediaIngest
 import type * as lib_accountFoundation from "../lib/accountFoundation.js";
 import type * as lib_authSecurity from "../lib/authSecurity.js";
 import type * as lib_clientPublicShape from "../lib/clientPublicShape.js";
+import type * as lib_companyHeadquartersPolicy from "../lib/companyHeadquartersPolicy.js";
 import type * as lib_companyName from "../lib/companyName.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as marketplaceActivity_constants from "../marketplaceActivity/constants.js";
@@ -136,6 +137,8 @@ import type * as seo_pageRegistry from "../seo/pageRegistry.js";
 import type * as seo_public from "../seo/public.js";
 import type * as seo_validators from "../seo/validators.js";
 import type * as serviceCatalog from "../serviceCatalog.js";
+import type * as siteVisits_adminMigration from "../siteVisits/adminMigration.js";
+import type * as siteVisits_adminProjection from "../siteVisits/adminProjection.js";
 import type * as siteVisits_index from "../siteVisits/index.js";
 import type * as siteVisits_state from "../siteVisits/state.js";
 import type * as storage_constants from "../storage/constants.js";
@@ -225,6 +228,7 @@ declare const fullApi: ApiFromModules<{
   "lib/accountFoundation": typeof lib_accountFoundation;
   "lib/authSecurity": typeof lib_authSecurity;
   "lib/clientPublicShape": typeof lib_clientPublicShape;
+  "lib/companyHeadquartersPolicy": typeof lib_companyHeadquartersPolicy;
   "lib/companyName": typeof lib_companyName;
   "lib/constants": typeof lib_constants;
   "marketplaceActivity/constants": typeof marketplaceActivity_constants;
@@ -285,6 +289,8 @@ declare const fullApi: ApiFromModules<{
   "seo/public": typeof seo_public;
   "seo/validators": typeof seo_validators;
   serviceCatalog: typeof serviceCatalog;
+  "siteVisits/adminMigration": typeof siteVisits_adminMigration;
+  "siteVisits/adminProjection": typeof siteVisits_adminProjection;
   "siteVisits/index": typeof siteVisits_index;
   "siteVisits/state": typeof siteVisits_state;
   "storage/constants": typeof storage_constants;
