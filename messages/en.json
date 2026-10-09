@@ -2125,6 +2125,10 @@
   "projectLocation": {
     "unspecified": "Location not specified"
   },
+  "adminProjectLocation": {
+    "incomplete": "Location incomplete",
+    "incompleteWithDetails": "{location} · Location incomplete"
+  },
   "projectWizard": {
     "loading": "Loading your project draft…",
     "progress": "Step {current} of {total}",
@@ -3299,6 +3303,7 @@
       "project": "Project",
       "client": "Client",
       "city": "City",
+      "location": "Location",
       "category": "Category",
       "submitted": "Submitted",
       "status": "Status",
@@ -3577,6 +3582,7 @@
     "fields": {
       "projectTitle": "Project title",
       "city": "City",
+      "location": "Location",
       "category": "Category",
       "projectStatus": "Project status",
       "safeIdentity": "Safe identity",

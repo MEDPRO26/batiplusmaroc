@@ -13,6 +13,7 @@ import {
   projectStatusValidator,
 } from "../projects/constants";
 import { requireAdminUser } from "./access";
+import { detailedProjectLocationValidator, toDetailedProjectLocation } from "../projects/location";
 
 const assessmentStatusValidator = v.union(
   v.literal("invited"),
@@ -95,6 +96,7 @@ const finalQuoteDetailValidator = v.union(
 );
 
 const listRowValidator = v.object({
+  location: detailedProjectLocationValidator,
   assessmentId: v.id("siteAssessments"),
   projectId: v.id("projects"),
   projectTitle: v.string(),
@@ -133,6 +135,7 @@ const activityItemValidator = v.object({
 const detailValidator = v.object({
   assessmentId: v.id("siteAssessments"),
   project: v.object({
+    location: detailedProjectLocationValidator,
     title: v.string(),
     city: v.union(projectCityValidator, v.null()),
     category: v.union(projectCategoryValidator, v.null()),
@@ -419,6 +422,7 @@ export const listSiteVisits = query({
         visitDate: visit?.proposedDate ?? null,
         visitTime: visit?.proposedTime ?? null,
         city: project.city ?? null,
+        location: toDetailedProjectLocation(project),
         proposedBy: visit ? actorType(visit.proposedByUserId, assessment.clientId) : null,
         status,
         finalQuoteStatus: quoteSummary.finalQuoteStatus,
@@ -509,6 +513,7 @@ export const getSiteVisitDetail = query({
       project: {
         title: project.title?.trim() || "—",
         city: project.city ?? null,
+        location: toDetailedProjectLocation(project),
         category: project.primaryCategory ?? null,
         customCategoryText: project.customCategoryText ?? null,
         status: project.status,

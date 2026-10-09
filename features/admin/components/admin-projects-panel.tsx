@@ -15,7 +15,7 @@ import { Link } from "@/i18n/navigation";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { findKnownCodeInText } from "@/lib/errors/codes";
 import { routes } from "@/lib/routes";
-import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
+import { useAdminProjectLocationLabel } from "@/features/admin/hooks/use-admin-project-location-label";
 
 type ListRow = FunctionReturnType<
   typeof api.admin.projects.listProjects
@@ -65,7 +65,7 @@ const CITIES = [
 ] as const;
 
 export function AdminProjectsPanel() {
-  const locationLabel = useProjectLocationLabel();
+  const locationLabel = useAdminProjectLocationLabel();
   const t = useTranslations("adminProjects");
   const tUx = useTranslations("ux");
   const tWizard = useTranslations("projectWizard");
@@ -202,7 +202,7 @@ export function AdminProjectsPanel() {
                   </div>
                   <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <CompactField
-                      label={t("columns.city")}
+                      label={t("columns.location")}
                       value={
                         locationLabel(row)
                       }
@@ -241,7 +241,7 @@ export function AdminProjectsPanel() {
                       {t("columns.client")}
                     </th>
                     <th className="px-3 py-2 font-semibold">
-                      {t("columns.city")}
+                      {t("columns.location")}
                     </th>
                     <th className="hidden px-3 py-2 font-semibold lg:table-cell">
                       {t("columns.category")}
@@ -266,7 +266,7 @@ export function AdminProjectsPanel() {
                       <td className="px-3 py-3 text-[#626970]">
                         {row.clientName}
                       </td>
-                      <td className="px-3 py-3 text-[#626970]">
+                      <td className="max-w-[20rem] px-3 py-3 text-[#626970] [overflow-wrap:anywhere]">
                         {locationLabel(row)}
                       </td>
                       <td className="hidden px-3 py-3 text-[#626970] lg:table-cell">
@@ -330,7 +330,7 @@ export function ProjectReviewDrawer({
   const tUx = useTranslations("ux");
   const tWizard = useTranslations("projectWizard");
   const tSupport = useTranslations("clientSupport.admin");
-  const locationLabel = useProjectLocationLabel();
+  const locationLabel = useAdminProjectLocationLabel();
   const locale = useLocale();
   const titleId = useId();
   const review = useQuery(api.admin.projects.getProjectReview, { projectId });
@@ -788,7 +788,7 @@ function Field({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-semibold tracking-[0.04em] text-[#a0a6ae] uppercase">
         {label}
       </p>
-      <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#17191d]">
+      <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#17191d] [overflow-wrap:anywhere]">
         {value}
       </p>
     </div>
@@ -796,7 +796,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 function CompactField({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="min-w-0 [overflow-wrap:anywhere]">
       <dt className="text-xs text-[#8b919a]">{label}</dt>
       <dd className="mt-1 text-[#17191d]">{value}</dd>
     </div>

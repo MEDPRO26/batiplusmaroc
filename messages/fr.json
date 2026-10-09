@@ -2125,6 +2125,10 @@
   "projectLocation": {
     "unspecified": "Localisation non précisée"
   },
+  "adminProjectLocation": {
+    "incomplete": "Localisation incomplète",
+    "incompleteWithDetails": "{location} · Localisation incomplète"
+  },
   "projectWizard": {
     "loading": "Chargement de votre brouillon…",
     "progress": "Étape {current} sur {total}",
@@ -3299,6 +3303,7 @@
       "project": "Projet",
       "client": "Client",
       "city": "Ville",
+      "location": "Localisation",
       "category": "Catégorie",
       "submitted": "Soumis le",
       "status": "Statut",
@@ -3577,6 +3582,7 @@
     "fields": {
       "projectTitle": "Titre du projet",
       "city": "Ville",
+      "location": "Localisation",
       "category": "Catégorie",
       "projectStatus": "Statut du projet",
       "safeIdentity": "Identité sécurisée",

@@ -25,6 +25,7 @@ import {
 } from "@/features/admin/components/admin-shell";
 import { Link } from "@/i18n/navigation";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
+import { useAdminProjectLocationLabel } from "@/features/admin/hooks/use-admin-project-location-label";
 
 const TABS = [
   "all",
@@ -90,6 +91,7 @@ const TONE_DOT: Record<Tone, string> = {
 };
 
 export function AdminSiteVisitsPanel() {
+  const locationLabel = useAdminProjectLocationLabel();
   const t = useTranslations("adminSiteVisits");
   const tWizard = useTranslations("projectWizard");
   const tUx = useTranslations("ux");
@@ -339,9 +341,9 @@ export function AdminSiteVisitsPanel() {
                           >
                             {row.projectTitle}
                           </button>
-                          <span className="mt-0.5 flex items-center gap-1 truncate text-xs text-[#8b919a]">
+                          <span className="mt-0.5 flex items-start gap-1 text-xs text-[#8b919a] [overflow-wrap:anywhere]">
                             <MapPin aria-hidden className="size-3.5 shrink-0" />
-                            {row.city ? tWizard(`cityOptions.${row.city}`) : "—"}
+                            {locationLabel(row)}
                           </span>
                         </td>
                         <td className="px-4 py-3.5">
@@ -479,7 +481,7 @@ function SiteVisitCard({
   onView: () => void;
 }) {
   const t = useTranslations("adminSiteVisits");
-  const tWizard = useTranslations("projectWizard");
+  const locationLabel = useAdminProjectLocationLabel();
   return (
     <li>
       <button
@@ -503,9 +505,9 @@ function SiteVisitCard({
               <CalendarDays aria-hidden className="size-3.5" />
               {formatVisitDate(row, locale)}
             </span>
-            <span className="inline-flex items-center gap-1">
-              <MapPin aria-hidden className="size-3.5" />
-              {row.city ? tWizard(`cityOptions.${row.city}`) : "—"}
+            <span className="inline-flex min-w-0 max-w-full items-start gap-1 [overflow-wrap:anywhere]">
+              <MapPin aria-hidden className="size-3.5 shrink-0" />
+              {locationLabel(row)}
             </span>
             <FinalQuoteText status={row.finalQuoteStatus} />
           </span>
@@ -630,6 +632,7 @@ function SiteVisitDrawerBody({
   assessmentId: Id<"siteAssessments">;
   now: number;
 }) {
+  const locationLabel = useAdminProjectLocationLabel();
   const t = useTranslations("adminSiteVisits");
   const tWizard = useTranslations("projectWizard");
   const tUx = useTranslations("ux");
@@ -655,12 +658,10 @@ function SiteVisitDrawerBody({
           </Dialog.Title>
           {detail ? (
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-[#626970]">
-              {detail.project.city ? (
-                <span className="inline-flex items-center gap-1">
-                  <MapPin aria-hidden className="size-4 text-[#8b919a]" />
-                  {tWizard(`cityOptions.${detail.project.city}`)}
-                </span>
-              ) : null}
+              <span className="inline-flex min-w-0 max-w-full items-start gap-1 [overflow-wrap:anywhere]">
+                <MapPin aria-hidden className="size-4 shrink-0 text-[#8b919a]" />
+                {locationLabel(detail.project)}
+              </span>
               {detail.project.category ? (
                 <span>{categoryLabel(detail, tWizard)}</span>
               ) : null}
@@ -699,6 +700,7 @@ function SiteVisitDrawerBody({
 }
 
 function SiteVisitDetail({ detail, locale }: { detail: Detail; locale: string }) {
+  const locationLabel = useAdminProjectLocationLabel();
   const t = useTranslations("adminSiteVisits");
   const tProjects = useTranslations("adminProjects");
   const tWizard = useTranslations("projectWizard");
@@ -794,12 +796,8 @@ function SiteVisitDetail({ detail, locale }: { detail: Detail; locale: string })
         <div className="divide-y divide-[#eef1f4] border-t border-[#eef1f4]">
           <DetailSection title={t("sections.project")}>
             <Field
-              label={t("fields.city")}
-              value={
-                detail.project.city
-                  ? tWizard(`cityOptions.${detail.project.city}`)
-                  : null
-              }
+              label={t("fields.location")}
+              value={locationLabel(detail.project)}
             />
             <Field
               label={t("fields.category")}
