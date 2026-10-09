@@ -53,6 +53,7 @@ describe.each(["fr", "en"] as const)("GEO9.1C %s Site Visit queue", (locale) => 
     const legacyCalls = vi.mocked(useQuery).mock.calls.filter(([query]) => getFunctionName(query) === "admin/siteVisits:listSiteVisits");
     expect(legacyCalls[0][1]).toBe("skip");
     expect(html).toContain(t.filters.allMorocco);
+    expect(html).not.toContain(t.filters.allCities);
     expect(html).toContain(t.filters.provinceDisabled);
     expect(html).toMatch(/<select[^>]*aria-describedby[^>]*disabled/);
     expect(html).toContain(t.filters.clearGeography);
@@ -65,6 +66,7 @@ describe.each(["fr", "en"] as const)("GEO9.1C %s Site Visit queue", (locale) => 
     expect(html).toContain("Older rural visit");
     expect(html).toContain(t.pagination.legacyLimited);
     expect(html).not.toContain(t.filters.allMorocco);
+    expect(html).toContain(t.filters.allCities);
     expect(html).not.toContain(t.pagination.loadMore);
     const call = vi.mocked(usePaginatedQuery).mock.calls.find(([query]) => getFunctionName(query) === "admin/siteVisits:listSiteVisitsPage");
     expect(call?.[1]).toBe("skip");

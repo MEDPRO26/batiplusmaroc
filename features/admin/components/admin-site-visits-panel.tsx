@@ -121,10 +121,10 @@ export function AdminSiteVisitsPanel() {
   const hasFilters =
     projectSearch !== "" ||
     companySearch !== "" ||
-    city !== "" ||
+    (!indexed && city !== "") ||
     dateFrom !== "" ||
     dateTo !== "" ||
-    indexed && (geography.regionCode !== "" || geography.provinceCode !== "");
+    (indexed && (geography.regionCode !== "" || geography.provinceCode !== ""));
   // Any filter change falls back to the first page without an effect.
   const filterKey = [tab, projectSearch, companySearch, city, dateFrom, dateTo].join("|");
   const visibleCount = expanded.key === filterKey ? expanded.count : PAGE_SIZE;
@@ -147,14 +147,13 @@ export function AdminSiteVisitsPanel() {
     status: tab,
     projectSearch: projectSearch.trim() || undefined,
     companySearch: companySearch.trim() || undefined,
-    city: city || undefined,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
     now,
   };
   const legacyList = useQuery(
     api.admin.siteVisits.listSiteVisits,
-    indexed || now === 0 || invalidDateRange ? "skip" : filters,
+    indexed || now === 0 || invalidDateRange ? "skip" : { ...filters, city: city || undefined },
   );
   const pager = usePaginatedQuery(
     api.admin.siteVisits.listSiteVisitsPage,
@@ -217,7 +216,9 @@ export function AdminSiteVisitsPanel() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-2 border-b border-[#eef1f4] p-4 sm:grid-cols-2 sm:px-5 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem_auto]">
+        <div className={`grid grid-cols-1 gap-2 border-b border-[#eef1f4] p-4 sm:grid-cols-2 sm:px-5 ${indexed
+          ? "2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+          : "2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem_auto]"}`}>
           <FilterInput
             label={t("filters.projectLabel")}
             onChange={setProjectSearch}
@@ -230,7 +231,7 @@ export function AdminSiteVisitsPanel() {
             placeholder={t("filters.companyPlaceholder")}
             value={companySearch}
           />
-          <label className={`${FILTER_SHELL} relative`}>
+          {!indexed ? <label className={`${FILTER_SHELL} relative`}>
             <MapPin aria-hidden className="size-4 shrink-0 text-[#8b919a]" />
             <span className="sr-only">{t("filters.cityLabel")}</span>
             <select
@@ -249,7 +250,7 @@ export function AdminSiteVisitsPanel() {
               aria-hidden
               className="pointer-events-none absolute right-4 size-4 text-[#8b919a]"
             />
-          </label>
+          </label> : null}
           <div
             aria-label={t("filters.dateRange")}
             className={`${FILTER_SHELL} ${invalidDateRange ? "border-[#e5484d]" : ""}`}

@@ -37,10 +37,12 @@ describe.each(["fr", "en"] as const)("GEO9.1B %s project queue", (locale) => {
     const html = render(locale);
     const [query, args, options] = vi.mocked(usePaginatedQuery).mock.calls[0];
     expect(getFunctionName(query)).toBe("admin/projects:listProjectsPage");
-    expect(args).toEqual({ status: "pending_review", search: undefined, city: undefined,
+    expect(args).toEqual({ status: "pending_review", search: undefined,
       regionCode: undefined, provinceCode: undefined });
     expect(options).toEqual({ initialNumItems: 25 });
     expect(html).toContain(messages.adminProjects.regionLabel);
+    expect(html).toContain(messages.adminProjects.allRegions);
+    expect(html).not.toContain(messages.adminProjects.allCities);
     expect(html).toContain(messages.adminProjects.provinceLabel);
     expect(html).toContain(messages.adminProjects.provinceDisabled);
     expect(html).toMatch(/<select[^>]*aria-describedby[^>]*disabled/);

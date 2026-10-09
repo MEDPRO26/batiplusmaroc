@@ -30,7 +30,6 @@ type HistoryItem = Review["history"][number];
 type ActivityItem = FunctionReturnType<
   typeof api.admin.projects.listProjectActivity
 >[number];
-type ProjectCity = NonNullable<ListRow["city"]>;
 
 const TABS: ListStatus[] = [
   "pending_review",
@@ -52,18 +51,6 @@ const FILTER_STATUSES: ListStatus[] = [
   "cancelled",
   "archived",
 ];
-const CITIES = [
-  "agadir",
-  "casablanca",
-  "fes",
-  "marrakech",
-  "meknes",
-  "oujda",
-  "rabat",
-  "sale",
-  "tangier",
-  "tetouan",
-] as const;
 const PROJECT_PAGE_SIZE = 25;
 
 export function AdminProjectsPanel() {
@@ -75,7 +62,6 @@ export function AdminProjectsPanel() {
   const filterId = useId();
   const [status, setStatus] = useState<ListStatus>("pending_review");
   const [search, setSearch] = useState("");
-  const [city, setCity] = useState<ProjectCity | "">("");
   const [geography, setGeography] = useState({ regionCode: "", provinceCode: "" });
   const [selectedId, setSelectedId] = useState<Id<"projects"> | null>(null);
   const [notice, setNotice] = useState("");
@@ -83,7 +69,6 @@ export function AdminProjectsPanel() {
   const { results: list, status: paginationStatus, loadMore } = usePaginatedQuery(api.admin.projects.listProjectsPage, {
     status,
     search: search.trim() || undefined,
-    city: city || undefined,
     regionCode: geography.regionCode || undefined,
     provinceCode: geography.provinceCode || undefined,
   }, { initialNumItems: PROJECT_PAGE_SIZE });
@@ -126,7 +111,7 @@ export function AdminProjectsPanel() {
               </button>
             ))}
           </div>
-          <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 gap-2 sm:grid-cols-2">
             <label className="flex min-h-11 items-center rounded-sm bg-[#f4f6f8] px-3 text-sm">
               <span className="sr-only">{t("searchLabel")}</span>
               <input
@@ -135,23 +120,6 @@ export function AdminProjectsPanel() {
                 placeholder={t("searchPlaceholder")}
                 value={search}
               />
-            </label>
-            <label className="flex min-h-11 items-center rounded-sm bg-[#f4f6f8] px-3 text-sm">
-              <span className="sr-only">{t("cityLabel")}</span>
-              <select
-                className="h-11 w-full bg-transparent text-[#626970] outline-none"
-                onChange={(event) =>
-                  setCity(event.target.value as ProjectCity | "")
-                }
-                value={city}
-              >
-                <option value="">{t("allCities")}</option>
-                {CITIES.map((item) => (
-                  <option key={item} value={item}>
-                    {tWizard(`cityOptions.${item}`)}
-                  </option>
-                ))}
-              </select>
             </label>
             <label className="flex min-h-11 items-center rounded-sm bg-[#f4f6f8] px-3 text-sm">
               <span className="sr-only">{t("statusFilterLabel")}</span>
@@ -209,7 +177,6 @@ export function AdminProjectsPanel() {
               className={`min-h-11 rounded-sm border border-[#e6e9ee] px-3 text-sm font-semibold text-[#626970] ${ADMIN_PRESS}`}
               onClick={() => {
                 setSearch("");
-                setCity("");
                 setStatus("all");
                 setGeography({ regionCode: "", provinceCode: "" });
                 setSelectedId(null);

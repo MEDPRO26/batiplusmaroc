@@ -18,6 +18,9 @@ type HarnessWindow = typeof window & {
   __paginatedQueries: Record<string, { results: unknown[]; status: string }>;
   __paginationCalls: { path: string; numItems: number }[];
   __paginationHandlers: Record<string, (numItems: number) => void>;
+  __queryHandlers: Record<string, (args: PagerArgs) => unknown>;
+  __legacyArgs: PagerArgs[];
+  __mutationCalls?: unknown[];
 };
 const row = { assessmentId: "older-202", projectId: "private-rural", projectTitle: "Later matching rural visit",
   clientName: "Client Tester", companyName: "Atlas Build", city: "rabat", assessmentStatus: "accepted",
@@ -50,6 +53,10 @@ for (const locale of ["fr", "en"] as const) {
       return copy;
     }, path);
     await expect(province).toBeDisabled();
+    await expect(region).toHaveValue("");
+    await expect(region.getByRole("option", { name: t.filters.allMorocco, exact: true })).toHaveAttribute("value", "");
+    await expect(page.getByRole("combobox", { name: t.filters.cityLabel, exact: true })).toHaveCount(0);
+    await expect.poll(latest).toEqual({ status: "all" });
     await expect(region.getByRole("option")).toHaveCount(13);
     await region.selectOption("05"); await province.selectOption("05.081");
     await expect.poll(latest).toEqual({ status: "all", regionCode: "05", provinceCode: "05.081" });
@@ -59,14 +66,13 @@ for (const locale of ["fr", "en"] as const) {
     await province.selectOption("09.541");
     await page.getByRole("searchbox", { name: t.filters.projectLabel, exact: true }).fill("  rural roof  ");
     await page.getByRole("searchbox", { name: t.filters.companyLabel, exact: true }).fill("Atlas");
-    await page.getByRole("combobox", { name: t.filters.cityLabel, exact: true }).selectOption("rabat");
     await page.getByLabel(t.filters.dateFrom, { exact: true }).fill("2026-10-10");
     await page.getByLabel(t.filters.dateTo, { exact: true }).fill("2026-10-20");
     await page.getByRole("button", { name: t.tabs.confirmed, exact: true }).click();
-    const expected = { status: "confirmed", projectSearch: "rural roof", companySearch: "Atlas", city: "rabat", dateFrom: "2026-10-10", dateTo: "2026-10-20" };
+    const expected = { status: "confirmed", projectSearch: "rural roof", companySearch: "Atlas", dateFrom: "2026-10-10", dateTo: "2026-10-20" };
     await expect.poll(latest).toEqual({ ...expected, regionCode: "09", provinceCode: "09.541" });
     await region.focus(); await page.keyboard.press("Tab"); await expect(province).toBeFocused();
-    for (const width of [320, 375, 1280]) {
+    for (const width of [320, 375, 1280, 1600]) {
       await page.setViewportSize({ width, height: 900 });
       await expect(region).toBeVisible(); await expect(province).toBeVisible();
       expect(await hasHorizontalOverflow(page)).toBe(false);
@@ -83,6 +89,7 @@ for (const locale of ["fr", "en"] as const) {
     await expect.poll(latest).toEqual(expected);
     const calls = await page.evaluate((queryPath) => (window as HarnessWindow).__paginatedArgs.filter((call) => call.path === queryPath), path);
     expect(calls.every((call) => call.options.initialNumItems === 25)).toBe(true);
+    expect(calls.every((call) => call.args === "skip" || !("city" in call.args))).toBe(true);
     expect(calls.some((call) => call.args !== "skip" && call.args.regionCode === "09" && call.args.provinceCode === "05.081")).toBe(false);
     expect(errors).toEqual([]);
   });
@@ -139,16 +146,82 @@ for (const locale of ["fr", "en"] as const) {
     await expect(page.getByRole("button", { name: t.viewAria.replace("{project}", row.projectTitle), exact: true })).toBeVisible();
   });
 
-  test(`${locale}: missing historical coverage keeps the legacy reader active and geographic controls unavailable`, async ({ page }) => {
+  for (const rollout of [undefined, { enabled: false, reason: "disabled" }, { enabled: false, reason: "historical_projection_missing" }]) {
+    test(`${locale}: ${rollout?.reason ?? "unknown rollout"} keeps the legacy city filter and reader`, async ({ page }) => {
+      await mountHarness(page, bundle, { __locale: locale, __pathname: "/admin/site-visits",
+        __queries: { [gate]: rollout, [legacy]: [row] },
+        __paginatedQueries: { [path]: { results: [{ ...row, projectTitle: "Should never appear" }], status: "Exhausted" } } });
+      await expect(page.getByText(t.pagination.legacyLimited, { exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: t.viewAria.replace("{project}", row.projectTitle), exact: true })).toBeVisible();
+      await expect(page.getByText("Should never appear", { exact: true })).toHaveCount(0);
+      await expect(page.getByRole("combobox", { name: t.filters.regionLabel, exact: true })).toHaveCount(0);
+      const city = page.getByRole("combobox", { name: t.filters.cityLabel, exact: true });
+      await expect(city).toBeVisible();
+      await expect(city.getByRole("option")).toHaveCount(11);
+      await city.selectOption("rabat");
+      await expect(city).toHaveValue("rabat");
+      for (const width of [320, 375, 1280]) {
+        await page.setViewportSize({ width, height: 900 });
+        await expect(city).toBeVisible();
+        expect(await hasHorizontalOverflow(page)).toBe(false);
+      }
+      await expect(page.getByRole("button", { name: t.pagination.loadMore, exact: true })).toHaveCount(0);
+      const calls = await page.evaluate((queryPath) => (window as HarnessWindow).__paginatedArgs.filter((call) => call.path === queryPath), path);
+      expect(calls.every((call) => call.args === "skip")).toBe(true);
+    });
+  }
+
+  test(`${locale}: hidden legacy city state cannot narrow indexed results across rollout changes`, async ({ page }) => {
+    const rural = { ...row, assessmentId: "new-rural", projectTitle: "Structured rural visit", city: null,
+      location: { regionCode: "09", provinceCode: "09.541", localityName: "Douar Tizi",
+        communeName: null, legacyCity: null, neighborhood: null } };
     await mountHarness(page, bundle, { __locale: locale, __pathname: "/admin/site-visits",
-      __queries: { [gate]: { enabled: false, reason: "historical_projection_missing" }, [legacy]: [row] },
-      __paginatedQueries: { [path]: { results: [{ ...row, projectTitle: "Should never appear" }], status: "Exhausted" } } });
-    await expect(page.getByText(t.pagination.legacyLimited, { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: t.viewAria.replace("{project}", row.projectTitle), exact: true })).toBeVisible();
-    await expect(page.getByText("Should never appear", { exact: true })).toHaveCount(0);
-    await expect(page.getByRole("combobox", { name: t.filters.regionLabel, exact: true })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: t.pagination.loadMore, exact: true })).toHaveCount(0);
-    const calls = await page.evaluate((queryPath) => (window as HarnessWindow).__paginatedArgs.filter((call) => call.path === queryPath), path);
-    expect(calls.every((call) => call.args === "skip")).toBe(true);
+      __queries: { [gate]: { enabled: false, reason: "disabled" }, [legacy]: [row] },
+      __paginatedQueries: { [path]: { results: [row, rural], status: "Exhausted" } } });
+    await page.evaluate((legacyPath) => {
+      const state = window as HarnessWindow;
+      state.__legacyArgs = [];
+      state.__queryHandlers = { [legacyPath]: (args) => {
+        state.__legacyArgs.push(args);
+        return state.__queries[legacyPath];
+      } };
+    }, legacy);
+    const city = page.getByRole("combobox", { name: t.filters.cityLabel, exact: true });
+    const region = page.getByRole("combobox", { name: t.filters.regionLabel, exact: true });
+    await city.selectOption("rabat");
+    await expect.poll(() => page.evaluate(() => (window as HarnessWindow).__legacyArgs.at(-1)?.city)).toBe("rabat");
+    await page.evaluate((gatePath) => {
+      (window as HarnessWindow).__queries[gatePath] = { enabled: true, reason: null };
+      window.dispatchEvent(new Event("convex-harness-update"));
+    }, gate);
+    await expect(city).toHaveCount(0);
+    await expect(region).toHaveValue("");
+    await expect(page.getByRole("button", { name: t.clearFilters, exact: true })).toHaveCount(0);
+    const args = await page.evaluate((queryPath) => (window as HarnessWindow).__paginatedArgs
+      .filter((call) => call.path === queryPath).at(-1)?.args, path);
+    expect(args).toMatchObject({ status: "all", now: expect.any(Number) });
+    expect(args).not.toHaveProperty("city");
+    expect(args).toMatchObject({ regionCode: undefined, provinceCode: undefined });
+    for (const width of [320, 375, 1280, 1600]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect(page.getByRole("button", { name: t.viewAria.replace("{project}", row.projectTitle), exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: t.viewAria.replace("{project}", rural.projectTitle), exact: true })).toBeVisible();
+      expect(await hasHorizontalOverflow(page)).toBe(false);
+    }
+    await region.selectOption("09");
+    await page.evaluate((gatePath) => {
+      (window as HarnessWindow).__queries[gatePath] = { enabled: false, reason: "historical_projection_missing" };
+      window.dispatchEvent(new Event("convex-harness-update"));
+    }, gate);
+    await expect(city).toHaveValue("rabat");
+    await expect(region).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => (window as HarnessWindow).__legacyArgs.at(-1))).toMatchObject({ city: "rabat" });
+    const legacyArgs = await page.evaluate(() => (window as HarnessWindow).__legacyArgs.at(-1));
+    expect(legacyArgs).not.toHaveProperty("regionCode");
+    expect(legacyArgs).not.toHaveProperty("provinceCode");
+    await page.getByRole("button", { name: t.clearFilters, exact: true }).click();
+    await expect(city).toHaveValue("");
+    await expect.poll(() => page.evaluate(() => (window as HarnessWindow).__legacyArgs.at(-1)?.city)).toBeUndefined();
+    expect(await page.evaluate(() => (window as HarnessWindow).__mutationCalls ?? [])).toEqual([]);
   });
 }
