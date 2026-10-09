@@ -1,6 +1,10 @@
+import { paginationOptsValidator, paginationResultValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
+import { getProvince, isProvinceInRegion, isValidRegion } from "../../lib/geography/morocco";
 import { internal } from "../_generated/api";
+import type { Doc } from "../_generated/dataModel";
 import { mutation, query } from "../_generated/server";
+import type { QueryCtx } from "../_generated/server";
 import {
   marketplaceActivityActorTypeValidator,
   marketplaceActivityEventTypeValidator,
@@ -120,6 +124,21 @@ function displayName(user: { firstName?: string; lastName?: string } | null) {
   return [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "—";
 }
 
+async function toAdminProjectListItem(ctx: QueryCtx, project: Doc<"projects">) {
+  const client = await ctx.db.get(project.clientId);
+  return {
+    projectId: project._id,
+    title: project.title || "—",
+    clientName: displayName(client),
+    city: project.city ?? null,
+    location: toDetailedProjectLocation(project),
+    category: project.primaryCategory ?? null,
+    customCategoryText: project.customCategoryText ?? null,
+    submittedAt: project.submittedAt ?? null,
+    status: project.status,
+  };
+}
+
 /** Admin-only entry point for the bounded, self-continuing marketplace field backfill. */
 export const startMarketplaceBackfill = mutation({
   args: {},
@@ -169,22 +188,66 @@ export const listProjects = query({
       if (args.city && args.status === "all" && project.city !== args.city) continue;
       const title = project.title ?? "";
       if (needle && !title.toLocaleLowerCase().includes(needle)) continue;
-      const client = await ctx.db.get(project.clientId);
-      rows.push({
-        projectId: project._id,
-        title: title || "—",
-        clientName: displayName(client),
-        city: project.city ?? null,
-        location: toDetailedProjectLocation(project),
-        category: project.primaryCategory ?? null,
-        customCategoryText: project.customCategoryText ?? null,
-        submittedAt: project.submittedAt ?? null,
-        status: project.status,
-      });
+      rows.push(await toAdminProjectListItem(ctx, project));
     }
 
     rows.sort((a, b) => (b.submittedAt ?? 0) - (a.submittedAt ?? 0));
     return rows;
+  },
+});
+
+/** One native source page per call; residuals never change exhaustion or cursor metadata. */
+export const listProjectsPage = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    status: listStatusValidator,
+    search: v.optional(v.string()),
+    city: v.optional(projectCityValidator),
+    regionCode: v.optional(v.string()),
+    provinceCode: v.optional(v.string()),
+  },
+  returns: paginationResultValidator(listItemValidator),
+  handler: async (ctx, args) => {
+    await requireAdminUser(ctx);
+    if (!Number.isInteger(args.paginationOpts.numItems) ||
+      args.paginationOpts.numItems < 1 || args.paginationOpts.numItems > 100) {
+      throw new ConvexError("INVALID_ADMIN_PROJECT_PAGE_SIZE");
+    }
+    if (args.regionCode !== undefined && !isValidRegion(args.regionCode)) {
+      throw new ConvexError("INVALID_PROJECT_REGION");
+    }
+    if (args.provinceCode !== undefined) {
+      if (!getProvince(args.provinceCode)) throw new ConvexError("INVALID_PROJECT_PROVINCE");
+      if (args.regionCode === undefined) throw new ConvexError("PROJECT_REGION_REQUIRED");
+      if (!isProvinceInRegion(args.provinceCode, args.regionCode)) {
+        throw new ConvexError("PROJECT_PROVINCE_REGION_MISMATCH");
+      }
+    }
+
+    const source = ctx.db.query("projects");
+    const indexed = args.provinceCode !== undefined
+      ? source.withIndex("by_provinceCode_and_submittedAt", (q) =>
+          q.eq("provinceCode", args.provinceCode))
+      : args.regionCode !== undefined
+        ? source.withIndex("by_regionCode_and_submittedAt", (q) =>
+            q.eq("regionCode", args.regionCode))
+        : args.status !== "all"
+          ? source.withIndex("by_status_and_submittedAt", (q) =>
+              q.eq("status", args.status as ProjectStatus))
+          : source.withIndex("by_submittedAt");
+
+    // Missing submittedAt sorts last natively. Never substitute creation/publication time
+    // or re-sort individual pages; _creationTime supplies the native stable tie-break.
+    const result = await indexed.order("desc").paginate(args.paginationOpts);
+    const needle = normalizeSearch(args.search);
+    const matches = result.page.filter((project) =>
+      (args.status === "all" || project.status === args.status) &&
+      (args.city === undefined || project.city === args.city) &&
+      (args.regionCode === undefined || project.regionCode === args.regionCode) &&
+      (args.provinceCode === undefined || project.provinceCode === args.provinceCode) &&
+      (!needle || (project.title ?? "").toLocaleLowerCase().includes(needle)));
+    const page = await Promise.all(matches.map((project) => toAdminProjectListItem(ctx, project)));
+    return { ...result, page };
   },
 });
 

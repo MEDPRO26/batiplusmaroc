@@ -12,7 +12,9 @@ const convex = vi.hoisted(() => ({ responses: {} as Record<string, unknown> }));
 vi.mock("convex/react", () => ({
   useQuery: (query: Parameters<typeof getFunctionName>[0]) => convex.responses[getFunctionName(query)],
   useMutation: () => vi.fn(),
-  usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }),
+  usePaginatedQuery: (query: Parameters<typeof getFunctionName>[0]) => ({
+    results: convex.responses[getFunctionName(query)] ?? [], status: "Exhausted", loadMore: vi.fn(),
+  }),
 }));
 vi.mock("next/font/google", () => ({ Outfit: () => ({ className: "font-outfit" }) }));
 vi.mock("@/i18n/navigation", () => ({
@@ -63,7 +65,7 @@ describe.each(["fr", "en"] as const)("GEO9.1 %s Admin location display", (locale
     for (const region of getRegions()) {
       const province = getProvincesByRegion(region.code)[0];
       const recorded = { ...location, regionCode: region.code, provinceCode: province.code };
-      convex.responses["admin/projects:listProjects"] = [{ ...project, location: recorded }];
+      convex.responses["admin/projects:listProjectsPage"] = [{ ...project, location: recorded }];
       convex.responses["admin/siteVisits:listSiteVisits"] = [{ ...visit, location: recorded }];
       for (const panel of [<AdminProjectsPanel key="projects" />, <AdminSiteVisitsPanel key="visits" />]) {
         const html = render(locale, panel);
@@ -77,7 +79,7 @@ describe.each(["fr", "en"] as const)("GEO9.1 %s Admin location display", (locale
   });
 
   test("keeps translated legacy city labels for old city-only DTOs", () => {
-    convex.responses["admin/projects:listProjects"] = [{ ...project, city: "rabat", location: undefined }];
+    convex.responses["admin/projects:listProjectsPage"] = [{ ...project, city: "rabat", location: undefined }];
     convex.responses["admin/siteVisits:listSiteVisits"] = [{ ...visit, city: "rabat", location: undefined }];
     for (const panel of [<AdminProjectsPanel key="projects" />, <AdminSiteVisitsPanel key="visits" />]) {
       const html = render(locale, panel);
@@ -89,7 +91,7 @@ describe.each(["fr", "en"] as const)("GEO9.1 %s Admin location display", (locale
 
   test("labels cleared structured locations as incomplete instead of using leftover city data", () => {
     const cleared = toDetailedProjectLocation({ locationMode: "structured", city: "rabat" });
-    convex.responses["admin/projects:listProjects"] = [{ ...project, city: "rabat", location: cleared, status: "draft" }];
+    convex.responses["admin/projects:listProjectsPage"] = [{ ...project, city: "rabat", location: cleared, status: "draft" }];
     convex.responses["admin/siteVisits:listSiteVisits"] = [{ ...visit, city: "rabat", location: cleared }];
     for (const panel of [<AdminProjectsPanel key="projects" />, <AdminSiteVisitsPanel key="visits" />]) {
       const html = render(locale, panel);
@@ -108,7 +110,7 @@ describe.each(["fr", "en"] as const)("GEO9.1 %s Admin location display", (locale
       { ...location, regionCode: "PRIVATE_UNKNOWN_REGION", provinceCode: "99.999" },
       { ...location, localityName: null },
     ]) {
-      convex.responses["admin/projects:listProjects"] = [{ ...project, location: recorded }];
+      convex.responses["admin/projects:listProjectsPage"] = [{ ...project, location: recorded }];
       convex.responses["admin/siteVisits:listSiteVisits"] = [{ ...visit, location: recorded }];
       for (const panel of [<AdminProjectsPanel key="projects" />, <AdminSiteVisitsPanel key="visits" />]) {
         const html = render(locale, panel);
@@ -121,7 +123,7 @@ describe.each(["fr", "en"] as const)("GEO9.1 %s Admin location display", (locale
   });
 
   test("keeps existing filters and keyboard-accessible review/view actions with both row layouts", () => {
-    convex.responses["admin/projects:listProjects"] = [project];
+    convex.responses["admin/projects:listProjectsPage"] = [project];
     convex.responses["admin/siteVisits:listSiteVisits"] = [visit];
     const projectHtml = render(locale, <AdminProjectsPanel />);
     const visitHtml = render(locale, <AdminSiteVisitsPanel />);

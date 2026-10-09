@@ -3299,6 +3299,17 @@
     "cityLabel": "City",
     "allCities": "All cities",
     "statusFilterLabel": "Status",
+    "regionLabel": "Region",
+    "allRegions": "All Morocco",
+    "provinceLabel": "Province / prefecture",
+    "allProvinces": "All provinces / prefectures",
+    "provinceDisabled": "Choose a region to filter by province or prefecture.",
+    "clearFilters": "Clear filters",
+    "pagination": {
+      "loadMore": "Load more projects",
+      "loadingMore": "Loading more projects…",
+      "moreMatches": "More projects may match your filters."
+    },
     "empty": "No projects match these filters.",
     "columns": {
       "project": "Project",

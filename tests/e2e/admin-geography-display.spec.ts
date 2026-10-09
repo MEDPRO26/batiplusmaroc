@@ -77,8 +77,10 @@ for (const locale of ["fr", "en"] as const) {
     page.on("pageerror", error => errors.push(error.message));
     await mountHarness(page, projectsBundle, {
       __locale: locale, __pathname: "/admin/projects",
+      __paginatedQueries: {
+        "admin.projects.listProjectsPage": { results: [project, { ...project, projectId: "draft-1", title: "Unfinished project", location: cleared, status: "draft" }], status: "Exhausted" },
+      },
       __queries: {
-        "admin.projects.listProjects": [project, { ...project, projectId: "draft-1", title: "Unfinished project", location: cleared, status: "draft" }],
         "admin.projects.getProjectReview": review,
         "admin.projects.listProjectActivity": [],
       },

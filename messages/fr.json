@@ -3299,6 +3299,17 @@
     "cityLabel": "Ville",
     "allCities": "Toutes les villes",
     "statusFilterLabel": "Statut",
+    "regionLabel": "Région",
+    "allRegions": "Tout le Maroc",
+    "provinceLabel": "Province / préfecture",
+    "allProvinces": "Toutes les provinces / préfectures",
+    "provinceDisabled": "Choisissez une région pour filtrer par province ou préfecture.",
+    "clearFilters": "Effacer les filtres",
+    "pagination": {
+      "loadMore": "Afficher plus de projets",
+      "loadingMore": "Chargement de projets supplémentaires…",
+      "moreMatches": "D’autres projets peuvent correspondre à vos filtres."
+    },
     "empty": "Aucun projet ne correspond à ces filtres.",
     "columns": {
       "project": "Projet",

@@ -266,6 +266,11 @@ export default defineSchema({
     .index("by_clientId_and_status", ["clientId", "status"])
     .index("by_status", ["status"])
     .index("by_status_and_city", ["status", "city"])
+    // Admin queue ordering is submission time, independently of public visibility.
+    .index("by_submittedAt", ["submittedAt"])
+    .index("by_status_and_submittedAt", ["status", "submittedAt"])
+    .index("by_regionCode_and_submittedAt", ["regionCode", "submittedAt"])
+    .index("by_provinceCode_and_submittedAt", ["provinceCode", "submittedAt"])
     .index("by_status_and_visibility", ["status", "visibility"])
     .index("by_status_visibility_publishedAt", ["status", "visibility", "publishedAt"])
     .index("by_status_visibility_city_publishedAt", ["status", "visibility", "city", "publishedAt"])
