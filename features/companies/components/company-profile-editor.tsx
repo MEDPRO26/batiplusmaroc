@@ -14,6 +14,7 @@ import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useEffect, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import { serviceName } from "@/features/companies/lib/service-label";
+import { headquartersLabel } from "@/features/companies/lib/headquarters-label";
 import { ProfileSectionSkeleton } from "@/features/shared/components/skeletons";
 import { FriendlyAlert } from "@/features/shared/components/error-state";
 import { WorkspaceTabs, workspaceButton } from "@/features/shared/components/workspace-page";
@@ -132,6 +133,7 @@ export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
 
 function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVerified: boolean }) {
   const t = useTranslations("companyProfileManager");
+  const locale = useLocale();
   const logoUrl = profile.logoUrl;
 
   return (
@@ -159,7 +161,7 @@ function ProfileHeader({ profile, isVerified }: { profile: ProfileManager; isVer
             </div>
             <p className="mt-1.5 mb-0 flex items-center gap-1.5 text-sm text-muted">
               <MapPin aria-hidden className="size-3.5 shrink-0" strokeWidth={1.8} />
-              {profile.city}
+              <span className="min-w-0 break-words">{t("headquartersLocation", { location: headquartersLabel(profile.city, profile.headquarters, locale) })}</span>
             </p>
           </div>
         </div>

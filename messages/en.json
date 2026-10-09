@@ -1705,6 +1705,7 @@
     "retryPreview": "Retry preview"
   },
   "companyProfileManager": {
+    "headquartersLocation": "Headquarters: {location}",
     "profileView": {
       "settings": "Profile settings",
       "about": "About the company",
@@ -1730,7 +1731,7 @@
       "noMatches": "No matches.",
       "searchCities": "Search cities",
       "identityTitle": "Company name & location",
-      "identityLead": "How clients find and recognise your company.",
+      "identityLead": "Your headquarters location is separate from the areas where you take on work.",
       "editIdentity": "Edit company name and location",
       "editAbout": "Edit about the company",
       "descriptionHelp": "Between 20 and 1,000 characters.",
@@ -1859,7 +1860,7 @@
     },
     "fields": {
       "name": "Company name",
-      "city": "Main city",
+      "city": "Headquarters city / locality",
       "description": "Short description",
       "website": "Website — optional",
       "websitePlaceholder": "https://example.com",
@@ -1952,6 +1953,7 @@
     }
   },
   "publicCompany": {
+    "headquartersLocation": "Headquarters: {location}",
     "coverAlt": "Cover image for {name}",
     "logoAlt": "{name} logo",
     "verified": "Verified company",

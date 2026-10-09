@@ -323,11 +323,36 @@ describe("HQ1 legacy compatibility and coverage independence", () => {
     const directoryBefore = await list(t);
     await save(asUser(t, company.userId), "profile", { ...headquarters, communeName: "PRIVATE-HEADQUARTERS-COMMUNE" });
     expect(await list(t)).toEqual(directoryBefore);
-    expect(await t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "agadir-construction" })).toEqual(publicBefore);
+    const publicAfter = await t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "agadir-construction" });
+    expect(publicAfter).toEqual({ ...publicBefore, headquarters: { regionCode: "09", provinceCode: "09.001" } });
+    expect(Object.keys(publicAfter!.headquarters).sort()).toEqual(["provinceCode", "regionCode"]);
     expect((await list(t, { regionCode: "09" })).page).toEqual([]);
     expect((await list(t, { regionCode: "09", provinceCode: "09.001" })).page).toEqual([]);
     expect((await snapshot(t)).coverage).toEqual([]);
-    for (const dto of [directoryBefore, publicBefore]) expect(JSON.stringify(dto)).not.toMatch(/headquarters|PRIVATE-LEGAL-ADDRESS|PRIVATE-HEADQUARTERS-COMMUNE/);
+    expect(JSON.stringify(directoryBefore)).not.toContain("headquarters");
+    for (const dto of [directoryBefore, publicBefore, publicAfter]) expect(JSON.stringify(dto)).not.toMatch(/PRIVATE-LEGAL-ADDRESS|PRIVATE-HEADQUARTERS-COMMUNE|headquartersPolicyVersion/);
+  });
+
+  test.each([undefined, "structured_v1"] as const)("HQ2.1 owner profile preloads the stored policy %s", async (policy) => {
+    const t = convexTest(schema, modules);
+    const company = await seedCompany(t, "policy", { company: { ...storedHeadquarters, ...(policy ? { headquartersPolicyVersion: policy } : {}) } });
+    const dto = await asUser(t, company.userId).query(api.companies.index.getProfileManager, {});
+    expect(dto.headquartersPolicyVersion).toBe(policy ?? null);
+    expect(dto.headquarters).toEqual(headquarters);
+  });
+
+  test("HQ2.1 public legacy and cleared profiles retain city without legal-address fallback", async () => {
+    const t = convexTest(schema, modules);
+    const company = await seedCompany(t, "legacy");
+    const owner = asUser(t, company.userId);
+    const read = () => t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "legacy-construction" });
+    const legacy = await read();
+    expect(legacy?.headquarters).toEqual({ regionCode: null, provinceCode: null });
+    expect(legacy?.city).toBe("Agadir");
+    await save(owner, "profile", headquarters);
+    await save(owner, "profile", clearHeadquarters);
+    expect(await read()).toEqual(legacy);
+    expect(JSON.stringify(legacy)).not.toMatch(/PRIVATE-LEGAL|communeName|verification|address|phone|headquartersPolicyVersion/);
   });
 
   test("existing coverage drives geographic discovery independently of headquarters", async () => {

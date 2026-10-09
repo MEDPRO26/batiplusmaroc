@@ -9,6 +9,7 @@ import type { api } from "@/convex/_generated/api";
 import { InviteCompanyButton } from "@/features/invitations/components/invite-company-button";
 import { VerifiedBadge } from "./verified-badge";
 import { serviceName } from "@/features/companies/lib/service-label";
+import { headquartersLabel } from "@/features/companies/lib/headquarters-label";
 
 type PublicCompany = NonNullable<FunctionReturnType<typeof api.portfolio.index.getPublicCompanyProfile>>;
 
@@ -53,9 +54,9 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                     </h1>
                     <VerifiedBadge label={t("verified")} isVerified={company.isVerified} />
                   </div>
-                  <p className="mt-2 mb-0 flex flex-wrap items-center gap-2 text-sm text-muted">
-                    <MapPin aria-hidden className="size-3.5 shrink-0" strokeWidth={1.8} />
-                    <span>{company.city}</span>
+                  <p className="mt-2 mb-0 flex items-start gap-2 text-sm text-muted">
+                    <MapPin aria-hidden className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.8} />
+                    <span className="min-w-0 break-words">{t("headquartersLocation", { location: headquartersLabel(company.city, company.headquarters, locale) })}</span>
                   </p>
                   <p className="mt-2 mb-0 text-sm font-semibold text-ink">
                     {company.rating === null ? t("reviewsNone") : <><span className="text-amber-600">★ {format.number(company.rating, { maximumFractionDigits: 1 })}</span> <span className="font-normal text-muted">{t("reviewCount", { count: company.reviewCount })}</span></>}

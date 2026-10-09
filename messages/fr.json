@@ -1705,6 +1705,7 @@
     "retryPreview": "Réessayer l’aperçu"
   },
   "companyProfileManager": {
+    "headquartersLocation": "Siège : {location}",
     "profileView": {
       "settings": "Paramètres du profil",
       "about": "À propos de l’entreprise",
@@ -1730,7 +1731,7 @@
       "noMatches": "Aucun résultat.",
       "searchCities": "Rechercher une ville",
       "identityTitle": "Nom et localisation",
-      "identityLead": "Comment les clients trouvent et reconnaissent votre entreprise.",
+      "identityLead": "La localisation de votre siège est distincte des zones où vous intervenez.",
       "editIdentity": "Modifier le nom et la localisation",
       "editAbout": "Modifier la présentation de l’entreprise",
       "descriptionHelp": "Entre 20 et 1 000 caractères.",
@@ -1859,7 +1860,7 @@
     },
     "fields": {
       "name": "Nom de l’entreprise",
-      "city": "Ville principale",
+      "city": "Ville / Localité du siège",
       "description": "Description courte",
       "website": "Site web — facultatif",
       "websitePlaceholder": "https://exemple.ma",
@@ -1952,6 +1953,7 @@
     }
   },
   "publicCompany": {
+    "headquartersLocation": "Siège : {location}",
     "coverAlt": "Image de couverture de {name}",
     "logoAlt": "Logo de {name}",
     "verified": "Entreprise vérifiée",

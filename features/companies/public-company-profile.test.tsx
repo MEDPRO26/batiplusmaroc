@@ -11,7 +11,7 @@ vi.mock("next/image", () => ({
   ),
 }));
 vi.mock("next-intl/server", () => ({
-  getTranslations: async () => (key: string, values?: Record<string, unknown>) => key === "verified" ? (localeState.locale === "fr" ? fr : en).publicCompany.verified : key === "reviewBy" ? `reviewBy ${String(values?.name ?? "")}` : key,
+  getTranslations: async () => (key: string, values?: Record<string, unknown>) => key === "verified" ? (localeState.locale === "fr" ? fr : en).publicCompany.verified : key === "reviewBy" ? `reviewBy ${String(values?.name ?? "")}` : key === "headquartersLocation" ? (localeState.locale === "fr" ? fr : en).publicCompany.headquartersLocation.replace("{location}", String(values?.location ?? "")) : key,
   getLocale: async () => localeState.locale,
   getFormatter: async () => ({ number: (value: number) => String(value), dateTime: () => "Sep 26, 2026" }),
 }));
@@ -77,6 +77,26 @@ const company = {
 } as const;
 
 describe("public company profile UX contract", () => {
+  for (const locale of ["en", "fr"] as const) {
+    test(`HQ2.1 renders localized administrative headquarters without commune or verification data in ${locale}`, async () => {
+      localeState.locale = locale;
+      const html = renderProfile(await PublicCompanyProfile({ company: {
+        ...company, city: "Agadir", headquarters: { regionCode: "09", provinceCode: "09.001", communeName: "PRIVATE-COMMUNE" },
+        legal: { address: "PRIVATE-VERIFICATION-ADDRESS" },
+      } as never }));
+      expect(html).toContain(`${locale === "fr" ? "Siège :" : "Headquarters:"} Agadir · Agadir-Ida-Ou-Tanane · Souss-Massa`);
+      expect(html).not.toMatch(/PRIVATE-COMMUNE|PRIVATE-VERIFICATION-ADDRESS/);
+      expect(html).toContain("serviceAreas");
+    });
+    test(`HQ2.1 falls back to the saved city for legacy or unavailable codes in ${locale}`, async () => {
+      localeState.locale = locale;
+      for (const headquarters of [undefined, { regionCode: null, provinceCode: null }, { regionCode: "99", provinceCode: "99.999" }]) {
+        const html = renderProfile(await PublicCompanyProfile({ company: { ...company, headquarters } as never }));
+        expect(html).toContain(`${locale === "fr" ? "Siège :" : "Headquarters:"} Rabat`);
+        expect(html).not.toContain("99.999");
+      }
+    });
+  }
   test.each([
     ["en", "Roofing", "Structural work"],
     ["fr", "Toiture", "Gros œuvre"],

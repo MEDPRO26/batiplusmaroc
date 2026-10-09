@@ -136,7 +136,7 @@ describe("Company identity is displayed from backend-safe DTOs", () => {
         <QuoteReviewContent key="quote" quote={proposal} confirmDecline={false} error={null} success={null} pendingAction={null} onReview={vi.fn()} onCancelDecline={vi.fn()} onConfirmDecline={vi.fn()} />,
         <MessagesInboxView key="inbox" accountType="client" projects={[]} threads={[summary]} />,
         <ConversationContextPanel key="conversation" accountType="client" conversation={{ ...summary, viewerType: "client" }} conversationId={conversationId} />,
-        await PublicCompanyProfile({ company: { ...row, marketplaceAvailable: true, invitationEligible: true, foundedYear: null, companySize: null, languages: [], website: null, reviews: [], portfolio: [] } }),
+        await PublicCompanyProfile({ company: { ...row, headquarters: { regionCode: null, provinceCode: null }, marketplaceAvailable: true, invitationEligible: true, foundedYear: null, companySize: null, languages: [], website: null, reviews: [], portfolio: [] } }),
       ];
       for (const surface of ["category", "feed", "hiring"] as const) {
         state.selection = surface === "category" ? "renovation" : surface === "feed" ? "companies" : null;
@@ -183,7 +183,7 @@ describe("Company identity is displayed from backend-safe DTOs", () => {
     test(`${locale} public profile and portfolio display only safe supplied text`, async () => {
       state.locale = locale;
       const profile: NonNullable<FunctionReturnType<typeof api.portfolio.index.getPublicCompanyProfile>> = {
-        ...company, marketplaceAvailable: true, invitationEligible: true, foundedYear: 2016, companySize: "2to10", languages: ["french", "english"], website: null, reviews: [],
+        ...company, headquarters: { regionCode: null, provinceCode: null }, marketplaceAvailable: true, invitationEligible: true, foundedYear: 2016, companySize: "2to10", languages: ["french", "english"], website: null, reviews: [],
         portfolio: [{ id: "portfolio-1" as Id<"portfolioProjects">, title: `Work by ${SAFE_NAME}`, description: "company-document.pdf", city: "Rabat", projectType: "renovation", surface: 100, durationMonths: 2, year: 2026, status: "published", coverImageUrl: "https://media.example.test/work.webp", media: [], updatedAt: 1 }],
       };
       expectSafe(render(await PublicCompanyProfile({ company: profile })));
