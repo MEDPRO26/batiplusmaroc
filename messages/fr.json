@@ -1829,6 +1829,12 @@
       "title": "Couverture géographique",
       "lead": "Indiquez où votre entreprise intervient. Cela ne change pas la ville du siège ni les anciennes sélections de villes.",
       "edit": "Modifier la couverture géographique",
+      "reminder": {
+        "title": "Déclarez où vous acceptez des projets de construction",
+        "lead": "Choisissez tout le Maroc, des régions entières ou des provinces et préfectures où votre entreprise accepte d’intervenir.",
+        "discovery": "Sans couverture d’intervention déclarée, votre entreprise peut être exclue des recherches géographiques des clients.",
+        "action": "Déclarer ma couverture d’intervention"
+      },
       "loading": "Chargement de la couverture géographique…",
       "loadError": "La couverture géographique n’a pas pu être chargée.",
       "allMorocco": "Tout le Maroc",

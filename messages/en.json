@@ -1829,6 +1829,12 @@
       "title": "Geographic coverage",
       "lead": "Declare where your company takes on work. This does not change your headquarters city or older city selections.",
       "edit": "Edit geographic coverage",
+      "reminder": {
+        "title": "Declare where you accept construction projects",
+        "lead": "Choose all Morocco, entire regions, or specific provinces and prefectures where your company is willing to work.",
+        "discovery": "Without declared service coverage, your company may be excluded from geographic searches by clients.",
+        "action": "Declare service coverage"
+      },
       "loading": "Loading geographic coverage…",
       "loadError": "Geographic coverage could not be loaded.",
       "allMorocco": "All Morocco",

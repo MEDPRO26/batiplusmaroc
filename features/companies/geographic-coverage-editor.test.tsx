@@ -204,6 +204,22 @@ describe.each(["fr", "en"] as const)("GEO8.1 coverage editor %s", (locale) => {
     expect(settings).toContain("Agadir");
   });
 
+  test("shows the reminder for legacy-only coverage and hides it when explicit coverage exists", () => {
+    vi.mocked(useQuery).mockClear();
+    state.coverage = [];
+    const html = render(locale, <CompanyProfileEditor />);
+    expect(html).toContain(copy.reminder.title);
+    expect(html).toContain(copy.reminder.discovery);
+    expect(html).toContain(copy.legacyTitle);
+    expect(html).toContain("Salé");
+    const reads = vi.mocked(useQuery).mock.calls.filter(([ref]) => getFunctionName(ref) === "companies/index:getMyGeographicCoverage");
+    expect(reads).toHaveLength(1);
+    for (const keys of [["MA"], ["R:09"], ["P:09.541"]]) {
+      state.coverage = keys;
+      expect(render(locale, <CompanyProfileEditor />)).not.toContain(copy.reminder.title);
+    }
+  });
+
   test("toggles Morocco, regions and provinces without treating browse as coverage", () => {
     const draft: string[] = [];
     const onDraftChange = vi.fn((next: string[]) => { draft.splice(0, draft.length, ...next); });

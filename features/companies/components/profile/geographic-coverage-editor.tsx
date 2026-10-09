@@ -26,6 +26,14 @@ import {
 } from "@/lib/geography/coverage-selection";
 import { getRegions } from "@/lib/geography/morocco";
 import { mapAppError, mapConvexFailure } from "@/lib/errors";
+import { CompanyCoverageReminder } from "../company-coverage-reminder";
+
+type CoverageDeclarationProps = {
+  profile: ProfileManager;
+  frame: "sidebar" | "settings";
+  editorRequested?: boolean;
+  onEditorDismiss?: () => void;
+};
 
 const controlClass =
   "min-h-11 w-full min-w-0 rounded-sm border border-[#c5c8cb] bg-white px-3 text-sm text-ink outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
@@ -336,18 +344,31 @@ export function GeographicCoveragePanel({
   );
 }
 
-export function GeographicCoverageDialog({ savedKeys }: { savedKeys: readonly string[] }) {
+export function GeographicCoverageDialog({
+  savedKeys,
+  requestedOpen = false,
+  onDismissRequest,
+}: {
+  savedKeys: readonly string[];
+  requestedOpen?: boolean;
+  onDismissRequest?: () => void;
+}) {
   const t = useTranslations("companyProfileManager");
   const [open, setOpen] = useState(false);
+  const isOpen = open || requestedOpen;
+  function changeOpen(next: boolean) {
+    setOpen(next);
+    if (!next && requestedOpen) onDismissRequest?.();
+  }
   return (
-    <Dialog.Root onOpenChange={setOpen} open={open}>
+    <Dialog.Root onOpenChange={changeOpen} open={isOpen}>
       <Dialog.Trigger asChild>
         <EditIconButton label={t("coverage.edit")} />
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[70] bg-[#0f1f2e]/40" />
         <Dialog.Content className="fixed top-1/2 left-1/2 z-[71] w-[calc(100vw-24px)] max-w-[720px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl bg-white shadow-[0_24px_64px_rgb(15_31_46/0.22)] outline-none">
-          {open ? <GeographicCoveragePanel onDismiss={() => setOpen(false)} savedKeys={savedKeys} /> : null}
+          {isOpen ? <GeographicCoveragePanel onDismiss={() => changeOpen(false)} savedKeys={savedKeys} /> : null}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
@@ -392,11 +413,13 @@ function LegacyServiceAreas({ profile }: { profile: ProfileManager }) {
   );
 }
 
-function CoverageDeclaration({ profile, frame }: { profile: ProfileManager; frame: "sidebar" | "settings" }) {
+function CoverageDeclaration({ profile, frame, editorRequested, onEditorDismiss }: CoverageDeclarationProps) {
   const t = useTranslations("companyProfileManager");
   const coverage = useQuery(api.companies.index.getMyGeographicCoverage, {});
   const title = t("coverage.title");
-  const action = coverage === undefined ? null : <GeographicCoverageDialog savedKeys={coverage} />;
+  const action = coverage === undefined ? null : (
+    <GeographicCoverageDialog onDismissRequest={onEditorDismiss} requestedOpen={editorRequested} savedKeys={coverage} />
+  );
   const heading = frame === "sidebar" ? (
     <div className="flex min-h-9 items-center justify-between gap-3">
       <h2 className="m-0 text-[0.95rem] font-semibold tracking-[-0.01em] text-ink">{title}</h2>
@@ -411,6 +434,7 @@ function CoverageDeclaration({ profile, frame }: { profile: ProfileManager; fram
   return (
     <div className="grid min-w-0 gap-4">
       {heading}
+      <CompanyCoverageReminder coverageScopeKeys={coverage} />
       <p className="m-0 text-xs leading-5 text-muted">{t("coverage.headquartersSeparate")}</p>
       {coverage === undefined ? (
         <p aria-busy="true" className="m-0 text-sm text-muted" role="status">{t("coverage.loading")}</p>
@@ -447,10 +471,10 @@ class CoverageErrorBoundary extends Component<{ children: ReactNode; fallback: R
   }
 }
 
-export function CompanyServiceAreas({ profile, frame }: { profile: ProfileManager; frame: "sidebar" | "settings" }) {
+export function CompanyServiceAreas({ profile, frame, editorRequested, onEditorDismiss }: CoverageDeclarationProps) {
   const body = (
     <CoverageErrorBoundary fallback={<CoverageUnavailable frame={frame} profile={profile} />}>
-      <CoverageDeclaration frame={frame} profile={profile} />
+      <CoverageDeclaration editorRequested={editorRequested} frame={frame} onEditorDismiss={onEditorDismiss} profile={profile} />
     </CoverageErrorBoundary>
   );
   if (frame === "sidebar") {

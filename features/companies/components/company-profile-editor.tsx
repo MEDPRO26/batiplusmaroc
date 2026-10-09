@@ -37,7 +37,7 @@ import { CompanyServiceAreas } from "./profile/geographic-coverage-editor";
  * The company's own profile: it reads like the public profile, and each section
  * carries a small edit control that opens a focused dialog.
  */
-export function CompanyProfileEditor() {
+export function CompanyProfileEditor({ coverageEditorRequested = false }: { coverageEditorRequested?: boolean }) {
   const t = useTranslations("companyProfileManager");
   const tUx = useTranslations("ux");
   const user = useQuery(api.users.currentUser);
@@ -59,10 +59,25 @@ export function CompanyProfileEditor() {
   if (!user || !canLoad || profile === undefined) {
     return <CompanyProfileEditorSkeleton label={t("loading")} />;
   }
-  return <CompanyProfileView key={user._id} profile={profile} />;
+  return (
+    <CompanyProfileView
+      coverageEditorRequested={coverageEditorRequested}
+      key={user._id}
+      onCoverageEditorDismiss={() => router.replace(routes.companyProfileManagement, { scroll: false })}
+      profile={profile}
+    />
+  );
 }
 
-export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
+export function CompanyProfileView({
+  profile,
+  coverageEditorRequested = false,
+  onCoverageEditorDismiss,
+}: {
+  profile: ProfileManager;
+  coverageEditorRequested?: boolean;
+  onCoverageEditorDismiss?: () => void;
+}) {
   const t = useTranslations("companyProfileManager");
   const locale = useLocale();
   const tPublic = useTranslations("publicCompany");
@@ -107,7 +122,12 @@ export function CompanyProfileView({ profile }: { profile: ProfileManager }) {
                 </Link>
               </SidebarSection>
 
-              <CompanyServiceAreas frame="sidebar" profile={profile} />
+              <CompanyServiceAreas
+                editorRequested={coverageEditorRequested}
+                frame="sidebar"
+                onEditorDismiss={onCoverageEditorDismiss}
+                profile={profile}
+              />
 
               <SidebarSection action={<LanguagesEditor profile={profile} />} title={t("fields.languages")}>
                 {profile.languages.length > 0 ? (

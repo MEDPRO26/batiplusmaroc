@@ -3,6 +3,7 @@
 import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
 
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+import { CompanyDashboardCoverageReminder } from "./company-coverage-reminder";
 
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -125,6 +126,7 @@ export function CompanyDashboard() {
   return (
     <div className="min-h-[calc(100dvh-4.5rem)] bg-white">
       <div className="mx-auto grid w-full max-w-[1120px] items-start gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6 lg:px-8">
+        <CompanyDashboardCoverageReminder key={user._id} />
         <ProjectFeed
           category={category}
           geography={geography}
