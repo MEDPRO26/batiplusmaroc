@@ -128,7 +128,7 @@ describe("GEO9.2C authorized OC3 location summaries", () => {
       expect(history.page.map(entry => [entry.sequence, entry.kind === "request" && entry.requestKind])).toEqual([
         [1, "free_help"], [2, "coordination_discussion"],
       ]);
-      expect(history.page.every(entry => !Object.hasOwn(entry, "location"))).toBe(true);
+      expect(history.page.every(entry => !Object.prototype.hasOwnProperty.call(entry, "location"))).toBe(true);
     }
     expect(await snapshot(s.t)).toEqual(before);
   });
@@ -206,7 +206,7 @@ describe("GEO9.2C authorized OC3 location summaries", () => {
     }
     expect(results.map(item => item.project.id).sort()).toEqual(ids.sort());
     expect(results.map(item => item.unreadCount).sort()).toEqual([1, 1, 2]);
-    expect(results.every(item => item.readThroughSequence === 0 && Object.hasOwn(item.project, "location"))).toBe(true);
+    expect(results.every(item => item.readThroughSequence === 0 && Object.prototype.hasOwnProperty.call(item.project, "location"))).toBe(true);
     expect(await snapshot(s.t)).toEqual(before);
   });
 });
