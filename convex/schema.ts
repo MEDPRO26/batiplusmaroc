@@ -904,6 +904,8 @@ export default defineSchema({
     headquartersRegionCode: v.optional(v.string()),
     headquartersProvinceCode: v.optional(v.string()),
     headquartersCommune: v.optional(v.string()),
+    /** Server-owned, immutable enrollment marker; absent records keep legacy onboarding. */
+    headquartersPolicyVersion: v.optional(v.literal("structured_v1")),
     description: v.optional(v.string()),
     yearsExperience: v.optional(v.number()),
     foundedYear: v.optional(v.number()),

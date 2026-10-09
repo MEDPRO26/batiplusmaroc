@@ -2,6 +2,7 @@ import { normalizeLocationText, PROJECT_LOCATION_TEXT_MAX_LENGTH } from "./locat
 import { validateAdministrativePair } from "./morocco";
 
 export const COMPANY_HEADQUARTERS_COMMUNE_MAX_LENGTH = PROJECT_LOCATION_TEXT_MAX_LENGTH;
+export const COMPANY_HEADQUARTERS_POLICY_VERSION = "structured_v1";
 
 /** Complete snapshot; omission preserves storage and an all-null snapshot clears it. */
 export type CompanyHeadquartersInput = {
@@ -27,7 +28,10 @@ type HeadquartersValidation =
     | "INVALID_COMPANY_HEADQUARTERS_COMMUNE" };
 
 /** No city/coverage inference, database access or legal-address fallback. */
-export function normalizeCompanyHeadquarters(input: CompanyHeadquartersInput | undefined): HeadquartersValidation {
+export function normalizeCompanyHeadquarters(input: CompanyHeadquartersInput | undefined, required = false): HeadquartersValidation {
+  if (required && (input === undefined || input.regionCode === null)) {
+    return { ok: false, error: "COMPANY_HEADQUARTERS_REGION_REQUIRED" };
+  }
   if (input === undefined) return { ok: true, fields: {} };
   if (input.regionCode === null && input.provinceCode === null && input.communeName === null) {
     return { ok: true, fields: {

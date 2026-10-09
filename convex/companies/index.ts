@@ -92,6 +92,7 @@ const onboardingProfileValidator = v.union(
     phone: v.string(),
     city: v.string(),
     headquarters: headquartersSnapshotValidator,
+    headquartersPolicyVersion: v.union(v.literal("structured_v1"), v.null()),
     description: v.string(),
     yearsExperience: v.union(v.number(), v.null()),
     website: v.string(),
@@ -172,8 +173,8 @@ function normalizeCity(value: string) {
   return normalized;
 }
 
-function validatedHeadquartersFields(input: CompanyHeadquartersInput | undefined) {
-  const headquarters = normalizeCompanyHeadquarters(input);
+function validatedHeadquartersFields(input: CompanyHeadquartersInput | undefined, required = false) {
+  const headquarters = normalizeCompanyHeadquarters(input, required);
   if (!headquarters.ok) throw new ConvexError(headquarters.error);
   return headquarters.fields;
 }
@@ -349,6 +350,7 @@ export const getOnboardingProfile = query({
       phone: company.phone ?? user.phone ?? "",
       city: company.city ?? "",
       headquarters: companyHeadquartersSnapshot(company),
+      headquartersPolicyVersion: company.headquartersPolicyVersion ?? null,
       description: company.description ?? "",
       yearsExperience: company.yearsExperience ?? null,
       website: company.website ?? "",
@@ -522,7 +524,10 @@ export const updatePublicProfile = mutation({
       ? company.description
       : normalizeText(args.description, 20, 1000, "INVALID_DESCRIPTION");
     const city = args.city === undefined ? company.city : normalizeCity(args.city);
-    const headquarters = validatedHeadquartersFields(args.headquarters);
+    const headquarters = validatedHeadquartersFields(
+      args.headquarters,
+      args.headquarters !== undefined && company.headquartersPolicyVersion === "structured_v1",
+    );
     const phone = args.phone === undefined ? company.phone : normalizeMoroccanPhone(args.phone);
     const website = args.website === undefined ? company.website : normalizeWebsite(args.website);
     const yearsExperience = args.yearsExperience === undefined
@@ -630,7 +635,12 @@ export const completeOnboarding = mutation({
     const legalName = normalizeOptionalText(args.legalName, 2, 160, "INVALID_LEGAL_NAME");
     const phone = normalizeMoroccanPhone(args.phone);
     const city = normalizeCity(args.city);
-    const headquarters = validatedHeadquartersFields(args.headquarters);
+    // The immutable record marker, rather than the current rollout setting, is authoritative.
+    const structuredRequired = company.headquartersPolicyVersion === "structured_v1";
+    const headquarters = validatedHeadquartersFields(
+      args.headquarters ?? (structuredRequired ? companyHeadquartersSnapshot(company) : undefined),
+      structuredRequired,
+    );
     const description = normalizeText(args.description, 20, 1000, "INVALID_DESCRIPTION");
     const yearsExperience = validateYearsExperience(args.yearsExperience);
     const website = normalizeWebsite(args.website);
@@ -704,7 +714,7 @@ export const completeOnboarding = mutation({
       legalName,
       phone,
       city,
-      ...headquarters,
+      ...(args.headquarters === undefined ? {} : headquarters),
       description,
       yearsExperience,
       website,

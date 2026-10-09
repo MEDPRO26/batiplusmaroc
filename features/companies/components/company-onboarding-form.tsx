@@ -9,14 +9,17 @@ import { OnboardingChrome } from "@/features/auth/components/onboarding-chrome";
 import { consumeOAuthSignupIntent } from "@/features/auth/lib/oauth-signup-intent";
 import { FriendlyAlert } from "@/features/shared/components/error-state";
 import { catalogServiceName } from "@/features/companies/lib/service-label";
+import { onboardingHeadquarters } from "@/features/companies/lib/onboarding-headquarters";
 import { FormSkeleton } from "@/features/shared/components/skeletons";
 import { useRouter } from "@/i18n/navigation";
 import { mapConvexFailure } from "@/lib/errors";
-import { focusFirstInvalidField } from "@/lib/forms/submit";
+import { createSubmitLock, focusFirstInvalidField } from "@/lib/forms/submit";
+import { COMPANY_HEADQUARTERS_POLICY_VERSION } from "@/lib/geography/company-headquarters";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
 import { joinClassNames } from "@/lib/utils";
 import { CompanyOwnerLogoManager } from "./company-owner-logo-manager";
+import { CompanyOnboardingHeadquarters } from "./company-onboarding-headquarters";
 
 const totalSteps = 3;
 type Step = 1 | 2 | 3;
@@ -42,11 +45,14 @@ export function CompanyOnboardingForm() {
   const router = useRouter();
   const finalized = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const submitLock = useRef(createSubmitLock());
   const formId = useId();
   const [step, setStep] = useState<Step>(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<{ name: string; message: string } | null>(null);
+  const supportsHeadquarters = profile?.headquarters !== undefined;
+  const headquartersRequired = profile?.headquartersPolicyVersion === COMPANY_HEADQUARTERS_POLICY_VERSION;
 
   useEffect(() => {
     if (user === null) {
@@ -85,9 +91,16 @@ export function CompanyOnboardingForm() {
     window.scrollTo({ top: 0, behavior: "auto" });
     const form = formRef.current;
     if (!form) return;
-    const first = form.querySelector<HTMLElement>(`[data-step="${step}"] input, [data-step="${step}"] textarea`);
+    const first = form.querySelector<HTMLElement>(`[data-step="${step}"] input, [data-step="${step}"] textarea, [data-step="${step}"] select`);
     first?.focus();
   }, [step]);
+
+  // Server failures must focus after React has re-enabled the saving fieldset.
+  useEffect(() => {
+    if (!submitting && fieldError && formRef.current) {
+      focusFirstInvalidField(formRef.current, fieldError.name);
+    }
+  }, [fieldError, step, submitting]);
 
   function invalid(name: string) {
     return fieldError?.name === name;
@@ -135,15 +148,23 @@ export function CompanyOnboardingForm() {
       return true;
     }
     const phone = String(formData.get("phone") ?? "").trim();
-    const city = String(formData.get("city") ?? "").trim();
+    const city = String(formData.get("city") ?? "").trim().replace(/\s+/g, " ");
     if (!phone) {
       setFieldError({ name: "phone", message: t("validation.phone") });
       focusFirstInvalidField(form, "phone");
       return false;
     }
-    if (city.length < 2) {
+    if (city.length < 2 || city.length > 80 || !/^[\p{L}\p{M}][\p{L}\p{M}\s'’.-]*$/u.test(city)) {
       setFieldError({ name: "city", message: t("validation.city") });
       focusFirstInvalidField(form, "city");
+      return false;
+    }
+    const headquarters = onboardingHeadquarters(formData, supportsHeadquarters, headquartersRequired);
+    if (!headquarters.ok) {
+      const mapped = mapConvexFailure(new Error(headquarters.error), tUx);
+      if (mapped.field) setFieldError({ name: mapped.field, message: mapped.message });
+      else setError(mapped.message);
+      focusFirstInvalidField(form, mapped.field);
       return false;
     }
     return true;
@@ -151,7 +172,7 @@ export function CompanyOnboardingForm() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting || onboardingCompleted) return;
+    if (submitting || submitLock.current.isLocked || onboardingCompleted) return;
     const form = event.currentTarget;
     setError(null);
     setFieldError(null);
@@ -164,6 +185,8 @@ export function CompanyOnboardingForm() {
 
     const formData = new FormData(form);
     const yearsValue = String(formData.get("yearsExperience") ?? "").trim();
+    const headquarters = onboardingHeadquarters(formData, supportsHeadquarters, headquartersRequired);
+    if (!headquarters.ok || !submitLock.current.tryAcquire()) return;
 
     setSubmitting(true);
     try {
@@ -172,6 +195,7 @@ export function CompanyOnboardingForm() {
         legalName: String(formData.get("legalName") ?? ""),
         phone: String(formData.get("phone") ?? ""),
         city: String(formData.get("city") ?? ""),
+        ...(headquarters.headquarters === undefined ? {} : { headquarters: headquarters.headquarters }),
         description: String(formData.get("description") ?? ""),
         ...(profile && profile.fallbackServices.length > 0
           ? { services: formData.getAll("services").map(String) }
@@ -189,7 +213,7 @@ export function CompanyOnboardingForm() {
       } else {
         setError(mapped.message);
       }
-      focusFirstInvalidField(form, mapped.field);
+      submitLock.current.release();
       setSubmitting(false);
     }
   }
@@ -243,7 +267,8 @@ export function CompanyOnboardingForm() {
         <h1 className="mt-3 mb-0 text-[1.75rem] font-semibold tracking-[-0.03em] text-ink sm:text-[2rem]">{heading}</h1>
         <p className="mt-2.5 mb-0 max-w-[34rem] text-[0.98rem] leading-6 text-muted">{lead}</p>
 
-        <form className="mt-8" noValidate onSubmit={onSubmit} ref={formRef}>
+        <form aria-busy={submitting} className="mt-8" noValidate onSubmit={onSubmit} ref={formRef}>
+          <fieldset className="min-w-0 border-0 p-0" disabled={submitting}>
           <div className={joinClassNames("rounded-2xl border border-brand-border bg-white p-5 sm:p-7", step !== 1 && "hidden")} data-step="1">
             <p className="m-0 text-[0.95rem] font-semibold text-ink">{t("detailsTitle")}</p>
             <p className="mt-1 mb-6 text-[0.88rem] leading-5 text-muted">{t("detailsLead")}</p>
@@ -349,9 +374,14 @@ export function CompanyOnboardingForm() {
                 <span className="mt-1 block text-[0.8rem] font-normal text-red-700">{fieldMessage("phone")}</span>
               ) : null}
             </label>
+            <CompanyOnboardingHeadquarters
+              fieldClass={fieldClass} fieldError={fieldError} id={formId}
+              required={headquartersRequired} snapshot={profile.headquarters} supported={supportsHeadquarters}
+            />
             <label className="mt-4 block text-[0.88rem] font-medium text-ink" htmlFor={`${formId}-city`}>
               {t("city")}
               <input
+                aria-describedby={`${formId}-city-hint${invalid("city") ? ` ${formId}-city-error` : ""}`}
                 aria-invalid={invalid("city")}
                 autoComplete="address-level2"
                 className={inputClass("city")}
@@ -363,9 +393,9 @@ export function CompanyOnboardingForm() {
                 required
                 type="text"
               />
-              <span className="mt-1.5 block text-[0.8rem] font-normal leading-5 text-muted">{t("cityHint")}</span>
+              <span className="mt-1.5 block text-[0.8rem] font-normal leading-5 text-muted" id={`${formId}-city-hint`}>{t("cityHint")}</span>
               {fieldMessage("city") ? (
-                <span className="mt-1 block text-[0.8rem] font-normal text-red-700">{fieldMessage("city")}</span>
+                <span className="mt-1 block text-[0.8rem] font-normal text-red-700" id={`${formId}-city-error`} role="alert">{fieldMessage("city")}</span>
               ) : null}
             </label>
 
@@ -406,6 +436,7 @@ export function CompanyOnboardingForm() {
 
             <div className="mt-6 border-t border-brand-border pt-5"><CompanyOwnerLogoManager /></div>
           </div>
+          </fieldset>
 
           {error ? (
             <div className="mt-5">
@@ -416,6 +447,7 @@ export function CompanyOnboardingForm() {
           <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row">
             {step > 1 ? (
               <button
+                disabled={submitting}
                 className="inline-flex min-h-12 flex-1 items-center justify-center rounded-[10px] border border-brand-border bg-white px-5 text-[0.95rem] font-semibold text-ink transition-colors duration-150 hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
                 onClick={() => goToStep((step - 1) as Step)}
                 type="button"
@@ -445,7 +477,7 @@ export function CompanyOnboardingForm() {
 
 function stepForField(field: string): Step {
   if (field === "services") return 2;
-  if (field === "phone" || field === "city" || field === "yearsExperience" || field === "website" || field === "logo") {
+  if (field === "phone" || field === "city" || field === "regionCode" || field === "provinceCode" || field === "communeName" || field === "yearsExperience" || field === "website" || field === "logo") {
     return 3;
   }
   return 1;

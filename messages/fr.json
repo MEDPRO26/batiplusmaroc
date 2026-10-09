@@ -1117,12 +1117,12 @@
       "titleServices": "Quels travaux réalisez-vous ?",
       "leadServices": "Sélectionnez tous les services que vous proposez régulièrement. Vous pourrez les modifier plus tard.",
       "titleContact": "Comment les clients peuvent-ils vous joindre ?",
-      "leadContact": "Ajoutez un téléphone et une ville pour que les clients près de chez vous puissent vous contacter.",
+      "leadContact": "Ajoutez un téléphone et la localisation du siège de votre entreprise.",
       "back": "Retour",
       "createProfile": "Créer le profil",
       "descriptionHint": "Saisissez au moins 20 caractères.",
       "phoneHint": "Partagé uniquement avec les clients avec lesquels vous travaillez.",
-      "cityHint": "Aide les clients à trouver des entreprises dans leur région.",
+      "cityHint": "La localisation du siège ne définit pas les zones où votre entreprise intervient.",
       "detailsTitle": "Informations de l’entreprise",
       "detailsLead": "Présentez votre entreprise aux clients.",
       "companyName": "Nom de l’entreprise",
@@ -1154,7 +1154,7 @@
       "owner": "Propriétaire du compte : {name}",
       "phone": "Téléphone",
       "phonePlaceholder": "06 12 34 56 78",
-      "city": "Ville",
+      "city": "Ville / Localité du siège",
       "cityPlaceholder": "Casablanca",
       "continue": "Continuer",
       "saving": "Enregistrement…",
@@ -1162,7 +1162,7 @@
       "validation": {
         "companyName": "Saisissez un nom d’entreprise valide.",
         "phone": "Saisissez un numéro de téléphone marocain valide.",
-        "city": "Saisissez une ville valide.",
+        "city": "Saisissez une ville / localité de 2 à 80 caractères (lettres, espaces, apostrophes, points ou traits d’union).",
         "description": "Saisissez une description de 20 à 1 000 caractères.",
         "services": "Sélectionnez au moins un service valide.",
         "years": "Saisissez un nombre entier entre 0 et 100.",
@@ -1171,6 +1171,20 @@
       },
       "errors": {
         "generic": "Impossible d’enregistrer le profil entreprise. Veuillez réessayer."
+      },
+      "headquarters": {
+        "country": "Pays",
+        "morocco": "Maroc",
+        "region": "Région",
+        "province": "Province / Préfecture",
+        "commune": "Commune (facultatif)",
+        "selectRegion": "Sélectionnez une région",
+        "selectProvince": "Sélectionnez une province ou préfecture",
+        "provinceHint": "Sélectionnez d’abord une région. Changer de région efface la province sélectionnée.",
+        "communeHint": "Facultatif. {max} caractères maximum, sans caractères de contrôle.",
+        "required": "La région et la province / préfecture du siège sont obligatoires.",
+        "legacyOptional": "Facultatif pour votre compte existant. Sélectionnez la région et la province ensemble.",
+        "unavailable": "La localisation détaillée du siège est temporairement indisponible. Vous pouvez continuer avec votre ville / localité."
       }
     },
     "companyDashboard": {
@@ -4869,7 +4883,14 @@
         "INVALID_COORDINATION_AMOUNT": "Saisissez un montant positif en MAD avec au maximum deux décimales et sans séparateur de milliers.",
         "INVALID_COORDINATION_PERCENTAGE": "Saisissez un pourcentage décimal positif de 64 caractères au maximum.",
         "INVALID_COORDINATION_REVISION": "La révision du brouillon est invalide. Rechargez et vérifiez avant d’enregistrer.",
-        "INVALID_COORDINATION_TIME": "Actualisez le résumé pour vérifier à nouveau son éligibilité."
+        "INVALID_COORDINATION_TIME": "Actualisez le résumé pour vérifier à nouveau son éligibilité.",
+        "COMPANY_HEADQUARTERS_REGION_REQUIRED": "Sélectionnez la région du siège.",
+        "COMPANY_HEADQUARTERS_PROVINCE_REQUIRED": "Sélectionnez la province / préfecture du siège.",
+        "INVALID_COMPANY_HEADQUARTERS_REGION": "Sélectionnez une région marocaine valide.",
+        "INVALID_COMPANY_HEADQUARTERS_PROVINCE": "Sélectionnez une province / préfecture marocaine valide.",
+        "COMPANY_HEADQUARTERS_PROVINCE_REGION_MISMATCH": "Sélectionnez une province / préfecture appartenant à cette région.",
+        "INVALID_COMPANY_HEADQUARTERS_COMMUNE": "Saisissez une commune de 100 caractères maximum, sans caractères de contrôle.",
+        "COMPANY_HEADQUARTERS_POLICY_UNAVAILABLE": "La localisation du siège est temporairement indisponible. Veuillez réessayer."
       }
     },
     "empty": {

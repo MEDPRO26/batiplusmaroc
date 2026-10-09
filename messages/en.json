@@ -1117,12 +1117,12 @@
       "titleServices": "What work do you do?",
       "leadServices": "Select every service you regularly offer. You can update this later.",
       "titleContact": "How can clients reach you?",
-      "leadContact": "Add a phone number and city so nearby clients can contact you.",
+      "leadContact": "Add a phone number and your company headquarters location.",
       "back": "Back",
       "createProfile": "Create your profile",
       "descriptionHint": "Write at least 20 characters.",
       "phoneHint": "Shared only with clients who work with you.",
-      "cityHint": "Helps clients find companies in their area.",
+      "cityHint": "Headquarters location does not define the areas your company serves.",
       "detailsTitle": "Company details",
       "detailsLead": "Tell clients who you are.",
       "companyName": "Company name",
@@ -1154,7 +1154,7 @@
       "owner": "Account owner: {name}",
       "phone": "Phone",
       "phonePlaceholder": "06 12 34 56 78",
-      "city": "City",
+      "city": "Headquarters city / locality",
       "cityPlaceholder": "Casablanca",
       "continue": "Continue",
       "saving": "Saving…",
@@ -1162,7 +1162,7 @@
       "validation": {
         "companyName": "Enter a valid company name.",
         "phone": "Enter a valid Moroccan phone number.",
-        "city": "Enter a valid city.",
+        "city": "Enter a city / locality of 2 to 80 characters (letters, spaces, apostrophes, periods or hyphens).",
         "description": "Enter a description between 20 and 1,000 characters.",
         "services": "Select at least one valid service.",
         "years": "Enter a whole number from 0 to 100.",
@@ -1171,6 +1171,20 @@
       },
       "errors": {
         "generic": "We could not save your company profile. Please try again."
+      },
+      "headquarters": {
+        "country": "Country",
+        "morocco": "Morocco",
+        "region": "Region",
+        "province": "Province / Prefecture",
+        "commune": "Commune (optional)",
+        "selectRegion": "Select a region",
+        "selectProvince": "Select a province or prefecture",
+        "provinceHint": "Select a region first. Changing the region clears the selected province.",
+        "communeHint": "Optional. Maximum {max} characters, without control characters.",
+        "required": "Headquarters region and province / prefecture are required.",
+        "legacyOptional": "Optional for your existing account. Select the region and province together.",
+        "unavailable": "Detailed headquarters location is temporarily unavailable. You can continue with your city / locality."
       }
     },
     "companyDashboard": {
@@ -4869,7 +4883,14 @@
         "INVALID_COORDINATION_AMOUNT": "Enter a positive MAD amount with at most two decimal digits and no thousands separator.",
         "INVALID_COORDINATION_PERCENTAGE": "Enter a positive decimal percentage with at most 64 characters.",
         "INVALID_COORDINATION_REVISION": "The draft revision is invalid. Reload and review before saving.",
-        "INVALID_COORDINATION_TIME": "Refresh the summary to check eligibility again."
+        "INVALID_COORDINATION_TIME": "Refresh the summary to check eligibility again.",
+        "COMPANY_HEADQUARTERS_REGION_REQUIRED": "Select the headquarters region.",
+        "COMPANY_HEADQUARTERS_PROVINCE_REQUIRED": "Select the headquarters province / prefecture.",
+        "INVALID_COMPANY_HEADQUARTERS_REGION": "Select a valid Moroccan region.",
+        "INVALID_COMPANY_HEADQUARTERS_PROVINCE": "Select a valid Moroccan province / prefecture.",
+        "COMPANY_HEADQUARTERS_PROVINCE_REGION_MISMATCH": "Select a province / prefecture belonging to this region.",
+        "INVALID_COMPANY_HEADQUARTERS_COMMUNE": "Enter a commune of up to 100 characters, without control characters.",
+        "COMPANY_HEADQUARTERS_POLICY_UNAVAILABLE": "Headquarters location is temporarily unavailable. Please try again."
       }
     },
     "empty": {

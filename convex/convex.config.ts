@@ -4,6 +4,7 @@ import { v } from "convex/values";
 
 const app = defineApp({
   env: {
+    COMPANY_HEADQUARTERS_POLICY_VERSION: v.optional(v.literal("structured_v1")),
     VERIFICATION_WEB_ORIGINS: v.optional(v.string()),
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: v.optional(v.string()),
     VAPID_PRIVATE_KEY: v.optional(v.string()),
