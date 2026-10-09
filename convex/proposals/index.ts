@@ -7,6 +7,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { query, type QueryCtx } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
 import { invitationForPair } from "../invitations/index";
+import { generalProjectLocationValidator, toGeneralProjectLocation } from "../projects/location";
 
 /** Every non-draft initial-quote status, in the order the proposal lifecycle reaches them. */
 const LISTED_STATUSES = [
@@ -33,6 +34,7 @@ const companyProposalValidator = v.object({
   projectId: v.id("projects"),
   projectTitle: v.string(),
   city: v.union(v.string(), v.null()),
+  location: generalProjectLocationValidator,
   status: proposalStatusValidator,
   estimatedPriceMad: v.number(),
   submittedAt: v.number(),
@@ -108,6 +110,7 @@ export const listMyProposals = query({
         projectId: project._id,
         projectTitle: project.title ?? "—",
         city: project.city ?? null,
+        location: toGeneralProjectLocation(project),
         status: quote.status,
         estimatedPriceMad: quote.estimatedPrice,
         submittedAt: quote.submittedAt,

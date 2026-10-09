@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
 import { Link } from "@/i18n/navigation";
 import { mapAppError } from "@/lib/errors";
 import { routes } from "@/lib/routes";
@@ -20,7 +21,7 @@ export function InviteCompanyButton({
 }) {
   const t = useTranslations("invitations.client");
   const tUx = useTranslations("ux");
-  const tWizard = useTranslations("projectWizard");
+  const locationLabel = useProjectLocationLabel();
   const user = useQuery(api.users.currentUser);
   const [open, setOpen] = useState(false);
   const projects = useQuery(
@@ -233,9 +234,7 @@ export function InviteCompanyButton({
                         value={project.id}
                       >
                         {project.title}
-                        {project.city
-                          ? ` · ${tWizard(`cityOptions.${project.city}`)}`
-                          : ""}
+                        {` · ${locationLabel(project)}`}
                         {project.invitationStatus
                           ? ` — ${t(`status.${project.invitationStatus}`)}`
                           : ""}

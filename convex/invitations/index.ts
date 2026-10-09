@@ -13,6 +13,12 @@ import {
   createNotificationForActiveCompanyMembers,
 } from "../notifications/model";
 import { requireClientUser, requireOwnedProject } from "../projects/access";
+import {
+  detailedProjectLocationValidator,
+  generalProjectLocationValidator,
+  toDetailedProjectLocation,
+  toGeneralProjectLocation,
+} from "../projects/location";
 import { assertProjectTransition } from "../projects/state";
 import { isActiveQuoteStatus } from "../quotes/state";
 import {
@@ -33,6 +39,7 @@ const eligibleProjectValidator = v.object({
   id: v.id("projects"),
   title: v.string(),
   city: v.union(v.string(), v.null()),
+  location: detailedProjectLocationValidator,
   category: v.union(v.string(), v.null()),
   status: v.union(v.literal("published"), v.literal("in_discussion")),
   invitationId: v.union(v.id("invitations"), v.null()),
@@ -45,6 +52,7 @@ const invitationValidator = v.object({
   projectTitle: v.string(),
   projectDescription: v.string(),
   city: v.union(v.string(), v.null()),
+  location: v.union(generalProjectLocationValidator, detailedProjectLocationValidator),
   category: v.union(v.string(), v.null()),
   companyId: v.id("companies"),
   companyName: v.string(),
@@ -142,6 +150,8 @@ async function toInvitationDto(ctx: Ctx, invitation: Doc<"invitations">, viewerT
     projectTitle: maskCompanyNamesInText(project.title ?? "", maskedNames, files),
     projectDescription: maskCompanyNamesInText(project.description ?? "", maskedNames, files),
     city: project.city ?? null,
+    // List summaries stay general for Companies; only the current owner gets details.
+    location: viewerType === "client" ? toDetailedProjectLocation(project) : toGeneralProjectLocation(project),
     category: project.primaryCategory ?? null,
     companyId: company._id,
     companyName: companyNameForAudience(company.name, audience),
@@ -192,6 +202,7 @@ export const listMyEligibleProjectsForCompany = query({
           id: project._id,
           title: project.title ?? "",
           city: project.city ?? null,
+          location: toDetailedProjectLocation(project),
           category: project.primaryCategory ?? null,
           status: project.status as "published" | "in_discussion",
           invitationId: existing?._id ?? null,
