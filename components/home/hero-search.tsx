@@ -118,6 +118,7 @@ function ClientPanel({
 
 function CompanyPanel() {
   const t = useTranslations("hero");
+  const router = useRouter();
 
   return (
     <div className="hero-panel-in w-full min-w-0">
@@ -128,7 +129,10 @@ function CompanyPanel() {
       >
         {t("exploreProjects")}
       </Link>
-      <ChipRow chips={companyChipKeys} />
+      <ChipRow
+        chips={companyChipKeys}
+        onSelect={(value) => router.push({ pathname: routes.browseProjects, query: { q: value } })}
+      />
     </div>
   );
 }
