@@ -29,6 +29,7 @@ import {
   type DirectoryPageStatus,
 } from "@/features/companies/lib/directory-pagination";
 import { catalogServiceName, serviceName } from "@/features/companies/lib/service-label";
+import { headquartersLabel } from "@/features/companies/lib/headquarters-label";
 import { logUnexpectedError } from "@/lib/errors";
 import { CompanyCoverageLabel } from "./company-coverage-label";
 
@@ -352,20 +353,9 @@ function FilterFields({
         <button className="min-h-11 text-xs font-semibold text-brand" onClick={onClear} type="button">{t("clear")}</button>
       </div>
       <div className="mt-4 grid gap-6">
-        <label className="grid gap-2 text-sm font-medium text-ink" htmlFor={`${idPrefix}-city`}>
-          {t("city.label")}
-          <input
-            className="min-h-11 rounded-sm border border-brand-border bg-white px-3 text-sm font-normal outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
-            aria-describedby={`${idPrefix}-city-hint`}
-            id={`${idPrefix}-city`}
-            onChange={(event) => onCityChange(event.target.value)}
-            placeholder={t("city.placeholder")}
-            value={city}
-          />
-          <span className="text-xs font-normal leading-5 text-muted" id={`${idPrefix}-city-hint`}>{t("city.hint")}</span>
-        </label>
-        <fieldset className="m-0 grid gap-3 border-0 p-0">
-          <legend className="mb-1 text-sm font-medium text-ink">{t("geography.legend")}</legend>
+        <fieldset aria-describedby={`${idPrefix}-coverage-hint`} className="m-0 grid gap-3 border-0 p-0">
+          <legend className="mb-1 text-sm font-semibold text-ink">{t("geography.legend")}</legend>
+          <p className="m-0 text-xs leading-5 text-muted" id={`${idPrefix}-coverage-hint`}>{t("geography.hint")}</p>
           <label className="grid gap-2 text-sm font-medium text-ink" htmlFor={`${idPrefix}-region`}>
             {t("geography.regionLabel")}
             <select
@@ -400,6 +390,18 @@ function FilterFields({
             )}
           </label>
         </fieldset>
+        <label className="grid gap-2 text-sm font-medium text-ink" htmlFor={`${idPrefix}-city`}>
+          {t("city.label")}
+          <input
+            className="min-h-11 rounded-sm border border-brand-border bg-white px-3 text-sm font-normal outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
+            aria-describedby={`${idPrefix}-city-hint`}
+            id={`${idPrefix}-city`}
+            onChange={(event) => onCityChange(event.target.value)}
+            placeholder={t("city.placeholder")}
+            value={city}
+          />
+          <span className="text-xs font-normal leading-5 text-muted" id={`${idPrefix}-city-hint`}>{t("city.hint")}</span>
+        </label>
         <fieldset className="m-0 grid gap-2 border-0 p-0">
           <legend className="mb-1 text-sm font-medium text-ink">{t("service.label")}</legend>
           <label className="flex min-h-8 cursor-pointer items-center gap-2 text-sm font-normal text-ink" htmlFor={`${idPrefix}-service-all`}>
@@ -457,6 +459,7 @@ function FilterSheet({ open, onClose, title, children }: { open: boolean; onClos
 function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => void }) {
   const t = useTranslations("companyDirectory");
   const tProfile = useTranslations("publicCompany");
+  const tCoverage = useTranslations("companyDirectory.coverage");
   const locale = useLocale();
   const profile = useQuery(api.portfolio.index.getPublicCompanyProfile, { slug });
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -525,12 +528,16 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
                       <h2 className="m-0 text-xl leading-7 font-semibold tracking-[-0.03em] text-ink sm:text-2xl" id="company-profile-sheet-title">{profile.name}</h2>
                       <VerifiedBadge label={tProfile("verified")} isVerified={profile.isVerified} />
                     </div>
-                    <p className="mt-1.5 mb-0 text-sm leading-5 text-muted">{profile.city}</p>
+                    <p className="mt-1.5 mb-0 text-sm leading-5 text-muted">{tProfile("headquartersLocation", { location: headquartersLabel(profile.city, profile.headquarters, locale) })}</p>
                     <p className="mt-1 mb-0 text-sm font-semibold text-ink">{profile.rating === null ? tProfile("reviewsNone") : <><span className="text-amber-600">★ {profile.rating.toFixed(1)}</span> <span className="font-normal text-muted">{tProfile("reviewCount", { count: profile.reviewCount })}</span></>}</p>
                     {profile.yearsExperience !== null ? <p className="mt-1 mb-0 text-sm leading-5 text-ink">{tProfile("years", { count: profile.yearsExperience })}</p> : null}
                   </div>
                 </div>
                 <p className="mt-5 mb-0 text-sm leading-6 text-ink/85">{profile.description}</p>
+                <section className="mt-5">
+                  <h3 className="m-0 text-sm font-semibold text-ink">{tProfile("declaredCoverage")}</h3>
+                  <CompanyCoverageLabel keys={profile.coverageScopeKeys} locale={locale === "fr" ? "fr" : "en"} t={tCoverage} showLabel={false} />
+                </section>
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
                   <InviteCompanyButton
                     companyEligible={profile.invitationEligible}

@@ -182,10 +182,10 @@
     "companyDescription": "Browse client requests and send proposals in minutes.",
     "client": "I want to start a project",
     "company": "I am looking for projects",
-    "searchProject": "Describe your project…",
-    "searchLabel": "Describe your project",
+    "searchProject": "Company or service, e.g. renovation…",
+    "searchLabel": "Search companies or services",
     "searchButton": "Search",
-    "searchExamples": "Villa construction, renovation, pool, structural work...",
+    "searchExamples": "Use service coverage filters to find companies working in your project’s area.",
     "findProjects": "Find projects",
     "companyHeadline": "Grow your business on Batiplus",
     "exploreProjects": "Explore projects",
@@ -1600,12 +1600,13 @@
     "closeFilters": "Close filters",
     "clear": "Clear filters",
     "city": {
-      "label": "Headquarters city",
+      "label": "Headquarters city (optional)",
       "placeholder": "e.g. Casablanca",
-      "hint": "Where the company is based. This is separate from the areas it serves."
+      "hint": "Also limits results to companies based in this city."
     },
     "geography": {
       "legend": "Service coverage",
+      "hint": "Find companies serving your project’s area, including those based elsewhere.",
       "regionLabel": "Region",
       "provinceLabel": "Province or prefecture",
       "allMorocco": "All Morocco",

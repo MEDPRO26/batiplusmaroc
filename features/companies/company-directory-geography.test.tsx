@@ -93,6 +93,19 @@ describe("company directory geographic filters", () => {
     expect(html).toContain("Headquarters city");
   });
 
+  test.each(["fr", "en"] as const)("prioritizes service coverage and explains the optional headquarters filter in %s", (locale) => {
+    const messages = locale === "fr" ? fr : en;
+    const html = renderDirectory(locale, true);
+    for (const prefix of ["desktop", "mobile"]) {
+      expect(html.indexOf(`id="${prefix}-region"`)).toBeLessThan(html.indexOf(`id="${prefix}-city"`));
+      expect(html).toContain(`aria-describedby="${prefix}-coverage-hint"`);
+    }
+    expect(html).toContain(messages.companyDirectory.geography.hint);
+    expect(html).toContain(messages.companyDirectory.city.label);
+    expect(html).toContain(messages.companyDirectory.city.hint);
+    expect(Object.keys(fr.companyDirectory.geography).sort()).toEqual(Object.keys(en.companyDirectory.geography).sort());
+  });
+
   test("lists the selected region's provinces only through the catalogue helper", () => {
     const souss = getProvincesByRegion("09");
     expect(souss.map((province) => province.nameEn)).toContain("Taroudannt");

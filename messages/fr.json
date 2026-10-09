@@ -182,10 +182,10 @@
     "companyDescription": "Parcourez les demandes de clients et envoyez vos propositions en quelques minutes.",
     "client": "Je veux lancer un projet",
     "company": "Je cherche des projets",
-    "searchProject": "Décrivez votre projet…",
-    "searchLabel": "Décrivez votre projet",
+    "searchProject": "Entreprise ou service, ex. rénovation…",
+    "searchLabel": "Rechercher une entreprise ou un service",
     "searchButton": "Rechercher",
-    "searchExamples": "Construction villa, rénovation, piscine, gros œuvre...",
+    "searchExamples": "Utilisez les filtres Zone d’intervention pour trouver des entreprises qui travaillent dans la zone de votre projet.",
     "findProjects": "Trouver des projets",
     "companyHeadline": "Développez votre activité sur Batiplus",
     "exploreProjects": "Explorer les projets",
@@ -1600,12 +1600,13 @@
     "closeFilters": "Fermer les filtres",
     "clear": "Effacer les filtres",
     "city": {
-      "label": "Ville du siège",
+      "label": "Ville du siège (facultatif)",
       "placeholder": "ex. Casablanca",
-      "hint": "Lieu du siège de l’entreprise, distinct des zones où elle intervient."
+      "hint": "Limite aussi les résultats aux entreprises dont le siège est dans cette ville."
     },
     "geography": {
-      "legend": "Couverture d’intervention",
+      "legend": "Zone d’intervention",
+      "hint": "Trouvez des entreprises intervenant dans la zone de votre projet, même si leur siège est ailleurs.",
       "regionLabel": "Région",
       "provinceLabel": "Province ou préfecture",
       "allMorocco": "Tout le Maroc",
