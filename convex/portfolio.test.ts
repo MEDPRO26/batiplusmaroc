@@ -92,6 +92,46 @@ const fields = {
 };
 
 describe("public company profile", () => {
+  test.each([
+    ["national", ["MA"], ["MA"]],
+    ["region", ["R:09"], ["R:09"]],
+    ["province only", ["P:09.541"], ["P:09.541"]],
+    ["overlap", ["MA", "R:09", "P:09.541"], ["MA", "R:09", "P:09.541"]],
+    ["empty", [], []],
+    ["legacy absent", undefined, []],
+    ["malformed", ["MA", "P:99.999"], []],
+    ["duplicate", ["MA", "MA"], []],
+  ] as const)("HQ3.1 projects validated %s coverage without private fields or inference", async (_label, keys, expected) => {
+    const t = convexTest(schema, modules);
+    const company = await seedCompany(t, { slug: "coverage-profile" });
+    const before = await t.run(async ctx => {
+      await ctx.db.patch(company.companyId, {
+        coverageScopeKeys: keys === undefined ? undefined : [...keys],
+        serviceAreas: ["agadir"], headquartersRegionCode: "09", headquartersProvinceCode: "09.001",
+        headquartersCommune: "PRIVATE-COMMUNE", headquartersPolicyVersion: "structured_v1",
+      });
+      await ctx.db.insert("companyVerifications", {
+        companyId: company.companyId, legalName: "PRIVATE-LEGAL-NAME", ice: "001122334455667",
+        rcNumber: "PRIVATE-RC", legalRepresentative: "PRIVATE-REP", phone: "0600000000",
+        address: "PRIVATE-ADDRESS", submittedAt: 1, createdAt: 1, updatedAt: 1,
+      });
+      // Stale derived rows never supply public declarations.
+      await ctx.db.insert("companyCoverageIndex", { companyId: company.companyId, areaKey: "MA" });
+      return ctx.db.get(company.companyId);
+    });
+    const profile = await t.query(api.portfolio.index.getPublicCompanyProfile, { slug: "coverage-profile" });
+    expect(profile?.coverageScopeKeys).toEqual(expected);
+    expect(profile?.serviceAreas).toEqual(["agadir"]);
+    expect(Object.keys(profile!).sort()).toEqual([
+      "id", "slug", "name", "logoUrl", "coverImageUrl", "isVerified", "marketplaceAvailable", "invitationEligible",
+      "city", "headquarters", "description", "services", "serviceNames", "serviceAreas", "coverageScopeKeys",
+      "yearsExperience", "foundedYear", "companySize", "languages", "website", "portfolio", "rating", "reviewCount", "reviews",
+    ].sort());
+    expect(Object.keys(profile!.headquarters).sort()).toEqual(["provinceCode", "regionCode"]);
+    expect(JSON.stringify(profile)).not.toMatch(/PRIVATE-|0612345678|001122334455667|userId|companyMembers|headquartersPolicyVersion|companyVerifications/);
+    expect(await t.run(ctx => ctx.db.get(company.companyId))).toEqual(before);
+  });
+
   test("completed profiles keep name masking and verification independent from images", async () => {
     for (const verificationStatus of ["draft", "verified", "pending", "rejected"] as const) {
       const t = convexTest(schema, modules);

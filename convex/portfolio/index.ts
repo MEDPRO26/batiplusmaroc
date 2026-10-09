@@ -11,6 +11,7 @@ import { resolvedServiceNames } from "../serviceCatalog";
 import { PORTFOLIO_GALLERY_LIMIT } from "../portfolioImages/constants";
 import { resolveApprovedPortfolioImageUrl } from "../portfolioImages/model";
 import { maskCompanyName, maskPublicCompanyText } from "../lib/companyName";
+import { publicCoverageScopeKeys } from "../../lib/geography/directory-coverage";
 
 const projectTypeValidator = v.union(
   v.literal("construction"),
@@ -130,6 +131,7 @@ export const getPublicCompanyProfile = query({
     services: v.array(v.string()),
     serviceNames: v.array(v.object({ slug: v.string(), nameFr: v.string(), nameEn: v.string() })),
     serviceAreas: v.array(v.string()),
+    coverageScopeKeys: v.array(v.string()),
     yearsExperience: v.union(v.number(), v.null()),
     foundedYear: v.union(v.number(), v.null()),
     companySize: v.union(v.string(), v.null()),
@@ -195,6 +197,7 @@ export const getPublicCompanyProfile = query({
       services: services.map((item) => item.service),
       serviceNames,
       serviceAreas: company.serviceAreas ?? [],
+      coverageScopeKeys: publicCoverageScopeKeys(company.coverageScopeKeys),
       yearsExperience: company.yearsExperience ?? null,
       foundedYear: company.foundedYear ?? null,
       companySize: company.companySize ?? null,

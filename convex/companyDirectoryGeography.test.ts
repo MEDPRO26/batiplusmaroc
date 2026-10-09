@@ -26,6 +26,7 @@ type SeedOptions = {
   coverage?: string[];
   indexKeys?: string[];
   omitEligibility?: boolean;
+  omitSearchText?: boolean;
 };
 
 async function seedCompany(t: Backend, options: SeedOptions) {
@@ -53,7 +54,7 @@ async function seedCompany(t: Backend, options: SeedOptions) {
           : (options.description ??
             `${options.name} completes residential construction work.`),
       serviceAreas,
-      directorySearchText: buildCompanyDirectorySearchText({
+      directorySearchText: options.omitSearchText ? undefined : buildCompanyDirectorySearchText({
         name: options.name,
         city,
         services: [service],
@@ -873,5 +874,114 @@ describe("public company directory geographic discovery", () => {
     expect(rest.map((company) => company.id)).toEqual([oldest.companyId]);
     expect(rest.map((company) => company.id)).not.toContain(middle.companyId);
     expect(rest.map((company) => company.id)).not.toContain(newest.companyId);
+  });
+});
+
+describe("HQ3.1 headquarters-city filtering", () => {
+  test.each([false, true])("matches only the actual city with legacy eligibility=%s", async (omitEligibility) => {
+    const t = convexTest(schema, modules);
+    await seedCompany(t, { name: "Local Builder", slug: "agadir-headquarters", city: "  Ａｇａｄｉｒ  ", omitEligibility });
+    await seedCompany(t, { name: "Agadir Construction", slug: "agadir-name-only", city: "Rabat", serviceAreas: ["rabat"], omitEligibility });
+    await seedCompany(t, { name: "Regional Builder", slug: "agadir-legacy-area-only", city: "Rabat", serviceAreas: ["agadir"], omitEligibility });
+    for (const city of ["Agadir", "  AGADIR  ", "ａｇａｄｉｒ"]) {
+      expect((await collect(t, { city, numItems: 1 })).map(row => row.slug)).toEqual(["agadir-headquarters"]);
+    }
+    // The main text search keeps its existing fields and normalization.
+    expect((await collect(t, { search: "Agadir", numItems: 1 })).map(row => row.slug).sort()).toEqual([
+      "agadir-headquarters", "agadir-legacy-area-only", "agadir-name-only",
+    ]);
+    expect((await collect(t, { search: "rénovation", numItems: 1 }))).toHaveLength(3);
+  });
+
+  test("finds city-only legacy Companies without directory search text or inferred coverage", async () => {
+    const t = convexTest(schema, modules);
+    await seedCompany(t, { name: "Local Builder", slug: "legacy-ait-melloul", city: "Aït   Melloul", omitEligibility: true, omitSearchText: true });
+    const rows = await collect(t, { city: "  aït melloul  ", numItems: 1 });
+    expect(rows.map(row => row.slug)).toEqual(["legacy-ait-melloul"]);
+    expect(rows[0]?.coverageScopeKeys).toEqual([]);
+    expect(await collect(t, { city: "Aït Melloul", regionCode: "09" })).toEqual([]);
+    expect((await collect(t, { city: "   " })).map(row => row.slug)).toEqual(["legacy-ait-melloul"]);
+  });
+
+  test("combines headquarters with verified-only, service and explicit region/province coverage", async () => {
+    const t = convexTest(schema, modules);
+    const fixtures: SeedOptions[] = [
+      { name: "Atlas Regional", slug: "regional", coverage: ["R:09"], verificationStatus: "verified" },
+      { name: "Atlas Province", slug: "province", coverage: ["P:09.541"], verificationStatus: "verified" },
+      { name: "Atlas Other Province", slug: "other-province", coverage: ["P:09.001"], verificationStatus: "verified" },
+      { name: "Atlas Pending", slug: "pending", coverage: ["MA"] },
+      { name: "Atlas Plumbing", slug: "plumbing", service: "plumbing", coverage: ["MA"], verificationStatus: "verified" },
+      { name: "Atlas Agadir Construction", slug: "wrong-headquarters", city: "Rabat", coverage: ["MA"], verificationStatus: "verified" },
+      { name: "Atlas Headquarters Only", slug: "no-coverage", verificationStatus: "verified" },
+      { name: "Atlas Suspended", slug: "suspended", operationalStatus: "suspended", coverage: ["MA"], verificationStatus: "verified" },
+      { name: "Atlas Unlisted", slug: "unlisted", directoryListed: false, coverage: ["MA"], verificationStatus: "verified" },
+      { name: "Atlas Incomplete", slug: "incomplete", description: null, coverage: ["MA"], verificationStatus: "verified" },
+    ];
+    for (const fixture of fixtures) await seedCompany(t, fixture);
+    const filters = { city: "Agadir", service: "renovation" as const, verifiedOnly: true, regionCode: "09", numItems: 1 };
+    expect((await collect(t, filters)).map(row => row.slug).sort()).toEqual(["other-province", "province", "regional"]);
+    expect((await collect(t, { ...filters, provinceCode: "09.541" })).map(row => row.slug).sort()).toEqual(["province", "regional"]);
+    // City filtering is a stable subsequence of the text-search relevance order.
+    for (const sort of ["relevance", "newest", "oldest"] as const) {
+      const source = await collect(t, { search: "Atlas", sort, numItems: 2 });
+      const filtered = await collect(t, { search: "Atlas", city: "Agadir", sort, numItems: 1 });
+      expect(filtered.map(row => row.id)).toEqual(source.filter(row => row.city === "Agadir").map(row => row.id));
+    }
+  });
+
+  test.each(["newest", "oldest"] as const)("preserves sparse %s city pagination beyond 200 candidates", async (sort) => {
+    const t = convexTest(schema, modules);
+    await t.run(async ctx => {
+      for (let index = 0; index < 251; index += 1) {
+        const city = [0, 25, 250].includes(index) ? "Agadir" : "Rabat";
+        await ctx.db.insert("companies", {
+          name: `Agadir Builder ${index}`, slug: `city-${index}`, city,
+          description: "Construction and renovation services.", serviceAreas: ["agadir"],
+          coverageScopeKeys: ["R:09"], onboardingStatus: "completed", verificationStatus: "verified",
+          operationalStatus: "normal", directoryListed: true,
+          // The oldest real match remains reachable before any search backfill.
+          directorySearchText: index === 0 ? undefined : buildCompanyDirectorySearchText({ name: `Agadir Builder ${index}`, city, services: [], serviceAreas: ["agadir"] }),
+          createdAt: index, updatedAt: index,
+        });
+      }
+    });
+    const filters = { city: "Agadir", regionCode: "09", provinceCode: "09.541", verifiedOnly: true, sort, numItems: 7 };
+    const pages = [];
+    let cursor: string | null = null;
+    for (let guard = 0; guard < 60; guard += 1) {
+      const page = await list(t, { ...filters, cursor });
+      pages.push(page);
+      expect(page.page.length).toBeLessThanOrEqual(7);
+      if (page.isDone) break;
+      expect(page.continueCursor).not.toBe(cursor);
+      cursor = page.continueCursor;
+    }
+    expect(pages.some(page => page.page.length === 0 && !page.isDone)).toBe(true);
+    expect(pages.at(-1)?.isDone).toBe(true);
+    const rows = pages.flatMap(page => page.page);
+    expect(rows.map(row => row.slug)).toEqual(sort === "newest" ? ["city-250", "city-25", "city-0"] : ["city-0", "city-25", "city-250"]);
+    expect(new Set(rows.map(row => row.id)).size).toBe(3);
+    const first = pages[0];
+    await expect(list(t, { ...filters, cursor: first.continueCursor })).resolves.toEqual(pages[1]);
+    await expect(list(t, { ...filters, city: "Rabat", cursor: first.continueCursor })).rejects.toThrow("INVALID_COMPANY_DIRECTORY_CURSOR");
+    const bounded = await list(t, { ...filters, numItems: 10, maximumRowsRead: 1 });
+    expect(bounded.page.length).toBeLessThanOrEqual(1);
+    expect(bounded.isDone).toBe(false);
+    const boundary = await list(t, { ...filters, cursor: null, endCursor: first.continueCursor });
+    expect(boundary.page).toEqual(first.page);
+  });
+
+  test("rechecks current headquarters and suspension before returning later city matches", async () => {
+    const t = convexTest(schema, modules);
+    const oldest = await seedCompany(t, { name: "Oldest Builder", slug: "oldest-city" });
+    const middle = await seedCompany(t, { name: "Middle Builder", slug: "middle-city" });
+    await seedCompany(t, { name: "Newest Builder", slug: "newest-city" });
+    const first = await list(t, { city: "Agadir", numItems: 1 });
+    expect(first.page.map(row => row.slug)).toEqual(["newest-city"]);
+    await t.run(async ctx => {
+      await ctx.db.patch(middle.companyId, { city: "Rabat" });
+      await ctx.db.patch(oldest.companyId, { operationalStatus: "suspended", directoryListed: false });
+    });
+    expect(await collect(t, { city: "Agadir", numItems: 1, cursor: first.continueCursor })).toEqual([]);
   });
 });

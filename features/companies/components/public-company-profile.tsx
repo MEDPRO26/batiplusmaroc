@@ -10,12 +10,14 @@ import { InviteCompanyButton } from "@/features/invitations/components/invite-co
 import { VerifiedBadge } from "./verified-badge";
 import { serviceName } from "@/features/companies/lib/service-label";
 import { headquartersLabel } from "@/features/companies/lib/headquarters-label";
+import { CompanyCoverageLabel } from "./company-coverage-label";
 
 type PublicCompany = NonNullable<FunctionReturnType<typeof api.portfolio.index.getPublicCompanyProfile>>;
 
 export async function PublicCompanyProfile({ company }: { company: PublicCompany }) {
   const t = await getTranslations("publicCompany");
   const tDirectory = await getTranslations("companyDirectory");
+  const tCoverage = await getTranslations("companyDirectory.coverage");
   const format = await getFormatter();
   const locale = await getLocale();
 
@@ -139,21 +141,8 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                 )}
               </SidebarBlock>
 
-              <SidebarBlock title={t("serviceAreas")}>
-                {company.serviceAreas.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {company.serviceAreas.map((area) => (
-                      <span
-                        className="rounded-sm bg-[#f7f9fb] px-2.5 py-1 text-xs font-medium text-ink"
-                        key={area}
-                      >
-                        {t(`serviceArea.${area}`)}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="m-0 text-sm text-muted">{t("notSpecified")}</p>
-                )}
+              <SidebarBlock title={t("declaredCoverage")}>
+                <CompanyCoverageLabel keys={company.coverageScopeKeys} locale={locale === "fr" ? "fr" : "en"} t={tCoverage} showLabel={false} />
               </SidebarBlock>
             </aside>
 

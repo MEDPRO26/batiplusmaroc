@@ -1974,6 +1974,7 @@
     "companySizeLabel": "Taille de l’entreprise",
     "languages": "Langues",
     "serviceAreas": "Zones d’intervention",
+    "declaredCoverage": "Couverture d’intervention déclarée",
     "verifications": "Vérifications",
     "verificationVerified": "Entreprise : vérifiée",
     "verificationPending": "Entreprise : non vérifiée",

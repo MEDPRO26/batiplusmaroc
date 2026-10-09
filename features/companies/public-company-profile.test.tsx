@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { NextIntlClientProvider } from "next-intl";
+import { createTranslator, NextIntlClientProvider } from "next-intl";
 import { describe, expect, test, vi } from "vitest";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
@@ -11,7 +11,17 @@ vi.mock("next/image", () => ({
   ),
 }));
 vi.mock("next-intl/server", () => ({
-  getTranslations: async () => (key: string, values?: Record<string, unknown>) => key === "verified" ? (localeState.locale === "fr" ? fr : en).publicCompany.verified : key === "reviewBy" ? `reviewBy ${String(values?.name ?? "")}` : key === "headquartersLocation" ? (localeState.locale === "fr" ? fr : en).publicCompany.headquartersLocation.replace("{location}", String(values?.location ?? "")) : key,
+  getTranslations: async (namespace: string) => {
+    const messages = localeState.locale === "fr" ? fr : en;
+    if (namespace === "companyDirectory.coverage") return createTranslator({ locale: localeState.locale, messages, namespace: "companyDirectory.coverage" });
+    return (key: string, values?: Record<string, unknown>) => {
+      if (key === "verified") return messages.publicCompany.verified;
+      if (key === "declaredCoverage") return messages.publicCompany.declaredCoverage;
+      if (key === "reviewBy") return `reviewBy ${String(values?.name ?? "")}`;
+      if (key === "headquartersLocation") return messages.publicCompany.headquartersLocation.replace("{location}", String(values?.location ?? ""));
+      return key;
+    };
+  },
   getLocale: async () => localeState.locale,
   getFormatter: async () => ({ number: (value: number) => String(value), dateTime: () => "Sep 26, 2026" }),
 }));
@@ -86,7 +96,7 @@ describe("public company profile UX contract", () => {
       } as never }));
       expect(html).toContain(`${locale === "fr" ? "Siège :" : "Headquarters:"} Agadir · Agadir-Ida-Ou-Tanane · Souss-Massa`);
       expect(html).not.toMatch(/PRIVATE-COMMUNE|PRIVATE-VERIFICATION-ADDRESS/);
-      expect(html).toContain("serviceAreas");
+      expect(html).toContain((locale === "fr" ? fr : en).publicCompany.declaredCoverage);
     });
     test(`HQ2.1 falls back to the saved city for legacy or unavailable codes in ${locale}`, async () => {
       localeState.locale = locale;
@@ -150,4 +160,54 @@ describe("public company profile UX contract", () => {
     expect(html).not.toMatch(/tel:|mailto:|publicPhone|@|0612|0522/i);
     expect(html).not.toMatch(/dealId|clientUserId|moderationStatus/i);
   });
+});
+
+describe("HQ3.1 public declared coverage", () => {
+  for (const locale of ["en", "fr"] as const) {
+    const labels = locale === "fr" ? fr.companyDirectory.coverage : en.companyDirectory.coverage;
+    test.each([
+      [["MA"], [labels.national], [labels.notDeclared]],
+      [["R:09"], [labels.region.replace("{name}", "Souss-Massa")], [labels.notDeclared]],
+      [["P:09.541"], [labels.province.replace("{name}", "Taroudannt")], [labels.region.replace("{name}", "Souss-Massa")]],
+      [["P:09.001"], [labels.prefectureElided.replace("{name}", "Agadir-Ida-Ou-Tanane")], ["P:09.001"]],
+      [[], [labels.notDeclared], [labels.national]],
+      [["R:99", "P:99.999", "invalid"], [labels.notDeclared], ["R:99", "P:99.999", "invalid"]],
+    ])(`renders explicit scopes %j in ${locale}`, async (coverageScopeKeys, included, excluded) => {
+      localeState.locale = locale;
+      const html = renderProfile(await PublicCompanyProfile({ company: { ...company, coverageScopeKeys } as never }));
+      const start = html.indexOf((locale === "fr" ? fr : en).publicCompany.declaredCoverage);
+      expect(start).toBeGreaterThan(0);
+      const section = html.slice(start, html.indexOf("</section>", start));
+      for (const text of included) expect(section).toContain(text);
+      for (const text of excluded) expect(section).not.toContain(text);
+      expect(section).not.toMatch(/data-verification|serviceArea\.|R:09|P:09.541/);
+      expect(html).not.toContain("serviceAreas");
+    });
+
+    test(`keeps overlaps and all names in a wrapping native disclosure in ${locale}`, async () => {
+      localeState.locale = locale;
+      const html = renderProfile(await PublicCompanyProfile({ company: { ...company, coverageScopeKeys: ["MA", "R:09", "P:09.541"] } as never }));
+      expect(html).toContain("<details");
+      expect(html).toContain("<summary");
+      expect(html).toContain("break-words");
+      expect(html).toContain("focus-visible:outline");
+      expect(html).toContain(labels.national);
+      expect(html).toContain(labels.region.replace("{name}", "Souss-Massa"));
+      expect(html).toContain(labels.province.replace("{name}", "Taroudannt"));
+      expect(html).not.toMatch(/R:09|P:09.541|serviceArea\./);
+    });
+
+    test(`legacy areas and structured headquarters never imply declared coverage in ${locale}`, async () => {
+      localeState.locale = locale;
+      for (const coverageScopeKeys of [undefined, []]) {
+        const html = renderProfile(await PublicCompanyProfile({ company: {
+          ...company, city: "Agadir", headquarters: { regionCode: "09", provinceCode: "09.001" },
+          serviceAreas: ["agadir", "rabat"], coverageScopeKeys,
+        } as never }));
+        expect(html).toContain(labels.notDeclared);
+        expect(html).not.toContain(labels.region.replace("{name}", "Souss-Massa"));
+        expect(html).not.toMatch(/serviceArea\.|serviceAreas/);
+      }
+    });
+  }
 });

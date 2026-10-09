@@ -1974,6 +1974,7 @@
     "companySizeLabel": "Company size",
     "languages": "Languages",
     "serviceAreas": "Service areas",
+    "declaredCoverage": "Declared service coverage",
     "verifications": "Verifications",
     "verificationVerified": "Company: Verified",
     "verificationPending": "Company: Not verified",

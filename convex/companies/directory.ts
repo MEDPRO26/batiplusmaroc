@@ -286,9 +286,9 @@ export const listPublicCompanies = query({
     };
     const terms = [
       normalizedSearch(args.search),
-      normalizedSearch(args.city),
       serviceFilterSearchTerm(serviceSlug),
     ].filter(Boolean);
+    const headquartersCity = normalizedSearch(args.city);
     const coverage = resolveDirectoryCoverageQuery(args.regionCode, args.provinceCode);
     if (!coverage.ok) throw new ConvexError(coverage.code);
     const fingerprint = coverage.active
@@ -296,7 +296,7 @@ export const listPublicCompanies = query({
           regionCode: args.regionCode ?? "",
           provinceCode: args.provinceCode ?? "",
           search: normalizedSearch(args.search),
-          city: normalizedSearch(args.city),
+          city: headquartersCity,
           service: serviceFilterSearchTerm(serviceSlug),
           verifiedOnly: args.verifiedOnly,
           sort: args.sort,
@@ -375,9 +375,13 @@ export const listPublicCompanies = query({
     // by Company id and cannot provide that order. A short or empty page only
     // means this slice had no match; `isDone` still comes from the native cursor.
     const scopeSet = coverage.active ? new Set(coverage.scopes) : null;
-    const candidates = scopeSet === null
-      ? page.page
-      : page.page.filter((company) => explicitCoverageMatches(company.coverageScopeKeys, scopeSet));
+    // Headquarters is independent of the combined text index and declared
+    // coverage. Filter only this native page, retaining its order and cursors
+    // even when it has no matches. Legacy cities need no search-text backfill.
+    const candidates = page.page.filter((company) =>
+      (!headquartersCity || normalizedSearch(company.city).includes(headquartersCity))
+      && (scopeSet === null || explicitCoverageMatches(company.coverageScopeKeys, scopeSet)),
+    );
     const publicPage = (
       await Promise.all(candidates.map((company) => toPublicCompanyResult(ctx, company, serviceFilter)))
     ).filter((company): company is NonNullable<typeof company> => company !== null);

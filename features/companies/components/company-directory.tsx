@@ -30,7 +30,7 @@ import {
 } from "@/features/companies/lib/directory-pagination";
 import { catalogServiceName, serviceName } from "@/features/companies/lib/service-label";
 import { logUnexpectedError } from "@/lib/errors";
-import { presentCoverageScopes, type CoverageScopePresentation } from "@/lib/geography/coverage-labels";
+import { CompanyCoverageLabel } from "./company-coverage-label";
 
 type Catalog = FunctionReturnType<typeof api.serviceCatalog.listActive>;
 type Sort = "newest" | "oldest";
@@ -626,57 +626,9 @@ function ExternalIcon() {
   );
 }
 
-function CompanyCoverageLabel({ keys }: { keys: readonly string[] | undefined }) {
-  const t = useTranslations("companyDirectory.coverage");
-  const locale = useLocale() === "fr" ? "fr" : "en";
-  const items = presentCoverageScopes(keys, locale);
-  if (items.length === 0) {
-    return <p className="mt-1 mb-0 text-sm leading-5 text-muted">{t("notDeclared")}</p>;
-  }
-  const summary = <CoverageSummary items={items} locale={locale} />;
-  if (items.length <= 2) {
-    return <p className="mt-1 mb-0 text-sm leading-5 text-muted">{summary}</p>;
-  }
-  return (
-    <details className="mt-1 text-sm leading-5 text-muted">
-      <summary className="cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
-        {summary}
-      </summary>
-      <ul className="mt-2 grid list-disc gap-1 pl-5">
-        {items.map((item) => <li key={item.key}>{coverageItemText(item, t, locale)}</li>)}
-      </ul>
-    </details>
-  );
-}
-
-function CoverageSummary({ items, locale }: { items: readonly CoverageScopePresentation[]; locale: "fr" | "en" }) {
-  const t = useTranslations("companyDirectory.coverage");
-  const visible = items.slice(0, 2).map((item) => coverageItemText(item, t, locale));
-  const hidden = items.length - visible.length;
-  return (
-    <>
-      <span className="font-medium text-ink">{t("label")}: </span>
-      {visible.join(", ")}
-      {hidden > 0 ? <span> · {t("more", { count: hidden })}</span> : null}
-    </>
-  );
-}
-
-function coverageItemText(
-  item: CoverageScopePresentation,
-  t: ReturnType<typeof useTranslations<"companyDirectory.coverage">>,
-  locale: "fr" | "en",
-) {
-  if (item.kind === "national") return t("national");
-  const name = item.name ?? "";
-  if (item.kind === "region") return t("region", { name });
-  const elided = locale === "fr" && /^[aeiouàâäéèêëîïôöùûüyh]/i.test(name);
-  if (item.kind === "prefecture") return t(elided ? "prefectureElided" : "prefecture", { name });
-  return t(elided ? "provinceElided" : "province", { name });
-}
-
 function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onViewProfile: () => void }) {
   const t = useTranslations("companyDirectory");
+  const tCoverage = useTranslations("companyDirectory.coverage");
   const locale = useLocale();
   const meta = [
     company.city,
@@ -695,7 +647,7 @@ function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onVie
               <VerifiedBadge label={t("verified")} isVerified={company.isVerified} />
             </div>
             {meta.length > 0 ? <p className="mt-1 mb-0 text-sm leading-5 text-muted">{meta.join(" · ")}</p> : null}
-            <CompanyCoverageLabel keys={company.coverageScopeKeys} />
+            <CompanyCoverageLabel keys={company.coverageScopeKeys} locale={locale === "fr" ? "fr" : "en"} t={tCoverage} />
             {company.rating !== null ? <p className="mt-1 mb-0 text-xs font-semibold text-amber-700">★ {company.rating.toFixed(1)} <span className="font-normal text-muted">{t("reviewCount", { count: company.reviewCount })}</span></p> : null}
           </div>
           <button

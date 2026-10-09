@@ -208,7 +208,9 @@ for (const locale of ["fr", "en"] as const) {
       });
       const location = `${locale === "fr" ? "Siège :" : "Headquarters:"} Agadir${legacy ? "" : " · Agadir-Ida-Ou-Tanane · Souss-Massa"}`;
       await expect(page.getByText(location, { exact: true })).toBeVisible();
-      await expect(page.getByRole("heading", { name: messages.publicCompany.serviceAreas, exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: messages.publicCompany.declaredCoverage, exact: true })).toBeVisible();
+      await expect(page.getByText(messages.companyDirectory.coverage.notDeclared, { exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: messages.publicCompany.serviceAreas, exact: true })).toHaveCount(0);
       expect(await page.locator("body").innerText()).not.toMatch(/PRIVATE-LEGAL|PRIVATE-COMMUNE|001122334455667/);
       for (const width of [320, 375, 1280]) {
         await page.setViewportSize({ width, height: 900 });
