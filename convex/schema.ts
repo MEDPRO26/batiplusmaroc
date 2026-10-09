@@ -370,6 +370,10 @@ export default defineSchema({
     active: v.boolean(),
     invitedByUserId: v.id("users"),
     invitedAt: v.number(),
+    // Derived Admin index keys; historical records remain optional until approved backfill.
+    adminRegionCode: v.optional(v.string()),
+    adminProvinceCode: v.optional(v.string()),
+    adminSortAt: v.optional(v.number()),
     acceptedAt: v.optional(v.number()),
     acceptedMarketplaceTermsAt: v.optional(v.number()),
     declinedAt: v.optional(v.number()),
@@ -384,7 +388,10 @@ export default defineSchema({
   })
     .index("by_projectId_and_active", ["projectId", "active"])
     .index("by_conversationId", ["conversationId"])
-    .index("by_projectId_and_companyId", ["projectId", "companyId"]),
+    .index("by_projectId_and_companyId", ["projectId", "companyId"])
+    .index("by_adminSortAt", ["adminSortAt"])
+    .index("by_adminRegionCode_and_adminSortAt", ["adminRegionCode", "adminSortAt"])
+    .index("by_adminProvinceCode_and_adminSortAt", ["adminProvinceCode", "adminSortAt"]),
 
   siteVisits: defineTable({
     assessmentId: v.id("siteAssessments"),

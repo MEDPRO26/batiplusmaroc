@@ -1,7 +1,8 @@
-import { ConvexError, v } from "convex/values";
+import { paginationOptsValidator, paginationResultValidator } from "convex/server";
+import { ConvexError, v, type Infer } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
-import { query } from "../_generated/server";
+import { env, query } from "../_generated/server";
 import {
   marketplaceActivityActorTypeValidator,
   marketplaceActivityEventTypeValidator,
@@ -14,6 +15,14 @@ import {
 } from "../projects/constants";
 import { requireAdminUser } from "./access";
 import { detailedProjectLocationValidator, toDetailedProjectLocation } from "../projects/location";
+import { getProvince, isProvinceInRegion, isValidRegion } from "../../lib/geography/morocco";
+import {
+  adminVisitEpoch as visitEpoch,
+  selectedVisitForAssessment as latestVisit,
+  assessmentAdminProjection,
+  assessmentProjectionMatches,
+  visitMatchesAssessment,
+} from "../siteVisits/adminProjection";
 
 const assessmentStatusValidator = v.union(
   v.literal("invited"),
@@ -219,49 +228,6 @@ function actorType(userId: Id<"users">, clientId: Id<"users">): "client" | "comp
   return userId === clientId ? "client" : "company";
 }
 
-async function latestVisit(ctx: QueryCtx, assessmentId: Id<"siteAssessments">) {
-  return (
-    await ctx.db
-      .query("siteVisits")
-      .withIndex("by_assessmentId_and_active", (q) => q.eq("assessmentId", assessmentId))
-      .order("desc")
-      .take(1)
-  )[0] ?? null;
-}
-
-function visitEpoch(visit: Pick<Doc<"siteVisits">, "proposedDate" | "proposedTime">) {
-  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(visit.proposedDate);
-  const timeMatch = /^(\d{2}):(\d{2})$/.exec(visit.proposedTime);
-  if (!dateMatch || !timeMatch) return null;
-  const [year, month, day] = dateMatch.slice(1).map(Number);
-  const [hour, minute] = timeMatch.slice(1).map(Number);
-  const target = Date.UTC(year, month - 1, day, hour, minute);
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Africa/Casablanca",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  });
-  let instant = target;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const parts = Object.fromEntries(
-      formatter.formatToParts(instant).map((part) => [part.type, part.value]),
-    );
-    const represented = Date.UTC(
-      Number(parts.year),
-      Number(parts.month) - 1,
-      Number(parts.day),
-      Number(parts.hour),
-      Number(parts.minute),
-    );
-    instant = target - (represented - instant);
-  }
-  return instant;
-}
-
 function workflowStatus(
   assessment: Doc<"siteAssessments">,
   visit: Doc<"siteVisits"> | null,
@@ -354,84 +320,142 @@ function assertDateRange(from: string | undefined, to: string | undefined) {
   }
 }
 
-/** Read-only admin projection. Convex subscriptions keep this operational list live. */
+const listFiltersValidator = v.object({
+  status: tabStatusValidator,
+  projectSearch: v.optional(v.string()),
+  companySearch: v.optional(v.string()),
+  city: v.optional(projectCityValidator),
+  dateFrom: v.optional(v.string()),
+  dateTo: v.optional(v.string()),
+  now: v.number(),
+});
+const geographicFiltersValidator = listFiltersValidator.extend({
+  regionCode: v.optional(v.string()),
+  provinceCode: v.optional(v.string()),
+});
+type ListFilters = Infer<typeof geographicFiltersValidator>;
+
+async function loadListRow(ctx: QueryCtx, assessment: Doc<"siteAssessments">, args: ListFilters, indexed = false) {
+  const visit = await latestVisit(ctx, assessment._id);
+  const [project, client, company] = await Promise.all([
+    ctx.db.get(assessment.projectId), ctx.db.get(assessment.clientId), ctx.db.get(assessment.companyId),
+  ]);
+  if (!project || !client || !company || project.clientId !== assessment.clientId ||
+    (indexed ? !visitMatchesAssessment(visit, assessment) : visit &&
+      (visit.projectId !== assessment.projectId || visit.clientId !== assessment.clientId || visit.companyId !== assessment.companyId))) {
+    // Broken historical relationships remain absent from lists; details fail closed.
+    return null;
+  }
+  const projection = assessmentAdminProjection(project, assessment, visit);
+  if (indexed && !assessmentProjectionMatches(assessment, projection)) {
+    // A stale cache must never yield an apparently complete, misordered page.
+    throw new ConvexError("ADMIN_SITE_VISIT_PROJECTION_STALE");
+  }
+  const status = workflowStatus(assessment, visit);
+  if (!matchesTab(status, args.status)) return null;
+  if (args.regionCode !== undefined && projection.adminRegionCode !== args.regionCode) return null;
+  if (args.provinceCode !== undefined && projection.adminProvinceCode !== args.provinceCode) return null;
+  const projectTitle = project.title?.trim() || "—";
+  const companyName = company.name?.trim() || "—";
+  const projectNeedle = normalizeSearch(args.projectSearch);
+  const companyNeedle = normalizeSearch(args.companySearch);
+  if (projectNeedle && !projectTitle.toLocaleLowerCase().includes(projectNeedle)) return null;
+  if (companyNeedle && !companyName.toLocaleLowerCase().includes(companyNeedle)) return null;
+  if (args.city && project.city !== args.city) return null;
+  const filterDate = visit?.proposedDate ?? dateKey(assessment.invitedAt);
+  if (args.dateFrom !== undefined && filterDate < args.dateFrom) return null;
+  if (args.dateTo !== undefined && filterDate > args.dateTo) return null;
+  const quoteSummary = await loadFinalQuoteSummary(ctx, assessment, project);
+  return {
+    assessmentId: assessment._id,
+    projectId: assessment.projectId,
+    projectTitle,
+    clientName: displayName(client),
+    companyName,
+    assessmentStatus: assessment.status,
+    visitDate: visit?.proposedDate ?? null,
+    visitTime: visit?.proposedTime ?? null,
+    city: project.city ?? null,
+    location: toDetailedProjectLocation(project),
+    proposedBy: visit ? actorType(visit.proposedByUserId, assessment.clientId) : null,
+    status,
+    finalQuoteStatus: quoteSummary.finalQuoteStatus,
+    riskSignal: riskSignal(assessment, visit, args.now),
+    sortAt: projection.adminSortAt,
+  };
+}
+
+/** Compatibility reader during the default-disabled historical rollout. */
 export const listSiteVisits = query({
-  args: {
-    status: tabStatusValidator,
-    projectSearch: v.optional(v.string()),
-    companySearch: v.optional(v.string()),
-    city: v.optional(projectCityValidator),
-    dateFrom: v.optional(v.string()),
-    dateTo: v.optional(v.string()),
-    now: v.number(),
-  },
+  args: listFiltersValidator.fields,
   returns: v.array(listRowValidator),
   handler: async (ctx, args) => {
     await requireAdminUser(ctx);
     assertDateRange(args.dateFrom, args.dateTo);
-    const projectNeedle = normalizeSearch(args.projectSearch);
-    const companyNeedle = normalizeSearch(args.companySearch);
     const assessments = await ctx.db.query("siteAssessments").order("desc").take(100);
     const rows = [];
-
     for (const assessment of assessments) {
-      const visit = await latestVisit(ctx, assessment._id);
-      const status = workflowStatus(assessment, visit);
-      if (!matchesTab(status, args.status)) continue;
-
-      const [project, client, company] = await Promise.all([
-        ctx.db.get(assessment.projectId),
-        ctx.db.get(assessment.clientId),
-        ctx.db.get(assessment.companyId),
-      ]);
-      if (
-        !project ||
-        !client ||
-        !company ||
-        project.clientId !== assessment.clientId ||
-        visit &&
-          (visit.projectId !== assessment.projectId ||
-            visit.clientId !== assessment.clientId ||
-            visit.companyId !== assessment.companyId)
-      ) {
-        // A stale historical row must not take down the entire operational
-        // list. Exact detail reads remain fail-closed below.
-        continue;
-      }
-
-      const projectTitle = project.title?.trim() || "—";
-      const companyName = company.name?.trim() || "—";
-      if (projectNeedle && !projectTitle.toLocaleLowerCase().includes(projectNeedle)) continue;
-      if (companyNeedle && !companyName.toLocaleLowerCase().includes(companyNeedle)) continue;
-      if (args.city && project.city !== args.city) continue;
-
-      const sortAt = visit ? visitEpoch(visit) ?? visit.proposedAt : assessment.invitedAt;
-      const filterDate = visit?.proposedDate ?? dateKey(assessment.invitedAt);
-      if (args.dateFrom !== undefined && filterDate < args.dateFrom) continue;
-      if (args.dateTo !== undefined && filterDate > args.dateTo) continue;
-
-      const quoteSummary = await loadFinalQuoteSummary(ctx, assessment, project);
-
-      rows.push({
-        assessmentId: assessment._id,
-        projectId: assessment.projectId,
-        projectTitle,
-        clientName: displayName(client),
-        companyName,
-        assessmentStatus: assessment.status,
-        visitDate: visit?.proposedDate ?? null,
-        visitTime: visit?.proposedTime ?? null,
-        city: project.city ?? null,
-        location: toDetailedProjectLocation(project),
-        proposedBy: visit ? actorType(visit.proposedByUserId, assessment.clientId) : null,
-        status,
-        finalQuoteStatus: quoteSummary.finalQuoteStatus,
-        riskSignal: riskSignal(assessment, visit, args.now),
-        sortAt,
-      });
+      const row = await loadListRow(ctx, assessment, args);
+      if (row) rows.push(row);
     }
-
     return rows.sort((left, right) => right.sortAt - left.sortAt);
+  },
+});
+
+const rolloutValidator = v.object({
+  enabled: v.boolean(),
+  reason: v.union(v.literal("disabled"), v.literal("historical_projection_missing"), v.null()),
+});
+async function paginationRollout(ctx: QueryCtx): Promise<Infer<typeof rolloutValidator>> {
+  if (env.ADMIN_SITE_VISIT_GEOGRAPHY_POLICY_VERSION !== "indexed_v1") return { enabled: false, reason: "disabled" };
+  const missing = await ctx.db.query("siteAssessments")
+    .withIndex("by_adminSortAt", (q) => q.eq("adminSortAt", undefined)).first();
+  return missing ? { enabled: false, reason: "historical_projection_missing" } : { enabled: true, reason: null };
+}
+
+/** Admin-only gate. The policy is set only after a separately approved coverage/consistency verification. */
+export const getSiteVisitPaginationRollout = query({
+  args: {},
+  returns: rolloutValidator,
+  handler: async (ctx) => {
+    await requireAdminUser(ctx);
+    return await paginationRollout(ctx);
+  },
+});
+
+export const listSiteVisitsPage = query({
+  args: { ...geographicFiltersValidator.fields, paginationOpts: paginationOptsValidator },
+  returns: paginationResultValidator(listRowValidator),
+  handler: async (ctx, args) => {
+    await requireAdminUser(ctx);
+    assertDateRange(args.dateFrom, args.dateTo);
+    if (!Number.isInteger(args.paginationOpts.numItems) || args.paginationOpts.numItems < 1 || args.paginationOpts.numItems > 100) {
+      throw new ConvexError("INVALID_ADMIN_SITE_VISIT_PAGE_SIZE");
+    }
+    if (args.regionCode !== undefined && !isValidRegion(args.regionCode)) throw new ConvexError("INVALID_PROJECT_REGION");
+    if (args.provinceCode !== undefined) {
+      if (!getProvince(args.provinceCode)) throw new ConvexError("INVALID_PROJECT_PROVINCE");
+      if (args.regionCode === undefined) throw new ConvexError("PROJECT_REGION_REQUIRED");
+      if (!isProvinceInRegion(args.provinceCode, args.regionCode)) throw new ConvexError("PROJECT_PROVINCE_REGION_MISMATCH");
+    }
+    const rollout = await paginationRollout(ctx);
+    if (!rollout.enabled) throw new ConvexError(rollout.reason === "disabled"
+      ? "ADMIN_SITE_VISIT_PAGINATION_DISABLED" : "ADMIN_SITE_VISIT_PROJECTION_NOT_READY");
+    const source = ctx.db.query("siteAssessments");
+    const indexed = args.provinceCode !== undefined
+      ? source.withIndex("by_adminProvinceCode_and_adminSortAt", (q) => q.eq("adminProvinceCode", args.provinceCode))
+      : args.regionCode !== undefined
+        ? source.withIndex("by_adminRegionCode_and_adminSortAt", (q) => q.eq("adminRegionCode", args.regionCode))
+        : source.withIndex("by_adminSortAt");
+    // Exactly one native stream; keep endCursor/id/limits and all split metadata.
+    // Residual joins may yield empty pages. Only native isDone indicates exhaustion.
+    const result = await indexed.order("desc").paginate(args.paginationOpts);
+    const page = [];
+    for (const assessment of result.page) {
+      const row = await loadListRow(ctx, assessment, args, true);
+      if (row) page.push(row);
+    }
+    return { ...result, page };
   },
 });
 

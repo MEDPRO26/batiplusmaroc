@@ -3457,7 +3457,13 @@
       "dateFrom": "Du",
       "dateTo": "Au",
       "invalidRange": "La date de fin doit être postérieure ou égale à la date de début.",
-      "dateRange": "Période de visite"
+      "dateRange": "Période de visite",
+      "regionLabel": "Région",
+      "provinceLabel": "Province / Préfecture",
+      "allMorocco": "Tout le Maroc",
+      "allProvinces": "Toutes les provinces / préfectures",
+      "provinceDisabled": "Sélectionnez d’abord une région.",
+      "clearGeography": "Effacer la géographie"
     },
     "empty": "Aucune visite technique ne correspond à ces filtres.",
     "columns": {
@@ -3644,6 +3650,14 @@
     "detailTabs": {
       "label": "Sections du détail de la visite technique",
       "overview": "Aperçu"
+    },
+    "pagination": {
+      "loadMore": "Afficher plus de visites techniques",
+      "loadingMore": "Chargement de visites supplémentaires…",
+      "moreMatches": "D’autres visites peuvent correspondre à vos filtres.",
+      "continueHint": "Poursuivez le chargement pour rechercher dans les enregistrements restants.",
+      "loadedCount": "{count, plural, one {# visite technique chargée} other {# visites techniques chargées}}",
+      "legacyLimited": "Cette vue affiche au maximum les 100 demandes de visite créées le plus récemment. Les filtres s’appliquent à ces enregistrements."
     }
   },
   "adminAccess": {

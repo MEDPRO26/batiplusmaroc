@@ -1,3 +1,4 @@
+import { syncProjectAssessmentGeography } from "../siteVisits/adminProjection";
 import { assertNotVerificationStorage } from "../storage/verificationPrivacy";
 import { paginationOptsValidator, paginationResultValidator, type OrderedQuery } from "convex/server";
 import { ConvexError, v } from "convex/values";
@@ -610,6 +611,9 @@ export const saveStructuredLocation = mutation({
       countryCode: "MA",
       updatedAt: Date.now(),
     });
+    if (project.regionCode !== location.regionCode || project.provinceCode !== location.provinceCode) {
+      await syncProjectAssessmentGeography(ctx, project._id);
+    }
     return null;
   },
 });

@@ -3457,7 +3457,13 @@
       "dateFrom": "From",
       "dateTo": "To",
       "invalidRange": "The end date must be on or after the start date.",
-      "dateRange": "Visit date range"
+      "dateRange": "Visit date range",
+      "regionLabel": "Region",
+      "provinceLabel": "Province / Prefecture",
+      "allMorocco": "All Morocco",
+      "allProvinces": "All provinces / prefectures",
+      "provinceDisabled": "Select a region first.",
+      "clearGeography": "Clear geography"
     },
     "empty": "No site visits match these filters.",
     "columns": {
@@ -3644,6 +3650,14 @@
     "detailTabs": {
       "label": "Site visit detail sections",
       "overview": "Overview"
+    },
+    "pagination": {
+      "loadMore": "Load more site visits",
+      "loadingMore": "Loading more site visits…",
+      "moreMatches": "More site visits may match your filters.",
+      "continueHint": "Continue loading to search the remaining records.",
+      "loadedCount": "{count, plural, one {# site visit loaded} other {# site visits loaded}}",
+      "legacyLimited": "This view shows up to the 100 most recently created assessment records. Filters apply to those records."
     }
   },
   "adminAccess": {
