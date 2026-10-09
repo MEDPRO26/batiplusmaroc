@@ -476,7 +476,7 @@ describe("Client support private-data isolation", () => {
     const privateData = await state.t.run(async (ctx) => {
       const storageId = await ctx.storage.store(new Blob(["%PDF-1.7 PRIVATE_PDF_SENTINEL"]));
       const attachmentUrl = (await ctx.storage.getUrl(storageId))!;
-      await ctx.db.patch(state.projectId, { description: "PRIVATE_PROJECT_DESCRIPTION_SENTINEL", neighborhood: "PRIVATE_ADDRESS_SENTINEL" });
+      await ctx.db.patch(state.projectId, { description: "PRIVATE_PROJECT_DESCRIPTION_SENTINEL", neighborhood: "Agdal" });
       const quoteId = await ctx.db.insert("projectQuotes", {
         projectId: state.projectId, companyId: state.companyId, submittedByUserId: state.company,
         message: "PRIVATE_PROPOSAL_SENTINEL", scope: "PRIVATE_PROPOSAL_SCOPE_SENTINEL",
@@ -487,6 +487,19 @@ describe("Client support private-data isolation", () => {
         projectId: state.projectId, quoteId, clientId: state.client, companyId: state.companyId,
         status: "active", createdBy: state.client, createdAt: 1, updatedAt: 1,
         lastMessagePreview: "PRIVATE_MARKETPLACE_PREVIEW_SENTINEL",
+      });
+      const assessmentId = await ctx.db.insert("siteAssessments", {
+        projectId: state.projectId, clientId: state.client, companyId: state.companyId,
+        initialQuoteId: quoteId, conversationId: marketplaceConversationId,
+        status: "scheduled", active: true, invitedByUserId: state.client, invitedAt: 1,
+        siteAddress: "PRIVATE_ADDRESS_SENTINEL", createdAt: 1, updatedAt: 1,
+      });
+      const visitId = await ctx.db.insert("siteVisits", {
+        assessmentId, projectId: state.projectId, clientId: state.client, companyId: state.companyId,
+        conversationId: marketplaceConversationId, initialQuoteId: quoteId,
+        proposedByUserId: state.client, proposedDate: "2099-01-01", proposedTime: "10:00",
+        timezone: "Africa/Casablanca", siteAddress: "PRIVATE_VISIT_ADDRESS_SENTINEL",
+        status: "proposed", active: true, proposedAt: 1, createdAt: 1, updatedAt: 1,
       });
       const marketplaceMessageId = await ctx.db.insert("messages", {
         conversationId: marketplaceConversationId, senderUserId: state.company, senderType: "company",
@@ -524,7 +537,7 @@ describe("Client support private-data isolation", () => {
       });
       await ctx.db.insert("companyAdminNotes", { companyId: state.companyId, authorAdminUserId: state.adminA, body: "PRIVATE_ADMIN_NOTE_SENTINEL", createdAt: 1 });
       await ctx.db.insert("invitations", { projectId: state.projectId, clientUserId: state.client, companyId: state.companyId, message: "PRIVATE_INVITATION_SENTINEL", status: "pending", createdAt: 1, updatedAt: 1 });
-      return { storageId, attachmentUrl, quoteId, finalQuoteId, revisionId, marketplaceConversationId, marketplaceMessageId, operationalConversationId, operationalMessageId };
+      return { storageId, attachmentUrl, quoteId, finalQuoteId, revisionId, marketplaceConversationId, marketplaceMessageId, operationalConversationId, operationalMessageId, assessmentId, visitId };
     });
     const snapshot = () => state.t.run(async (ctx) => ({
       projects: await ctx.db.query("projects").collect(),
@@ -542,6 +555,8 @@ describe("Client support private-data isolation", () => {
       operationalMessages: await ctx.db.query("adminCompanyMessages").collect(),
       operationalReads: await ctx.db.query("adminCompanyConversationReads").collect(),
       companyAdminNotes: await ctx.db.query("companyAdminNotes").collect(),
+      siteAssessments: await ctx.db.query("siteAssessments").collect(),
+      siteVisits: await ctx.db.query("siteVisits").collect(),
       invitations: await ctx.db.query("invitations").collect(),
       deals: await ctx.db.query("deals").collect(),
       dealHistory: await ctx.db.query("dealStatusHistory").collect(),
@@ -580,7 +595,11 @@ describe("Client support private-data isolation", () => {
       expect(notification.entity.type).toBe("client_support_entry");
     }
     for (const summary of summaries) {
-      expect(Object.keys(summary!.project).sort()).toEqual(["city", "id", "status", "title"]);
+      expect(Object.keys(summary!.project).sort()).toEqual(["city", "id", "location", "status", "title"]);
+      expect(summary!.project.location).toEqual({
+        regionCode: null, provinceCode: null, communeName: null, legacyCity: "rabat",
+        localityName: null, neighborhood: "Agdal",
+      });
       expect(Object.keys(summary!).sort()).toEqual(["clientDisplayName", "createdAt", "entryCount", "hasUnread", "id", "lastEntry", "project", "readThroughSequence", "requestedKinds", "unreadCount", "updatedAt"]);
     }
     for (const page of pages) for (const entry of page.page) {
