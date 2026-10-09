@@ -1,6 +1,12 @@
 import { v } from "convex/values";
 import { query } from "../_generated/server";
 import { requireCompanyUser } from "../companies/access";
+import {
+  canAccessDetailedProjectLocation,
+  companyProjectLocationValidator,
+  toDetailedProjectLocation,
+  toGeneralProjectLocation,
+} from "../projects/location";
 import { commissionStatusValidator, dealStatusValidator } from "./constants";
 import { readCommissionSummary } from "./commissionSummary";
 import { hasCompleteCommissionSnapshot } from "./money";
@@ -80,6 +86,7 @@ const companyDealValidator = v.object({
   projectId: v.id("projects"),
   projectTitle: v.string(),
   city: v.union(v.string(), v.null()),
+  location: companyProjectLocationValidator,
   status: dealStatusValidator,
   agreedAmountMad: v.number(),
   conversationId: v.id("conversations"),
@@ -105,11 +112,16 @@ export const listMyDeals = query({
     const rows = [];
     for (const deal of deals) {
       const project = await ctx.db.get(deal.projectId);
+      // A Deal alone does not grant locality access; recheck the existing conversation gates.
+      const location = project && await canAccessDetailedProjectLocation(ctx, project, company._id)
+        ? toDetailedProjectLocation(project)
+        : toGeneralProjectLocation(project ?? {});
       rows.push({
         dealId: deal._id,
         projectId: deal.projectId,
         projectTitle: project?.title ?? "—",
         city: project?.city ?? null,
+        location,
         status: deal.status,
         agreedAmountMad: deal.agreedAmountMad,
         conversationId: deal.conversationId,
