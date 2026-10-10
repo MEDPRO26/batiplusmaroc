@@ -4,7 +4,7 @@ Date: 2026-10-09. Result: **PASS for the assigned implementation and focused loc
 
 ## Baseline and isolation
 
-- New managed Codex worktree: `/Users/yassin/.codex/worktrees/geo92d-company-work-location/batiplusmaroc`.
+- New managed Codex worktree (local-only path omitted).
 - Clean, detached starting HEAD: `7a96e6a63b65cab0187ab57a91c4f70788228a74`. This matches the required `7a96e6a` baseline and differs from the original checkout path.
 - Remote `main` was checked with `git ls-remote`; it matched cached `origin/main` at `7e8400d559a7f070590395ce31828e420a581e51`.
 - The original checkout and `feature/nationwide-project-intake` started at `7a96e6a63b65cab0187ab57a91c4f70788228a74`. During final verification, another integration operation advanced them to `a02cd28dd55a7ed5ce7ffb8323896433c3610f8a` (site-assessment projection backfill); the original checkout remained clean. This agent did not modify that checkout or branch. None of this fix's production files or GEO3 dependencies changed between those commits. The explicit task's detached-worktree instruction overrides the general GEO feature-branch instruction.

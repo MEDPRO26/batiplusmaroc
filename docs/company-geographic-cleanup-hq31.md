@@ -7,8 +7,8 @@ or production-scale performance claim is made.
 
 ## Worktree and scope
 
-Work took place only in
-`/Users/yassin/.codex/worktrees/e332/batiplusmaroc`, on 2026-10-09.
+Work took place only in an isolated Codex worktree
+(local-only path omitted), on 2026-10-09.
 The initial worktree was clean at detached HEAD `7e8400d`. As explicitly
 instructed, it was switched to detached
 `a43a0feecbad22b6cd1a3ae971cd6fefcb4dca58` before editing. That remains HEAD.

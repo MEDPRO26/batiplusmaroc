@@ -7,7 +7,7 @@ No application routing defect was confirmed; application code is unchanged.
 
 - Base: `543d7f19f217830861e53d7dc7d3fae113a9d836`.
 - Branch: `codex/geo-r1-english-public-routing`.
-- Worktree: `/Users/yassin/.codex/worktrees/geo-r1-english-public-routing/batiplusmaroc`.
+- Worktree: isolated Codex worktree (local-only path omitted).
 - Installed versions: Next.js 16.3.6, next-intl 4.14.5, Playwright 1.63.0.
 - Latest fetched `origin/main`: `7e8400d559a7f070590395ce31828e420a581e51`.
 - GEO-D3 remains separate at `60d6c40511519c24eb8bcd699c53311924c042b0`.

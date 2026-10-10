@@ -4,7 +4,7 @@ Date: 2026-10-09. Result: **PASS for the assigned local implementation and focus
 
 ## Isolation and baseline
 
-- Worktree: `/Users/yassin/.codex/worktrees/18af/batiplusmaroc`, verified as a clean linked Codex worktree distinct from `/Users/yassin/Desktop/Projects/batiplusmaroc` before editing.
+- Worktree: isolated Codex worktree (local-only path omitted), verified as a clean linked Codex worktree distinct from the original integration checkout before editing.
 - Switched only this worktree to detached `23384374dab9f8ffea29e3ea667192177fc50a0e`, the required integration baseline. HEAD remains there. The original `feature/nationwide-project-intake` reference also remains at that commit.
 - The cached `origin/main` and a read-only remote main check agree at `7e8400d559a7f070590395ce31828e420a581e51`.
 - Read AGENTS.md, Convex AI guidelines, relevant local Next.js client-component/testing guides, the GEO3/GEO9 handoffs and current assigned consumers. The ignored nationwide specification was read from its existing original-checkout copy because it was absent here. GEO3's adopted privacy policy takes precedence over that older document's OPEN visibility proposal.

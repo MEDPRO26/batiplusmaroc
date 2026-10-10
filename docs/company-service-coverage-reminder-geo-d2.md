@@ -14,8 +14,8 @@ release claim is made.
   isolated branch from the requested base. The integration branch stays at
   `0f28526`; this task does not merge or cherry-pick its changes.
 - The feature specification is ignored and absent from the integration commit.
-  Its full existing copy was read from
-  `/Users/yassin/Desktop/Projects/batiplusmaroc/docs/features/nationwide-geography.md`.
+  Its full existing copy was read from the local-only path
+  `docs/features/nationwide-geography.md` (git-ignored; absent from fresh clones).
   No specification or OPEN Product HQ decision was changed.
 
 ## Behavior

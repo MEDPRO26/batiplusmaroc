@@ -4,7 +4,7 @@ Date: 2026-10-09. Result: **PASS for local source and focused verification.** Re
 
 ## Baseline and isolation
 
-- Worktree: `/Users/yassin/.codex/worktrees/f0ff/batiplusmaroc`, verified as a linked Codex worktree distinct from the original project checkout.
+- Worktree: isolated Codex worktree (local-only path omitted), verified as a linked Codex worktree distinct from the original project checkout.
 - The worktree was clean before switching to detached HEAD `3bd084a88c79b4f3a05813524f90f5db4472b825`. HEAD matches `feature/nationwide-project-intake`.
 - Preserved branches: `parallel/geo91-display` (`051ddd1`), `parallel/geo91b` (`99a6f72`), `parallel/geo91c` (`48bf8fb`). No branch was created for this task.
 - Cached `origin/main` and the read-only remote main check agree at `7e8400d559a7f070590395ce31828e420a581e51`.

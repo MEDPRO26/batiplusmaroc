@@ -7,7 +7,7 @@ No onboarding policy activation was performed.
 
 ## Worktree and scope
 
-Work took place only in `/Users/yassin/.codex/worktrees/8490/batiplusmaroc`.
+Work took place only in an isolated Codex worktree (local-only path omitted).
 The initial clean detached HEAD was `7e8400d559a7f070590395ce31828e420a581e51`.
 After the owner explicitly authorized correcting this mismatch, the worktree was
 switched with `git switch --detach feature/nationwide-project-intake`.

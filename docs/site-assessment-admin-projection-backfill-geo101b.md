@@ -2,7 +2,7 @@
 
 2026-10-09. **PASS WITH ISSUES:** local implementation and focused tests pass; the additional Convex-specific compiler check has two pre-existing GEO9.2C errors described below. This report does not establish deployment or live-data readiness.
 
-The isolated worktree `/Users/yassin/.codex/worktrees/2f2d/batiplusmaroc` was clean before detaching to the required integration baseline `7a96e6a63b65cab0187ab57a91c4f70788228a74`. The original integration checkout and other branches were preserved. Existing GEO10.1A findings were reused as previous measurements, without another deployment audit.
+The isolated Codex worktree (local-only path omitted) was clean before detaching to the required integration baseline `7a96e6a63b65cab0187ab57a91c4f70788228a74`. The original integration checkout and other branches were preserved. Existing GEO10.1A findings were reused as previous measurements, without another deployment audit.
 
 ## Exact source changes
 

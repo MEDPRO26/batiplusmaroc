@@ -2,7 +2,7 @@
 
 Date: 2026-10-09. **Result: BLOCKED for geographic filtering and pagination; location display is implemented and locally verified.** GEO9.1 is not complete or ready for full-feature integration. The display changes are ready for Product HQ review.
 
-Worktree: `/Users/yassin/.codex/worktrees/f0ff/batiplusmaroc`, detached HEAD `a43a0feecbad22b6cd1a3ae971cd6fefcb4dca58`. The integration ref `feature/nationwide-project-intake` still resolves to that commit. No commit, push, merge, deployment, Convex watcher/codegen, migration or deployment-environment change was performed. The existing dependency tree was copied into this worktree for local tests; dependency manifests were unchanged.
+Isolated Codex worktree (local-only path omitted), detached HEAD `a43a0feecbad22b6cd1a3ae971cd6fefcb4dca58`. The integration ref `feature/nationwide-project-intake` still resolves to that commit. No commit, push, merge, deployment, Convex watcher/codegen, migration or deployment-environment change was performed. The existing dependency tree was copied into this worktree for local tests; dependency manifests were unchanged.
 
 The owner's attached GEO9.1 brief expressly replaces the missing ignored geography specification for this task. AGENTS.md, Convex AI guidelines, relevant local Next.js guides, tracked GEO3 helpers/handoff, schema and existing Admin source/tests were consulted. Other geographic tasks and correction workflows were not started.
 

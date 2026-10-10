@@ -4,7 +4,7 @@ Date: 2026-10-09. Result: **PASS for the assigned location-only implementation a
 
 ## Baseline and isolation
 
-- Isolated linked Codex worktree: `/Users/yassin/.codex/worktrees/d3a8/batiplusmaroc`.
+- Isolated linked Codex worktree (local-only path omitted).
 - The worktree was clean before `git switch --detach 2338437`.
 - Required and final HEAD: `23384374dab9f8ffea29e3ea667192177fc50a0e`, detached.
 - The integration branch `feature/nationwide-project-intake` remains at that commit. The original checkout was not switched or edited.

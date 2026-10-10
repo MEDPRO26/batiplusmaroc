@@ -2,7 +2,7 @@
 
 Date: 2026-10-09. **Result: PASS at the local source/test level.** Admin Projects now use an additive cursor reader with recorded GEO1 region/province filters. Site Visit filtering remains outside this task.
 
-Worktree: `/Users/yassin/.codex/worktrees/f0ff/batiplusmaroc`. The initially clean worktree was detached at `7a0cae95d99e60409342b52afcbc045816566a43`, matching `feature/nationwide-project-intake`. The original integration checkout was not switched or modified. `parallel/geo91-display` still points to `051ddd1d428bd660f346625736b023c3f70f5d7f`. Changes remain unstaged and uncommitted.
+Isolated Codex worktree (local-only path omitted). The initially clean worktree was detached at `7a0cae95d99e60409342b52afcbc045816566a43`, matching `feature/nationwide-project-intake`. The original integration checkout was not switched or modified. `parallel/geo91-display` still points to `051ddd1d428bd660f346625736b023c3f70f5d7f`. Changes remain unstaged and uncommitted.
 
 At final verification the integration ref had independently advanced to `62e3d91d038ee8c3e80850a07d6879e8f91b7f89`. This worktree remains on the assigned `7a0cae9` baseline; validation applies to that baseline plus these changes. No rebase or integration against the newer tip was performed.
 
