@@ -15,6 +15,7 @@ import {
 } from "@/features/marketplace/lib/conversation-workflow";
 import { SiteAssessmentPanel } from "@/features/site-assessments/components/site-assessment-panel";
 import { mapAppError } from "@/lib/errors/map-app-error";
+import { MAD_AMOUNT_FORMAT } from "@/lib/money/mad";
 
 type AssessmentQuery = FunctionReturnType<typeof api.siteVisits.index.getForConversation>;
 type QuoteQuery = FunctionReturnType<typeof api.finalQuotes.index.getForConversation>;
@@ -312,7 +313,7 @@ function WorkflowLead({
   viewerType: QuoteResult["viewerType"];
 }) {
   const money = latest
-    ? format.number(latest.price, { style: "currency", currency: "MAD", maximumFractionDigits: 0 })
+    ? format.number(latest.price, MAD_AMOUNT_FORMAT)
     : null;
   const validUntil = latest
     ? format.dateTime(new Date(`${latest.validUntil}T12:00:00Z`), { dateStyle: "medium", timeZone: "UTC" })

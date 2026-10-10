@@ -23,6 +23,7 @@ import { COMPANIES_RETURN_KEY } from "@/features/admin/lib/company-filters";
 import { OperationalConversation } from "@/features/operations/components/operational-conversation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
+import { formatMadAmount } from "@/lib/money/mad";
 
 export type AdminCompanyTab = "overview" | "verification" | "logo" | "cover" | "portfolioImages" | "projectsDeals" | "commissions" | "reviews" | "activity" | "messages" | "internalNotes";
 type Summary = NonNullable<FunctionReturnType<typeof api.admin.companies.getCompanySummary>>;
@@ -442,5 +443,5 @@ function Loading() { const t = useTranslations("adminCompanies"); return <div ar
 function Empty({ text }: { text: string }) { return <p className="rounded-sm bg-[#f8fafb] px-4 py-10 text-center text-sm text-[#8b919a]">{text}</p>; }
 function Field({ label, value }: { label: string; value: string }) { return <div><dt className="text-xs font-semibold text-[#8b919a]">{label}</dt><dd className="mt-1 text-sm font-medium text-[#30343a]">{value}</dd></div>; }
 function Pill({ text, tone }: { text: string; tone: "green" | "red" | "amber" | "slate" }) { const style = tone === "green" ? "bg-emerald-100 text-emerald-800" : tone === "red" ? "bg-red-100 text-red-800" : tone === "amber" ? "bg-amber-100 text-amber-800" : "bg-slate-200 text-slate-700"; return <span className={`rounded-sm px-2.5 py-1 text-xs font-semibold ${style}`}>{text}</span>; }
-function money(value: number, locale: string) { return new Intl.NumberFormat(locale, { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(value); }
+function money(value: number, locale: string) { return formatMadAmount(value, locale); }
 function date(value: number, locale: string) { return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Casablanca" }).format(value); }

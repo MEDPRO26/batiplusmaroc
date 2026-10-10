@@ -7,6 +7,7 @@ import type { ProjectDetails } from "@/features/projects/components/client-proje
 import { latestRevision } from "@/features/marketplace/lib/conversation-workflow";
 import { Link } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
+import { MAD_AMOUNT_FORMAT } from "@/lib/money/mad";
 
 export function ClientProjectCurrentStep({ project }: { project: ProjectDetails }) {
   const t = useTranslations("clientProjects.currentStep");
@@ -49,7 +50,7 @@ export function ClientProjectCurrentStep({ project }: { project: ProjectDetails 
           {!selected && !submitted ? <p className="mt-0.5 mb-0 text-[13px] text-[#5b6570]">{t("discussionOpened")}</p> : null}
           {latest && (selected || submitted) ? (
             <p className="mt-1 mb-0 text-[20px] font-semibold tracking-[-0.03em] text-ink">
-              {format.number(latest.price, { style: "currency", currency: "MAD", maximumFractionDigits: 0 })}
+              {format.number(latest.price, MAD_AMOUNT_FORMAT)}
             </p>
           ) : null}
         </div>

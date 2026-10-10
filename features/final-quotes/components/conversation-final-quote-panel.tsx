@@ -11,7 +11,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { mapAppError } from "@/lib/errors/map-app-error";
-import { parseMadInput } from "@/lib/money/mad";
+import { MAD_AMOUNT_FORMAT, parseMadCentimeInput } from "@/lib/money/mad";
 import { ClientQuoteReadiness } from "@/features/coordination-agreements/components/client-quote-readiness";
 
 type ConversationFinalQuoteResult = FunctionReturnType<
@@ -78,11 +78,11 @@ export function ConversationFinalQuotePanel({ conversationId }: { conversationId
           : quote.status === "changes_requested"
             ? t("changesLead")
             : quote.status === "submitted" && latest
-              ? `${t("revision", { number: latest.revisionNumber })} · ${format.number(latest.price, { style: "currency", currency: "MAD", maximumFractionDigits: 0 })}`
+              ? `${t("revision", { number: latest.revisionNumber })} · ${format.number(latest.price, MAD_AMOUNT_FORMAT)}`
               : quote.status === "draft"
                 ? t("requestedLead")
                 : latest
-                  ? `${t("revision", { number: latest.revisionNumber })} · ${format.number(latest.price, { style: "currency", currency: "MAD", maximumFractionDigits: 0 })}`
+                  ? `${t("revision", { number: latest.revisionNumber })} · ${format.number(latest.price, MAD_AMOUNT_FORMAT)}`
                   : t("requestedLead");
 
   return <section className="border-b border-brand-border bg-[#f7f9fb] px-4 py-3 sm:px-7" aria-labelledby="final-quote-heading">
@@ -244,11 +244,7 @@ export function FinalQuoteSheet({
           ) : latest ? (
             <>
               <p className="m-0 text-[24px] font-semibold tracking-[-0.03em] text-ink">
-                {format.number(latest.price, {
-                  style: "currency",
-                  currency: "MAD",
-                  maximumFractionDigits: 0,
-                })}
+                {format.number(latest.price, MAD_AMOUNT_FORMAT)}
               </p>
               <p className="mt-1 mb-0 text-[12px] text-[#6b7785]">
                 {t("revision", { number: latest.revisionNumber })} ·{" "}
@@ -282,11 +278,7 @@ export function FinalQuoteSheet({
                     {[...quote.revisions].reverse().map((revision) => (
                       <li className="text-sm text-ink" key={revision.id}>
                         {t("revision", { number: revision.revisionNumber })} ·{" "}
-                        {format.number(revision.price, {
-                          style: "currency",
-                          currency: "MAD",
-                          maximumFractionDigits: 0,
-                        })}
+                        {format.number(revision.price, MAD_AMOUNT_FORMAT)}
                       </li>
                     ))}
                   </ol>
@@ -485,7 +477,7 @@ function CompanyQuoteForm({
   async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (busy) return; setBusy(true); onError(""); const data = new FormData(event.currentTarget);
     try { let pdf: { uploadToken: string } | undefined;
       if (file) { if (file.type !== "application/pdf" || file.size < 1 || file.size > 15 * 1024 * 1024) throw new Error("INVALID_FINAL_QUOTE_PDF"); const intent = await generateUpload({ finalQuoteId, fileName: file.name, contentType: file.type, size: file.size }); await uploadFinalQuotePdf({ file, sessionToken, uploadToken: intent.uploadToken }); pdf = { uploadToken: intent.uploadToken }; }
-      const price = parseMadInput(String(data.get("price") ?? ""));
+      const price = parseMadCentimeInput(String(data.get("price") ?? ""));
       if (price === null) throw new Error("INVALID_FINAL_QUOTE_PRICE");
       await submitRevision({ conversationId, price, duration: Number(data.get("duration")), plannedStartDate: String(data.get("plannedStartDate")), validUntil: String(data.get("validUntil")), scope: String(data.get("scope")), inclusions: String(data.get("inclusions")), exclusions: String(data.get("exclusions")), paymentTerms: String(data.get("paymentTerms")), companyNote: String(data.get("companyNote") || "") || undefined, pdf }); onSubmitted();
     } catch (cause) { onError(mapAppError(cause, (key) => tUx(key))); } finally { setBusy(false); } }

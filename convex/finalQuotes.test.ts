@@ -596,6 +596,62 @@ describe("atomic Deal creation at Final Quote acceptance", () => {
     },
   );
 
+  test.each([
+    [320_000.5, 500, 16_000.03],
+    [45_250.75, 300, 1_357.52],
+    // Existing flat-bracket rule: the tier is matched on whole dirhams (floor).
+    [300_000.01, 300, 9_000],
+    [300_000.99, 300, 9_000.03],
+    [300_001.5, 500, 15_000.08],
+    [0.29, 300, 0.01],
+  ])(
+    "fractional Final Quote %f MAD is the exact Deal amount at %i bps with %f MAD commission",
+    async (price, commissionRateBps, commissionAmountMad) => {
+      const s = await setup();
+      const { requested, submitted } = await prepareSubmittedFinalQuote(s, price);
+      const stored = await s.t.run((ctx) => ctx.db.get(submitted.revisionId));
+      expect(stored?.price).toBe(price);
+      await asUser(s.t, s.clientId).mutation(api.finalQuotes.index.review, {
+        finalQuoteId: requested.finalQuoteId,
+        revisionId: submitted.revisionId,
+        action: "accept",
+      });
+      const deal = await s.t.run((ctx) =>
+        ctx.db
+          .query("deals")
+          .withIndex("by_projectId", (q) => q.eq("projectId", s.projectId))
+          .unique(),
+      );
+      expect(deal).toMatchObject({
+        agreedAmountMad: price,
+        commissionRateBps,
+        commissionAmountMad,
+        commissionConfigVersion: 1,
+        acceptedFinalQuoteRevisionId: submitted.revisionId,
+      });
+    },
+  );
+
+  test.each([320_000.505, 0.001, 100.999, Number.NaN, 0, -10.5])(
+    "rejects Final Quote price %f instead of rounding it",
+    async (price) => {
+      const s = await setup();
+      await asUser(s.t, s.clientId).mutation(api.finalQuotes.index.request, {
+        conversationId: s.conversationId,
+      });
+      await expect(
+        asUser(s.t, s.companyUserId).mutation(
+          api.finalQuotes.index.submitRevision,
+          { conversationId: s.conversationId, ...revision, price },
+        ),
+      ).rejects.toThrow("INVALID_FINAL_QUOTE_PRICE");
+      const revisions = await s.t.run((ctx) =>
+        ctx.db.query("finalQuoteRevisions").take(1),
+      );
+      expect(revisions).toHaveLength(0);
+    },
+  );
+
   test("missing commission configuration rolls back acceptance and selection", async () => {
     const s = await setup();
     const requested = await asUser(s.t, s.clientId).mutation(

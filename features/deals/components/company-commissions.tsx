@@ -5,6 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
 import { api } from "@/convex/_generated/api";
 import { WorkspacePage, WorkspacePageHeader } from "@/features/shared/components/workspace-page";
+import { formatMadAmount } from "@/lib/money/mad";
 
 type Obligation = FunctionReturnType<
   typeof api.deals.company.listMyCommissionObligations
@@ -154,7 +155,7 @@ function CommissionsSkeleton() {
 }
 
 function money(value: number, locale: string) {
-  return new Intl.NumberFormat(locale, { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(value);
+  return formatMadAmount(value, locale);
 }
 function amount(value: number | null, locale: string, fallback: string) { return value === null ? fallback : money(value, locale); }
 function rate(value: number, locale: string) { return new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 2 }).format(value / 10_000); }

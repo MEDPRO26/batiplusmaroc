@@ -83,6 +83,24 @@ describe("Company commission visibility UI", () => {
     expect(html).not.toMatch(/<button/i);
   });
 
+  test.each([
+    ["en", "MAD\u00a0320,000.50", "MAD\u00a016,000.03", "MAD\u00a017,357.55"],
+    ["fr", "320\u202f000,50\u00a0MAD", "16\u202f000,03\u00a0MAD", "17\u202f357,55\u00a0MAD"],
+  ] as const)(
+    "shows centime-exact amounts and totals with two decimals in %s",
+    (locale, agreed, commission, total) => {
+      convex.results = [
+        [{ ...due, agreedAmountMad: 320_000.5, commissionAmountMad: 16_000.03 }],
+        { totalDueMad: 17_357.55, totalPaidMad: 0, dueCount: 2 },
+      ];
+      const html = render(locale);
+      expect(html).toContain(agreed);
+      expect(html).toContain(commission);
+      expect(html).toContain(total);
+      expect(html).toContain(locale === "en" ? "MAD\u00a00.00" : "0,00\u00a0MAD");
+    },
+  );
+
   test("includes both card and table responsive presentations", () => {
     convex.results = [
       [due],

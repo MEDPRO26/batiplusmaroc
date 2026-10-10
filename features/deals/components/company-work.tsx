@@ -20,6 +20,7 @@ import {
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
+import { MAD_AMOUNT_FORMAT } from "@/lib/money/mad";
 
 type Deal = FunctionReturnType<typeof api.deals.company.listMyDeals>[number];
 export type CompanyWorkView = "active" | "history";
@@ -112,7 +113,7 @@ function DealRow({ deal }: { deal: Deal }) {
       <p className="m-0 text-sm sm:w-44 sm:text-right">
         <span className="block text-xs text-muted">{t("agreedAmount")}</span>
         <span className="font-semibold tabular-nums text-ink">
-          {format.number(deal.agreedAmountMad, { style: "currency", currency: "MAD", maximumFractionDigits: 0 })}
+          {format.number(deal.agreedAmountMad, MAD_AMOUNT_FORMAT)}
         </span>
       </p>
       <div className="sm:w-44 sm:text-right">

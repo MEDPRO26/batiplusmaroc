@@ -4863,7 +4863,7 @@
         "FINAL_QUOTE_PDF_NOT_FOUND": "This PDF is unavailable.",
         "INVALID_FINAL_QUOTE_STATUS_TRANSITION": "This final quote action is no longer available.",
         "INVALID_FINAL_QUOTE_PDF": "Choose a valid PDF no larger than 15 MB.",
-        "INVALID_FINAL_QUOTE_PRICE": "Enter a valid final price.",
+        "INVALID_FINAL_QUOTE_PRICE": "Enter a valid final price in MAD with at most two decimals (e.g. 320000.50).",
         "INVALID_FINAL_QUOTE_DURATION": "Enter a valid final duration.",
         "INVALID_FINAL_QUOTE_DATE": "Enter valid future dates.",
         "INVALID_FINAL_QUOTE_SCOPE": "Describe the detailed scope of work.",

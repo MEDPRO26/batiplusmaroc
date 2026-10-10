@@ -4863,7 +4863,7 @@
         "FINAL_QUOTE_PDF_NOT_FOUND": "Ce PDF n’est pas disponible.",
         "INVALID_FINAL_QUOTE_STATUS_TRANSITION": "Cette action sur le devis final n’est plus disponible.",
         "INVALID_FINAL_QUOTE_PDF": "Choisissez un PDF valide de 15 Mo maximum.",
-        "INVALID_FINAL_QUOTE_PRICE": "Saisissez un prix final valide.",
+        "INVALID_FINAL_QUOTE_PRICE": "Saisissez un prix final valide en MAD, avec au maximum deux décimales (ex. 320000,50).",
         "INVALID_FINAL_QUOTE_DURATION": "Saisissez une durée finale valide.",
         "INVALID_FINAL_QUOTE_DATE": "Saisissez des dates futures valides.",
         "INVALID_FINAL_QUOTE_SCOPE": "Décrivez le périmètre détaillé des travaux.",
