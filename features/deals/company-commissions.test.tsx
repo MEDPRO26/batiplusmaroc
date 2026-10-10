@@ -6,10 +6,29 @@ import { routes } from "@/lib/routes";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 
-const convex = vi.hoisted(() => ({ results: [] as unknown[] }));
-vi.mock("convex/react", () => ({ useQuery: () => convex.results.shift() }));
+const companyUser = { accountType: "company", onboardingStatus: "completed" } as const;
+const convex = vi.hoisted(() => ({
+  user: undefined as unknown,
+  results: [] as unknown[],
+  calls: [] as Array<{ name: string; args: unknown }>,
+}));
+vi.mock("convex/react", async () => {
+  const { getFunctionName } = await import("convex/server");
+  return {
+    useQuery: (query: never, args: unknown) => {
+      const name = getFunctionName(query);
+      convex.calls.push({ name, args });
+      if (name === "users:currentUser") return convex.user;
+      return args === "skip" ? undefined : convex.results.shift();
+    },
+  };
+});
+vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 
-import { CompanyCommissions } from "./components/company-commissions";
+import {
+  CompanyCommissions,
+  resolveCompanyCommissionsRedirect,
+} from "./components/company-commissions";
 
 function render(locale: "en" | "fr") {
   return renderToStaticMarkup(
@@ -46,6 +65,8 @@ const paid = {
 
 describe("Company commission visibility UI", () => {
   beforeEach(() => {
+    convex.user = companyUser;
+    convex.calls = [];
     convex.results = [[], { totalDueMad: 0, totalPaidMad: 0, dueCount: 0 }];
   });
 
@@ -127,5 +148,64 @@ describe("Company commission visibility UI", () => {
     expect(html).toContain("MAD\u00a04,147,500");
     expect(html).toContain("MAD\u00a02,370,000");
     expect(html).toContain(">210<");
+  });
+});
+
+describe("Company commissions route guard", () => {
+  const commissionCalls = () =>
+    convex.calls.filter((call) => call.name.startsWith("deals/company:"));
+
+  beforeEach(() => {
+    convex.calls = [];
+    convex.results = [[due], { totalDueMad: 19_750, totalPaidMad: 0, dueCount: 1 }];
+  });
+
+  test.each([
+    ["Client", { accountType: "client", onboardingStatus: "completed" }, routes.clientDashboard],
+    ["Client still onboarding", { accountType: "client", onboardingStatus: "pending" }, routes.clientOnboarding],
+    ["Admin", { accountType: "admin", onboardingStatus: null }, routes.admin],
+    ["SEO team", { accountType: "seo_team", onboardingStatus: null }, routes.seoDashboard],
+    ["Company still onboarding", { accountType: "company", onboardingStatus: "pending" }, routes.companyOnboarding],
+    ["anonymous visitor", null, routes.signIn],
+  ] as const)(
+    "%s never starts commission queries and is sent to the right place",
+    (_label, user, destination) => {
+      convex.user = user;
+      const html = render("en");
+      expect(resolveCompanyCommissionsRedirect(user)).toBe(destination);
+      expect(destination).not.toBe(routes.companyCommissions);
+      expect(commissionCalls()).toHaveLength(2);
+      expect(commissionCalls().every((call) => call.args === "skip")).toBe(true);
+      expect(html).toContain('aria-busy="true"');
+      expect(html).not.toContain("Villa Anfa");
+      expect(html).not.toContain("19,750");
+    },
+  );
+
+  test("a loading session neither queries commissions nor redirects", () => {
+    convex.user = undefined;
+    const html = render("fr");
+    expect(resolveCompanyCommissionsRedirect(undefined)).toBeNull();
+    expect(commissionCalls().every((call) => call.args === "skip")).toBe(true);
+    expect(html).toContain('aria-busy="true"');
+  });
+
+  test("an onboarded Company loads its commissions without a redirect", () => {
+    convex.user = companyUser;
+    const html = render("en");
+    expect(resolveCompanyCommissionsRedirect(companyUser)).toBeNull();
+    expect(commissionCalls().map((call) => call.args)).toEqual([{}, {}]);
+    expect(html).toContain("Villa Anfa");
+    expect(html).toContain("MAD\u00a019,750.00");
+  });
+
+  test("switching from a Company to a Client session stops the queries", () => {
+    convex.user = companyUser;
+    render("en");
+    convex.calls = [];
+    convex.user = { accountType: "client", onboardingStatus: "completed" };
+    const html = render("en");
+    expect(commissionCalls().every((call) => call.args === "skip")).toBe(true);
+    expect(html).not.toContain("Villa Anfa");
   });
 });

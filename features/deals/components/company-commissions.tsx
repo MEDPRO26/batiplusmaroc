@@ -3,21 +3,47 @@
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
+import { useEffect } from "react";
 import { api } from "@/convex/_generated/api";
 import { WorkspacePage, WorkspacePageHeader } from "@/features/shared/components/workspace-page";
+import { useRouter } from "@/i18n/navigation";
+import { workspaceRouteForUser, type WorkspaceUser } from "@/lib/auth/workspace-route";
 import { formatMadAmount } from "@/lib/money/mad";
+import { routes, type AppRoute } from "@/lib/routes";
 
 type Obligation = FunctionReturnType<
   typeof api.deals.company.listMyCommissionObligations
 >[number];
 
+type CurrentUser = WorkspaceUser | null | undefined;
+
+function canLoadCompanyCommissions(user: CurrentUser) {
+  return user?.accountType === "company" && user.onboardingStatus === "completed";
+}
+
+/** Where a viewer who may not load Company commissions belongs; null while loading or when eligible. */
+export function resolveCompanyCommissionsRedirect(user: CurrentUser): AppRoute | null {
+  if (user === undefined) return null;
+  if (user === null) return routes.signIn;
+  if (canLoadCompanyCommissions(user)) return null;
+  return workspaceRouteForUser(user);
+}
+
 export function CompanyCommissions() {
   const t = useTranslations("companyCommissions");
   const locale = useLocale();
-  const obligations = useQuery(api.deals.company.listMyCommissionObligations);
-  const summary = useQuery(api.deals.company.getMyCommissionSummary);
+  const router = useRouter();
+  const user = useQuery(api.users.currentUser);
+  const canLoad = canLoadCompanyCommissions(user);
+  const obligations = useQuery(api.deals.company.listMyCommissionObligations, canLoad ? {} : "skip");
+  const summary = useQuery(api.deals.company.getMyCommissionSummary, canLoad ? {} : "skip");
 
-  if (obligations === undefined || summary === undefined) return <CommissionsSkeleton />;
+  useEffect(() => {
+    const destination = resolveCompanyCommissionsRedirect(user);
+    if (destination) router.replace(destination);
+  }, [router, user]);
+
+  if (!canLoad || obligations === undefined || summary === undefined) return <CommissionsSkeleton />;
 
   return (
     <WorkspacePage>
