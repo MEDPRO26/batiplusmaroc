@@ -194,12 +194,27 @@ contract editor, technical guarantees or construction ERP.
 
 ## Required reading for support changes
 
-- [OC3.2 backend and adopted V1 defaults](docs/client-support-backend-v1.md)
-- [OC3.4 notifications and verification](docs/client-support-notifications-oc34.md)
-- [OC3.3.1 browser comparison and open checks](docs/client-support-browser-regression-oc331.md)
-- [OC3.6.2 agreement backend, API contract and verification](docs/coordination-agreement-backend-oc362.md)
-- [OC3.6.3 agreement UI, verification and remaining integration limits](docs/coordination-agreement-ui-oc363.md)
+Tracked, available in every clone:
+
 - [Notification domain](docs/notifications.md)
+
+Local-only, git-ignored private reports (see `.gitignore`; absent from fresh
+clones and never to be force-added):
+
+- OC3.2 backend and adopted V1 defaults: `docs/client-support-backend-v1.md`
+- OC3.4 notifications and verification: `docs/client-support-notifications-oc34.md`
+- OC3.3.1 browser comparison and open checks: `docs/client-support-browser-regression-oc331.md`
+- OC3.6.2 agreement backend, API contract and verification: `docs/coordination-agreement-backend-oc362.md`
+- OC3.6.3 agreement UI, verification and remaining integration limits: `docs/coordination-agreement-ui-oc363.md`
+
+When a local-only report is unavailable:
+
+- Use the tracked documentation, current source code and tests.
+- Keep applying the approved OC3 rules recorded in this file; they remain
+  binding without the reports.
+- Do not invent missing decisions, test counts, deployment status or open checks.
+- Report the missing report, and request Product HQ clarification when a
+  private requirement is essential to the task.
 
 Use these reports for changing test counts, deployment evidence/status and open
 checks; do not duplicate counts here. Inspect current source, distinguish
@@ -524,14 +539,21 @@ Tracked milestone record and accepted V1 limitations:
 Feature specification (planning handoff):
 `docs/features/nationwide-geography.md`
 
-That specification is a local, git-ignored file (see `.gitignore`) and is
-absent from fresh clones. When it is unavailable, use the closure record and
-the tracked `docs/*geo*` / `docs/*hq*` handoffs, and report the missing
-specification instead of guessing its content.
+That specification is a local-only, git-ignored private file (see
+`.gitignore`); it is absent from fresh clones and must never be force-added.
+When it is unavailable:
+
+- Use the closure record, the tracked `docs/*geo*` / `docs/*hq*` handoffs,
+  current source code and tests.
+- Keep applying the approved GEO rules recorded in this file.
+- Do not invent missing decisions or treat OPEN Product HQ decisions as approved.
+- Report the missing specification, and request Product HQ clarification when
+  a private requirement is essential to the task.
 
 ### Mandatory instructions for GEO tasks
 
-1. Read the full geography specification before starting.
+1. Read the full geography specification before starting; if it is absent
+   (fresh clone), follow the fallback above.
 2. Read `convex/_generated/ai/guidelines.md` before Convex work.
 3. Verify latest `origin/main`, current branch and clean worktree.
 4. Work on `feature/nationwide-project-intake`.
