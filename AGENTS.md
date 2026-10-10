@@ -147,9 +147,11 @@ complete authorization/security verification, full authenticated E2E or proof
 of local/deployed code and schema parity. Keep remaining OC3.5 security/release
 checks, including historical private-cover verification, open.
 
-All Morocco remains the service coverage goal. Support has no city filter, but
-the Project wizard/schema still limit intake to ten cities: a separate nationwide
-launch blocker, not a limitation resolved by OC3.
+All Morocco remains the service coverage goal. Support has no city filter.
+Project intake is no longer limited to ten cities: Nationwide Geography V1 adds
+structured Region → Province/Prefecture locations with rural localities (see
+the GEO section below). That change came from GEO, not OC3; production rollout
+of GEO remains a separate step.
 
 ## CURRENT STAGE — Coordination agreement
 
@@ -508,13 +510,24 @@ Prefer the simplest production-ready solution.
 
 
 
-## ACTIVE FEATURE — Nationwide Geography (GEO)
+## Nationwide Geography (GEO) — V1 development complete
 
-Batiplus is expanding project intake and Company coverage
-to all Moroccan regions, provinces, cities, villages and douars.
+Project intake and Company coverage now span all Moroccan regions,
+provinces, cities, villages and douars. V1 development is closed on
+`feature/nationwide-project-intake` (milestone tag `geo-v1-final`).
+Production migration, data verification and rollout remain separate,
+unapproved steps.
 
-Feature specification:
+Tracked milestone record and accepted V1 limitations:
+`docs/nationwide-geography-v1-closure.md`
+
+Feature specification (planning handoff):
 `docs/features/nationwide-geography.md`
+
+That specification is a local, git-ignored file (see `.gitignore`) and is
+absent from fresh clones. When it is unavailable, use the closure record and
+the tracked `docs/*geo*` / `docs/*hq*` handoffs, and report the missing
+specification instead of guessing its content.
 
 ### Mandatory instructions for GEO tasks
 
