@@ -5,7 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { api } from "@/convex/_generated/api";
-import type { Doc } from "@/convex/_generated/dataModel";
+import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
 import { EmptyState } from "@/features/shared/components/error-state";
 import { TableListSkeleton } from "@/features/shared/components/skeletons";
 import {
@@ -23,7 +23,6 @@ import { routes } from "@/lib/routes";
 
 type Proposal = FunctionReturnType<typeof api.proposals.index.listMyProposals>[number];
 type Filter = "all" | "open" | "discussion" | "closed";
-type City = NonNullable<Doc<"projects">["city"]>;
 
 const FILTER_STATUSES: Record<Exclude<Filter, "all">, Proposal["status"][]> = {
   open: ["submitted", "viewed", "shortlisted"],
@@ -112,7 +111,7 @@ export function CompanyProposals() {
 function ProposalRow({ proposal }: { proposal: Proposal }) {
   const t = useTranslations("companyProposals");
   const tStatus = useTranslations("initialQuote.detail");
-  const tWizard = useTranslations("projectWizard");
+  const locationLabel = useProjectLocationLabel();
   const format = useFormatter();
 
   return (
@@ -123,8 +122,8 @@ function ProposalRow({ proposal }: { proposal: Proposal }) {
           <StatusBadge tone={STATUS_TONE[proposal.status]}>{tStatus(proposal.status)}</StatusBadge>
         </div>
         <p className="mt-1 mb-0 flex flex-wrap gap-x-2 text-sm text-muted">
-          {proposal.city ? <span>{tWizard(`cityOptions.${proposal.city as City}`)}</span> : null}
-          {proposal.city ? <span aria-hidden>·</span> : null}
+          <span className="break-words">{locationLabel(proposal)}</span>
+          <span aria-hidden>·</span>
           <span>{t("sentOn", { date: format.dateTime(proposal.submittedAt, { dateStyle: "medium" }) })}</span>
         </p>
       </div>

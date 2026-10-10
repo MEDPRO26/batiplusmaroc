@@ -11,11 +11,12 @@
  * - Idempotent via stable `seed-demo-*` slugs
  * - Cleanup deletes only those seeded rows
  */
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { buildCompanyDirectorySearchText } from "../companies/directory";
+import { companyHeadquartersCreationPolicy } from "../lib/companyHeadquartersPolicy";
 
 export const SEED_SLUG_PREFIX = "seed-demo-";
 
@@ -948,6 +949,12 @@ export const seedDemoCompanies = internalMutation({
       }
 
       const description = buildDescription(company);
+      const headquartersPolicy = companyHeadquartersCreationPolicy();
+      // These fictional completed fixtures contain only a legacy city. Never
+      // introduce an already-completed Company that bypasses the active policy.
+      if (headquartersPolicy.headquartersPolicyVersion && company.onboardingStatus === "completed") {
+        throw new ConvexError("DEV_SEED_STRUCTURED_HEADQUARTERS_REQUIRED");
+      }
       const directorySearchText = buildCompanyDirectorySearchText({
         name: company.name,
         city: company.city,
@@ -955,6 +962,7 @@ export const seedDemoCompanies = internalMutation({
       });
 
       const companyId = await ctx.db.insert("companies", {
+        ...headquartersPolicy,
         name: company.name,
         legalName: company.legalName,
         slug: company.slug,

@@ -148,7 +148,8 @@ Notification reads and support-thread reads remain independent. Clearing alerts
 changes only notification state; support reads change only per-reader support
 positions. Clicking an alert does not request a service or create a conversation.
 The existing visible-message acknowledgment behavior applies when the thread
-actually opens. See `client-support-notifications-oc34.md` for verification.
+actually opens. Verification is recorded in `client-support-notifications-oc34.md`,
+a local-only, git-ignored report that is absent from fresh clones.
 
 ## Step 12.2.1 event map
 

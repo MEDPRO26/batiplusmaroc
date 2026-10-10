@@ -1,7 +1,10 @@
 import { NextIntlClientProvider } from "next-intl";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import type { FunctionReturnType } from "convex/server";
+import type { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { toGeneralProjectLocation } from "@/lib/geography/project-location";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 
@@ -31,22 +34,27 @@ const project = {
   id: projectId,
   title: "Renovation of a family apartment",
   city: "rabat" as const,
+  location: toGeneralProjectLocation({ city: "rabat" }),
   primaryCategory: "renovation" as const,
   timeline: "one_to_three_months" as const,
-};
+} satisfies NonNullable<FunctionReturnType<typeof api.quotes.index.getSubmissionContext>>["project"];
 
 function render(locale: "en" | "fr", context: unknown, quote?: unknown, threads?: unknown) {
   state.queryResults = [companyUser, context, quote, threads];
   state.queryIndex = 0;
-  return renderToStaticMarkup(
+  const onError = vi.fn();
+  const html = renderToStaticMarkup(
     <NextIntlClientProvider
       locale={locale}
       messages={locale === "en" ? en : fr}
       timeZone="Africa/Casablanca"
+      onError={onError}
     >
       <CompanyInitialQuoteWorkspace projectId={projectId} />
     </NextIntlClientProvider>,
   );
+  expect(onError).not.toHaveBeenCalled();
+  return html;
 }
 
 function renderNode(locale: "en" | "fr", node: React.ReactNode) {
@@ -101,6 +109,43 @@ describe("company initial quote workspace", () => {
     expect(html).toContain("Initial estimate");
     expect(html).not.toContain("100,000–250,000 MAD");
     expect(html).not.toContain(">Budget<");
+  });
+
+  describe.each(["fr", "en"] as const)("GEO4.2 %s general location summary", (locale) => {
+    const recorded = {
+      regionCode: "05", provinceCode: "05.081", communeName: "Aït Tamlil — آيت تامليل",
+      localityName: "PRIVATE_DOUAR_QUOTE_RENDER", neighborhood: "PRIVATE_NEIGHBORHOOD_QUOTE_RENDER",
+    };
+    test.each([
+      { name: "structured-only", city: null, location: toGeneralProjectLocation(recorded), label: "Azilal" },
+      { name: "optional commune", city: null, location: toGeneralProjectLocation({ ...recorded, communeName: null }), label: "Azilal" },
+      { name: "mixed historical/new", city: "rabat", location: toGeneralProjectLocation({ ...recorded, city: "rabat" }), label: "Azilal" },
+      { name: "legacy-only", city: "rabat", location: project.location, label: "Rabat" },
+      { name: "unspecified historical", city: null, location: toGeneralProjectLocation({}), label: (locale === "fr" ? fr : en).projectLocation.unspecified },
+    ])("renders $name in the form and saved quote without private fields or invalid city translation keys", ({ city, location, label }) => {
+      const summary = { ...project, city, location };
+      for (const hasQuote of [false, true]) {
+        const html = render(locale, {
+          project: { ...summary, ...{ neighborhood: recorded.neighborhood, localityName: recorded.localityName } },
+          verificationStatus: "verified", marketplaceWriteAllowed: true,
+          activeQuoteId: hasQuote ? quoteId : null, latestQuoteId: hasQuote ? quoteId : null,
+        }, hasQuote ? {
+          id: quoteId, projectId, companyId, project: summary,
+          message: "We can deliver this renovation with a dedicated site team.",
+          estimatedPrice: 185000, currency: "MAD", estimatedDuration: 75, availableStartDate: "2099-01-15",
+          scope: "Demolition, plumbing, electrical work, finishes, and site cleanup.", quoteType: "initial",
+          status: "submitted", createdAt: 100, updatedAt: 100, submittedAt: 100, withdrawnAt: null,
+          history: [{ oldStatus: "draft", newStatus: "submitted", changedAt: 100, reason: null }],
+        } : undefined);
+        expect(html).toContain(label);
+        if (location.communeName) expect(html).toContain(location.communeName);
+        expect(html).not.toContain("PRIVATE_");
+        expect(html).not.toContain("cityOptions.null");
+        expect(html).not.toContain("cityOptions.undefined");
+        expect(html).toContain(hasQuote ? (locale === "fr" ? "Votre proposition" : "Your proposal")
+          : (locale === "fr" ? "Votre estimation" : "Your estimate"));
+      }
+    });
   });
 
   test("disables submission behind company verification", () => {

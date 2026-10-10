@@ -1,8 +1,8 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useId, useState } from "react";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 
 type Role = "client" | "company";
@@ -72,13 +72,19 @@ function ClientPanel({
   onQueryChange: (value: string) => void;
 }) {
   const t = useTranslations("hero");
+  const router = useRouter();
+  const locale = useLocale();
 
   return (
     <div className="hero-panel-in w-full min-w-0">
       <form
+        action={getPathname({ locale: locale === "fr" ? "fr" : "en", href: routes.companies })}
         className="w-full min-w-0"
+        method="get"
         onSubmit={(event) => {
           event.preventDefault();
+          const value = query.trim();
+          router.push({ pathname: routes.companies, query: value ? { q: value } : undefined });
         }}
       >
         <label className="sr-only" htmlFor={searchId}>
@@ -89,6 +95,7 @@ function ClientPanel({
             autoComplete="off"
             className="h-11 min-w-0 flex-1 border-0 bg-transparent text-[0.95rem] text-ink outline-none placeholder:text-muted md:h-12 md:text-[1.02rem]"
             id={searchId}
+            name="q"
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder={t("searchProject")}
             type="search"
@@ -111,6 +118,7 @@ function ClientPanel({
 
 function CompanyPanel() {
   const t = useTranslations("hero");
+  const router = useRouter();
 
   return (
     <div className="hero-panel-in w-full min-w-0">
@@ -121,7 +129,10 @@ function CompanyPanel() {
       >
         {t("exploreProjects")}
       </Link>
-      <ChipRow chips={companyChipKeys} />
+      <ChipRow
+        chips={companyChipKeys}
+        onSelect={(value) => router.push({ pathname: routes.browseProjects, query: { q: value } })}
+      />
     </div>
   );
 }

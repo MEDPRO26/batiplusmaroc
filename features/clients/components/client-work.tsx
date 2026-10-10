@@ -10,6 +10,7 @@ import { WorkspacePage, workspaceButton } from "@/features/shared/components/wor
 import { Link, useRouter } from "@/i18n/navigation";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { routes } from "@/lib/routes";
+import { MAD_AMOUNT_FORMAT } from "@/lib/money/mad";
 
 export type ClientWorkTab = "projects" | "contracts";
 const TABS: ClientWorkTab[] = ["projects", "contracts"];
@@ -196,7 +197,7 @@ function ContractRow({ project }: { project: Project }) {
             <dl className="mt-1.5 mb-0 flex flex-wrap gap-x-5 gap-y-1 text-sm">
               {deal.companyName ? <Meta label={t("contract.company")}>{deal.companyName}</Meta> : null}
               <Meta label={t("contract.amount")}>
-                {format.number(deal.agreedAmountMad, { style: "currency", currency: "MAD", maximumFractionDigits: 0 })}
+                {format.number(deal.agreedAmountMad, MAD_AMOUNT_FORMAT)}
               </Meta>
             </dl>
             <p className="mt-2.5 mb-0 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-muted tabular-nums">

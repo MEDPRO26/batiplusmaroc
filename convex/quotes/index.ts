@@ -14,6 +14,10 @@ import {
   projectCityValidator,
   projectTimelineValidator,
 } from "../projects/constants";
+import {
+  generalProjectLocationValidator,
+  toGeneralProjectLocation,
+} from "../projects/location";
 import { ensureConversationForQuote } from "../messages/index";
 import { appendMarketplaceActivity } from "../marketplaceActivity/model";
 import { invitationForPair } from "../invitations/index";
@@ -45,7 +49,8 @@ const quoteStatusValidator = v.union(
 const projectSummaryValidator = v.object({
   id: v.id("projects"),
   title: v.string(),
-  city: projectCityValidator,
+  city: v.union(projectCityValidator, v.null()),
+  location: generalProjectLocationValidator,
   primaryCategory: projectCategoryValidator,
   timeline: projectTimelineValidator,
 });
@@ -151,18 +156,14 @@ function assertAvailableStartDate(value: string, now: number) {
 }
 
 function projectSummary(project: Doc<"projects">) {
-  if (
-    !project.title ||
-    !project.city ||
-    !project.primaryCategory ||
-    !project.timeline
-  ) {
+  if (!project.title || !project.primaryCategory || !project.timeline) {
     throw new ConvexError("PROJECT_INCOMPLETE");
   }
   return {
     id: project._id,
     title: project.title,
-    city: project.city,
+    city: project.city ?? null,
+    location: toGeneralProjectLocation(project),
     primaryCategory: project.primaryCategory,
     timeline: project.timeline,
   };

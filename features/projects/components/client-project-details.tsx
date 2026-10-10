@@ -1,5 +1,7 @@
 "use client";
 
+import { useProjectLocationLabel } from "../hooks/use-project-location-label";
+
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { ArrowLeft, CalendarClock, ChevronDown, Clock3, FileText, FolderOpen, House, MapPin, Ruler } from "lucide-react";
@@ -50,12 +52,13 @@ export function ClientProjectDetails({ projectId }: { projectId: string }) {
 const DESCRIPTION_PREVIEW_CHARS = 600;
 
 export function ClientProjectDetailsView({ project, quotesSlot, supportSlot }: { project: ProjectDetails; quotesSlot?: React.ReactNode; supportSlot?: React.ReactNode }) {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("clientProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
   const locale = useLocale();
   const category = project.primaryCategory ? `${tWizard(`categoryOptions.${project.primaryCategory}`)}${project.primaryCategory === "other" && project.customCategoryText ? ` · ${project.customCategoryText}` : ""}` : null;
-  const location = [project.city ? tWizard(`cityOptions.${project.city}`) : null, project.neighborhood].filter(Boolean).join(" · ") || null;
+  const location = locationLabel(project);
   const surface = project.surfaceUnknown ? t("surfaceUnknown") : project.surface ? `${format.number(project.surface)} m²` : null;
   // The project read model has no publishedAt; the immutable status history is the source of truth.
   const publishedAt = project.history.findLast((item) => item.newStatus === "published")?.changedAt ?? null;
@@ -75,7 +78,7 @@ export function ClientProjectDetailsView({ project, quotesSlot, supportSlot }: {
           <div className="pt-1.5 sm:pt-2.5"><StatusBadge status={project.status} /></div>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
-          {location ? <span className="inline-flex items-center gap-1.5"><MapPin aria-hidden className="size-4" />{location}</span> : null}
+          {location ? <span className="inline-flex min-w-0 max-w-full items-start gap-1.5"><MapPin aria-hidden className="mt-0.5 size-4 shrink-0" /><span className="min-w-0 [overflow-wrap:anywhere]">{location}</span></span> : null}
           {category ? <span className="inline-flex items-center gap-1.5"><FolderOpen aria-hidden className="size-4" />{category}</span> : null}
           {surface && !project.surfaceUnknown ? <span className="inline-flex items-center gap-1.5"><Ruler aria-hidden className="size-4" />{surface}</span> : null}
           <span className="inline-flex items-center gap-1.5"><Clock3 aria-hidden className="size-4" />{publishedAt ? t("publishedOn", { date: formatDate(publishedAt) }) : t("createdOn", { date: formatDate(project.createdAt) })}</span>

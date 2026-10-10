@@ -9,12 +9,15 @@ import type { api } from "@/convex/_generated/api";
 import { InviteCompanyButton } from "@/features/invitations/components/invite-company-button";
 import { VerifiedBadge } from "./verified-badge";
 import { serviceName } from "@/features/companies/lib/service-label";
+import { headquartersLabel } from "@/features/companies/lib/headquarters-label";
+import { CompanyCoverageLabel } from "./company-coverage-label";
 
 type PublicCompany = NonNullable<FunctionReturnType<typeof api.portfolio.index.getPublicCompanyProfile>>;
 
 export async function PublicCompanyProfile({ company }: { company: PublicCompany }) {
   const t = await getTranslations("publicCompany");
   const tDirectory = await getTranslations("companyDirectory");
+  const tCoverage = await getTranslations("companyDirectory.coverage");
   const format = await getFormatter();
   const locale = await getLocale();
 
@@ -53,9 +56,9 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                     </h1>
                     <VerifiedBadge label={t("verified")} isVerified={company.isVerified} />
                   </div>
-                  <p className="mt-2 mb-0 flex flex-wrap items-center gap-2 text-sm text-muted">
-                    <MapPin aria-hidden className="size-3.5 shrink-0" strokeWidth={1.8} />
-                    <span>{company.city}</span>
+                  <p className="mt-2 mb-0 flex items-start gap-2 text-sm text-muted">
+                    <MapPin aria-hidden className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.8} />
+                    <span className="min-w-0 break-words">{t("headquartersLocation", { location: headquartersLabel(company.city, company.headquarters, locale) })}</span>
                   </p>
                   <p className="mt-2 mb-0 text-sm font-semibold text-ink">
                     {company.rating === null ? t("reviewsNone") : <><span className="text-amber-600">★ {format.number(company.rating, { maximumFractionDigits: 1 })}</span> <span className="font-normal text-muted">{t("reviewCount", { count: company.reviewCount })}</span></>}
@@ -138,21 +141,8 @@ export async function PublicCompanyProfile({ company }: { company: PublicCompany
                 )}
               </SidebarBlock>
 
-              <SidebarBlock title={t("serviceAreas")}>
-                {company.serviceAreas.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {company.serviceAreas.map((area) => (
-                      <span
-                        className="rounded-sm bg-[#f7f9fb] px-2.5 py-1 text-xs font-medium text-ink"
-                        key={area}
-                      >
-                        {t(`serviceArea.${area}`)}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="m-0 text-sm text-muted">{t("notSpecified")}</p>
-                )}
+              <SidebarBlock title={t("declaredCoverage")}>
+                <CompanyCoverageLabel keys={company.coverageScopeKeys} locale={locale === "fr" ? "fr" : "en"} t={tCoverage} showLabel={false} />
               </SidebarBlock>
             </aside>
 

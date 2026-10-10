@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ADMIN_PRESS, AdminPage } from "./admin-shell";
+import { formatMadAmount } from "@/lib/money/mad";
 
 type Row = FunctionReturnType<typeof api.admin.deals.listCommissionObligations>["page"][number];
 type Filter = "all" | "due" | "paid";
@@ -65,6 +66,6 @@ function DealDialog({ row, locale, onClose, onSuccess }: { row: Row; locale: str
 
 function Field({ label, value }: { label: string; value: string }) { return <div><dt className="text-xs font-semibold uppercase tracking-wide text-[#8b919a]">{label}</dt><dd className="mt-1 text-sm font-medium">{value}</dd></div>; }
 function Status({ status, t }: { status: "due" | "paid"; t: ReturnType<typeof useTranslations> }) { return <span className={`inline-flex rounded-sm px-2.5 py-1 text-xs font-semibold ${status === "paid" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>{t(`status.${status}`)}</span>; }
-function money(value: number, locale: string) { return new Intl.NumberFormat(locale, { style: "currency", currency: "MAD", maximumFractionDigits: 0 }).format(value); }
+function money(value: number, locale: string) { return formatMadAmount(value, locale); }
 function rate(bps: number, locale: string) { return new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 2 }).format(bps / 10000); }
 function date(value: number | null, locale: string) { return value ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Casablanca" }).format(value) : "—"; }

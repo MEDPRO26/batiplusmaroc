@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import {
   Building2,
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Dialog, Tabs } from "radix-ui";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
@@ -24,7 +24,10 @@ import {
   ADMIN_PRESS,
 } from "@/features/admin/components/admin-shell";
 import { Link } from "@/i18n/navigation";
+import { hasAdminVisitDateTimeFormat } from "@/lib/dates/admin-site-visit";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
+import { getProvincesByRegion, getRegions } from "@/lib/geography/morocco";
+import { useAdminProjectLocationLabel } from "@/features/admin/hooks/use-admin-project-location-label";
 
 const TABS = [
   "all",
@@ -48,6 +51,7 @@ const CITIES = [
   "tetouan",
 ] as const;
 const PAGE_SIZE = 15;
+const CURSOR_PAGE_SIZE = 25;
 
 const SECONDARY = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-sm border border-[#e6e9ee] bg-white px-4 text-sm font-semibold text-[#17191d] hover:bg-[#f7f9fc] ${ADMIN_PRESS}`;
 const ICON_BUTTON = `inline-flex size-10 shrink-0 items-center justify-center rounded-sm text-[#626970] hover:bg-[#f2f4f7] hover:text-[#17191d] ${ADMIN_PRESS}`;
@@ -90,10 +94,16 @@ const TONE_DOT: Record<Tone, string> = {
 };
 
 export function AdminSiteVisitsPanel() {
+  const locationLabel = useAdminProjectLocationLabel();
   const t = useTranslations("adminSiteVisits");
   const tWizard = useTranslations("projectWizard");
   const tUx = useTranslations("ux");
   const locale = useLocale();
+  const filterId = useId();
+  const rollout = useQuery(api.admin.siteVisits.getSiteVisitPaginationRollout, {});
+  const indexed = rollout?.enabled === true;
+  const [geography, setGeography] = useState({ regionCode: "", provinceCode: "" });
+  const provinces = getProvincesByRegion(geography.regionCode);
   const [tab, setTab] = useState<Tab>("all");
   const [projectSearch, setProjectSearch] = useState("");
   const [companySearch, setCompanySearch] = useState("");
@@ -104,21 +114,27 @@ export function AdminSiteVisitsPanel() {
     null,
   );
   const [now, setNow] = useState(0);
+  const [pageNow, setPageNow] = useState(0);
   const [expanded, setExpanded] = useState({ key: "", count: PAGE_SIZE });
   const invalidDateRange =
     dateFrom !== "" && dateTo !== "" && dateFrom > dateTo;
   const hasFilters =
     projectSearch !== "" ||
     companySearch !== "" ||
-    city !== "" ||
+    (!indexed && city !== "") ||
     dateFrom !== "" ||
-    dateTo !== "";
+    dateTo !== "" ||
+    (indexed && (geography.regionCode !== "" || geography.provinceCode !== ""));
   // Any filter change falls back to the first page without an effect.
   const filterKey = [tab, projectSearch, companySearch, city, dateFrom, dateTo].join("|");
   const visibleCount = expanded.key === filterKey ? expanded.count : PAGE_SIZE;
 
   useEffect(() => {
-    const updateClock = () => setNow(Date.now());
+    const updateClock = () => {
+      const value = Date.now();
+      setNow(value);
+      setPageNow((initial) => initial || value);
+    };
     const initialTimer = window.setTimeout(updateClock, 0);
     const interval = window.setInterval(updateClock, 60_000);
     return () => {
@@ -127,22 +143,41 @@ export function AdminSiteVisitsPanel() {
     };
   }, []);
 
-  const list = useQuery(
+  const filters = {
+    status: tab,
+    projectSearch: projectSearch.trim() || undefined,
+    companySearch: companySearch.trim() || undefined,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+    now,
+  };
+  const legacyList = useQuery(
     api.admin.siteVisits.listSiteVisits,
-    now === 0 || invalidDateRange
-      ? "skip"
-      : {
-          status: tab,
-          projectSearch: projectSearch.trim() || undefined,
-          companySearch: companySearch.trim() || undefined,
-          city: city || undefined,
-          dateFrom: dateFrom || undefined,
-          dateTo: dateTo || undefined,
-          now,
-        },
+    indexed || now === 0 || invalidDateRange ? "skip" : { ...filters, city: city || undefined },
   );
-  const visible = list?.slice(0, visibleCount) ?? [];
-  const remaining = (list?.length ?? 0) - visible.length;
+  const pager = usePaginatedQuery(
+    api.admin.siteVisits.listSiteVisitsPage,
+    !indexed || pageNow === 0 || invalidDateRange ? "skip" : {
+      ...filters,
+      // A changing clock would discard every loaded cursor page. Live risk is
+      // refreshed below; source/status/filter changes still use the native pager.
+      now: pageNow,
+      regionCode: geography.regionCode || undefined,
+      provinceCode: geography.provinceCode || undefined,
+    },
+    { initialNumItems: CURSOR_PAGE_SIZE },
+  );
+  const list = indexed ? pager.results : legacyList;
+  const loading = indexed ? pager.status === "LoadingFirstPage" : list === undefined;
+  const exhausted = !indexed || pager.status === "Exhausted";
+  const visible = indexed ? (list ?? []).map((row): Row => {
+    if (row.status !== "confirmed" || !row.visitDate || !row.visitTime) return row;
+    // Use the authoritative backend epoch: browser timezone data may differ.
+    // Malformed schedules use proposedAt for sort, but never acquire overdue risk.
+    const parseable = hasAdminVisitDateTimeFormat({ proposedDate: row.visitDate, proposedTime: row.visitTime });
+    return { ...row, riskSignal: parseable && row.sortAt < now ? "visit_follow_up_needed" : null };
+  }) : list?.slice(0, visibleCount) ?? [];
+  const remaining = indexed ? 0 : (list?.length ?? 0) - visible.length;
 
   function clearFilters() {
     setProjectSearch("");
@@ -150,6 +185,7 @@ export function AdminSiteVisitsPanel() {
     setCity("");
     setDateFrom("");
     setDateTo("");
+    setGeography({ regionCode: "", provinceCode: "" });
   }
 
   return (
@@ -180,7 +216,9 @@ export function AdminSiteVisitsPanel() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-2 border-b border-[#eef1f4] p-4 sm:grid-cols-2 sm:px-5 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem_auto]">
+        <div className={`grid grid-cols-1 gap-2 border-b border-[#eef1f4] p-4 sm:grid-cols-2 sm:px-5 ${indexed
+          ? "2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+          : "2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_11rem_auto]"}`}>
           <FilterInput
             label={t("filters.projectLabel")}
             onChange={setProjectSearch}
@@ -193,7 +231,7 @@ export function AdminSiteVisitsPanel() {
             placeholder={t("filters.companyPlaceholder")}
             value={companySearch}
           />
-          <label className={`${FILTER_SHELL} relative`}>
+          {!indexed ? <label className={`${FILTER_SHELL} relative`}>
             <MapPin aria-hidden className="size-4 shrink-0 text-[#8b919a]" />
             <span className="sr-only">{t("filters.cityLabel")}</span>
             <select
@@ -212,7 +250,7 @@ export function AdminSiteVisitsPanel() {
               aria-hidden
               className="pointer-events-none absolute right-4 size-4 text-[#8b919a]"
             />
-          </label>
+          </label> : null}
           <div
             aria-label={t("filters.dateRange")}
             className={`${FILTER_SHELL} ${invalidDateRange ? "border-[#e5484d]" : ""}`}
@@ -237,6 +275,45 @@ export function AdminSiteVisitsPanel() {
             />
           </div>
         </div>
+        {indexed ? (
+          <div className="grid min-w-0 gap-2 border-b border-[#eef1f4] p-4 sm:grid-cols-2 sm:px-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <label className={FILTER_SHELL}>
+              <span className="sr-only">{t("filters.regionLabel")}</span>
+              <select className="h-10 w-full min-w-0 bg-transparent text-[#17191d] outline-none"
+                onChange={(event) => setGeography({ regionCode: event.target.value, provinceCode: "" })}
+                value={geography.regionCode}>
+                <option value="">{t("filters.allMorocco")}</option>
+                {getRegions().map((region) => <option key={region.code} value={region.code}>
+                  {locale === "fr" ? region.nameFr : region.nameEn}
+                </option>)}
+              </select>
+            </label>
+            <div className="min-w-0">
+              <label className={FILTER_SHELL}>
+                <span className="sr-only">{t("filters.provinceLabel")}</span>
+                <select aria-describedby={!geography.regionCode ? `${filterId}-province-help` : undefined}
+                  className="h-10 w-full min-w-0 bg-transparent text-[#17191d] outline-none disabled:text-[#8b919a]"
+                  disabled={!geography.regionCode}
+                  onChange={(event) => setGeography((current) => ({ ...current, provinceCode: event.target.value }))}
+                  value={geography.provinceCode}>
+                  <option value="">{t("filters.allProvinces")}</option>
+                  {provinces.map((province) => <option key={province.code} value={province.code}>
+                    {locale === "fr" ? province.nameFr : province.nameEn}
+                  </option>)}
+                </select>
+              </label>
+              {!geography.regionCode ? <p className="mt-1 text-xs text-[#626970]" id={`${filterId}-province-help`}>
+                {t("filters.provinceDisabled")}
+              </p> : null}
+            </div>
+            <button className={SECONDARY} disabled={!geography.regionCode && !geography.provinceCode}
+              onClick={() => setGeography({ regionCode: "", provinceCode: "" })} type="button">
+              {t("filters.clearGeography")}
+            </button>
+          </div>
+        ) : <p className="border-b border-[#eef1f4] px-4 py-3 text-xs leading-5 text-[#626970] sm:px-5">
+          {t("pagination.legacyLimited")}
+        </p>}
         {invalidDateRange ? (
           <p
             className="mx-4 mt-4 rounded-[10px] bg-[#fff4f2] px-3 py-2 text-sm text-[#8a2f28] sm:mx-5"
@@ -248,13 +325,13 @@ export function AdminSiteVisitsPanel() {
 
         {invalidDateRange ? (
           <div className="h-4" />
-        ) : list === undefined ? (
+        ) : loading ? (
           <SiteVisitSkeleton label={tUx("loading.dashboard")} />
         ) : (
           <>
             <div className="flex min-h-12 items-center justify-between gap-3 px-4 sm:px-5">
               <p className="text-sm text-[#626970] tabular-nums">
-                {t("resultCount", { count: list.length })}
+                {indexed ? t("pagination.loadedCount", { count: list?.length ?? 0 }) : t("resultCount", { count: list?.length ?? 0 })}
               </p>
               {hasFilters ? (
                 <button
@@ -267,13 +344,13 @@ export function AdminSiteVisitsPanel() {
                 </button>
               ) : null}
             </div>
-            {list.length === 0 ? (
+            {list?.length === 0 ? (
               <div className="grid justify-items-center gap-1 border-t border-[#eef1f4] px-6 py-16 text-center">
                 <p className="text-base font-semibold text-[#17191d]">
-                  {t("empty")}
+                  {exhausted ? t("empty") : t("pagination.moreMatches")}
                 </p>
                 <p className="max-w-sm text-sm text-[#626970]">
-                  {t("emptyHint")}
+                  {exhausted ? t("emptyHint") : t("pagination.continueHint")}
                 </p>
               </div>
             ) : (
@@ -339,9 +416,9 @@ export function AdminSiteVisitsPanel() {
                           >
                             {row.projectTitle}
                           </button>
-                          <span className="mt-0.5 flex items-center gap-1 truncate text-xs text-[#8b919a]">
+                          <span className="mt-0.5 flex items-start gap-1 text-xs text-[#8b919a] [overflow-wrap:anywhere]">
                             <MapPin aria-hidden className="size-3.5 shrink-0" />
-                            {row.city ? tWizard(`cityOptions.${row.city}`) : "—"}
+                            {locationLabel(row)}
                           </span>
                         </td>
                         <td className="px-4 py-3.5">
@@ -408,6 +485,14 @@ export function AdminSiteVisitsPanel() {
                 ) : null}
               </>
             )}
+            {indexed && (pager.status === "CanLoadMore" || pager.status === "LoadingMore") ? (
+              <div className="flex justify-center border-t border-[#eef1f4] p-4">
+                <button className={SECONDARY} disabled={pager.status === "LoadingMore"}
+                  onClick={() => pager.loadMore(CURSOR_PAGE_SIZE)} type="button">
+                  {pager.status === "LoadingMore" ? t("pagination.loadingMore") : t("pagination.loadMore")}
+                </button>
+              </div>
+            ) : null}
           </>
         )}
       </section>
@@ -479,7 +564,7 @@ function SiteVisitCard({
   onView: () => void;
 }) {
   const t = useTranslations("adminSiteVisits");
-  const tWizard = useTranslations("projectWizard");
+  const locationLabel = useAdminProjectLocationLabel();
   return (
     <li>
       <button
@@ -503,9 +588,9 @@ function SiteVisitCard({
               <CalendarDays aria-hidden className="size-3.5" />
               {formatVisitDate(row, locale)}
             </span>
-            <span className="inline-flex items-center gap-1">
-              <MapPin aria-hidden className="size-3.5" />
-              {row.city ? tWizard(`cityOptions.${row.city}`) : "—"}
+            <span className="inline-flex min-w-0 max-w-full items-start gap-1 [overflow-wrap:anywhere]">
+              <MapPin aria-hidden className="size-3.5 shrink-0" />
+              {locationLabel(row)}
             </span>
             <FinalQuoteText status={row.finalQuoteStatus} />
           </span>
@@ -630,6 +715,7 @@ function SiteVisitDrawerBody({
   assessmentId: Id<"siteAssessments">;
   now: number;
 }) {
+  const locationLabel = useAdminProjectLocationLabel();
   const t = useTranslations("adminSiteVisits");
   const tWizard = useTranslations("projectWizard");
   const tUx = useTranslations("ux");
@@ -655,12 +741,10 @@ function SiteVisitDrawerBody({
           </Dialog.Title>
           {detail ? (
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-[#626970]">
-              {detail.project.city ? (
-                <span className="inline-flex items-center gap-1">
-                  <MapPin aria-hidden className="size-4 text-[#8b919a]" />
-                  {tWizard(`cityOptions.${detail.project.city}`)}
-                </span>
-              ) : null}
+              <span className="inline-flex min-w-0 max-w-full items-start gap-1 [overflow-wrap:anywhere]">
+                <MapPin aria-hidden className="size-4 shrink-0 text-[#8b919a]" />
+                {locationLabel(detail.project)}
+              </span>
               {detail.project.category ? (
                 <span>{categoryLabel(detail, tWizard)}</span>
               ) : null}
@@ -699,6 +783,7 @@ function SiteVisitDrawerBody({
 }
 
 function SiteVisitDetail({ detail, locale }: { detail: Detail; locale: string }) {
+  const locationLabel = useAdminProjectLocationLabel();
   const t = useTranslations("adminSiteVisits");
   const tProjects = useTranslations("adminProjects");
   const tWizard = useTranslations("projectWizard");
@@ -794,12 +879,8 @@ function SiteVisitDetail({ detail, locale }: { detail: Detail; locale: string })
         <div className="divide-y divide-[#eef1f4] border-t border-[#eef1f4]">
           <DetailSection title={t("sections.project")}>
             <Field
-              label={t("fields.city")}
-              value={
-                detail.project.city
-                  ? tWizard(`cityOptions.${detail.project.city}`)
-                  : null
-              }
+              label={t("fields.location")}
+              value={locationLabel(detail.project)}
             />
             <Field
               label={t("fields.category")}
@@ -1235,7 +1316,8 @@ function formatMoney(value: number, locale: string, currency = "MAD") {
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value);
 }
 

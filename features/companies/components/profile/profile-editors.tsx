@@ -1,6 +1,9 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useId } from "react";
+import { CompanyOnboardingHeadquarters } from "../company-onboarding-headquarters";
+import { onboardingHeadquarters } from "@/features/companies/lib/onboarding-headquarters";
 import { catalogServiceName } from "@/features/companies/lib/service-label";
 import {
   EditDialog,
@@ -31,22 +34,41 @@ function useEditor() {
 
 export function IdentityEditor({ profile }: Props) {
   const { t, save, fail } = useEditor();
+  const tUx = useTranslations("ux");
+  const id = useId();
+  const supported = "headquarters" in profile;
+  const required = profile.headquartersPolicyVersion === "structured_v1";
   return (
     <EditDialog
       lead={t("dialogs.identityLead")}
       onSave={async (form) => {
         const name = String(form.get("name") ?? "").trim();
-        const city = String(form.get("city") ?? "").trim();
+        const rawCity = String(form.get("city") ?? "");
+        const city = rawCity.trim();
         if (name.length < 2) fail("validation.name");
         if (city.length < 2) fail("validation.city");
-        await save({ name, city });
+        const result = onboardingHeadquarters(form, supported, required);
+        if (!result.ok) throw new Error(tUx(`error.codes.${result.error}`));
+        await save({
+          name,
+          ...(rawCity === profile.city ? {} : { city }),
+          ...(result.headquarters === undefined ? {} : { headquarters: result.headquarters }),
+        });
       }}
       title={t("dialogs.identityTitle")}
       triggerLabel={t("dialogs.editIdentity")}
     >
       {() => (
-        <div className="grid gap-4">
+        <div className="grid min-w-0 gap-4">
           <label className={labelClass}>{t("fields.name")}<input className={fieldClass} defaultValue={profile.name} maxLength={120} name="name" required /></label>
+          <CompanyOnboardingHeadquarters
+            fieldClass={`${fieldClass} min-w-0`}
+            fieldError={null}
+            id={id}
+            required={required}
+            snapshot={profile.headquarters}
+            supported={supported}
+          />
           <label className={labelClass}>{t("fields.city")}<input className={fieldClass} defaultValue={profile.city} maxLength={80} name="city" required /></label>
         </div>
       )}

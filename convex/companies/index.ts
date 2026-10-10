@@ -9,6 +9,8 @@ import { buildCompanyDirectorySearchText } from "./directory";
 import { getCompanyOperationalStatus } from "./operationalStatus";
 import { existingServiceIds, listCatalog, validateNewServiceIds } from "../serviceCatalog";
 import { defaultServiceCatalog } from "../../lib/service-catalog-defaults";
+import { MAX_COMPANY_COVERAGE_SCOPES, validateCompanyCoverageScopes } from "../../lib/geography/company-coverage";
+import { companyHeadquartersSnapshot, normalizeCompanyHeadquarters, type CompanyHeadquartersInput } from "../../lib/geography/company-headquarters";
 
 // Keep the original translation keys for browser sessions opened before rollout.
 // New clients use catalogServices; remove this compatibility field only later.
@@ -74,6 +76,12 @@ const verificationDocumentTypeValidator = v.union(
 type CompanyServiceArea = (typeof companyServiceAreas)[number];
 type CompanyLanguage = (typeof companyLanguages)[number];
 
+const headquartersSnapshotValidator = v.object({
+  regionCode: v.union(v.string(), v.null()),
+  provinceCode: v.union(v.string(), v.null()),
+  communeName: v.union(v.string(), v.null()),
+});
+
 const onboardingProfileValidator = v.union(
   v.null(),
   v.object({
@@ -83,6 +91,8 @@ const onboardingProfileValidator = v.union(
     legalName: v.string(),
     phone: v.string(),
     city: v.string(),
+    headquarters: headquartersSnapshotValidator,
+    headquartersPolicyVersion: v.union(v.literal("structured_v1"), v.null()),
     description: v.string(),
     yearsExperience: v.union(v.number(), v.null()),
     website: v.string(),
@@ -110,6 +120,8 @@ const profileManagerValidator = v.object({
   name: v.string(),
   description: v.string(),
   city: v.string(),
+  headquarters: headquartersSnapshotValidator,
+  headquartersPolicyVersion: v.union(v.literal("structured_v1"), v.null()),
   phone: v.string(),
   website: v.string(),
   yearsExperience: v.union(v.number(), v.null()),
@@ -160,6 +172,12 @@ function normalizeCity(value: string) {
     throw new ConvexError("INVALID_CITY");
   }
   return normalized;
+}
+
+function validatedHeadquartersFields(input: CompanyHeadquartersInput | undefined, required = false) {
+  const headquarters = normalizeCompanyHeadquarters(input, required);
+  if (!headquarters.ok) throw new ConvexError(headquarters.error);
+  return headquarters.fields;
 }
 
 function normalizeMoroccanPhone(value: string) {
@@ -332,6 +350,8 @@ export const getOnboardingProfile = query({
       legalName: company.legalName ?? "",
       phone: company.phone ?? user.phone ?? "",
       city: company.city ?? "",
+      headquarters: companyHeadquartersSnapshot(company),
+      headquartersPolicyVersion: company.headquartersPolicyVersion ?? null,
       description: company.description ?? "",
       yearsExperience: company.yearsExperience ?? null,
       website: company.website ?? "",
@@ -392,6 +412,8 @@ export const getProfileManager = query({
       name: company.name ?? "",
       description: company.description ?? "",
       city: company.city ?? "",
+      headquarters: companyHeadquartersSnapshot(company),
+      headquartersPolicyVersion: company.headquartersPolicyVersion ?? null,
       phone: company.phone ?? "",
       website: company.website ?? "",
       yearsExperience: company.yearsExperience ?? null,
@@ -422,11 +444,60 @@ export const getProfileManager = query({
   },
 });
 
+/** Private owner profile context, with the same onboarding rules as getProfileManager. */
+export const getMyGeographicCoverage = query({
+  args: {},
+  returns: v.array(v.string()),
+  handler: async (ctx) => {
+    const { company } = await requireOwnerCompany(ctx);
+    if (company.onboardingStatus !== "completed") throw new ConvexError("COMPANY_ONBOARDING_REQUIRED");
+    const selected = validateCompanyCoverageScopes(company.coverageScopeKeys ?? []);
+    if (!selected.valid) throw new ConvexError("INVALID_COMPANY_COVERAGE_STATE");
+    return selected.coverageScopeKeys;
+  },
+});
+
+/** Explicit profile maintenance, independent of marketplace verification/suspension gates. */
+export const updateMyGeographicCoverage = mutation({
+  args: { coverageScopeKeys: v.array(v.string()) },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const { company } = await requireOwnerCompany(ctx);
+    if (company.onboardingStatus !== "completed") throw new ConvexError("COMPANY_ONBOARDING_REQUIRED");
+    const selected = validateCompanyCoverageScopes(args.coverageScopeKeys);
+    if (!selected.valid) throw new ConvexError(selected.error);
+
+    // The extra row detects corruption rather than silently reconciling a capped prefix.
+    const rows = await ctx.db.query("companyCoverageIndex")
+      .withIndex("by_companyId_and_areaKey", (q) => q.eq("companyId", company._id))
+      .take(MAX_COMPANY_COVERAGE_SCOPES + 1);
+    if (rows.length > MAX_COMPANY_COVERAGE_SCOPES) throw new ConvexError("COMPANY_COVERAGE_INDEX_CORRUPTED");
+
+    const requested = new Set<string>(selected.coverageScopeKeys);
+    const retained = new Set<string>();
+    for (const row of rows) {
+      if (!requested.has(row.areaKey) || retained.has(row.areaKey)) {
+        await ctx.db.delete(row._id);
+      } else retained.add(row.areaKey);
+    }
+    for (const areaKey of requested) {
+      if (!retained.has(areaKey)) await ctx.db.insert("companyCoverageIndex", { companyId: company._id, areaKey });
+    }
+    const unchanged = company.coverageScopeKeys?.length === selected.coverageScopeKeys.length &&
+      company.coverageScopeKeys.every((key, index) => key === selected.coverageScopeKeys[index]);
+    if (!unchanged) {
+      await ctx.db.patch(company._id, { coverageScopeKeys: selected.coverageScopeKeys, updatedAt: Date.now() });
+    }
+    return null;
+  },
+});
+
 export const updatePublicProfile = mutation({
   args: {
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     city: v.optional(v.string()),
+    headquarters: v.optional(headquartersSnapshotValidator),
     phone: v.optional(v.string()),
     website: v.optional(v.string()),
     yearsExperience: v.optional(v.union(v.number(), v.null())),
@@ -455,6 +526,10 @@ export const updatePublicProfile = mutation({
       ? company.description
       : normalizeText(args.description, 20, 1000, "INVALID_DESCRIPTION");
     const city = args.city === undefined ? company.city : normalizeCity(args.city);
+    const headquarters = validatedHeadquartersFields(
+      args.headquarters,
+      args.headquarters !== undefined && company.headquartersPolicyVersion === "structured_v1",
+    );
     const phone = args.phone === undefined ? company.phone : normalizeMoroccanPhone(args.phone);
     const website = args.website === undefined ? company.website : normalizeWebsite(args.website);
     const yearsExperience = args.yearsExperience === undefined
@@ -507,6 +582,7 @@ export const updatePublicProfile = mutation({
 
     const patch: Partial<Omit<Doc<"companies">, "_id" | "_creationTime">> = {
       updatedAt: now,
+      ...headquarters,
       ...(company.slug ? {} : { slug }),
       ...(args.name === undefined ? {} : { name }),
       ...(args.description === undefined ? {} : { description }),
@@ -545,6 +621,7 @@ export const completeOnboarding = mutation({
     legalName: v.string(),
     phone: v.string(),
     city: v.string(),
+    headquarters: v.optional(headquartersSnapshotValidator),
     description: v.string(),
     services: v.optional(v.array(companyServiceValidator)),
     serviceIds: v.optional(v.array(v.id("serviceCatalog"))),
@@ -560,6 +637,12 @@ export const completeOnboarding = mutation({
     const legalName = normalizeOptionalText(args.legalName, 2, 160, "INVALID_LEGAL_NAME");
     const phone = normalizeMoroccanPhone(args.phone);
     const city = normalizeCity(args.city);
+    // The immutable record marker, rather than the current rollout setting, is authoritative.
+    const structuredRequired = company.headquartersPolicyVersion === "structured_v1";
+    const headquarters = validatedHeadquartersFields(
+      args.headquarters ?? (structuredRequired ? companyHeadquartersSnapshot(company) : undefined),
+      structuredRequired,
+    );
     const description = normalizeText(args.description, 20, 1000, "INVALID_DESCRIPTION");
     const yearsExperience = validateYearsExperience(args.yearsExperience);
     const website = normalizeWebsite(args.website);
@@ -633,6 +716,7 @@ export const completeOnboarding = mutation({
       legalName,
       phone,
       city,
+      ...(args.headquarters === undefined ? {} : headquarters),
       description,
       yearsExperience,
       website,

@@ -17,6 +17,7 @@ import {
 } from "../notifications/model";
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import { assertProjectTransition } from "../projects/state";
+import { isCentimePrecisionMadAmount } from "../deals/money";
 import { assertFinalQuoteTransition } from "./state";
 import { claimPdfUpload, createPdfUploadIntent } from "./pdfUploads";
 
@@ -401,13 +402,13 @@ export const submitRevision = mutation({
       pdfFields = { pdfStorageId: file.storageId, pdfFileName: file.fileName, pdfUploadFileName: file.uploadFileName, pdfSize: file.size };
       await ctx.db.patch(file.intent._id, { claimedAt: now });
     }
-    if (!Number.isFinite(args.price) || args.price <= 0 || args.price > MAX_PRICE_MAD) throw new ConvexError("INVALID_FINAL_QUOTE_PRICE");
+    if (!isCentimePrecisionMadAmount(args.price) || args.price > MAX_PRICE_MAD) throw new ConvexError("INVALID_FINAL_QUOTE_PRICE");
     if (!Number.isInteger(args.duration) || args.duration < 1 || args.duration > MAX_DURATION_DAYS) throw new ConvexError("INVALID_FINAL_QUOTE_DURATION");
     const plannedStartDate = dateValue(args.plannedStartDate, now, true, "INVALID_FINAL_QUOTE_DATE");
     const validUntil = dateValue(args.validUntil, now, false, "INVALID_FINAL_QUOTE_DATE");
     if (validUntil < plannedStartDate) throw new ConvexError("INVALID_FINAL_QUOTE_DATE");
     const revisionId = await ctx.db.insert("finalQuoteRevisions", { finalQuoteId: parent._id, revisionNumber,
-      price: Math.round(args.price * 100) / 100, currency: "MAD", duration: args.duration, plannedStartDate, validUntil,
+      price: args.price, currency: "MAD", duration: args.duration, plannedStartDate, validUntil,
       scope: normalizeText(args.scope, 20, 5000, "INVALID_FINAL_QUOTE_SCOPE"), inclusions: normalizeText(args.inclusions, 2, 4000, "INVALID_FINAL_QUOTE_INCLUSIONS"),
       exclusions: normalizeText(args.exclusions, 2, 4000, "INVALID_FINAL_QUOTE_EXCLUSIONS"), paymentTerms: normalizeText(args.paymentTerms, 5, 3000, "INVALID_FINAL_QUOTE_PAYMENT_TERMS"),
       companyNote: normalizeOptionalText(args.companyNote, 2000, "INVALID_FINAL_QUOTE_NOTE"), ...pdfFields,
@@ -419,7 +420,7 @@ export const submitRevision = mutation({
     await appendMarketplaceActivity(ctx, { projectId: parent.projectId, eventType: revisionNumber === 1 ? "final_quote_submitted" : "final_quote_revised",
       actorUserId: access.userId, actorType: "company", companyId: parent.companyId, quoteId: parent.initialQuoteId, conversationId: parent.conversationId,
       ...siteRefs, finalQuoteId: parent._id, finalQuoteRevisionId: revisionId, oldStatus: parent.status, newStatus: "submitted",
-      metadata: { revisionNumber, price: Math.round(args.price * 100) / 100, currency: "MAD" }, createdAt: now });
+      metadata: { revisionNumber, price: args.price, currency: "MAD" }, createdAt: now });
     await createFinalQuoteSubmittedNotification(ctx, {
       parent,
       project: context.project,

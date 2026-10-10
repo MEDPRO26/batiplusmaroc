@@ -11,6 +11,7 @@ import { resolvedServiceNames } from "../serviceCatalog";
 import { PORTFOLIO_GALLERY_LIMIT } from "../portfolioImages/constants";
 import { resolveApprovedPortfolioImageUrl } from "../portfolioImages/model";
 import { maskCompanyName, maskPublicCompanyText } from "../lib/companyName";
+import { publicCoverageScopeKeys } from "../../lib/geography/directory-coverage";
 
 const projectTypeValidator = v.union(
   v.literal("construction"),
@@ -122,10 +123,15 @@ export const getPublicCompanyProfile = query({
     marketplaceAvailable: v.boolean(),
     invitationEligible: v.boolean(),
     city: v.string(),
+    headquarters: v.object({
+      regionCode: v.union(v.string(), v.null()),
+      provinceCode: v.union(v.string(), v.null()),
+    }),
     description: v.string(),
     services: v.array(v.string()),
     serviceNames: v.array(v.object({ slug: v.string(), nameFr: v.string(), nameEn: v.string() })),
     serviceAreas: v.array(v.string()),
+    coverageScopeKeys: v.array(v.string()),
     yearsExperience: v.union(v.number(), v.null()),
     foundedYear: v.union(v.number(), v.null()),
     companySize: v.union(v.string(), v.null()),
@@ -182,10 +188,16 @@ export const getPublicCompanyProfile = query({
       marketplaceAvailable: getCompanyOperationalStatus(company) !== "suspended",
       invitationEligible: (await companyInvitationEligibilityError(ctx, company)) === null,
       city: company.city,
+      // Public administrative codes only; commune and legal addresses stay private.
+      headquarters: {
+        regionCode: company.headquartersRegionCode ?? null,
+        provinceCode: company.headquartersProvinceCode ?? null,
+      },
       description: maskPublicCompanyText(company.description, names),
       services: services.map((item) => item.service),
       serviceNames,
       serviceAreas: company.serviceAreas ?? [],
+      coverageScopeKeys: publicCoverageScopeKeys(company.coverageScopeKeys),
       yearsExperience: company.yearsExperience ?? null,
       foundedYear: company.foundedYear ?? null,
       companySize: company.companySize ?? null,

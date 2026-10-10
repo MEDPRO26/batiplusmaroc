@@ -19,9 +19,9 @@ import {
   ContactEditor,
   IdentityEditor,
   LanguagesEditor,
-  ServiceAreasEditor,
   ServicesEditor,
 } from "./profile-editors";
+import { CompanyServiceAreas } from "./geographic-coverage-editor";
 
 import { SETTINGS_SECTIONS, type SettingsSection } from "@/features/companies/lib/settings-sections";
 
@@ -121,9 +121,7 @@ function ProfileSettings({ profile }: { profile: ProfileManager }) {
         <Chips items={profile.services.map((service) => serviceName(service, profile.catalogServices, locale, key => t(`serviceOptions.${key}`)))} />
       </SettingsCard>
 
-      <SettingsCard action={<ServiceAreasEditor profile={profile} />} title={t("serviceAreas.title")}>
-        <Chips items={profile.serviceAreas.map((area) => t(`serviceAreaOptions.${area}`))} />
-      </SettingsCard>
+      <CompanyServiceAreas frame="settings" profile={profile} />
 
       <SettingsCard action={<LanguagesEditor profile={profile} />} title={t("fields.languages")}>
         <Chips items={profile.languages.map((language) => t(`languages.${language}`))} />

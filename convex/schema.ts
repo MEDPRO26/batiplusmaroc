@@ -240,6 +240,12 @@ export default defineSchema({
   projects: defineTable({
     clientId: v.id("users"), primaryCategory: v.optional(projectCategory), customCategoryText: v.optional(v.string()),
     city: v.optional(companyServiceArea), neighborhood: v.optional(v.string()), countryCode: v.literal("MA"),
+    regionCode: v.optional(v.string()),
+    provinceCode: v.optional(v.string()),
+    communeName: v.optional(v.string()),
+    localityName: v.optional(v.string()),
+    /** Structured-location intent persists even when all geographic fields are cleared. */
+    locationMode: v.optional(v.literal("structured")),
     title: v.optional(v.string()), propertyType: v.optional(projectPropertyType), surface: v.optional(v.number()),
     surfaceUnknown: v.boolean(), description: v.optional(v.string()),
     /** Deploy-1 compatibility fields. Current product code must not read or write them. */
@@ -260,9 +266,16 @@ export default defineSchema({
     .index("by_clientId_and_status", ["clientId", "status"])
     .index("by_status", ["status"])
     .index("by_status_and_city", ["status", "city"])
+    // Admin queue ordering is submission time, independently of public visibility.
+    .index("by_submittedAt", ["submittedAt"])
+    .index("by_status_and_submittedAt", ["status", "submittedAt"])
+    .index("by_regionCode_and_submittedAt", ["regionCode", "submittedAt"])
+    .index("by_provinceCode_and_submittedAt", ["provinceCode", "submittedAt"])
     .index("by_status_and_visibility", ["status", "visibility"])
     .index("by_status_visibility_publishedAt", ["status", "visibility", "publishedAt"])
     .index("by_status_visibility_city_publishedAt", ["status", "visibility", "city", "publishedAt"])
+    .index("by_status_visibility_region_publishedAt", ["status", "visibility", "regionCode", "publishedAt"])
+    .index("by_status_visibility_province_publishedAt", ["status", "visibility", "provinceCode", "publishedAt"])
     .index("by_status_visibility_category_publishedAt", ["status", "visibility", "primaryCategory", "publishedAt"])
     .index("by_status_visibility_timeline_publishedAt", ["status", "visibility", "timeline", "publishedAt"])
     .index("by_status_visibility_propertyType_publishedAt", ["status", "visibility", "propertyType", "publishedAt"])
@@ -274,6 +287,13 @@ export default defineSchema({
       // Phase 1 keeps the enabled origin/main definition unchanged. Removing
       // budgetRange is deferred until the staged-index rollout is promoted.
       filterFields: ["status", "visibility", "city", "primaryCategory", "budgetRange", "timeline", "propertyType"],
+    })
+    .searchIndex("search_marketplace_geography", {
+      searchField: "marketplaceSearchText",
+      filterFields: ["status", "visibility", "regionCode", "provinceCode", "city", "primaryCategory", "timeline", "propertyType"],
+      // Additive preparation only. Backfill and enable in an authorized rollout
+      // before changing the Company query to use geographic search equalities.
+      staged: true,
     }),
 
   projectStatusHistory: defineTable({
@@ -350,6 +370,10 @@ export default defineSchema({
     active: v.boolean(),
     invitedByUserId: v.id("users"),
     invitedAt: v.number(),
+    // Derived Admin index keys; historical records remain optional until approved backfill.
+    adminRegionCode: v.optional(v.string()),
+    adminProvinceCode: v.optional(v.string()),
+    adminSortAt: v.optional(v.number()),
     acceptedAt: v.optional(v.number()),
     acceptedMarketplaceTermsAt: v.optional(v.number()),
     declinedAt: v.optional(v.number()),
@@ -364,7 +388,10 @@ export default defineSchema({
   })
     .index("by_projectId_and_active", ["projectId", "active"])
     .index("by_conversationId", ["conversationId"])
-    .index("by_projectId_and_companyId", ["projectId", "companyId"]),
+    .index("by_projectId_and_companyId", ["projectId", "companyId"])
+    .index("by_adminSortAt", ["adminSortAt"])
+    .index("by_adminRegionCode_and_adminSortAt", ["adminRegionCode", "adminSortAt"])
+    .index("by_adminProvinceCode_and_adminSortAt", ["adminProvinceCode", "adminSortAt"]),
 
   siteVisits: defineTable({
     assessmentId: v.id("siteAssessments"),
@@ -885,12 +912,20 @@ export default defineSchema({
     slug: v.optional(v.string()),
     phone: v.optional(v.string()),
     city: v.optional(v.string()),
+    /** Structured headquarters in Morocco; independent of explicit service coverage. */
+    headquartersRegionCode: v.optional(v.string()),
+    headquartersProvinceCode: v.optional(v.string()),
+    headquartersCommune: v.optional(v.string()),
+    /** Server-owned, immutable enrollment marker; absent records keep legacy onboarding. */
+    headquartersPolicyVersion: v.optional(v.literal("structured_v1")),
     description: v.optional(v.string()),
     yearsExperience: v.optional(v.number()),
     foundedYear: v.optional(v.number()),
     companySize: v.optional(companySize),
     languages: v.optional(v.array(companyLanguage)),
     serviceAreas: v.optional(v.array(companyServiceArea)),
+    /** Explicit MA/full-region/province declarations; headquarters and legacy cities never infer coverage. */
+    coverageScopeKeys: v.optional(v.array(v.string())),
     website: v.optional(v.string()),
     logoStorageId: v.optional(v.id("_storage")),
     logoMediaId: v.optional(v.id("publicMedia")),
@@ -949,6 +984,14 @@ export default defineSchema({
         "directoryListed",
       ],
     }),
+
+  /** Derived explicit selections only; synchronized with the Company in one mutation. */
+  companyCoverageIndex: defineTable({
+    companyId: v.id("companies"),
+    areaKey: v.string(),
+  })
+    .index("by_companyId_and_areaKey", ["companyId", "areaKey"])
+    .index("by_areaKey_and_companyId", ["areaKey", "companyId"]),
 
   companyMembers: defineTable({
     companyId: v.id("companies"),

@@ -13,6 +13,7 @@ import { mapAppError } from "@/lib/errors";
 import { parseMadInput } from "@/lib/money/mad";
 import { routes } from "@/lib/routes";
 import { resolveCompanyProjectsRedirect } from "@/features/projects/components/company-project-marketplace";
+import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
 
 type Quote = NonNullable<FunctionReturnType<typeof api.quotes.index.getMyQuote>>;
 
@@ -272,6 +273,7 @@ function ProjectSummary({ project }: { project: NonNullable<FunctionReturnType<t
   const t = useTranslations("initialQuote");
   const tProject = useTranslations("companyProjects.detail");
   const tWizard = useTranslations("projectWizard");
+  const locationLabel = useProjectLocationLabel();
   return (
     <Card title={t("projectSummary")}>
       <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_240px] md:gap-8">
@@ -281,7 +283,7 @@ function ProjectSummary({ project }: { project: NonNullable<FunctionReturnType<t
           <Link className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" href={{ pathname: routes.companyProject, params: { projectId: project.id } }}>{t("viewProject")}</Link>
         </div>
         <dl className="m-0 space-y-4 border-brand-border md:border-l md:pl-8">
-          <MetaItem icon={<MapPin />} label={tProject("city")} value={tWizard(`cityOptions.${project.city}`)} />
+          <MetaItem icon={<MapPin />} label={tProject("city")} value={locationLabel(project)} />
           <MetaItem icon={<CalendarClock />} label={tProject("timeline")} value={tWizard(`timelineOptions.${project.timeline}`)} />
         </dl>
       </div>

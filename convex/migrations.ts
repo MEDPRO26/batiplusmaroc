@@ -1,5 +1,12 @@
 import { Migrations } from "@convex-dev/migrations";
+import { ConvexError, v } from "convex/values";
 import { components } from "./_generated/api";
+import { env, internalMutation, internalQuery } from "./_generated/server";
+import {
+  assessmentProjectionPageArgs,
+  assessmentProjectionPageResultFields,
+  inspectAssessmentProjectionPage,
+} from "./siteVisits/adminMigration";
 
 const migrations = new Migrations(components.migrations, {
   defaultBatchSize: 10,
@@ -64,4 +71,45 @@ export const clearLegacyProjectBudgetFields = migrations.define({
 export const backfillCompanyOperationalStatus = migrations.define({
   table: "companies",
   migrateOne: (_ctx, company) => legacyCompanyOperationalStatusPatch(company),
+});
+
+/**
+ * Private, aggregate-only preview/verification. Start with cursor null and sum
+ * every page until isDone; the last page alone is not a coverage certificate.
+ */
+export const verifySiteAssessmentAdminProjections = internalQuery({
+  args: assessmentProjectionPageArgs,
+  returns: v.object(assessmentProjectionPageResultFields),
+  handler: async (ctx, args) => (await inspectAssessmentProjectionPage(ctx, args)).summary,
+});
+
+/**
+ * Explicit one-batch historical repair; defaults to a write-free preview.
+ * Native component dry runs log whole private documents, so this migration
+ * uses aggregate-only output and caller-held native creation-index cursors.
+ * No scheduler/import/deployment hook invokes it. Deployment and execution
+ * both require separate approval; keep indexed discovery disabled throughout.
+ */
+export const backfillSiteAssessmentAdminProjections = internalMutation({
+  args: { ...assessmentProjectionPageArgs, dryRun: v.optional(v.boolean()) },
+  returns: v.object({
+    ...assessmentProjectionPageResultFields,
+    dryRun: v.boolean(),
+    updated: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const dryRun = args.dryRun ?? true;
+    if (!dryRun && env.ADMIN_SITE_VISIT_GEOGRAPHY_POLICY_VERSION === "indexed_v1") {
+      throw new ConvexError("SITE_ASSESSMENT_BACKFILL_REQUIRES_DISABLED_READER");
+    }
+    const { summary, patches } = await inspectAssessmentProjectionPage(ctx, args);
+    if (!dryRun) {
+      if (summary.counts.sourceIntegrityFailures > 0 || summary.counts.nonfiniteSourceSortAt > 0) {
+        // No private document/id in errors and no checkpoint advancement on failure.
+        throw new ConvexError({ code: "SITE_ASSESSMENT_BACKFILL_INTEGRITY_ERROR", counts: summary.counts });
+      }
+      for (const { id, patch } of patches) await ctx.db.patch(id, patch);
+    }
+    return { ...summary, dryRun, updated: dryRun ? 0 : patches.length };
+  },
 });

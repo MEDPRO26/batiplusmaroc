@@ -7,7 +7,7 @@ import { ApprovedCompanyLogo } from "@/features/companies/components/approved-co
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Component, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { api } from "@/convex/_generated/api";
 import { getPathname } from "@/i18n/navigation";
@@ -15,7 +15,23 @@ import { routing, type AppLocale } from "@/i18n/routing";
 import { VerifiedBadge } from "./verified-badge";
 import { CompanyDiscoveryCardSkeleton } from "./company-directory-skeleton";
 import { InviteCompanyButton } from "@/features/invitations/components/invite-company-button";
+import {
+  changeDirectoryProvince,
+  changeDirectoryRegion,
+  directoryCoverageQuery,
+  directoryProvinceOptions,
+  directoryRegionOptions,
+  initialDirectoryGeography,
+  type DirectoryGeography,
+} from "@/features/companies/lib/directory-geography";
+import {
+  directoryAutomaticAdvance,
+  type DirectoryPageStatus,
+} from "@/features/companies/lib/directory-pagination";
 import { catalogServiceName, serviceName } from "@/features/companies/lib/service-label";
+import { headquartersLabel } from "@/features/companies/lib/headquarters-label";
+import { logUnexpectedError } from "@/lib/errors";
+import { CompanyCoverageLabel } from "./company-coverage-label";
 
 type Catalog = FunctionReturnType<typeof api.serviceCatalog.listActive>;
 type Sort = "newest" | "oldest";
@@ -24,7 +40,13 @@ type CompanyResult = FunctionReturnType<
 >["page"][number];
 const COMPANY_PAGE_SIZE = 12;
 
-export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: string }) {
+export function CompanyDirectory({
+  initialSearch = "",
+  initialFiltersOpen = false,
+}: {
+  initialSearch?: string;
+  initialFiltersOpen?: boolean;
+}) {
   const t = useTranslations("companyDirectory");
   const catalog = useQuery(api.serviceCatalog.listActive) ?? [];
   const [search, setSearch] = useState(initialSearch);
@@ -32,7 +54,8 @@ export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: strin
   const [service, setService] = useState("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sort, setSort] = useState<Sort>("newest");
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [geography, setGeography] = useState<DirectoryGeography>(initialDirectoryGeography);
+  const [filtersOpen, setFiltersOpen] = useState(initialFiltersOpen);
   const [previewSlug, setPreviewSlug] = useState<string | null>(null);
   const debouncedSearch = useDebouncedValue(search, 250);
   const debouncedCity = useDebouncedValue(city, 250);
@@ -46,18 +69,9 @@ export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: strin
       service: service || undefined,
       verifiedOnly,
       sort: isSearchMode ? ("relevance" as const) : sort,
+      ...directoryCoverageQuery(geography),
     }),
-    [debouncedCity, debouncedSearch, isSearchMode, service, sort, verifiedOnly],
-  );
-
-  const { results, status, loadMore } = usePaginatedQuery(
-    api.companies.directory.listPublicCompanies,
-    queryArgs,
-    { initialNumItems: COMPANY_PAGE_SIZE },
-  );
-  const companies = useMemo(
-    () => Array.from(new Map(results.map((company) => [company.id, company])).values()),
-    [results],
+    [debouncedCity, debouncedSearch, geography, isSearchMode, service, sort, verifiedOnly],
   );
 
   const clearFilters = () => {
@@ -66,6 +80,7 @@ export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: strin
     setService("");
     setVerifiedOnly(false);
     setSort("newest");
+    setGeography(initialDirectoryGeography());
     setFiltersOpen(false);
   };
 
@@ -74,9 +89,12 @@ export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: strin
     city,
     service,
     verifiedOnly,
+    geography,
     onCityChange: setCity,
     onServiceChange: setService,
     onVerifiedChange: setVerifiedOnly,
+    onRegionChange: (regionCode: string) => setGeography(changeDirectoryRegion(regionCode)),
+    onProvinceChange: (provinceCode: string) => setGeography((current) => changeDirectoryProvince(current, provinceCode)),
     onClear: clearFilters,
   };
 
@@ -113,14 +131,11 @@ export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: strin
               <FilterIcon />
               {t("filters")}
             </button>
-            {status !== "LoadingFirstPage" ? (
-              <p aria-live="polite" className="m-0 text-sm text-muted">{t("loadedCount", { count: companies.length })}</p>
-            ) : null}
           </div>
           <label className="flex items-center gap-2 text-sm font-medium text-ink" htmlFor="company-sort">
             <span>{t("sort.label")}</span>
             <select
-              className="min-h-11 rounded-xl border border-brand-border bg-white px-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
+              className="min-h-11 rounded-sm border border-brand-border bg-white px-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted"
               disabled={isSearchMode}
               id="company-sort"
               onChange={(event) => setSort(event.target.value as Sort)}
@@ -138,35 +153,9 @@ export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: strin
             <FilterFields {...filterProps} idPrefix="desktop" />
           </aside>
 
-          <section aria-busy={status === "LoadingFirstPage" || status === "LoadingMore"} aria-label={t("resultsLabel")}>
-            {status === "LoadingFirstPage" ? (
-              <CompanyResultsSkeleton label={t("loading")} />
-            ) : companies.length === 0 && status === "Exhausted" ? (
-              <EmptyCompanies onClear={clearFilters} />
-            ) : (
-              <>
-                <ul className="m-0 list-none p-0">
-                  {companies.map((company) => (
-                    <li className="" key={company.id}>
-                      <CompanyCard company={company} onViewProfile={() => setPreviewSlug(company.slug)} />
-                    </li>
-                  ))}
-                </ul>
-                {status === "LoadingMore" ? <CompanyResultsSkeleton compact label={t("loadingMore")} /> : null}
-                {status === "CanLoadMore" ? (
-                  <div className="mt-8 flex justify-center">
-                    <button
-                      className="inline-flex min-h-12 items-center justify-center rounded-xl border border-brand px-6 text-sm font-semibold text-brand transition-[background-color,color,transform] duration-150 hover:bg-brand hover:text-white active:scale-[0.96]"
-                      onClick={() => loadMore(COMPANY_PAGE_SIZE)}
-                      type="button"
-                    >
-                      {t("loadMore")}
-                    </button>
-                  </div>
-                ) : null}
-              </>
-            )}
-          </section>
+          <DirectoryQueryBoundary message={t("loadError")} resetKey={JSON.stringify(queryArgs)}>
+            <DirectoryResults onClear={clearFilters} onPreview={setPreviewSlug} queryArgs={queryArgs} />
+          </DirectoryQueryBoundary>
         </div>
       </main>
 
@@ -176,6 +165,142 @@ export function CompanyDirectory({ initialSearch = "" }: { initialSearch?: strin
       {previewSlug ? <CompanyProfileSheet onClose={() => setPreviewSlug(null)} slug={previewSlug} /> : null}
     </div>
   );
+}
+
+function DirectoryResults({
+  queryArgs,
+  onClear,
+  onPreview,
+}: {
+  queryArgs: {
+    search?: string;
+    city?: string;
+    service?: string;
+    verifiedOnly: boolean;
+    sort: "relevance" | Sort;
+    regionCode?: string;
+    provinceCode?: string;
+  };
+  onClear: () => void;
+  onPreview: (slug: string) => void;
+}) {
+  const t = useTranslations("companyDirectory");
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.companies.directory.listPublicCompanies,
+    queryArgs,
+    { initialNumItems: COMPANY_PAGE_SIZE },
+  );
+  const companies = useMemo(
+    () => Array.from(new Map(results.map((company) => [company.id, company])).values()),
+    [results],
+  );
+  const pageStatus = status as DirectoryPageStatus;
+  const paging = useRef({ advances: 0, previous: 0, queryKey: "", pending: false });
+
+  useEffect(() => {
+    const queryKey = JSON.stringify(queryArgs);
+    if (paging.current.queryKey !== queryKey) {
+      paging.current = { advances: 0, previous: 0, queryKey, pending: false };
+    }
+    if (pageStatus === "LoadingFirstPage" || pageStatus === "LoadingMore") {
+      paging.current.pending = false;
+      return;
+    }
+    if (companies.length > paging.current.previous) paging.current.advances = 0;
+    const shouldAdvance = directoryAutomaticAdvance({
+      status: pageStatus,
+      visibleCount: companies.length,
+      previousVisibleCount: paging.current.previous,
+      automaticAdvances: paging.current.advances,
+    });
+    if (!shouldAdvance || paging.current.pending) {
+      paging.current.previous = companies.length;
+      return;
+    }
+    paging.current.pending = true;
+    paging.current.advances += 1;
+    paging.current.previous = companies.length;
+    loadMore(COMPANY_PAGE_SIZE);
+  }, [companies.length, loadMore, pageStatus, queryArgs]);
+
+  return (
+    <section aria-busy={status === "LoadingFirstPage" || status === "LoadingMore"} aria-label={t("resultsLabel")}>
+      {status !== "LoadingFirstPage" ? (
+        <p aria-live="polite" className="mb-4 text-sm text-muted">{t("loadedCount", { count: companies.length })}</p>
+      ) : null}
+      {(status as string) === "Error" ? <DirectoryLoadError message={t("loadError")} /> : null}
+      {status === "LoadingFirstPage" ? (
+        <CompanyResultsSkeleton label={t("loading")} />
+      ) : companies.length === 0 && status === "Exhausted" ? (
+        <EmptyCompanies onClear={onClear} />
+      ) : companies.length === 0 && (status as string) !== "Error" ? (
+        <>
+          <p className="m-0 rounded-lg border border-brand-border bg-white px-4 py-6 text-sm leading-6 text-muted" role="status">
+            {t("searchingMore")}
+          </p>
+          {status === "LoadingMore" ? <CompanyResultsSkeleton compact label={t("loadingMore")} /> : null}
+          {status === "CanLoadMore" ? <LoadMoreButton onClick={() => loadMore(COMPANY_PAGE_SIZE)} /> : null}
+        </>
+      ) : (
+        <>
+          <ul className="m-0 list-none p-0">
+            {companies.map((company) => (
+              <li key={company.id}>
+                <CompanyCard company={company} onViewProfile={() => onPreview(company.slug)} />
+              </li>
+            ))}
+          </ul>
+          {status === "LoadingMore" ? <CompanyResultsSkeleton compact label={t("loadingMore")} /> : null}
+          {status === "CanLoadMore" ? <LoadMoreButton onClick={() => loadMore(COMPANY_PAGE_SIZE)} /> : null}
+        </>
+      )}
+    </section>
+  );
+}
+
+function LoadMoreButton({ onClick }: { onClick: () => void }) {
+  const t = useTranslations("companyDirectory");
+  return (
+    <div className="mt-8 flex justify-center">
+      <button
+        className="inline-flex min-h-12 items-center justify-center rounded-xl border border-brand px-6 text-sm font-semibold text-brand transition-[background-color,color,transform] duration-150 hover:bg-brand hover:text-white active:scale-[0.96]"
+        onClick={onClick}
+        type="button"
+      >
+        {t("loadMore")}
+      </button>
+    </div>
+  );
+}
+
+function DirectoryLoadError({ message }: { message: string }) {
+  return <p className="mb-4 rounded-lg border border-brand-border bg-white px-4 py-3 text-sm leading-6 text-ink" role="alert">{message}</p>;
+}
+
+class DirectoryQueryBoundary extends Component<
+  { children: ReactNode; message: string; resetKey: string },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    logUnexpectedError(error, { source: "company-directory", componentStack: info.componentStack ?? undefined });
+  }
+
+  componentDidUpdate(previous: { resetKey: string }) {
+    if (previous.resetKey !== this.props.resetKey && this.state.failed) {
+      this.setState({ failed: false });
+    }
+  }
+
+  render() {
+    if (this.state.failed) return <DirectoryLoadError message={this.props.message} />;
+    return this.props.children;
+  }
 }
 
 function useDebouncedValue(value: string, delay: number) {
@@ -192,9 +317,12 @@ function FilterFields({
   city,
   service,
   verifiedOnly,
+  geography,
   onCityChange,
   onServiceChange,
   onVerifiedChange,
+  onRegionChange,
+  onProvinceChange,
   onClear,
   idPrefix,
   showHeading = true,
@@ -203,15 +331,21 @@ function FilterFields({
   city: string;
   service: string;
   verifiedOnly: boolean;
+  geography: DirectoryGeography;
   onCityChange: (value: string) => void;
   onServiceChange: (value: string) => void;
   onVerifiedChange: (value: boolean) => void;
+  onRegionChange: (value: string) => void;
+  onProvinceChange: (value: string) => void;
   onClear: () => void;
   idPrefix: string;
   showHeading?: boolean;
 }) {
   const t = useTranslations("companyDirectory");
   const locale = useLocale();
+  const language = locale === "fr" ? "fr" : "en";
+  const provinces = directoryProvinceOptions(geography.regionCode);
+  const selectClass = "min-h-11 w-full rounded-sm border border-brand-border bg-white px-3 text-sm font-normal outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted";
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
@@ -219,15 +353,54 @@ function FilterFields({
         <button className="min-h-11 text-xs font-semibold text-brand" onClick={onClear} type="button">{t("clear")}</button>
       </div>
       <div className="mt-4 grid gap-6">
+        <fieldset aria-describedby={`${idPrefix}-coverage-hint`} className="m-0 grid gap-3 border-0 p-0">
+          <legend className="mb-1 text-sm font-semibold text-ink">{t("geography.legend")}</legend>
+          <p className="m-0 text-xs leading-5 text-muted" id={`${idPrefix}-coverage-hint`}>{t("geography.hint")}</p>
+          <label className="grid gap-2 text-sm font-medium text-ink" htmlFor={`${idPrefix}-region`}>
+            {t("geography.regionLabel")}
+            <select
+              className={selectClass}
+              id={`${idPrefix}-region`}
+              onChange={(event) => onRegionChange(event.target.value)}
+              value={geography.regionCode}
+            >
+              <option value="">{t("geography.allMorocco")}</option>
+              {directoryRegionOptions().map((region) => (
+                <option key={region.code} value={region.code}>{language === "fr" ? region.nameFr : region.nameEn}</option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-medium text-ink" htmlFor={`${idPrefix}-province`}>
+            {t("geography.provinceLabel")}
+            <select
+              aria-describedby={geography.regionCode ? undefined : `${idPrefix}-province-hint`}
+              className={selectClass}
+              disabled={!geography.regionCode}
+              id={`${idPrefix}-province`}
+              onChange={(event) => onProvinceChange(event.target.value)}
+              value={geography.provinceCode}
+            >
+              <option value="">{t("geography.allProvinces")}</option>
+              {provinces.map((province) => (
+                <option key={province.code} value={province.code}>{language === "fr" ? province.nameFr : province.nameEn}</option>
+              ))}
+            </select>
+            {geography.regionCode ? null : (
+              <span className="text-xs font-normal leading-5 text-muted" id={`${idPrefix}-province-hint`}>{t("geography.provinceDisabled")}</span>
+            )}
+          </label>
+        </fieldset>
         <label className="grid gap-2 text-sm font-medium text-ink" htmlFor={`${idPrefix}-city`}>
           {t("city.label")}
           <input
             className="min-h-11 rounded-sm border border-brand-border bg-white px-3 text-sm font-normal outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
+            aria-describedby={`${idPrefix}-city-hint`}
             id={`${idPrefix}-city`}
             onChange={(event) => onCityChange(event.target.value)}
             placeholder={t("city.placeholder")}
             value={city}
           />
+          <span className="text-xs font-normal leading-5 text-muted" id={`${idPrefix}-city-hint`}>{t("city.hint")}</span>
         </label>
         <fieldset className="m-0 grid gap-2 border-0 p-0">
           <legend className="mb-1 text-sm font-medium text-ink">{t("service.label")}</legend>
@@ -286,6 +459,7 @@ function FilterSheet({ open, onClose, title, children }: { open: boolean; onClos
 function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => void }) {
   const t = useTranslations("companyDirectory");
   const tProfile = useTranslations("publicCompany");
+  const tCoverage = useTranslations("companyDirectory.coverage");
   const locale = useLocale();
   const profile = useQuery(api.portfolio.index.getPublicCompanyProfile, { slug });
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -354,12 +528,16 @@ function CompanyProfileSheet({ slug, onClose }: { slug: string; onClose: () => v
                       <h2 className="m-0 text-xl leading-7 font-semibold tracking-[-0.03em] text-ink sm:text-2xl" id="company-profile-sheet-title">{profile.name}</h2>
                       <VerifiedBadge label={tProfile("verified")} isVerified={profile.isVerified} />
                     </div>
-                    <p className="mt-1.5 mb-0 text-sm leading-5 text-muted">{profile.city}</p>
+                    <p className="mt-1.5 mb-0 text-sm leading-5 text-muted">{tProfile("headquartersLocation", { location: headquartersLabel(profile.city, profile.headquarters, locale) })}</p>
                     <p className="mt-1 mb-0 text-sm font-semibold text-ink">{profile.rating === null ? tProfile("reviewsNone") : <><span className="text-amber-600">★ {profile.rating.toFixed(1)}</span> <span className="font-normal text-muted">{tProfile("reviewCount", { count: profile.reviewCount })}</span></>}</p>
                     {profile.yearsExperience !== null ? <p className="mt-1 mb-0 text-sm leading-5 text-ink">{tProfile("years", { count: profile.yearsExperience })}</p> : null}
                   </div>
                 </div>
                 <p className="mt-5 mb-0 text-sm leading-6 text-ink/85">{profile.description}</p>
+                <section className="mt-5">
+                  <h3 className="m-0 text-sm font-semibold text-ink">{tProfile("declaredCoverage")}</h3>
+                  <CompanyCoverageLabel keys={profile.coverageScopeKeys} locale={locale === "fr" ? "fr" : "en"} t={tCoverage} showLabel={false} />
+                </section>
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
                   <InviteCompanyButton
                     companyEligible={profile.invitationEligible}
@@ -457,6 +635,7 @@ function ExternalIcon() {
 
 function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onViewProfile: () => void }) {
   const t = useTranslations("companyDirectory");
+  const tCoverage = useTranslations("companyDirectory.coverage");
   const locale = useLocale();
   const meta = [
     company.city,
@@ -475,6 +654,7 @@ function CompanyCard({ company, onViewProfile }: { company: CompanyResult; onVie
               <VerifiedBadge label={t("verified")} isVerified={company.isVerified} />
             </div>
             {meta.length > 0 ? <p className="mt-1 mb-0 text-sm leading-5 text-muted">{meta.join(" · ")}</p> : null}
+            <CompanyCoverageLabel keys={company.coverageScopeKeys} locale={locale === "fr" ? "fr" : "en"} t={tCoverage} />
             {company.rating !== null ? <p className="mt-1 mb-0 text-xs font-semibold text-amber-700">★ {company.rating.toFixed(1)} <span className="font-normal text-muted">{t("reviewCount", { count: company.reviewCount })}</span></p> : null}
           </div>
           <button

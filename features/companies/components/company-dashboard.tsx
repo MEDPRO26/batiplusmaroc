@@ -1,6 +1,9 @@
 "use client";
 
+import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
+
 import { ApprovedCompanyLogo } from "@/features/companies/components/approved-company-logo";
+import { CompanyDashboardCoverageReminder } from "./company-coverage-reminder";
 
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -8,7 +11,8 @@ import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "@/convex/_generated/api";
 import { serviceName } from "@/features/companies/lib/service-label";
-import { projectCategories, projectCities } from "@/convex/projects/constants";
+import { projectCategories } from "@/convex/projects/constants";
+import { ProjectGeographicFilters, type ProjectGeographicSelection } from "@/features/projects/components/project-geographic-filters";
 import { DashboardCardsSkeleton } from "@/features/shared/components/skeletons";
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
@@ -19,7 +23,6 @@ import { joinClassNames } from "@/lib/utils";
 type VerificationStatus = "draft" | "pending" | "verified" | "rejected";
 type Profile = NonNullable<FunctionReturnType<typeof api.companies.index.getOnboardingProfile>>;
 type Project = FunctionReturnType<typeof api.projects.marketplace.listCompanyMarketplaceProjects>["page"][number];
-type City = (typeof projectCities)[number];
 type Category = (typeof projectCategories)[number];
 
 const PAGE_SIZE = 8;
@@ -73,7 +76,7 @@ export function CompanyDashboard() {
   const profile = useQuery(api.companies.index.getOnboardingProfile, canLoad ? {} : "skip");
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [city, setCity] = useState<City | "">("");
+  const [geography, setGeography] = useState<ProjectGeographicSelection>({ regionCode: "", provinceCode: "" });
   const [category, setCategory] = useState<Category | "">("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const debouncedSearch = useDebouncedValue(search, 250);
@@ -94,11 +97,12 @@ export function CompanyDashboard() {
       canLoad
         ? {
             search: debouncedSearch.trim() || undefined,
-            city: city || undefined,
+            regionCode: geography.regionCode || undefined,
+            provinceCode: geography.provinceCode || undefined,
             category: category || undefined,
           }
         : ("skip" as const),
-    [canLoad, category, city, debouncedSearch],
+    [canLoad, category, geography, debouncedSearch],
   );
   const { results, status, loadMore } = usePaginatedQuery(
     api.projects.marketplace.listCompanyMarketplaceProjects,
@@ -122,21 +126,23 @@ export function CompanyDashboard() {
   return (
     <div className="min-h-[calc(100dvh-4.5rem)] bg-white">
       <div className="mx-auto grid w-full max-w-[1120px] items-start gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6 lg:px-8">
+        <CompanyDashboardCoverageReminder key={user._id} />
         <ProjectFeed
           category={category}
-          city={city}
+          geography={geography}
           filtersOpen={filtersOpen}
           onCategoryChange={setCategory}
-          onCityChange={setCity}
+          onGeographyChange={setGeography}
           onClearFilters={() => {
             setSearch("");
-            setCity("");
+            setGeography({ regionCode: "", provinceCode: "" });
             setCategory("");
           }}
           onSearchChange={setSearch}
           onToggleFilters={() => setFiltersOpen((open) => !open)}
           projects={projects}
           search={search}
+          searchActive={Boolean(debouncedSearch.trim())}
           status={status}
           verification={verification}
           onLoadMore={() => loadMore(PAGE_SIZE)}
@@ -149,12 +155,13 @@ export function CompanyDashboard() {
 
 function ProjectFeed({
   search,
+  searchActive,
   onSearchChange,
   filtersOpen,
   onToggleFilters,
-  city,
+  geography,
   category,
-  onCityChange,
+  onGeographyChange,
   onCategoryChange,
   onClearFilters,
   projects,
@@ -163,12 +170,13 @@ function ProjectFeed({
   verification,
 }: {
   search: string;
+  searchActive: boolean;
   onSearchChange: (value: string) => void;
   filtersOpen: boolean;
   onToggleFilters: () => void;
-  city: City | "";
+  geography: ProjectGeographicSelection;
   category: Category | "";
-  onCityChange: (value: City | "") => void;
+  onGeographyChange: (value: ProjectGeographicSelection) => void;
   onCategoryChange: (value: Category | "") => void;
   onClearFilters: () => void;
   projects: Project[];
@@ -234,17 +242,17 @@ function ProjectFeed({
         <div className="mt-3 rounded-xl border border-brand-border bg-white p-4">
           <FilterFields
             category={category}
-            city={city}
+            geography={geography}
             onCategoryChange={onCategoryChange}
-            onCityChange={onCityChange}
+            onGeographyChange={onGeographyChange}
             onClear={onClearFilters}
           />
         </div>
       ) : null}
 
       <div className="mt-5 border-b border-brand-border">
-        <p className="m-0 inline-flex border-b-2 border-[#B9563B] pb-3 text-sm font-semibold text-ink">
-          {t("feed.tabRecent")}
+        <p aria-live="polite" className="m-0 inline-flex border-b-2 border-[#B9563B] pb-3 text-sm font-semibold text-ink">
+          {searchActive ? tProjects("sort.relevance") : t("feed.tabRecent")}
         </p>
       </div>
 
@@ -283,6 +291,7 @@ function ProjectFeed({
 }
 
 function ProjectRow({ project, now }: { project: Project; now: Date }) {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("auth.companyDashboard");
   const tProjects = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
@@ -318,10 +327,10 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
           {project.title}
         </Link>
       </h2>
-      <p className="mt-1 mb-0 text-sm text-ink/80">
+      <p className="mt-1 mb-0 text-sm text-ink/80 [overflow-wrap:anywhere]">
         {tWizard(`timelineOptions.${project.timeline}`)}
         <span aria-hidden> · </span>
-        {tWizard(`cityOptions.${project.city}`)}
+        {locationLabel(project)}
       </p>
       <p className="mt-3 mb-0 line-clamp-3 text-sm leading-6 text-[#3d3d3d]">
         {project.description}{" "}
@@ -334,7 +343,7 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
         {property ? <Tag>{property}</Tag> : null}
         {surface ? <Tag>{surface}</Tag> : null}
       </div>
-      <p className="mt-4 mb-0 text-[13px] text-muted">
+      <p className="mt-4 mb-0 text-[13px] text-muted [overflow-wrap:anywhere]">
         {project.client
           ? tProjects("card.client", {
               name: project.client.displayName,
@@ -342,7 +351,7 @@ function ProjectRow({ project, now }: { project: Project; now: Date }) {
             })
           : tProjects("card.clientPrivate")}
         <span aria-hidden> · </span>
-        {tWizard(`cityOptions.${project.city}`)}
+        {locationLabel(project)}
       </p>
     </article>
   );
@@ -451,15 +460,15 @@ function CompanySidebar({ profile, verification }: { profile: Profile; verificat
 }
 
 function FilterFields({
-  city,
+  geography,
   category,
-  onCityChange,
+  onGeographyChange,
   onCategoryChange,
   onClear,
 }: {
-  city: City | "";
+  geography: ProjectGeographicSelection;
   category: Category | "";
-  onCityChange: (value: City | "") => void;
+  onGeographyChange: (value: ProjectGeographicSelection) => void;
   onCategoryChange: (value: Category | "") => void;
   onClear: () => void;
 }) {
@@ -474,14 +483,7 @@ function FilterFields({
         </button>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <FilterSelect id="company-feed-city" label={t("filters.city")} onChange={(value) => onCityChange(value as City | "")} value={city}>
-          <option value="">{t("filters.allCities")}</option>
-          {projectCities.map((item) => (
-            <option key={item} value={item}>
-              {tWizard(`cityOptions.${item}`)}
-            </option>
-          ))}
-        </FilterSelect>
+        <ProjectGeographicFilters className="contents" idPrefix="company-feed" onChange={onGeographyChange} value={geography} />
         <FilterSelect
           id="company-feed-category"
           label={t("filters.category")}

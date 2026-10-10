@@ -8,11 +8,12 @@ import { routes } from "@/lib/routes";
 
 const state = vi.hoisted(() => ({
   queryResults: [] as unknown[],
-  queryIndex: 0,
 }));
 
 vi.mock("convex/react", () => ({
-  useQuery: () => state.queryResults[state.queryIndex++],
+  useQuery: () => state.queryResults[1],
+  usePaginatedQuery: () => ({ results: state.queryResults[0] ?? [],
+    status: state.queryResults[0] === undefined ? "LoadingFirstPage" : "Exhausted", loadMore: vi.fn() }),
 }));
 
 vi.mock("@/i18n/navigation", () => ({
@@ -57,7 +58,6 @@ function render(locale: "en" | "fr", node: React.ReactNode) {
 describe("public project browse", () => {
   beforeEach(() => {
     state.queryResults = [];
-    state.queryIndex = 0;
   });
 
   test("keeps FR and EN browse page keys aligned", () => {

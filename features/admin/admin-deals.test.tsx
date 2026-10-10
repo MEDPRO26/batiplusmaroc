@@ -41,4 +41,13 @@ describe("admin Deal commission tracking", () => {
     expect(html).toContain("5%");
     expect(html).toContain("Due");
   });
+  test.each([
+    ["en", "MAD\u00a0320,000.50", "MAD\u00a016,000.03"],
+    ["fr", "320\u202f000,50\u00a0MAD", "16\u202f000,03\u00a0MAD"],
+  ] as const)("shows centime-exact Deal and commission amounts in %s", (locale, agreed, commission) => {
+    convex.result = [{ dealId: "deal-1", projectId: "project-1", projectTitle: "Villa Rabat", companyId: "company-1", companyName: "Atlas Build", agreedAmountMad: 320000.5, commissionRateBps: 500, commissionAmountMad: 16000.03, commissionConfigVersion: 3, commissionStatus: "due", createdAt: 1790000000000, paidAt: null, paidByAdminName: null, paymentReference: null, paymentNote: null }];
+    const html = render(locale);
+    expect(html).toContain(agreed);
+    expect(html).toContain(commission);
+  });
 });

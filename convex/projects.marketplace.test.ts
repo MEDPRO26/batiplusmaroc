@@ -354,7 +354,6 @@ describe("company project marketplace safe details", () => {
 
     expect(detail).toMatchObject({
       id: projectId,
-      neighborhood: "Agdal",
       client: {
         displayName: "Samir C.",
         firstName: "Samir",
@@ -368,6 +367,9 @@ describe("company project marketplace safe details", () => {
       canSubmitQuote,
       myQuoteId: null,
     });
+    expect(detail).not.toHaveProperty("neighborhood");
+    expect(detail?.location).not.toHaveProperty("neighborhood");
+    expect(detail?.location).not.toHaveProperty("localityName");
     const serialized = JSON.stringify(detail);
     expect(serialized).not.toContain("@private.test");
     expect(serialized).not.toContain("+212600000000");

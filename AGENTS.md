@@ -147,9 +147,11 @@ complete authorization/security verification, full authenticated E2E or proof
 of local/deployed code and schema parity. Keep remaining OC3.5 security/release
 checks, including historical private-cover verification, open.
 
-All Morocco remains the service coverage goal. Support has no city filter, but
-the Project wizard/schema still limit intake to ten cities: a separate nationwide
-launch blocker, not a limitation resolved by OC3.
+All Morocco remains the service coverage goal. Support has no city filter.
+Project intake is no longer limited to ten cities: Nationwide Geography V1 adds
+structured Region → Province/Prefecture locations with rural localities (see
+the GEO section below). That change came from GEO, not OC3; production rollout
+of GEO remains a separate step.
 
 ## CURRENT STAGE — Coordination agreement
 
@@ -192,12 +194,27 @@ contract editor, technical guarantees or construction ERP.
 
 ## Required reading for support changes
 
-- [OC3.2 backend and adopted V1 defaults](docs/client-support-backend-v1.md)
-- [OC3.4 notifications and verification](docs/client-support-notifications-oc34.md)
-- [OC3.3.1 browser comparison and open checks](docs/client-support-browser-regression-oc331.md)
-- [OC3.6.2 agreement backend, API contract and verification](docs/coordination-agreement-backend-oc362.md)
-- [OC3.6.3 agreement UI, verification and remaining integration limits](docs/coordination-agreement-ui-oc363.md)
+Tracked, available in every clone:
+
 - [Notification domain](docs/notifications.md)
+
+Local-only, git-ignored private reports (see `.gitignore`; absent from fresh
+clones and never to be force-added):
+
+- OC3.2 backend and adopted V1 defaults: `docs/client-support-backend-v1.md`
+- OC3.4 notifications and verification: `docs/client-support-notifications-oc34.md`
+- OC3.3.1 browser comparison and open checks: `docs/client-support-browser-regression-oc331.md`
+- OC3.6.2 agreement backend, API contract and verification: `docs/coordination-agreement-backend-oc362.md`
+- OC3.6.3 agreement UI, verification and remaining integration limits: `docs/coordination-agreement-ui-oc363.md`
+
+When a local-only report is unavailable:
+
+- Use the tracked documentation, current source code and tests.
+- Keep applying the approved OC3 rules recorded in this file; they remain
+  binding without the reports.
+- Do not invent missing decisions, test counts, deployment status or open checks.
+- Report the missing report, and request Product HQ clarification when a
+  private requirement is essential to the task.
 
 Use these reports for changing test counts, deployment evidence/status and open
 checks; do not duplicate counts here. Inspect current source, distinguish
@@ -508,17 +525,35 @@ Prefer the simplest production-ready solution.
 
 
 
-## ACTIVE FEATURE — Nationwide Geography (GEO)
+## Nationwide Geography (GEO) — V1 development complete
 
-Batiplus is expanding project intake and Company coverage
-to all Moroccan regions, provinces, cities, villages and douars.
+Project intake and Company coverage now span all Moroccan regions,
+provinces, cities, villages and douars. V1 development is closed on
+`feature/nationwide-project-intake` (milestone tag `geo-v1-final`).
+Production migration, data verification and rollout remain separate,
+unapproved steps.
 
-Feature specification:
+Tracked milestone record and accepted V1 limitations:
+`docs/nationwide-geography-v1-closure.md`
+
+Feature specification (planning handoff):
 `docs/features/nationwide-geography.md`
+
+That specification is a local-only, git-ignored private file (see
+`.gitignore`); it is absent from fresh clones and must never be force-added.
+When it is unavailable:
+
+- Use the closure record, the tracked `docs/*geo*` / `docs/*hq*` handoffs,
+  current source code and tests.
+- Keep applying the approved GEO rules recorded in this file.
+- Do not invent missing decisions or treat OPEN Product HQ decisions as approved.
+- Report the missing specification, and request Product HQ clarification when
+  a private requirement is essential to the task.
 
 ### Mandatory instructions for GEO tasks
 
-1. Read the full geography specification before starting.
+1. Read the full geography specification before starting; if it is absent
+   (fresh clone), follow the fallback above.
 2. Read `convex/_generated/ai/guidelines.md` before Convex work.
 3. Verify latest `origin/main`, current branch and clean worktree.
 4. Work on `feature/nationwide-project-intake`.

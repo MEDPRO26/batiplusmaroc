@@ -17,6 +17,8 @@ import {
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import { assertSiteAssessmentTransition, assertSiteVisitTransition, isActiveSiteAssessmentStatus } from "./state";
 
+import { selectedVisitForAssessment as latestVisitForAssessment, syncAssessmentAdminProjection } from "./adminProjection";
+
 const MOROCCO_TIMEZONE = "Africa/Casablanca" as const;
 const MAX_SCHEDULING_DAYS = 365;
 const assessmentStatusValidator = v.union(v.literal("invited"), v.literal("accepted"), v.literal("scheduled"), v.literal("completed"), v.literal("declined"), v.literal("cancelled"));
@@ -195,10 +197,6 @@ async function activeVisitForAssessment(ctx: Ctx, assessmentId: Id<"siteAssessme
   return rows[0] ?? null;
 }
 
-async function latestVisitForAssessment(ctx: Ctx, assessmentId: Id<"siteAssessments">) {
-  return (await ctx.db.query("siteVisits").withIndex("by_assessmentId_and_active", (q) => q.eq("assessmentId", assessmentId)).order("desc").take(1))[0] ?? null;
-}
-
 async function requireAssessmentParticipant(ctx: MutationCtx, assessment: Doc<"siteAssessments">): Promise<Participant> {
   const userId = await getAuthUserId(ctx);
   if (!userId) throw new ConvexError("NOT_AUTHENTICATED");
@@ -307,6 +305,7 @@ export const invite = mutation({
       conversationId: conversation._id, status: "invited", active: true, invitedByUserId: client.userId,
       invitedAt: now, clientNote, createdAt: now, updatedAt: now,
     });
+    await syncAssessmentAdminProjection(ctx, assessmentId);
     await appendMarketplaceActivity(ctx, { projectId: project._id, eventType: "site_assessment_invited", actorUserId: client.userId, actorType: "client", companyId: conversation.companyId, quoteId: quote._id, conversationId: conversation._id, siteAssessmentId: assessmentId, newStatus: "invited", createdAt: now });
     return { assessmentId, status: "invited" as const, duplicate: false };
   },
@@ -329,6 +328,7 @@ export const respond = mutation({
     const companyNote = normalizeOptionalText(args.companyNote, 1_000, "INVALID_SITE_ASSESSMENT_NOTE");
     const now = Date.now();
     await ctx.db.patch(assessment._id, { status: desired, active: isActiveSiteAssessmentStatus(desired), companyNote, acceptedAt: desired === "accepted" ? now : undefined, acceptedMarketplaceTermsAt: desired === "accepted" ? now : undefined, declinedAt: desired === "declined" ? now : undefined, updatedAt: now });
+    await syncAssessmentAdminProjection(ctx, assessment._id);
     await appendMarketplaceActivity(ctx, { projectId: assessment.projectId, eventType: desired === "accepted" ? "site_assessment_accepted" : "site_assessment_declined", actorUserId: access.userId, actorType: "company", companyId: assessment.companyId, quoteId: assessment.initialQuoteId, conversationId: assessment.conversationId, siteAssessmentId: assessment._id, oldStatus: assessment.status, newStatus: desired, createdAt: now });
     return { status: desired, duplicate: false };
   },
@@ -359,6 +359,7 @@ export const proposeVisit = mutation({
       if (!currentProposal || currentProposal.visitId !== active._id) throw new ConvexError("SITE_VISIT_INTEGRITY_ERROR");
       const proposalId = await ctx.db.insert("siteVisitProposals", { visitId: active._id, assessmentId: assessment._id, sequence: currentProposal.sequence + 1, proposedByUserId: participant.userId, proposedDate: args.proposedDate, proposedTime: args.proposedTime, timezone: MOROCCO_TIMEZONE, siteAddress, note, proposedAt: now });
       await ctx.db.patch(active._id, { proposedByUserId: participant.userId, currentProposalId: proposalId, proposedDate: args.proposedDate, proposedTime: args.proposedTime, timezone: MOROCCO_TIMEZONE, siteAddress, note, proposedAt: now, updatedAt: now });
+      await syncAssessmentAdminProjection(ctx, assessment._id);
       await appendMarketplaceActivity(ctx, { projectId: assessment.projectId, eventType: "site_visit_rescheduled", actorUserId: participant.userId, actorType: participant.actorType, companyId: assessment.companyId, quoteId: assessment.initialQuoteId, conversationId: assessment.conversationId, siteAssessmentId: assessment._id, siteVisitId: active._id, oldStatus: "proposed", newStatus: "proposed", metadata: { proposedDate: args.proposedDate, proposedTime: args.proposedTime, timezone: MOROCCO_TIMEZONE, scheduledEpoch }, createdAt: now });
       await createSiteVisitNotification(ctx, {
         visitId: active._id,
@@ -377,6 +378,7 @@ export const proposeVisit = mutation({
     const visitId = await ctx.db.insert("siteVisits", { assessmentId: assessment._id, projectId: assessment.projectId, clientId: assessment.clientId, companyId: assessment.companyId, conversationId: assessment.conversationId, initialQuoteId: assessment.initialQuoteId, proposedByUserId: participant.userId, proposedDate: args.proposedDate, proposedTime: args.proposedTime, timezone: MOROCCO_TIMEZONE, siteAddress, note, status: "proposed", active: true, proposedAt: now, createdAt: now, updatedAt: now });
     const proposalId = await ctx.db.insert("siteVisitProposals", { visitId, assessmentId: assessment._id, sequence: 1, proposedByUserId: participant.userId, proposedDate: args.proposedDate, proposedTime: args.proposedTime, timezone: MOROCCO_TIMEZONE, siteAddress, note, proposedAt: now });
     await ctx.db.patch(visitId, { currentProposalId: proposalId });
+    await syncAssessmentAdminProjection(ctx, assessment._id);
     await appendMarketplaceActivity(ctx, { projectId: assessment.projectId, eventType: "site_visit_proposed", actorUserId: participant.userId, actorType: participant.actorType, companyId: assessment.companyId, quoteId: assessment.initialQuoteId, conversationId: assessment.conversationId, siteAssessmentId: assessment._id, siteVisitId: visitId, newStatus: "proposed", metadata: { proposedDate: args.proposedDate, proposedTime: args.proposedTime, timezone: MOROCCO_TIMEZONE, scheduledEpoch }, createdAt: now });
     await createSiteVisitNotification(ctx, {
       visitId,
@@ -405,6 +407,7 @@ export const respondToVisit = mutation({
     const now = Date.now();
     const scheduledEpoch = moroccoDateTimeToEpoch(visit.proposedDate, visit.proposedTime);
     await ctx.db.patch(visit._id, desired === "confirmed" ? { status: desired, confirmedByUserId: participant.userId, confirmedAt: now, updatedAt: now } : { status: desired, active: false, declinedByUserId: participant.userId, declinedAt: now, updatedAt: now });
+    await syncAssessmentAdminProjection(ctx, assessment._id);
     await appendMarketplaceActivity(ctx, { projectId: visit.projectId, eventType: desired === "confirmed" ? "site_visit_confirmed" : "site_visit_declined", actorUserId: participant.userId, actorType: participant.actorType, companyId: visit.companyId, quoteId: visit.initialQuoteId, conversationId: visit.conversationId, siteAssessmentId: assessment._id, siteVisitId: visit._id, oldStatus: visit.status, newStatus: desired, metadata: { proposedDate: visit.proposedDate, proposedTime: visit.proposedTime, timezone: MOROCCO_TIMEZONE, scheduledEpoch }, createdAt: now });
     if (desired === "confirmed") {
       await createSiteVisitNotification(ctx, {
@@ -432,6 +435,7 @@ export const cancelVisit = mutation({
     const reason = normalizeOptionalText(args.reason, 500, "INVALID_SITE_VISIT_CANCELLATION_REASON");
     const now = Date.now();
     await ctx.db.patch(visit._id, { status: "cancelled", active: false, cancelledByUserId: participant.userId, cancelledAt: now, cancellationReason: reason, updatedAt: now });
+    await syncAssessmentAdminProjection(ctx, assessment._id);
     await appendMarketplaceActivity(ctx, { projectId: visit.projectId, eventType: "site_visit_cancelled", actorUserId: participant.userId, actorType: participant.actorType, companyId: visit.companyId, quoteId: visit.initialQuoteId, conversationId: visit.conversationId, siteAssessmentId: assessment._id, siteVisitId: visit._id, oldStatus: visit.status, newStatus: "cancelled", reason, createdAt: now });
     await createSiteVisitNotification(ctx, {
       visitId: visit._id,
@@ -460,6 +464,7 @@ export const completeVisit = mutation({
       throw new ConvexError("SITE_VISIT_NOT_YET_DUE");
     }
     await ctx.db.patch(visit._id, { status: "completed", active: false, completedByUserId: participant.userId, completedAt: now, updatedAt: now });
+    await syncAssessmentAdminProjection(ctx, assessment._id);
     await appendMarketplaceActivity(ctx, { projectId: visit.projectId, eventType: "site_visit_completed", actorUserId: participant.userId, actorType: participant.actorType, companyId: visit.companyId, quoteId: visit.initialQuoteId, conversationId: visit.conversationId, siteAssessmentId: assessment._id, siteVisitId: visit._id, oldStatus: visit.status, newStatus: "completed", createdAt: now });
     return { status: "completed" as const, duplicate: false };
   },

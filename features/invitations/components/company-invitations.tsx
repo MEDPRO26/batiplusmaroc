@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
 import { Link, useRouter } from "@/i18n/navigation";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { mapAppError } from "@/lib/errors";
@@ -17,6 +18,7 @@ export function CompanyInvitations() {
   const t = useTranslations("invitations.company");
   const tUx = useTranslations("ux");
   const tWizard = useTranslations("projectWizard");
+  const locationLabel = useProjectLocationLabel();
   const locale = useLocale();
   const user = useQuery(api.users.currentUser);
   const router = useRouter();
@@ -134,12 +136,10 @@ export function CompanyInvitations() {
                   {row.projectDescription}
                 </p>
                 <dl className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted">
-                  {row.city ? (
-                    <div>
-                      <dt className="sr-only">{t("location")}</dt>
-                      <dd>{tWizard(`cityOptions.${row.city}`)}</dd>
-                    </div>
-                  ) : null}
+                  <div>
+                    <dt className="sr-only">{t("location")}</dt>
+                    <dd className="break-words">{locationLabel(row)}</dd>
+                  </div>
                   {row.category ? (
                     <div>
                       <dt className="sr-only">{t("category")}</dt>

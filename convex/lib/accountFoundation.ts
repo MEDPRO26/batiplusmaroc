@@ -2,6 +2,7 @@ import { ConvexError } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import type { PublicAccountType } from "./constants";
+import { companyHeadquartersCreationPolicy } from "./companyHeadquartersPolicy";
 
 type FoundationResult =
   | { accountType: "client"; clientProfileId: Id<"clientProfiles"> }
@@ -79,6 +80,7 @@ export async function ensureAccountFoundation(
   }
 
   const companyId = await ctx.db.insert("companies", {
+    ...companyHeadquartersCreationPolicy(),
     onboardingStatus: "pending",
     verificationStatus: "draft",
     operationalStatus: "normal",

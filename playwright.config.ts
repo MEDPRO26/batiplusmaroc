@@ -18,7 +18,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    // NextURL normalizes loopback IPs to localhost. Keep the server origin
+    // aligned so localized proxy rewrites remain internal requests.
+    command: "npm run dev -- --hostname localhost",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

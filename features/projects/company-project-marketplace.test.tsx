@@ -139,7 +139,9 @@ describe("company project feed", () => {
     expect(html.match(/<details/g)).toHaveLength(6);
     expect(html).toContain("<summary");
     expect(html).toContain('open=""');
-    expect(html).toContain('id="desktop-city"');
+    expect(html).toContain('id="desktop-region"');
+    expect(html).toContain('id="desktop-province"');
+    expect(html).not.toContain('id="desktop-city"');
     expect(html).toContain('type="search"');
     expect(html).toContain('id="desktop-category"');
     expect(html).not.toContain('id="desktop-budget-under_50000"');
@@ -154,7 +156,8 @@ describe("company project feed", () => {
     expect(html).toContain("Last 24 hours");
     expect(html).toContain('aria-label="Filters"');
     expect(html).toContain("border-b border-[#e4e8eb]");
-    expect(html).not.toContain("<select");
+    expect(html.match(/<select/g)).toHaveLength(2);
+    expect(html).toContain("All Morocco");
     expect(html).toContain("No projects match your filters.");
     expect(html).toContain("Clear filters");
     expect(html).toContain("Sort by");
@@ -172,7 +175,9 @@ describe("company project feed", () => {
 
   test("renders localized French filter labels", () => {
     const html = renderFeed("fr");
-    expect(html).toContain("Ville");
+    expect(html).toContain("Région");
+    expect(html).toContain("Province / Préfecture");
+    expect(html).toContain("Tout le Maroc");
     expect(html).toContain("Catégorie");
     expect(html).not.toContain("Budget");
     expect(html).toContain("Délai");

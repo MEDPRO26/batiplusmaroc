@@ -5,7 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { api } from "@/convex/_generated/api";
-import type { Doc } from "@/convex/_generated/dataModel";
+import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
 import { EmptyState } from "@/features/shared/components/error-state";
 import { TableListSkeleton } from "@/features/shared/components/skeletons";
 import {
@@ -20,9 +20,9 @@ import {
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { routes } from "@/lib/routes";
+import { MAD_AMOUNT_FORMAT } from "@/lib/money/mad";
 
 type Deal = FunctionReturnType<typeof api.deals.company.listMyDeals>[number];
-type City = NonNullable<Doc<"projects">["city"]>;
 export type CompanyWorkView = "active" | "history";
 
 const STATUS_TONE: Record<Deal["status"], BadgeTone> = {
@@ -89,7 +89,7 @@ export function CompanyWork({ view }: { view: CompanyWorkView }) {
 
 function DealRow({ deal }: { deal: Deal }) {
   const t = useTranslations("companyWork");
-  const tWizard = useTranslations("projectWizard");
+  const locationLabel = useProjectLocationLabel();
   const format = useFormatter();
   const date = (value: number) => format.dateTime(value, { dateStyle: "medium" });
 
@@ -101,8 +101,8 @@ function DealRow({ deal }: { deal: Deal }) {
           <StatusBadge tone={STATUS_TONE[deal.status]}>{t(`status.${deal.status}`)}</StatusBadge>
         </div>
         <p className="mt-1 mb-0 flex flex-wrap gap-x-2 text-sm text-muted">
-          {deal.city ? <span>{tWizard(`cityOptions.${deal.city as City}`)}</span> : null}
-          {deal.city ? <span aria-hidden>·</span> : null}
+          <span>{locationLabel(deal)}</span>
+          <span aria-hidden>·</span>
           <span>
             {deal.completedAt
               ? t("completedOn", { date: date(deal.completedAt) })
@@ -113,7 +113,7 @@ function DealRow({ deal }: { deal: Deal }) {
       <p className="m-0 text-sm sm:w-44 sm:text-right">
         <span className="block text-xs text-muted">{t("agreedAmount")}</span>
         <span className="font-semibold tabular-nums text-ink">
-          {format.number(deal.agreedAmountMad, { style: "currency", currency: "MAD", maximumFractionDigits: 0 })}
+          {format.number(deal.agreedAmountMad, MAD_AMOUNT_FORMAT)}
         </span>
       </p>
       <div className="sm:w-44 sm:text-right">

@@ -1,13 +1,15 @@
 "use client";
 
+import { useProjectLocationLabel } from "../hooks/use-project-location-label";
+
 import { usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { ChevronDown, Check as CheckIcon, ExternalLink, Search as SearchIconLucide } from "lucide-react";
+import { ChevronDown, Check as CheckIcon, ExternalLink } from "lucide-react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { api } from "@/convex/_generated/api";
-import { projectCategories, projectCities, projectPostedWindows, projectPropertyTypes, projectSurfaceRanges, projectTimelines } from "@/convex/projects/constants";
+import { projectCategories, projectPostedWindows, projectPropertyTypes, projectSurfaceRanges, projectTimelines } from "@/convex/projects/constants";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -17,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { ProjectGeographicFilters, type ProjectGeographicSelection } from "./project-geographic-filters";
 import { Link, useRouter } from "@/i18n/navigation";
 import { workspaceRouteForUser } from "@/lib/auth/workspace-route";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
@@ -47,12 +49,11 @@ export function resolveCompanyProjectsRedirect(user: User) {
 
 export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearch?: string }) {
   const t = useTranslations("companyProjects");
-  const tWizard = useTranslations("projectWizard");
   const user = useQuery(api.users.currentUser);
   const router = useRouter();
   const canBrowse = user?.accountType === "company" && user.onboardingStatus === "completed";
   const [search, setSearch] = useState(initialSearch);
-  const [citySearch, setCitySearch] = useState("");
+  const [geography, setGeography] = useState<ProjectGeographicSelection>({ regionCode: "", provinceCode: "" });
   const [categories, setCategories] = useState<Category[]>([]);
   const [timelines, setTimelines] = useState<Timeline[]>([]);
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([]);
@@ -62,7 +63,6 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const debouncedSearch = useDebouncedValue(search, 250);
-  const debouncedCitySearch = useDebouncedValue(citySearch, 250);
   const [postedNow, setPostedNow] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -70,21 +70,14 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
     if (destination) router.replace(destination);
   }, [router, user]);
 
-  const matchingCities = useMemo(() => {
-    const query = normalizeFilterSearch(debouncedCitySearch);
-    if (!query) return undefined;
-    return projectCities.filter((item) =>
-      normalizeFilterSearch(tWizard(`cityOptions.${item}`)).includes(query),
-    );
-  }, [debouncedCitySearch, tWizard]);
-
   const queryArgs = useMemo(
     () => {
       if (!canBrowse) return "skip" as const;
       if (postedWindows.length > 0 && postedNow === undefined) return "skip" as const;
       return {
         search: debouncedSearch.trim() || undefined,
-        cities: matchingCities,
+        regionCode: geography.regionCode || undefined,
+        provinceCode: geography.provinceCode || undefined,
         categories: categories.length > 0 ? categories : undefined,
         timelines: timelines.length > 0 ? timelines : undefined,
         propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
@@ -98,7 +91,7 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
       canBrowse,
       categories,
       debouncedSearch,
-      matchingCities,
+      geography,
       postedNow,
       postedWindows,
       propertyTypes,
@@ -118,7 +111,7 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
   );
   const closeFilters = useCallback(() => setFiltersOpen(false), []);
   const clearFilters = useCallback(() => {
-    setCitySearch("");
+    setGeography({ regionCode: "", provinceCode: "" });
     setCategories([]);
     setTimelines([]);
     setPropertyTypes([]);
@@ -136,13 +129,13 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
   if (!canBrowse) return <ProjectFeedSkeleton label={t("loading")} />;
 
   const filterProps = {
-    citySearch,
+    geography,
     categories,
     timelines,
     propertyTypes,
     surfaceRanges,
     postedWindows,
-    onCitySearchChange: setCitySearch,
+    onGeographyChange: setGeography,
     onCategoriesChange: setCategories,
     onTimelinesChange: setTimelines,
     onPropertyTypesChange: setPropertyTypes,
@@ -188,7 +181,7 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
             </button>
             {status !== "LoadingFirstPage" ? <p aria-live="polite" className="m-0 text-sm text-muted">{t("loadedCount", { count: projects.length })}</p> : null}
           </div>
-          <SortDropdown onChange={setSortBy} value={sortBy} />
+          <SortDropdown onChange={setSortBy} searchActive={Boolean(debouncedSearch.trim())} value={sortBy} />
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-7">
@@ -241,6 +234,7 @@ export function CompanyProjectMarketplace({ initialSearch = "" }: { initialSearc
 }
 
 function ProjectCard({ project, selected, onOpen }: { project: Project; selected: boolean; onOpen: () => void }) {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
@@ -262,7 +256,7 @@ function ProjectCard({ project, selected, onOpen }: { project: Project; selected
       />
       <div className="pointer-events-none relative z-0">
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted">
-          <span>{tWizard(`cityOptions.${project.city}`)}</span><span aria-hidden>·</span><span>{category}</span>
+          <span>{locationLabel(project)}</span><span aria-hidden>·</span><span>{category}</span>
           {project.publishedAt ? <><span aria-hidden>·</span><time dateTime={new Date(project.publishedAt).toISOString()}>{t("card.published", { date: formatMarketplaceDateTime(project.publishedAt, locale, { dateStyle: "medium" }) })}</time></> : null}
         </div>
         <h2 className="mt-2 mb-0 text-[1.18rem] leading-7 font-semibold tracking-[-0.025em] text-ink transition-colors duration-150 group-hover:text-brand">
@@ -398,6 +392,7 @@ export function ProjectDetailsSheet({ projectId, onClose }: { projectId: string 
 }
 
 function ProjectSheetContent({ project }: { project: Details }) {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
@@ -421,7 +416,7 @@ function ProjectSheetContent({ project }: { project: Details }) {
             {project.title}
           </h2>
           <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
-            <span>{tWizard(`cityOptions.${project.city}`)}</span>
+            <span>{locationLabel(project)}</span>
             {project.publishedAt ? (
               <>
                 <span aria-hidden>·</span>
@@ -455,7 +450,7 @@ function ProjectSheetContent({ project }: { project: Details }) {
               />
               <SheetDetail label={t("detail.surface")} value={surfaceValue} />
               <SheetDetail label={t("detail.category")} value={category} />
-              <SheetDetail label={t("detail.city")} value={tWizard(`cityOptions.${project.city}`)} />
+              <SheetDetail label={t("detail.location")} value={locationLabel(project)} />
             </dl>
           </section>
         </article>
@@ -606,9 +601,21 @@ function sortOptionLabelKey(option: SortOption) {
   return "sort.options.newest" as const;
 }
 
-function SortDropdown({ value, onChange }: { value: SortOption; onChange: (value: SortOption) => void }) {
+function SortDropdown({ value, onChange, searchActive }: {
+  value: SortOption;
+  onChange: (value: SortOption) => void;
+  searchActive: boolean;
+}) {
   const t = useTranslations("companyProjects");
   const selectedLabel = t(sortOptionLabelKey(value));
+
+  if (searchActive) {
+    return (
+      <p aria-live="polite" className="m-0 inline-flex min-h-10 items-center rounded-sm border border-[#c5c8cb] bg-white px-3.5 text-sm text-ink">
+        <span><span className="text-muted">{t("sort.label")}: </span><span className="font-semibold">{t("sort.relevance")}</span></span>
+      </p>
+    );
+  }
 
   return (
     <DropdownMenu>
@@ -656,13 +663,13 @@ function SortDropdown({ value, onChange }: { value: SortOption; onChange: (value
 }
 
 type FilterProps = {
-  citySearch: string;
+  geography: ProjectGeographicSelection;
   categories: Category[];
   timelines: Timeline[];
   propertyTypes: PropertyType[];
   surfaceRanges: SurfaceRange[];
   postedWindows: PostedWindow[];
-  onCitySearchChange: (value: string) => void;
+  onGeographyChange: (value: ProjectGeographicSelection) => void;
   onCategoriesChange: (value: Category[]) => void;
   onTimelinesChange: (value: Timeline[]) => void;
   onPropertyTypesChange: (value: PropertyType[]) => void;
@@ -672,13 +679,13 @@ type FilterProps = {
 };
 
 function FilterFields({
-  citySearch,
+  geography,
   categories,
   timelines,
   propertyTypes,
   surfaceRanges,
   postedWindows,
-  onCitySearchChange,
+  onGeographyChange,
   onCategoriesChange,
   onTimelinesChange,
   onPropertyTypesChange,
@@ -691,7 +698,8 @@ function FilterFields({
   const t = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
   const hasActiveFilters = Boolean(
-    citySearch.trim() ||
+    geography.regionCode ||
+      geography.provinceCode ||
       categories.length ||
       timelines.length ||
       propertyTypes.length ||
@@ -721,23 +729,8 @@ function FilterFields({
         </div>
       ) : null}
 
-      <FilterSection defaultOpen label={t("filters.city")}>
-        <div className="relative">
-          <SearchIconLucide
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted"
-            strokeWidth={1.8}
-          />
-          <Input
-            aria-label={t("filters.city")}
-            className="h-10 rounded-sm border-[#c5c8cb] bg-white pr-3 pl-9 text-sm text-ink shadow-none placeholder:text-muted focus-visible:border-brand focus-visible:ring-brand/15"
-            id={`${idPrefix}-city`}
-            onChange={(event) => onCitySearchChange(event.target.value)}
-            placeholder={t("filters.cityPlaceholder")}
-            type="search"
-            value={citySearch}
-          />
-        </div>
+      <FilterSection defaultOpen label={t("filters.location")}>
+        <ProjectGeographicFilters className="grid gap-3" idPrefix={idPrefix} onChange={onGeographyChange} value={geography} />
       </FilterSection>
 
       <FilterSection defaultOpen label={t("filters.category")}>
@@ -936,10 +929,6 @@ function useDebouncedValue(value: string, delay: number) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => { const timer = window.setTimeout(() => setDebounced(value), delay); return () => window.clearTimeout(timer); }, [delay, value]);
   return debounced;
-}
-
-function normalizeFilterSearch(value: string) {
-  return value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase();
 }
 
 function SearchIcon({ staticPosition = false }: { staticPosition?: boolean }) { return <svg aria-hidden className={staticPosition ? "size-5" : "pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted"} fill="none" viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.6" /><path d="m12.5 12.5 4 4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" /></svg>; }

@@ -11,6 +11,7 @@ import { routes } from "@/lib/routes";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { resolveCompanyProjectsRedirect } from "./company-project-marketplace";
 import { ProjectSiteAssessment } from "@/features/site-assessments/components/site-assessment-panel";
+import { useProjectLocationLabel } from "../hooks/use-project-location-label";
 
 type Details = NonNullable<FunctionReturnType<typeof api.projects.marketplace.getCompanyMarketplaceProject>>;
 
@@ -35,13 +36,13 @@ export function CompanyProjectDetails({ projectId }: { projectId: string }) {
 }
 
 export function ProjectDetailsView({ project }: { project: Details }) {
+  const locationLabel = useProjectLocationLabel();
   const t = useTranslations("companyProjects");
   const tWizard = useTranslations("projectWizard");
   const format = useFormatter();
   const locale = useLocale();
   const category = project.primaryCategory === "other" && project.customCategoryText ? project.customCategoryText : tWizard(`categoryOptions.${project.primaryCategory}`);
-  const city = tWizard(`cityOptions.${project.city}`);
-  const location = project.neighborhood ? `${city} · ${project.neighborhood}` : city;
+  const location = locationLabel(project);
   const surface = project.surface !== null && !project.surfaceUnknown ? t("card.surface", { value: format.number(project.surface) }) : null;
   const propertyType = project.propertyType ? tWizard(`propertyTypeOptions.${project.propertyType}`) : null;
 
@@ -61,7 +62,7 @@ export function ProjectDetailsView({ project }: { project: Details }) {
                 {project.publishedAt ? (
                   <span className="inline-flex items-center gap-1.5"><Clock3 aria-hidden className="size-4" /><time dateTime={new Date(project.publishedAt).toISOString()}>{t("card.published", { date: formatMarketplaceDateTime(project.publishedAt, locale, { dateStyle: "medium" }) })}</time></span>
                 ) : null}
-                <span className="inline-flex items-center gap-1.5"><MapPin aria-hidden className="size-4" />{location}</span>
+                <span className="inline-flex min-w-0 max-w-full items-start gap-1.5"><MapPin aria-hidden className="mt-0.5 size-4 shrink-0" /><span className="min-w-0 [overflow-wrap:anywhere]">{location}</span></span>
               </div>
             </header>
 

@@ -182,10 +182,10 @@
     "companyDescription": "Parcourez les demandes de clients et envoyez vos propositions en quelques minutes.",
     "client": "Je veux lancer un projet",
     "company": "Je cherche des projets",
-    "searchProject": "Décrivez votre projet…",
-    "searchLabel": "Décrivez votre projet",
+    "searchProject": "Entreprise ou service, ex. rénovation…",
+    "searchLabel": "Rechercher une entreprise ou un service",
     "searchButton": "Rechercher",
-    "searchExamples": "Construction villa, rénovation, piscine, gros œuvre...",
+    "searchExamples": "Utilisez les filtres Zone d’intervention pour trouver des entreprises qui travaillent dans la zone de votre projet.",
     "findProjects": "Trouver des projets",
     "companyHeadline": "Développez votre activité sur Batiplus",
     "exploreProjects": "Explorer les projets",
@@ -1117,12 +1117,12 @@
       "titleServices": "Quels travaux réalisez-vous ?",
       "leadServices": "Sélectionnez tous les services que vous proposez régulièrement. Vous pourrez les modifier plus tard.",
       "titleContact": "Comment les clients peuvent-ils vous joindre ?",
-      "leadContact": "Ajoutez un téléphone et une ville pour que les clients près de chez vous puissent vous contacter.",
+      "leadContact": "Ajoutez un téléphone et la localisation du siège de votre entreprise.",
       "back": "Retour",
       "createProfile": "Créer le profil",
       "descriptionHint": "Saisissez au moins 20 caractères.",
       "phoneHint": "Partagé uniquement avec les clients avec lesquels vous travaillez.",
-      "cityHint": "Aide les clients à trouver des entreprises dans leur région.",
+      "cityHint": "La localisation du siège ne définit pas les zones où votre entreprise intervient.",
       "detailsTitle": "Informations de l’entreprise",
       "detailsLead": "Présentez votre entreprise aux clients.",
       "companyName": "Nom de l’entreprise",
@@ -1154,7 +1154,7 @@
       "owner": "Propriétaire du compte : {name}",
       "phone": "Téléphone",
       "phonePlaceholder": "06 12 34 56 78",
-      "city": "Ville",
+      "city": "Ville / Localité du siège",
       "cityPlaceholder": "Casablanca",
       "continue": "Continuer",
       "saving": "Enregistrement…",
@@ -1162,7 +1162,7 @@
       "validation": {
         "companyName": "Saisissez un nom d’entreprise valide.",
         "phone": "Saisissez un numéro de téléphone marocain valide.",
-        "city": "Saisissez une ville valide.",
+        "city": "Saisissez une ville / localité de 2 à 80 caractères (lettres, espaces, apostrophes, points ou traits d’union).",
         "description": "Saisissez une description de 20 à 1 000 caractères.",
         "services": "Sélectionnez au moins un service valide.",
         "years": "Saisissez un nombre entier entre 0 et 100.",
@@ -1171,6 +1171,20 @@
       },
       "errors": {
         "generic": "Impossible d’enregistrer le profil entreprise. Veuillez réessayer."
+      },
+      "headquarters": {
+        "country": "Pays",
+        "morocco": "Maroc",
+        "region": "Région",
+        "province": "Province / Préfecture",
+        "commune": "Commune (facultatif)",
+        "selectRegion": "Sélectionnez une région",
+        "selectProvince": "Sélectionnez une province ou préfecture",
+        "provinceHint": "Sélectionnez d’abord une région. Changer de région efface la province sélectionnée.",
+        "communeHint": "Facultatif. {max} caractères maximum, sans caractères de contrôle.",
+        "required": "La région et la province / préfecture du siège sont obligatoires.",
+        "legacyOptional": "Facultatif pour votre compte existant. Sélectionnez la région et la province ensemble.",
+        "unavailable": "La localisation détaillée du siège est temporairement indisponible. Vous pouvez continuer avec votre ville / localité."
       }
     },
     "companyDashboard": {
@@ -1586,9 +1600,33 @@
     "closeFilters": "Fermer les filtres",
     "clear": "Effacer les filtres",
     "city": {
-      "label": "Ville",
-      "placeholder": "ex. Casablanca"
+      "label": "Ville du siège (facultatif)",
+      "placeholder": "ex. Casablanca",
+      "hint": "Limite aussi les résultats aux entreprises dont le siège est dans cette ville."
     },
+    "geography": {
+      "legend": "Zone d’intervention",
+      "hint": "Trouvez des entreprises intervenant dans la zone de votre projet, même si leur siège est ailleurs.",
+      "regionLabel": "Région",
+      "provinceLabel": "Province ou préfecture",
+      "allMorocco": "Tout le Maroc",
+      "allProvinces": "Toutes les provinces et préfectures",
+      "provinceDisabled": "Choisissez une région pour afficher ses provinces et préfectures."
+    },
+    "coverage": {
+      "label": "Couverture",
+      "notDeclared": "Couverture non déclarée",
+      "national": "Tout le Maroc",
+      "region": "Région {name} entière",
+      "province": "Province de {name}",
+      "provinceElided": "Province d’{name}",
+      "prefecture": "Préfecture de {name}",
+      "prefectureElided": "Préfecture d’{name}",
+      "more": "{count, plural, one {# zone de plus} other {# zones de plus}}",
+      "details": "Toutes les zones déclarées"
+    },
+    "searchingMore": "Recherche d’autres entreprises…",
+    "loadError": "Les entreprises n’ont pas pu être chargées. Vos filtres restent appliqués.",
     "service": {
       "label": "Service",
       "all": "Tous les services",
@@ -1668,6 +1706,7 @@
     "retryPreview": "Réessayer l’aperçu"
   },
   "companyProfileManager": {
+    "headquartersLocation": "Siège : {location}",
     "profileView": {
       "settings": "Paramètres du profil",
       "about": "À propos de l’entreprise",
@@ -1693,7 +1732,7 @@
       "noMatches": "Aucun résultat.",
       "searchCities": "Rechercher une ville",
       "identityTitle": "Nom et localisation",
-      "identityLead": "Comment les clients trouvent et reconnaissent votre entreprise.",
+      "identityLead": "La localisation de votre siège est distincte des zones où vous intervenez.",
       "editIdentity": "Modifier le nom et la localisation",
       "editAbout": "Modifier la présentation de l’entreprise",
       "descriptionHelp": "Entre 20 et 1 000 caractères.",
@@ -1786,9 +1825,49 @@
       "title": "Zones d’intervention",
       "lead": "Sélectionnez les villes dans lesquelles votre équipe peut intervenir."
     },
+    "coverage": {
+      "title": "Couverture géographique",
+      "lead": "Indiquez où votre entreprise intervient. Cela ne change pas la ville du siège ni les anciennes sélections de villes.",
+      "edit": "Modifier la couverture géographique",
+      "reminder": {
+        "title": "Déclarez où vous acceptez des projets de construction",
+        "lead": "Choisissez tout le Maroc, des régions entières ou des provinces et préfectures où votre entreprise accepte d’intervenir.",
+        "discovery": "Sans couverture d’intervention déclarée, votre entreprise peut être exclue des recherches géographiques des clients.",
+        "action": "Déclarer ma couverture d’intervention"
+      },
+      "loading": "Chargement de la couverture géographique…",
+      "loadError": "La couverture géographique n’a pas pu être chargée.",
+      "allMorocco": "Tout le Maroc",
+      "allMoroccoHelp": "Ajoute la couverture de tout le pays. Les régions et provinces déjà choisies restent tant que vous ne les retirez pas.",
+      "entireRegions": "Régions entières",
+      "entireRegionsHelp": "Choisir une région entière couvre toutes ses provinces et préfectures.",
+      "entireRegion": "Région entière",
+      "provinces": "Provinces et préfectures précises",
+      "browseRegion": "Choisir une région",
+      "browsePlaceholder": "Choisissez une région pour voir ses provinces",
+      "browseHelp": "Choisir une région ici affiche seulement ses provinces et préfectures. Cela n’ajoute pas la couverture de la région entière.",
+      "browsePrompt": "Choisissez une région pour sélectionner des provinces ou des préfectures.",
+      "searchProvinces": "Rechercher des provinces et préfectures",
+      "noProvinceMatches": "Aucune province ou préfecture ne correspond à cette recherche.",
+      "selected": "Zones d’intervention sélectionnées",
+      "empty": "Aucune couverture déclarée",
+      "discard": "Annuler les modifications",
+      "success": "Couverture géographique enregistrée.",
+      "failure": "La couverture géographique n’a pas pu être enregistrée.",
+      "headquartersSeparate": "La ville du siège est distincte de cette couverture d’intervention.",
+      "legacyTitle": "Anciennes sélections de villes",
+      "legacyHelp": "Ces anciennes villes sont conservées telles quelles. Elles ne sont pas converties en couverture géographique et ne changent pas lorsque vous enregistrez la couverture.",
+      "nationalOverlap": "Ces régions et provinces sont déjà incluses dans la couverture nationale. Elles restent sélectionnées tant que vous ne les retirez pas.",
+      "regionalOverlap": "Certaines provinces sélectionnées sont déjà incluses dans une région entière. Elles restent sélectionnées tant que vous ne les retirez pas.",
+      "kind": {
+        "region": "Région entière",
+        "province": "Province",
+        "prefecture": "Préfecture"
+      }
+    },
     "fields": {
       "name": "Nom de l’entreprise",
-      "city": "Ville principale",
+      "city": "Ville / Localité du siège",
       "description": "Description courte",
       "website": "Site web — facultatif",
       "websitePlaceholder": "https://exemple.ma",
@@ -1881,6 +1960,7 @@
     }
   },
   "publicCompany": {
+    "headquartersLocation": "Siège : {location}",
     "coverAlt": "Image de couverture de {name}",
     "logoAlt": "Logo de {name}",
     "verified": "Entreprise vérifiée",
@@ -1901,6 +1981,7 @@
     "companySizeLabel": "Taille de l’entreprise",
     "languages": "Langues",
     "serviceAreas": "Zones d’intervention",
+    "declaredCoverage": "Couverture d’intervention déclarée",
     "verifications": "Vérifications",
     "verificationVerified": "Entreprise : vérifiée",
     "verificationPending": "Entreprise : non vérifiée",
@@ -2049,6 +2130,13 @@
       "extra": "Photos supplémentaires — facultatif"
     }
   },
+  "projectLocation": {
+    "unspecified": "Localisation non précisée"
+  },
+  "adminProjectLocation": {
+    "incomplete": "Localisation incomplète",
+    "incompleteWithDetails": "{location} · Localisation incomplète"
+  },
   "projectWizard": {
     "loading": "Chargement de votre brouillon…",
     "progress": "Étape {current} sur {total}",
@@ -2079,7 +2167,7 @@
       "2": {
         "eyebrow": "Localisation",
         "title": "Où se situe votre projet ?",
-        "lead": "Nous avons seulement besoin de la ville et, si utile, du quartier."
+        "lead": "Choisissez la région et la province, puis indiquez la ville, le village ou le douar."
       },
       "3": {
         "eyebrow": "Détails du projet",
@@ -2101,6 +2189,13 @@
       "category": "Choisissez une catégorie de projet.",
       "customCategory": "Décrivez les travaux en au moins 3 caractères.",
       "city": "Choisissez une ville valide.",
+      "region": "Choisissez une région.",
+      "province": "Choisissez une province ou une préfecture.",
+      "provinceMismatch": "Cette province n’appartient pas à la région sélectionnée.",
+      "locality": "Indiquez la ville, le village ou le douar.",
+      "localityInvalid": "Saisissez une ville, un village ou un douar de 100 caractères maximum.",
+      "communeInvalid": "Saisissez une commune de 100 caractères maximum.",
+      "unsavedLocation": "Enregistrez l’étape Localisation avant de publier. Une ancienne ville n’est pas utilisée après une modification.",
       "title": "Saisissez un titre d’au moins 5 caractères.",
       "propertyType": "Choisissez un type de bien.",
       "surface": "Saisissez une surface positive ou cochez « Je ne sais pas ».",
@@ -2115,6 +2210,18 @@
       "city": "Ville",
       "cityPlaceholder": "Choisissez une ville",
       "neighborhood": "Quartier ou secteur",
+      "country": "Pays",
+      "countryValue": "Maroc",
+      "region": "Région",
+      "regionPlaceholder": "Sélectionnez une région",
+      "province": "Province / Préfecture",
+      "provincePlaceholder": "Sélectionnez une province",
+      "provinceDisabled": "Sélectionnez une région avant de choisir une province ou une préfecture.",
+      "commune": "Commune",
+      "communePlaceholder": "Ex. Commune rurale de ...",
+      "locality": "Ville, village ou douar",
+      "localityPlaceholder": "Ville, village ou douar",
+      "legacyLocation": "Ville enregistrée auparavant : {city}. Mettez à jour la région, la province et la localité. Si vous enregistrez un brouillon en vidant tous les nouveaux champs, cette ancienne ville reste sur le projet.",
       "title": "Titre du projet",
       "titlePlaceholder": "Par exemple : Rénover un appartement de 120 m²",
       "titleExamplesTitle": "Exemples de titres",
@@ -2128,7 +2235,7 @@
       "description": "Description",
       "descriptionPlaceholder": "Expliquez ce que vous souhaitez construire, rénover ou modifier."
     },
-    "locationPrivacy": "N’indiquez pas votre adresse exacte. Elle pourra être communiquée plus tard pour une visite.",
+    "locationPrivacy": "N’indiquez pas votre adresse exacte. Vous pourrez la communiquer lors d’une visite du chantier.",
     "categoryOptions": {
       "houseConstruction": "Construire une maison / villa",
       "buildingConstruction": "Construire un immeuble",
@@ -2189,6 +2296,8 @@
       "lead": "Modifiez une section si nécessaire. Le projet sera validé avant d’être visible par les entreprises.",
       "category": "Type de projet",
       "location": "Localisation",
+      "locationIncomplete": "Localisation encore incomplète",
+      "locationUnsaved": "Les modifications de localisation ne sont pas encore enregistrées",
       "projectTitle": "Titre",
       "propertyType": "Type de bien",
       "surface": "Surface",
@@ -2489,7 +2598,7 @@
     "title": "Parcourir les projets",
     "lead": "Découvrez les demandes de construction publiées par des clients partout au Maroc.",
     "searchLabel": "Rechercher des projets",
-    "searchPlaceholder": "Rechercher par titre, ville ou catégorie",
+    "searchPlaceholder": "Rechercher par titre ou catégorie",
     "clearSearch": "Effacer la recherche",
     "filters": "Filtres",
     "closeFilters": "Fermer les filtres",
@@ -2499,8 +2608,16 @@
     "allCategories": "Toutes les catégories",
     "allCities": "Toutes les villes",
     "resultsLabel": "Résultats des projets",
-    "resultsCount": "{count, plural, =0 {Aucun projet} one {# projet} other {# projets}}",
+    "resultsCount": "{count, plural, =0 {Aucun projet chargé} one {# projet chargé} other {# projets chargés}}",
     "loading": "Chargement des projets…",
+    "loadMore": "Charger plus",
+    "loadingMore": "Chargement d’autres projets…",
+    "scanning": "Continuez à parcourir les résultats pour trouver des projets correspondants.",
+    "exhausted": "Tous les projets correspondants sont chargés.",
+    "sortLabel": "Trier les projets",
+    "newest": "Plus récents",
+    "oldest": "Plus anciens",
+    "relevance": "Plus pertinents",
     "emptyTitle": "Aucun projet correspondant",
     "emptyLead": "Essayez une autre recherche ou effacez vos filtres. Les nouveaux projets clients apparaissent ici après validation.",
     "openAria": "Ouvrir le projet : {title}",
@@ -3189,11 +3306,23 @@
     "cityLabel": "Ville",
     "allCities": "Toutes les villes",
     "statusFilterLabel": "Statut",
+    "regionLabel": "Région",
+    "allRegions": "Tout le Maroc",
+    "provinceLabel": "Province / préfecture",
+    "allProvinces": "Toutes les provinces / préfectures",
+    "provinceDisabled": "Choisissez une région pour filtrer par province ou préfecture.",
+    "clearFilters": "Effacer les filtres",
+    "pagination": {
+      "loadMore": "Afficher plus de projets",
+      "loadingMore": "Chargement de projets supplémentaires…",
+      "moreMatches": "D’autres projets peuvent correspondre à vos filtres."
+    },
     "empty": "Aucun projet ne correspond à ces filtres.",
     "columns": {
       "project": "Projet",
       "client": "Client",
       "city": "Ville",
+      "location": "Localisation",
       "category": "Catégorie",
       "submitted": "Soumis le",
       "status": "Statut",
@@ -3335,7 +3464,13 @@
       "dateFrom": "Du",
       "dateTo": "Au",
       "invalidRange": "La date de fin doit être postérieure ou égale à la date de début.",
-      "dateRange": "Période de visite"
+      "dateRange": "Période de visite",
+      "regionLabel": "Région",
+      "provinceLabel": "Province / Préfecture",
+      "allMorocco": "Tout le Maroc",
+      "allProvinces": "Toutes les provinces / préfectures",
+      "provinceDisabled": "Sélectionnez d’abord une région.",
+      "clearGeography": "Effacer la géographie"
     },
     "empty": "Aucune visite technique ne correspond à ces filtres.",
     "columns": {
@@ -3472,6 +3607,7 @@
     "fields": {
       "projectTitle": "Titre du projet",
       "city": "Ville",
+      "location": "Localisation",
       "category": "Catégorie",
       "projectStatus": "Statut du projet",
       "safeIdentity": "Identité sécurisée",
@@ -3521,6 +3657,14 @@
     "detailTabs": {
       "label": "Sections du détail de la visite technique",
       "overview": "Aperçu"
+    },
+    "pagination": {
+      "loadMore": "Afficher plus de visites techniques",
+      "loadingMore": "Chargement de visites supplémentaires…",
+      "moreMatches": "D’autres visites peuvent correspondre à vos filtres.",
+      "continueHint": "Poursuivez le chargement pour rechercher dans les enregistrements restants.",
+      "loadedCount": "{count, plural, one {# visite technique chargée} other {# visites techniques chargées}}",
+      "legacyLimited": "Cette vue affiche au maximum les 100 demandes de visite créées le plus récemment. Les filtres s’appliquent à ces enregistrements."
     }
   },
   "adminAccess": {
@@ -3586,11 +3730,17 @@
     "title": "Trouvez votre prochain projet de construction",
     "lead": "Parcourez les projets clients validés par Batiplus et trouvez les missions adaptées à votre entreprise.",
     "searchLabel": "Rechercher des projets",
-    "searchPlaceholder": "Rechercher par titre, catégorie ou ville",
+    "searchPlaceholder": "Rechercher par titre ou catégorie",
     "filters": {
       "title": "Filtres",
       "close": "Fermer les filtres",
       "active": "Filtres actifs",
+      "location": "Localisation",
+      "region": "Région",
+      "province": "Province / Préfecture",
+      "allMorocco": "Tout le Maroc",
+      "allProvinces": "Toutes les provinces / préfectures",
+      "provinceDisabled": "Choisissez une région pour filtrer par province ou préfecture.",
       "city": "Ville",
       "cityPlaceholder": "Rechercher une ville",
       "allCities": "Toutes les villes",
@@ -3621,6 +3771,7 @@
     "sort": {
       "label": "Trier par",
       "triggerAria": "Trier par : {option}",
+      "relevance": "Plus pertinents",
       "options": {
         "newest": "Plus récents",
         "oldest": "Plus anciens"
@@ -4564,6 +4715,15 @@
         "INVALID_YEARS_EXPERIENCE": "Saisissez un nombre entier entre 0 et 100.",
         "INVALID_FOUNDED_YEAR": "Saisissez une année de création valide.",
         "INVALID_SERVICE_AREAS": "Sélectionnez au moins une zone d’intervention valide.",
+        "COMPANY_COVERAGE_LIMIT_EXCEEDED": "Sélectionnez moins de zones. Le maximum correspond au catalogue marocain complet.",
+        "INVALID_COMPANY_COVERAGE_SCOPE": "Choisissez une zone de couverture marocaine valide.",
+        "DUPLICATE_COMPANY_COVERAGE_SCOPE": "Chaque zone de couverture ne peut être sélectionnée qu’une fois.",
+        "INVALID_COMPANY_COVERAGE_STATE": "La couverture enregistrée ne peut pas être lue. Rechargez la page avant de la modifier.",
+        "COMPANY_COVERAGE_INDEX_CORRUPTED": "La couverture enregistrée ne peut pas être mise à jour. Contactez le support Batiplus.",
+        "INVALID_COMPANY_DIRECTORY_REGION": "Choisissez une région valide.",
+        "COMPANY_DIRECTORY_REGION_REQUIRED": "Choisissez une région avant de choisir une province ou préfecture.",
+        "INVALID_COMPANY_DIRECTORY_PROVINCE": "Choisissez une province ou préfecture valide.",
+        "COMPANY_DIRECTORY_PROVINCE_REGION_MISMATCH": "Cette province ou préfecture n’appartient pas à la région sélectionnée.",
         "INVALID_LANGUAGES": "Sélectionnez au moins une langue valide.",
         "INVALID_SERVICES": "Sélectionnez au moins un service valide.",
         "DUPLICATE_COMPANY_SERVICE": "Ce service est déjà associé à l’entreprise.",
@@ -4614,8 +4774,16 @@
         "PRIVATE_PORTFOLIO_IMAGE_FILE": "Cette image privée du portfolio ne peut pas être utilisée via une autre API de fichiers.",
         "PROJECT_NOT_FOUND": "Ce projet est introuvable.",
         "PROJECT_NOT_EDITABLE": "Ce projet ne peut plus être modifié.",
+        "PROJECT_STRUCTURED_LOCATION_REQUIRED": "Actualisez le projet et renseignez sa région, sa province et sa localité.",
+        "AMBIGUOUS_PROJECT_LOCATION_FILTER": "Choisissez les filtres région/province ou les anciens filtres par ville.",
         "INVALID_PROJECT_CATEGORY": "Choisissez une catégorie de projet valide.",
         "INVALID_PROJECT_NEIGHBORHOOD": "Saisissez un quartier valide.",
+        "INVALID_PROJECT_REGION": "Choisissez une région valide.",
+        "PROJECT_REGION_REQUIRED": "Choisissez une région avant la province.",
+        "INVALID_PROJECT_PROVINCE": "Choisissez une province ou préfecture valide.",
+        "PROJECT_PROVINCE_REGION_MISMATCH": "Cette province n’appartient pas à la région sélectionnée.",
+        "INVALID_PROJECT_COMMUNE": "Saisissez une commune de 100 caractères maximum, sans caractères de contrôle.",
+        "INVALID_PROJECT_LOCALITY": "Saisissez une ville, un village ou un douar de 100 caractères maximum, sans caractères de contrôle.",
         "INVALID_PROJECT_TITLE": "Saisissez un titre de projet valide.",
         "INVALID_PROJECT_SURFACE": "Saisissez une surface valide ou cochez « Je ne sais pas ».",
         "INVALID_PROJECT_DESCRIPTION": "Saisissez une description de 20 à 2 000 caractères.",
@@ -4695,7 +4863,7 @@
         "FINAL_QUOTE_PDF_NOT_FOUND": "Ce PDF n’est pas disponible.",
         "INVALID_FINAL_QUOTE_STATUS_TRANSITION": "Cette action sur le devis final n’est plus disponible.",
         "INVALID_FINAL_QUOTE_PDF": "Choisissez un PDF valide de 15 Mo maximum.",
-        "INVALID_FINAL_QUOTE_PRICE": "Saisissez un prix final valide.",
+        "INVALID_FINAL_QUOTE_PRICE": "Saisissez un prix final valide en MAD, avec au maximum deux décimales (ex. 320000,50).",
         "INVALID_FINAL_QUOTE_DURATION": "Saisissez une durée finale valide.",
         "INVALID_FINAL_QUOTE_DATE": "Saisissez des dates futures valides.",
         "INVALID_FINAL_QUOTE_SCOPE": "Décrivez le périmètre détaillé des travaux.",
@@ -4756,7 +4924,14 @@
         "INVALID_COORDINATION_AMOUNT": "Saisissez un montant positif en MAD avec au maximum deux décimales et sans séparateur de milliers.",
         "INVALID_COORDINATION_PERCENTAGE": "Saisissez un pourcentage décimal positif de 64 caractères au maximum.",
         "INVALID_COORDINATION_REVISION": "La révision du brouillon est invalide. Rechargez et vérifiez avant d’enregistrer.",
-        "INVALID_COORDINATION_TIME": "Actualisez le résumé pour vérifier à nouveau son éligibilité."
+        "INVALID_COORDINATION_TIME": "Actualisez le résumé pour vérifier à nouveau son éligibilité.",
+        "COMPANY_HEADQUARTERS_REGION_REQUIRED": "Sélectionnez la région du siège.",
+        "COMPANY_HEADQUARTERS_PROVINCE_REQUIRED": "Sélectionnez la province / préfecture du siège.",
+        "INVALID_COMPANY_HEADQUARTERS_REGION": "Sélectionnez une région marocaine valide.",
+        "INVALID_COMPANY_HEADQUARTERS_PROVINCE": "Sélectionnez une province / préfecture marocaine valide.",
+        "COMPANY_HEADQUARTERS_PROVINCE_REGION_MISMATCH": "Sélectionnez une province / préfecture appartenant à cette région.",
+        "INVALID_COMPANY_HEADQUARTERS_COMMUNE": "Saisissez une commune de 100 caractères maximum, sans caractères de contrôle.",
+        "COMPANY_HEADQUARTERS_POLICY_UNAVAILABLE": "La localisation du siège est temporairement indisponible. Veuillez réessayer."
       }
     },
     "empty": {
@@ -5182,7 +5357,7 @@
       "backToProjects": "Retour à mes projets",
       "untitledProject": "Projet en brouillon sans titre",
       "contextTitle": "Projet",
-      "contextCity": "Ville",
+      "contextCity": "Localisation",
       "contextStatus": "Statut",
       "contextRequested": "Services demandés",
       "notProvided": "Pas encore renseigné",
@@ -5242,7 +5417,7 @@
       "unread": "{count, plural, one {# entrée non lue} other {# entrées non lues}}",
       "contextLabel": "Contexte de la demande",
       "contextClient": "Client",
-      "contextCity": "Ville",
+      "contextCity": "Localisation",
       "contextStatus": "Statut du projet",
       "contextRequested": "Demandé",
       "notProvided": "Non renseigné",

@@ -6,6 +6,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { routing } from "@/i18n/routing";
 import { APP_ERROR_CODES } from "@/lib/errors/codes";
 import { routes } from "@/lib/routes";
+import { toDetailedProjectLocation } from "@/lib/geography/project-location";
 import en from "@/messages/en.json";
 import fr from "@/messages/fr.json";
 
@@ -113,7 +114,7 @@ function request(sequence: number, requestKind: "free_help" | "coordination_disc
 function summary(overrides: Partial<SupportSummary> = {}): SupportSummary {
   return {
     id: conversationId,
-    project: { id: projectId, title: "Villa Atlas", city: "rabat", status: "published" },
+    project: { id: projectId, title: "Villa Atlas", city: "rabat", location: toDetailedProjectLocation({ city: "rabat" }), status: "published" },
     clientDisplayName: "Sara Client",
     requestedKinds: ["free_help"],
     entryCount: 3,
@@ -407,7 +408,7 @@ describe("admin support inbox", () => {
     ["en", "Untitled draft project", "Client"],
     ["fr", "Projet en brouillon sans titre", "Client"],
   ] as const)("uses localized %s draft and name fallbacks", (locale, untitled, client) => {
-    convex.paginated = { "clientSupport/index:listAdminConversations": { status: "Exhausted", results: [summary({ project: { id: projectId, title: null, city: null, status: "draft" }, clientDisplayName: "", lastEntry: { id: "entry-1" as Id<"clientSupportMessages">, sequence: 1, createdAt: at, kind: "request", senderType: "client", requestKind: "coordination_discussion", eventKey: "clientSupport.events.coordinationDiscussionRequested" } })] } };
+    convex.paginated = { "clientSupport/index:listAdminConversations": { status: "Exhausted", results: [summary({ project: { id: projectId, title: null, city: null, location: toDetailedProjectLocation({}), status: "draft" }, clientDisplayName: "", lastEntry: { id: "entry-1" as Id<"clientSupportMessages">, sequence: 1, createdAt: at, kind: "request", senderType: "client", requestKind: "coordination_discussion", eventKey: "clientSupport.events.coordinationDiscussionRequested" } })] } };
     const html = panel(locale, null);
     expect(html).toContain(untitled);
     expect(html).toContain(`>${client}</span>`);
@@ -415,7 +416,7 @@ describe("admin support inbox", () => {
   });
 
   test("a deep link resolves by projectId even when the thread is not in the first inbox page", () => {
-    convex.paginated = { "clientSupport/index:listAdminConversations": { status: "CanLoadMore", results: [summary({ id: "support-other" as Id<"clientSupportConversations">, project: { id: "project-other" as Id<"projects">, title: "Other project", city: null, status: "draft" } })] } };
+    convex.paginated = { "clientSupport/index:listAdminConversations": { status: "CanLoadMore", results: [summary({ id: "support-other" as Id<"clientSupportConversations">, project: { id: "project-other" as Id<"projects">, title: "Other project", city: null, location: toDetailedProjectLocation({}), status: "draft" } })] } };
     convex.queries = { [GET_ADMIN]: summary() };
     const html = panel("en", projectId);
     expect(convex.calls).toContainEqual({ name: GET_ADMIN, args: { projectId } });

@@ -120,6 +120,7 @@ describe("messages inbox", () => {
             title: "Villa build",
             primaryCategory: "houseConstruction",
             city: "casablanca",
+            location: { regionCode: null, provinceCode: null, communeName: null, legacyCity: "casablanca", localityName: null, neighborhood: null },
             timeline: "one_to_three_months",
             status: "pending_review",
             createdAt: 1,

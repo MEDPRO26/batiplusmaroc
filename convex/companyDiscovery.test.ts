@@ -471,7 +471,7 @@ describe("public company discovery", () => {
     expect(company).not.toHaveProperty("rcNumber");
     expect(company).not.toHaveProperty("verificationDocuments");
     expect(Object.keys(company).sort()).toEqual([
-      "city", "coverImageUrl", "description", "id", "isVerified", "logoUrl", "name",
+      "city", "coverageScopeKeys", "coverImageUrl", "description", "id", "isVerified", "logoUrl", "name",
       "portfolio", "rating", "reviewCount", "serviceAreas", "serviceNames", "services", "slug", "yearsExperience",
     ].sort());
   });

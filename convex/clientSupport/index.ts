@@ -10,6 +10,7 @@ import { requireAdminUser } from "../admin/access";
 import { plainMessagePreview } from "../messages/attachmentRules";
 import { requireClientUser, requireOwnedProject } from "../projects/access";
 import { projectStatusValidator } from "../projects/constants";
+import { detailedProjectLocationValidator, toDetailedProjectLocation } from "../projects/location";
 import { supportContextFor as contextFor, type SupportCtx, type SupportContext } from "./access";
 import { notifyClientSupportEntry } from "./notifications";
 import {
@@ -73,6 +74,7 @@ const summaryValidator = v.object({
     id: v.id("projects"),
     title: v.union(v.string(), v.null()),
     city: v.union(v.string(), v.null()),
+    location: detailedProjectLocationValidator,
     status: projectStatusValidator,
   }),
   clientDisplayName: v.string(),
@@ -197,6 +199,7 @@ async function summaryFor(ctx: SupportCtx, context: SupportContext, userId: Id<"
       id: project._id,
       title: project.title?.trim() || null,
       city: project.city ?? null,
+      location: toDetailedProjectLocation(project),
       status: project.status,
     },
     clientDisplayName: safeDisplayName(client),

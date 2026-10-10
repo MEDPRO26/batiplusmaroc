@@ -343,8 +343,21 @@ describe("source readiness and lifecycle", () => {
     await expect(asUser(s.t, s.adminA).mutation(agreements.publishAdminDraft, await publishArgs(s, "expired"))).rejects.toThrow("COORDINATION_READINESS_NOT_ELIGIBLE");
   });
 
-  test("accepting the same eligible revision does not invalidate pending confirmation or expire accepted readiness", async () => {
-    const s = await setup(); const published = await prepare(s, { ...TERMS, startDate: "2027-02-01" });
+  test.each(["legacy", "structured", "incomplete"] as const)("GEO9.2C %s: accepting the same eligible revision preserves pending confirmation and accepted readiness", async geography => {
+    const s = await setup();
+    if (geography !== "legacy") await s.t.run(ctx => ctx.db.patch(s.projectId, {
+      city: undefined, locationMode: "structured", regionCode: "08",
+      provinceCode: geography === "structured" ? "08.401" : undefined,
+      localityName: geography === "structured" ? "Douar Aït Atlas" : undefined,
+    }));
+    const published = await prepare(s, { ...TERMS, startDate: "2027-02-01" });
+    const beforeReads = await stored(s);
+    const marketBeforeReads = await unrelatedSnapshot(s);
+    await asUser(s.t, s.client).query(api.clientSupport.index.getMyConversation, { projectId: s.projectId });
+    await asUser(s.t, s.adminA).query(api.clientSupport.index.getAdminConversation, { projectId: s.projectId });
+    await asUser(s.t, s.adminA).query(api.clientSupport.index.listAdminConversations, page());
+    expect(await stored(s)).toEqual(beforeReads);
+    expect(await unrelatedSnapshot(s)).toEqual(marketBeforeReads);
     await asUser(s.t, s.client).mutation(api.finalQuotes.index.review, { finalQuoteId: s.finalQuoteId, revisionId: s.revisionId, action: "accept" });
     const marketBefore = await unrelatedSnapshot(s);
     vi.mocked(Date.now).mockReturnValue(Date.parse("2027-01-01T12:00:00Z"));

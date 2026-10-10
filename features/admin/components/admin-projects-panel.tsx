@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useState } from "react";
@@ -15,10 +15,12 @@ import { Link } from "@/i18n/navigation";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { findKnownCodeInText } from "@/lib/errors/codes";
 import { routes } from "@/lib/routes";
+import { getProvincesByRegion, getRegions } from "@/lib/geography/morocco";
+import { useAdminProjectLocationLabel } from "@/features/admin/hooks/use-admin-project-location-label";
 
 type ListRow = FunctionReturnType<
-  typeof api.admin.projects.listProjects
->[number];
+  typeof api.admin.projects.listProjectsPage
+>["page"][number];
 type Review = NonNullable<
   FunctionReturnType<typeof api.admin.projects.getProjectReview>
 >;
@@ -28,7 +30,6 @@ type HistoryItem = Review["history"][number];
 type ActivityItem = FunctionReturnType<
   typeof api.admin.projects.listProjectActivity
 >[number];
-type ProjectCity = NonNullable<ListRow["city"]>;
 
 const TABS: ListStatus[] = [
   "pending_review",
@@ -50,35 +51,28 @@ const FILTER_STATUSES: ListStatus[] = [
   "cancelled",
   "archived",
 ];
-const CITIES = [
-  "agadir",
-  "casablanca",
-  "fes",
-  "marrakech",
-  "meknes",
-  "oujda",
-  "rabat",
-  "sale",
-  "tangier",
-  "tetouan",
-] as const;
+const PROJECT_PAGE_SIZE = 25;
 
 export function AdminProjectsPanel() {
+  const locationLabel = useAdminProjectLocationLabel();
   const t = useTranslations("adminProjects");
   const tUx = useTranslations("ux");
   const tWizard = useTranslations("projectWizard");
   const locale = useLocale();
+  const filterId = useId();
   const [status, setStatus] = useState<ListStatus>("pending_review");
   const [search, setSearch] = useState("");
-  const [city, setCity] = useState<ProjectCity | "">("");
+  const [geography, setGeography] = useState({ regionCode: "", provinceCode: "" });
   const [selectedId, setSelectedId] = useState<Id<"projects"> | null>(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const list = useQuery(api.admin.projects.listProjects, {
+  const { results: list, status: paginationStatus, loadMore } = usePaginatedQuery(api.admin.projects.listProjectsPage, {
     status,
     search: search.trim() || undefined,
-    city: city || undefined,
-  });
+    regionCode: geography.regionCode || undefined,
+    provinceCode: geography.provinceCode || undefined,
+  }, { initialNumItems: PROJECT_PAGE_SIZE });
+  const provinces = getProvincesByRegion(geography.regionCode);
 
   useEffect(() => {
     if (!notice) return;
@@ -90,7 +84,7 @@ export function AdminProjectsPanel() {
     <AdminPage breadcrumb={t("title")} notice={notice} title={t("title")}>
       <p className="max-w-2xl text-sm leading-6 text-[#626970]">{t("lead")}</p>
       <section className="rounded-[20px] border border-[#e7eaee] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] sm:p-5">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex min-w-0 flex-col gap-3">
           <div
             className="flex flex-wrap gap-1"
             role="tablist"
@@ -117,7 +111,7 @@ export function AdminProjectsPanel() {
               </button>
             ))}
           </div>
-          <div className="grid gap-2 sm:grid-cols-[minmax(220px,1fr)_180px_190px]">
+          <div className="grid min-w-0 gap-2 sm:grid-cols-2">
             <label className="flex min-h-11 items-center rounded-sm bg-[#f4f6f8] px-3 text-sm">
               <span className="sr-only">{t("searchLabel")}</span>
               <input
@@ -126,23 +120,6 @@ export function AdminProjectsPanel() {
                 placeholder={t("searchPlaceholder")}
                 value={search}
               />
-            </label>
-            <label className="flex min-h-11 items-center rounded-sm bg-[#f4f6f8] px-3 text-sm">
-              <span className="sr-only">{t("cityLabel")}</span>
-              <select
-                className="h-11 w-full bg-transparent text-[#626970] outline-none"
-                onChange={(event) =>
-                  setCity(event.target.value as ProjectCity | "")
-                }
-                value={city}
-              >
-                <option value="">{t("allCities")}</option>
-                {CITIES.map((item) => (
-                  <option key={item} value={item}>
-                    {tWizard(`cityOptions.${item}`)}
-                  </option>
-                ))}
-              </select>
             </label>
             <label className="flex min-h-11 items-center rounded-sm bg-[#f4f6f8] px-3 text-sm">
               <span className="sr-only">{t("statusFilterLabel")}</span>
@@ -161,7 +138,60 @@ export function AdminProjectsPanel() {
                 ))}
               </select>
             </label>
+            <label className="flex min-h-11 min-w-0 items-center rounded-sm bg-[#f4f6f8] px-3 text-sm">
+              <span className="sr-only">{t("regionLabel")}</span>
+              <select
+                className="h-11 w-full min-w-0 bg-transparent text-[#626970] outline-none focus-visible:ring-2 focus-visible:ring-[#2f6bff]"
+                onChange={(event) => {
+                  setGeography({ regionCode: event.target.value, provinceCode: "" });
+                  setSelectedId(null);
+                }}
+                value={geography.regionCode}
+              >
+                <option value="">{t("allRegions")}</option>
+                {getRegions().map((region) => (
+                  <option key={region.code} value={region.code}>
+                    {locale === "fr" ? region.nameFr : region.nameEn}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex min-h-11 min-w-0 items-center rounded-sm bg-[#f4f6f8] px-3 text-sm">
+              <span className="sr-only">{t("provinceLabel")}</span>
+              <select
+                aria-describedby={!geography.regionCode ? `${filterId}-province-hint` : undefined}
+                className="h-11 w-full min-w-0 bg-transparent text-[#626970] outline-none focus-visible:ring-2 focus-visible:ring-[#2f6bff] disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={!geography.regionCode}
+                onChange={(event) => setGeography({ ...geography, provinceCode: event.target.value })}
+                value={geography.provinceCode}
+              >
+                <option value="">{t("allProvinces")}</option>
+                {provinces.map((province) => (
+                  <option key={province.code} value={province.code}>
+                    {locale === "fr" ? province.nameFr : province.nameEn}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              className={`min-h-11 rounded-sm border border-[#e6e9ee] px-3 text-sm font-semibold text-[#626970] ${ADMIN_PRESS}`}
+              onClick={() => {
+                setSearch("");
+                setStatus("all");
+                setGeography({ regionCode: "", provinceCode: "" });
+                setSelectedId(null);
+                setError("");
+              }}
+              type="button"
+            >
+              {t("clearFilters")}
+            </button>
           </div>
+          {!geography.regionCode ? (
+            <p className="text-xs text-[#626970]" id={`${filterId}-province-hint`}>
+              {t("provinceDisabled")}
+            </p>
+          ) : null}
         </div>
 
         {error ? (
@@ -173,11 +203,12 @@ export function AdminProjectsPanel() {
           </p>
         ) : null}
 
-        {list === undefined ? (
+        {paginationStatus === "LoadingFirstPage" ? (
           <ProjectListSkeleton label={tUx("loading.dashboard")} />
         ) : list.length === 0 ? (
-          <p className="mt-8 py-10 text-center text-sm text-[#8b919a]">
-            {t("empty")}
+          <p className="mt-8 py-10 text-center text-sm text-[#8b919a]" role="status">
+            {paginationStatus === "Exhausted" ? t("empty") :
+              paginationStatus === "LoadingMore" ? t("pagination.loadingMore") : t("pagination.moreMatches")}
           </p>
         ) : (
           <>
@@ -200,9 +231,9 @@ export function AdminProjectsPanel() {
                   </div>
                   <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <CompactField
-                      label={t("columns.city")}
+                      label={t("columns.location")}
                       value={
-                        row.city ? tWizard(`cityOptions.${row.city}`) : "—"
+                        locationLabel(row)
                       }
                     />
                     <CompactField
@@ -239,7 +270,7 @@ export function AdminProjectsPanel() {
                       {t("columns.client")}
                     </th>
                     <th className="px-3 py-2 font-semibold">
-                      {t("columns.city")}
+                      {t("columns.location")}
                     </th>
                     <th className="hidden px-3 py-2 font-semibold lg:table-cell">
                       {t("columns.category")}
@@ -264,8 +295,8 @@ export function AdminProjectsPanel() {
                       <td className="px-3 py-3 text-[#626970]">
                         {row.clientName}
                       </td>
-                      <td className="px-3 py-3 text-[#626970]">
-                        {row.city ? tWizard(`cityOptions.${row.city}`) : "—"}
+                      <td className="max-w-[20rem] px-3 py-3 text-[#626970] [overflow-wrap:anywhere]">
+                        {locationLabel(row)}
                       </td>
                       <td className="hidden px-3 py-3 text-[#626970] lg:table-cell">
                         {categoryLabel(
@@ -296,6 +327,18 @@ export function AdminProjectsPanel() {
             </div>
           </>
         )}
+        {paginationStatus === "CanLoadMore" || paginationStatus === "LoadingMore" ? (
+          <div className="mt-5 flex justify-center">
+            <button
+              className={`min-h-11 rounded-sm border border-[#e6e9ee] px-4 text-sm font-semibold text-[#626970] disabled:cursor-wait disabled:opacity-60 ${ADMIN_PRESS}`}
+              disabled={paginationStatus === "LoadingMore"}
+              onClick={() => loadMore(PROJECT_PAGE_SIZE)}
+              type="button"
+            >
+              {paginationStatus === "LoadingMore" ? t("pagination.loadingMore") : t("pagination.loadMore")}
+            </button>
+          </div>
+        ) : null}
       </section>
 
       {selectedId ? (
@@ -328,6 +371,7 @@ export function ProjectReviewDrawer({
   const tUx = useTranslations("ux");
   const tWizard = useTranslations("projectWizard");
   const tSupport = useTranslations("clientSupport.admin");
+  const locationLabel = useAdminProjectLocationLabel();
   const locale = useLocale();
   const titleId = useId();
   const review = useQuery(api.admin.projects.getProjectReview, { projectId });
@@ -453,16 +497,7 @@ export function ProjectReviewDrawer({
                 />
                 <Field
                   label={t("fields.location")}
-                  value={
-                    [
-                      review.city
-                        ? tWizard(`cityOptions.${review.city}`)
-                        : null,
-                      review.neighborhood,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || "—"
-                  }
+                  value={locationLabel(review)}
                 />
                 <Field
                   label={t("fields.propertyType")}
@@ -794,7 +829,7 @@ function Field({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-semibold tracking-[0.04em] text-[#a0a6ae] uppercase">
         {label}
       </p>
-      <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#17191d]">
+      <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#17191d] [overflow-wrap:anywhere]">
         {value}
       </p>
     </div>
@@ -802,7 +837,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 function CompactField({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="min-w-0 [overflow-wrap:anywhere]">
       <dt className="text-xs text-[#8b919a]">{label}</dt>
       <dd className="mt-1 text-[#17191d]">{value}</dd>
     </div>

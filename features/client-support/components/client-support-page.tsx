@@ -17,6 +17,7 @@ import { WorkspacePage, workspaceButton } from "@/features/shared/components/wor
 import { Link, useRouter } from "@/i18n/navigation";
 import { routes } from "@/lib/routes";
 import { ClientAgreementPanel } from "@/features/coordination-agreements/components/client-agreement-panel";
+import { useProjectLocationLabel } from "@/features/projects/hooks/use-project-location-label";
 
 type Project = NonNullable<FunctionReturnType<typeof api.projects.index.getMyProject>>;
 
@@ -95,7 +96,7 @@ export function ClientSupportPage({ projectId }: { projectId: string }) {
 
 function ClientSupportWorkspace({ project }: { project: Project }) {
   const t = useTranslations("clientSupport");
-  const tWizard = useTranslations("projectWizard");
+  const locationLabel = useProjectLocationLabel();
   const tProjects = useTranslations("clientProjects");
   const [drafts] = useState(createSupportDraftStore);
   const conversation = useQuery(api.clientSupport.index.getMyConversation, { projectId: project.id });
@@ -109,11 +110,11 @@ function ClientSupportWorkspace({ project }: { project: Project }) {
   return (
     <>
       <dl aria-label={t("page.contextTitle")} className="mt-3 mb-0 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
-        <div className="flex items-center gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.5">
           <dt className="sr-only">{t("page.contextCity")}</dt>
           <MapPin aria-hidden className="size-4 shrink-0 text-muted" />
-          <dd className={`m-0 font-medium ${project.city ? "text-ink" : "text-muted"}`}>
-            {project.city ? tWizard(`cityOptions.${project.city}`) : t("page.notProvided")}
+          <dd className="m-0 min-w-0 font-medium break-words text-ink">
+            {locationLabel(project)}
           </dd>
         </div>
         <div className="flex items-center gap-1.5">

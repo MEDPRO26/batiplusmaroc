@@ -20,6 +20,7 @@ import { useRouter } from "@/i18n/navigation";
 import { formatMarketplaceDateTime } from "@/lib/dates/marketplace-date-time";
 import { routes } from "@/lib/routes";
 import { AdminAgreementPanel } from "@/features/coordination-agreements/components/admin-agreement-panel";
+import { useAdminProjectLocationLabel } from "@/features/admin/hooks/use-admin-project-location-label";
 
 const SECONDARY = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-sm border border-[#e6e9ee] bg-white px-4 text-sm font-semibold text-[#17191d] hover:bg-[#f7f9fc] disabled:opacity-50 ${ADMIN_PRESS}`;
 const PANE = "min-h-0 flex-col overflow-hidden rounded-[16px] border border-[#e7eaee] bg-white";
@@ -273,7 +274,7 @@ function KindChips({ kinds }: { kinds: SupportSummary["requestedKinds"] }) {
 function AdminSupportConversation({ projectId, drafts }: { projectId: string; drafts: SupportDraftStore }) {
   const t = useTranslations("clientSupport.admin");
   const tProjects = useTranslations("adminProjects");
-  const tWizard = useTranslations("projectWizard");
+  const locationLabel = useAdminProjectLocationLabel();
   const tAgreement = useTranslations("coordinationAgreement");
   const [summaryOpen, setSummaryOpen] = useState(false);
   // An ID the backend cannot validate throws and is handled by the boundary above.
@@ -292,7 +293,6 @@ function AdminSupportConversation({ projectId, drafts }: { projectId: string; dr
   if (conversation === null) return <Notice lead={t("noThreadLead")} title={t("noThreadTitle")} />;
 
   const { project } = conversation;
-  const cityKey = `cityOptions.${project.city}` as "cityOptions.agadir";
   return (
     <>
       <header aria-label={t("contextLabel")} className="border-b border-[#eef1f4] px-4 py-3.5 sm:px-6">
@@ -304,7 +304,7 @@ function AdminSupportConversation({ projectId, drafts }: { projectId: string; dr
             {conversation.clientDisplayName || t("clientFallback")}
           </ContextItem>
           <ContextItem icon={<MapPin aria-hidden className="size-3.5" />} label={t("contextCity")}>
-            {project.city ? (tWizard.has(cityKey) ? tWizard(cityKey) : project.city) : t("notProvided")}
+            {locationLabel(project)}
           </ContextItem>
           <ContextItem label={t("contextStatus")}>{tProjects(`status.${project.status}`)}</ContextItem>
           <ContextItem label={t("contextRequested")}>

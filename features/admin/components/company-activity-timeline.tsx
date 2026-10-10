@@ -128,6 +128,7 @@ function TimelineRow({ item, locale }: { item: TimelineItem; locale: string }) {
                 amount: new Intl.NumberFormat(locale, {
                   style: "currency",
                   currency: item.context.currency ?? "MAD",
+                  minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 }).format(amount),
               })

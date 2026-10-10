@@ -15,7 +15,7 @@ vi.mock("next/font/google", () => ({
 vi.mock("convex/react", () => ({
   useQuery: () => convex.queryResults.shift(),
   useMutation: () => vi.fn(),
-  usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: vi.fn() }),
+  usePaginatedQuery: () => ({ results: convex.queryResults.shift() ?? [], status: "Exhausted", loadMore: vi.fn() }),
 }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({

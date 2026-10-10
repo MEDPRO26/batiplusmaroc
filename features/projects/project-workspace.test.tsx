@@ -32,6 +32,7 @@ const baseProject: Project = {
   title: "Villa build",
   primaryCategory: "houseConstruction",
   city: "casablanca",
+  location: { regionCode: null, provinceCode: null, communeName: null, legacyCity: "casablanca", localityName: null, neighborhood: null },
   timeline: "one_to_three_months",
   status: "pending_review",
   createdAt: 1_790_000_000_000,
@@ -247,7 +248,7 @@ describe("client project workspace", () => {
   });
 
   test("renders discovery results and a translated loading state", () => {
-    const publicProject: PublicProject = { id: projectId, title: "Published villa", description: "A safe public project description.", city: "rabat", primaryCategory: "houseConstruction", timeline: null, publishedAt: 1, thumbnailUrl: null };
+    const publicProject: PublicProject = { id: projectId, title: "Published villa", description: "A safe public project description.", city: "rabat", location: { regionCode: null, provinceCode: null, communeName: null, legacyCity: "rabat" }, primaryCategory: "houseConstruction", timeline: null, publishedAt: 1, thumbnailUrl: null };
     expect(render("en", <ProjectDiscoveryResults projects={[publicProject]} />)).toContain("Published villa");
     expect(render("en", <ProjectDiscoveryEmptyState />)).toContain("Loading available projects…");
   });
